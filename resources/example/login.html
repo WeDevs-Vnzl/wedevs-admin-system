@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4.1 Login - Iniciar sesión · WeDevs Core</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .custom-shadow {
+      box-shadow: 0 1px 2px rgba(16,16,24,.04), 0 12px 32px rgba(16,16,24,.06);
+    }
+  </style>
+</head>
+<body class="h-full bg-[#F3F4F8] text-[#0E0E12] antialiased select-none overflow-hidden">
+  <div class="w-full h-full min-h-screen flex flex-row">
+    
+    <!-- LEFT HALF (720px / 50% split) - Near-black panel (#0E0E12) -->
+    <div class="relative w-1/2 h-full bg-[#0E0E12] text-white p-12 lg:p-16 flex flex-col justify-between overflow-hidden">
+      
+      <!-- Abstract Network Motif / Graph SVG in background (bottom-right area, low contrast #2A2A32 lines) -->
+      <div class="absolute -right-8 bottom-12 w-[520px] h-[520px] pointer-events-none opacity-85">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+          <!-- Graph Edges / Connections -->
+          <g stroke="#2A2A32" stroke-width="1.2">
+            <line x1="80" y1="180" x2="160" y2="120" />
+            <line x1="160" y1="120" x2="260" y2="170" />
+            <line x1="260" y1="170" x2="360" y2="110" />
+            <line x1="160" y1="120" x2="210" y2="250" />
+            <line x1="80" y1="180" x2="120" y2="290" />
+            <line x1="120" y1="290" x2="210" y2="250" />
+            <line x1="210" y1="250" x2="310" y2="270" />
+            <line x1="260" y1="170" x2="310" y2="270" />
+            <line x1="360" y1="110" x2="440" y2="190" />
+            <line x1="310" y1="270" x2="420" y2="280" />
+            <line x1="440" y1="190" x2="420" y2="280" />
+            <line x1="210" y1="250" x2="180" y2="380" />
+            <line x1="310" y1="270" x2="290" y2="400" />
+            <line x1="180" y1="380" x2="290" y2="400" />
+            <line x1="420" y1="280" x2="450" y2="390" />
+            <line x1="290" y1="400" x2="410" y2="420" />
+            <line x1="420" y1="280" x2="410" y2="420" />
+            <line x1="120" y1="290" x2="90" y2="410" />
+            <line x1="90" y1="410" x2="180" y2="380" />
+          </g>
+
+          <!-- 14 Nodes with subtle radius and highlights -->
+          <!-- Node 1 -->
+          <circle cx="80" cy="180" r="4.5" fill="#2A2A32" stroke="#4A4A55" stroke-width="1.5" />
+          <!-- Node 2 (Filled White) -->
+          <circle cx="160" cy="120" r="6" fill="#FFFFFF" />
+          <circle cx="160" cy="120" r="11" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1" />
+          <!-- Node 3 -->
+          <circle cx="260" cy="170" r="5" fill="#2A2A32" stroke="#6B6B76" stroke-width="1.5" />
+          <!-- Node 4 (Filled White) -->
+          <circle cx="360" cy="110" r="6" fill="#FFFFFF" />
+          <!-- Node 5 -->
+          <circle cx="440" cy="190" r="4.5" fill="#2A2A32" stroke="#4A4A55" stroke-width="1.5" />
+          <!-- Node 6 -->
+          <circle cx="120" cy="290" r="4.5" fill="#2A2A32" />
+          <!-- Node 7 (Central Filled White) -->
+          <circle cx="210" cy="250" r="7" fill="#FFFFFF" />
+          <circle cx="210" cy="250" r="14" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1" />
+          <!-- Node 8 -->
+          <circle cx="310" cy="270" r="5.5" fill="#2A2A32" stroke="#4A4A55" stroke-width="1.5" />
+          <!-- Node 9 (Filled White) -->
+          <circle cx="420" cy="280" r="5.5" fill="#FFFFFF" />
+          <!-- Node 10 -->
+          <circle cx="90" cy="410" r="4" fill="#2A2A32" />
+          <!-- Node 11 -->
+          <circle cx="180" cy="380" r="5" fill="#2A2A32" stroke="#4A4A55" stroke-width="1.5" />
+          <!-- Node 12 (Filled White) -->
+          <circle cx="290" cy="400" r="6" fill="#FFFFFF" />
+          <circle cx="290" cy="400" r="12" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1" />
+          <!-- Node 13 -->
+          <circle cx="410" cy="420" r="4.5" fill="#2A2A32" />
+          <!-- Node 14 -->
+          <circle cx="450" cy="390" r="4" fill="#2A2A32" stroke="#4A4A55" stroke-width="1" />
+        </svg>
+      </div>
+
+      <!-- Top-Left: Logo & Brand -->
+      <div class="relative z-10 flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+          <span class="text-[#0E0E12] font-bold text-sm tracking-tighter">W</span>
+        </div>
+        <span class="text-white text-[17px] font-semibold tracking-tight">WeDevs Core</span>
+      </div>
+
+      <!-- Vertically Centered Headline & Description -->
+      <div class="relative z-10 max-w-xl my-auto py-12">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#1A1A22] border border-[#2A2A32] text-xs text-[#A0A0AB] mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#1F8A4C]"></span>
+          <span>Acceso restringido · v1.0</span>
+        </div>
+        <h1 class="text-[40px] leading-[48px] font-semibold text-white tracking-tight mb-4">
+          El centro de operaciones<br>de tu estudio.
+        </h1>
+        <p class="text-[16px] leading-[24px] text-[#A0A0AB] font-normal max-w-md">
+          Clientes, proyectos, facturas y documentos en un solo lugar.
+        </p>
+      </div>
+
+      <!-- Bottom-Left: Stats Line -->
+      <div class="relative z-10 flex items-center space-x-6 text-[13px] text-[#A0A0AB] border-t border-[#2A2A32]/80 pt-6">
+        <div class="flex items-center space-x-1.5">
+          <span class="text-white font-semibold tabular-nums">48</span>
+          <span>clientes</span>
+        </div>
+        <span class="text-[#2A2A32]">/</span>
+        <div class="flex items-center space-x-1.5">
+          <span class="text-white font-semibold tabular-nums">23</span>
+          <span>proyectos</span>
+        </div>
+        <span class="text-[#2A2A32]">/</span>
+        <div class="flex items-center space-x-1.5">
+          <span class="text-white font-semibold tabular-nums">1.284</span>
+          <span>eventos registrados</span>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- RIGHT HALF (720px / 50% split) - Canvas #F3F4F8 with centered card -->
+    <div class="w-1/2 h-full bg-[#F3F4F8] flex flex-col justify-between items-center p-8 lg:p-12 relative overflow-y-auto">
+      
+      <!-- Top subtle badge -->
+      <div class="w-full max-w-[420px] flex justify-end pt-2">
+        <span class="inline-flex items-center space-x-1.5 text-xs text-[#6B6B76]">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Sistema operativo</span>
+        </span>
+      </div>
+
+      <!-- Centered Card (420px wide, 16px radius, soft shadow, 40px padding) -->
+      <div class="w-full max-w-[420px] bg-white rounded-[16px] border border-[#E8E8EE] custom-shadow p-10 my-auto">
+        
+        <!-- 40px black circular logo mark centered -->
+        <div class="w-10 h-10 rounded-full bg-[#0E0E12] flex items-center justify-center mx-auto mb-5">
+          <span class="text-white font-bold text-base tracking-tighter">W</span>
+        </div>
+
+        <!-- Title & Subtitle -->
+        <div class="text-center mb-7">
+          <h2 class="text-[24px] leading-[30px] font-semibold text-[#0E0E12] tracking-tight">Iniciar sesión</h2>
+          <p class="text-[14px] leading-[20px] text-[#6B6B76] mt-1">Acceso solo por invitación</p>
+        </div>
+
+        <!-- Secondary Button (Full width 44px, Google G + "Continuar con Google") -->
+        <button type="button" class="w-full h-[44px] rounded-[10px] bg-white hover:bg-[#FAFAFB] border border-[#E8E8EE] text-[#0E0E12] text-[14px] font-medium transition-colors flex items-center justify-center space-x-3 px-4 mb-5 shadow-sm active:bg-gray-50" onclick="location.href='dashboard.html'">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continuar con Google</span>
+        </button>
+
+        <!-- Divider line with centered gray text "o" -->
+        <div class="relative flex items-center justify-center my-6">
+          <div class="w-full border-t border-[#E8E8EE]"></div>
+          <span class="absolute bg-white px-3 text-[13px] text-[#9A9AA5] font-normal">o</span>
+        </div>
+
+        <!-- Form fields -->
+        <form class="space-y-4" onsubmit="event.preventDefault()">
+          <div>
+            <label class="block text-[13px] font-medium text-[#0E0E12] mb-1.5">
+              Correo electrónico
+            </label>
+            <div class="relative">
+              <input 
+                type="email" 
+                value="andres@wedevs.studio"
+                placeholder="nombre@wedevs.studio" 
+                class="w-full h-[40px] px-3.5 text-[14px] text-[#0E0E12] placeholder-[#9A9AA5] bg-white border border-[#E8E8EE] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0E0E12] transition-all"
+              >
+            </div>
+          </div>
+
+          <!-- Primary Black Button full width, 44px -->
+          <button 
+            type="submit" 
+            class="w-full h-[44px] rounded-[10px] bg-[#0E0E12] hover:bg-[#1E1E24] text-white text-[14px] font-medium transition-colors flex items-center justify-center space-x-2 pt-0.5 active:scale-[0.99]"
+           onclick="location.href='dashboard.html'">
+            <span>Continuar con correo</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </button>
+        </form>
+
+        <!-- Helper text with shield-check icon -->
+        <div class="flex items-center justify-center space-x-2 text-[12px] text-[#6B6B76] mt-5 pt-1">
+          <svg class="w-4 h-4 text-[#6B6B76] shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+          <span>Te enviaremos un código de verificación.</span>
+        </div>
+
+      </div>
+
+      <!-- Below card footer text -->
+      <div class="text-center text-[12px] text-[#9A9AA5] pb-2">
+        <span>© 2026 WeDevs</span>
+        <span class="mx-1.5">·</span>
+        <a href="#" class="hover:text-[#6B6B76] transition-colors">Privacidad</a>
+        <span class="mx-1.5">·</span>
+        <a href="#" class="hover:text-[#6B6B76] transition-colors">Términos</a>
+      </div>
+
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4.9 Editor de documentos Markdown - DOC-0018</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            canvas: '#F3F4F8',
+            surface: '#FFFFFF',
+            'surface-muted': '#FAFAFB',
+            border: '#E8E8EE',
+            ink: '#0E0E12',
+            'ink-divider': '#2A2A32',
+            'text-primary': '#0E0E12',
+            'text-secondary': '#6B6B76',
+            'text-muted': '#9A9AA5',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F3F4F8;
+      color: #0E0E12;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #32323D;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar-light::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar-light::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar-light::-webkit-scrollbar-thumb {
+      background: #DCDCE3;
+      border-radius: 9999px;
+    }
+    .line-number {
+      user-select: none;
+      color: #4A4A55;
+    }
+    .active-line-bg {
+      background-color: rgba(255, 255, 255, 0.045);
+    }
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 16px;
+      background-color: #FFFFFF;
+      vertical-align: middle;
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body class="w-[1440px] h-[1024px] mx-auto flex flex-col bg-[#F3F4F8] select-none text-[14px]">
+
+  <!-- TOP BAR (64px, white, bottom hairline) -->
+  <header class="h-[64px] bg-white border-b border-[#E8E8EE] px-6 flex items-center justify-between z-20 shrink-0">
+    <!-- Left Section: Navigation & Document Meta -->
+    <div class="flex items-center space-x-3.5">
+      <!-- Ghost Back Button -->
+      <a href="documentos.html" class="inline-flex items-center text-[#6B6B76] hover:text-[#0E0E12] text-[13px] font-medium transition-colors py-1 px-1.5 -ml-1.5 rounded-lg hover:bg-[#FAFAFB]">
+        <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5 stroke-[1.5]"></i>
+        <span>Documentos</span>
+      </a>
+
+      <!-- Vertical hairline -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE]"></div>
+
+      <!-- Breadcrumbs -->
+      <div class="flex items-center text-[13px] text-[#6B6B76] font-normal">
+        <span class="hover:text-[#0E0E12] cursor-pointer">Kairos Studio LLC</span>
+        <span class="mx-1.5 text-[#9A9AA5]">/</span>
+        <span class="hover:text-[#0E0E12] cursor-pointer">App Delivery Kairos</span>
+      </div>
+
+      <!-- Vertical hairline -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE]"></div>
+
+      <!-- Document Title -->
+      <h1 class="text-[16px] font-semibold text-[#0E0E12] tracking-tight">
+        PRD — App Delivery Kairos
+      </h1>
+
+      <!-- Code chip -->
+      <span class="font-mono text-[12px] font-medium px-2 py-0.5 rounded bg-[#FAFAFB] border border-[#E8E8EE] text-[#0E0E12]">
+        DOC-0018
+      </span>
+
+      <!-- Status Pill: Borrador (neutral bg #F1F1F4 · text #55555F) -->
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F1F4] text-[#55555F] leading-tight">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#55555F] mr-1.5"></span>
+        Borrador
+      </span>
+
+      <!-- Autosave indicator -->
+      <div class="flex items-center text-[12px] text-[#6B6B76] pl-1">
+        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-[#1F8A4C] mr-1.5 stroke-[1.75]"></i>
+        <span>Guardado hace 5 s</span>
+      </div>
+
+      <!-- Version tag chip -->
+      <span class="text-[12px] font-normal text-[#6B6B76] px-2 py-0.5 rounded-md border border-[#E8E8EE] bg-white">
+        Vigente: <span class="font-medium text-[#0E0E12]">v3</span>
+      </span>
+    </div>
+
+    <!-- Right Section: Actions -->
+    <div class="flex items-center space-x-2.5">
+      <!-- Historial ghost button -->
+      <button class="inline-flex items-center h-[38px] px-3 text-[13px] font-medium text-[#6B6B76] hover:text-[#0E0E12] hover:bg-[#FAFAFB] rounded-[10px] transition-colors">
+        <i data-lucide="history" class="w-4 h-4 mr-1.5 stroke-[1.5]"></i>
+        <span>Historial</span>
+      </button>
+
+      <!-- Imprimir secondary button -->
+      <button class="inline-flex items-center h-[38px] px-3.5 text-[13px] font-medium text-[#0E0E12] bg-white border border-[#E8E8EE] hover:bg-[#FAFAFB] rounded-[10px] transition-colors shadow-sm">
+        <i data-lucide="printer" class="w-4 h-4 mr-1.5 text-[#6B6B76] stroke-[1.5]"></i>
+        <span>Imprimir</span>
+      </button>
+
+      <!-- Publicar versión v4 primary button (near-black ink #0E0E12) -->
+      <button class="inline-flex items-center h-[38px] px-4 text-[13px] font-medium text-white bg-[#0E0E12] hover:bg-[#1E1E24] rounded-[10px] transition-colors shadow-sm">
+        <i data-lucide="upload" class="w-4 h-4 mr-2 stroke-[1.5]"></i>
+        <span>Publicar versión v4</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- FORMATTING TOOLBAR (48px, #FAFAFB, bottom hairline) -->
+  <div class="h-[48px] bg-[#FAFAFB] border-b border-[#E8E8EE] px-6 flex items-center justify-between shrink-0 z-10">
+    <!-- Formatting icon groups -->
+    <div class="flex items-center space-x-1">
+      <!-- Headings group: H1 H2 H3 -->
+      <div class="flex items-center bg-transparent rounded-lg p-0.5">
+        <button title="Título 1" class="w-[30px] h-[30px] flex items-center justify-center font-semibold text-[13px] text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          H1
+        </button>
+        <button title="Título 2" class="w-[30px] h-[30px] flex items-center justify-center font-semibold text-[13px] text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          H2
+        </button>
+        <button title="Título 3" class="w-[30px] h-[30px] flex items-center justify-center font-semibold text-[13px] text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          H3
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE] mx-1"></div>
+
+      <!-- Text styles: Bold, Italic, Strikethrough, Code -->
+      <div class="flex items-center space-x-0.5">
+        <button title="Negrita (**)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="bold" class="w-4 h-4 stroke-[2]"></i>
+        </button>
+        <button title="Cursiva (*)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="italic" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Tachado (~~)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="strikethrough" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Código en línea (`)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="code" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE] mx-1"></div>
+
+      <!-- Links & Media: Link, Image -->
+      <div class="flex items-center space-x-0.5">
+        <button title="Enlace [texto](url)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="link" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Imagen ![alt](url)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="image" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE] mx-1"></div>
+
+      <!-- Lists: Bulleted list, Numbered list, Checklist -->
+      <div class="flex items-center space-x-0.5">
+        <button title="Lista con viñetas" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="list" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Lista numerada" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="list-ordered" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Lista de verificación [ ]" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="check-square" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-4 w-[1px] bg-[#E8E8EE] mx-1"></div>
+
+      <!-- Blocks: Table, Quote, Code Block -->
+      <div class="flex items-center space-x-0.5">
+        <button title="Insertar tabla" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="table" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Cita (>)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="quote" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+        <button title="Bloque de código (```)" class="w-[30px] h-[30px] flex items-center justify-center text-[#6B6B76] hover:text-[#0E0E12] hover:bg-white hover:border hover:border-[#E8E8EE] rounded-[6px] transition-all">
+          <i data-lucide="file-code" class="w-4 h-4 stroke-[1.75]"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Far Right: Segmented Control "Editor | Dividido | Vista previa" -->
+    <div class="flex items-center p-0.5 bg-[#E8E8EE] rounded-lg text-[12px] font-medium text-[#6B6B76]">
+      <button class="px-2.5 py-1 rounded-[6px] hover:text-[#0E0E12] transition-colors">Editor</button>
+      <button class="px-3 py-1 rounded-[6px] bg-white text-[#0E0E12] shadow-sm font-semibold transition-all flex items-center space-x-1.5">
+        <i data-lucide="columns" class="w-3.5 h-3.5 stroke-[1.75]"></i>
+        <span>Dividido</span>
+      </button>
+      <button class="px-2.5 py-1 rounded-[6px] hover:text-[#0E0E12] transition-colors">Vista previa</button>
+    </div>
+  </div>
+
+  <!-- SPLIT BODY (50/50, full remaining height: 1024 - 64 - 48 - 32 = 880px) -->
+  <div class="flex-1 flex overflow-hidden w-full">
+
+    <!-- LEFT PANE: Dark Code Editor (#0E0E12, 50% width) -->
+    <div class="w-1/2 h-full bg-[#0E0E12] border-r border-[#26262E] flex flex-col overflow-hidden relative">
+      <!-- Editor Header Strip / Mini Tabs -->
+      <div class="h-[36px] bg-[#141418] border-b border-[#26262E] px-4 flex items-center justify-between text-[12px] text-[#A0A0AB] shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="font-mono text-white flex items-center">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#9A9AA5] mr-1.5 stroke-[1.5]"></i>
+            DOC-0018_PRD_App_Delivery.md
+          </span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#3949AB]" title="Cambios no publicados"></span>
+        </div>
+        <div class="flex items-center space-x-3 text-[11px] font-mono text-[#6B6B76]">
+          <span>Markdown GFM</span>
+          <span>Tab: 2</span>
+        </div>
+      </div>
+
+      <!-- Editor Content with Gutter and Syntax -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar font-mono text-[13px] leading-[26px] p-0 flex">
+        <!-- Gutter (Line Numbers 1-24 in #4A4A55) -->
+        <div class="w-[48px] shrink-0 pt-4 pb-12 text-right pr-4 select-none bg-[#0E0E12] border-r border-[#1B1B21] text-[#4A4A55] font-normal leading-[26px]">
+          <div>1</div>
+          <div>2</div>
+          <div>3</div>
+          <div>4</div>
+          <div>5</div>
+          <div>6</div>
+          <div>7</div>
+          <div>8</div>
+          <div>9</div>
+          <div>10</div>
+          <div>11</div>
+          <div>12</div>
+          <div>13</div>
+          <div>14</div>
+          <div>15</div>
+          <div>16</div>
+          <div>17</div>
+          <div class="text-[#A0A0AB] font-medium">18</div>
+          <div>19</div>
+          <div>20</div>
+          <div>21</div>
+          <div>22</div>
+          <div>23</div>
+          <div>24</div>
+        </div>
+
+        <!-- Code Area -->
+        <div class="flex-1 pt-4 pb-12 pl-4 pr-6 text-[#D9DADE] whitespace-pre overflow-x-auto leading-[26px]">
+          <!-- Line 1 -->
+          <div><span class="text-[#6B6B76]"># </span><span class="text-white font-semibold">PRD — App Delivery Kairos</span></div>
+          <!-- Line 2 -->
+          <div></div>
+          <!-- Line 3 -->
+          <div><span class="text-[#6B6B76]">## </span><span class="text-white font-semibold">1. Resumen</span></div>
+          <!-- Line 4 -->
+          <div>La app permite a los restaurantes aliados de <span class="text-white font-bold">**Kairos**</span> gestionar pedidos,</div>
+          <!-- Line 5 -->
+          <div>repartidores y pagos desde un solo panel.</div>
+          <!-- Line 6 -->
+          <div></div>
+          <!-- Line 7 -->
+          <div><span class="text-[#6B6B76]">## </span><span class="text-white font-semibold">2. Objetivos</span></div>
+          <!-- Line 8 -->
+          <div><span class="text-[#6B6B76]">- [x] </span>Reducir el tiempo de despacho a menos de 25 min</div>
+          <!-- Line 9 -->
+          <div><span class="text-[#6B6B76]">- [x] </span>Pagos con <span class="text-[#FBBF24] bg-[#27271F] px-1 py-0.5 rounded">`Pago Móvil`</span> y <span class="text-[#FBBF24] bg-[#27271F] px-1 py-0.5 rounded">`Zinli`</span></div>
+          <!-- Line 10 -->
+          <div><span class="text-[#6B6B76]">- [ ] </span>Seguimiento del repartidor en tiempo real</div>
+          <!-- Line 11 -->
+          <div></div>
+          <!-- Line 12 -->
+          <div><span class="text-[#6B6B76]">## </span><span class="text-white font-semibold">3. Alcance del MVP</span></div>
+          <!-- Line 13 -->
+          <div></div>
+          <!-- Line 14 -->
+          <div><span class="text-[#6B6B76]">| </span>Módulo    <span class="text-[#6B6B76]">| </span>Prioridad <span class="text-[#6B6B76]">| </span>Estado   <span class="text-[#6B6B76]">|</span></div>
+          <!-- Line 15 -->
+          <div><span class="text-[#6B6B76]">|-----------|-----------|----------|</span></div>
+          <!-- Line 16 -->
+          <div><span class="text-[#6B6B76]">| </span>Catálogo  <span class="text-[#6B6B76]">| </span>Alta      <span class="text-[#6B6B76]">| </span>Listo    <span class="text-[#6B6B76]">|</span></div>
+          <!-- Line 17 -->
+          <div><span class="text-[#6B6B76]">| </span>Pedidos   <span class="text-[#6B6B76]">| </span>Alta      <span class="text-[#6B6B76]">| </span>En curso <span class="text-[#6B6B76]">|</span></div>
+          <!-- Line 18: Active line highlight -->
+          <div class="active-line-bg -mx-4 px-4"><span class="text-[#6B6B76]">| </span>Reportes  <span class="text-[#6B6B76]">| </span>Media     <span class="text-[#6B6B76]">| </span>Pendiente<span class="text-[#6B6B76]">|</span><span class="cursor-blink"></span></div>
+          <!-- Line 19 -->
+          <div></div>
+          <!-- Line 20 -->
+          <div><span class="text-[#6B6B76]">## </span><span class="text-white font-semibold">4. Criterios de Aceptación</span></div>
+          <!-- Line 21 -->
+          <div><span class="text-[#6B6B76]">> </span><span class="text-[#A0A0AB] italic">Los pagos en bolívares deben calcularse usando la tasa BCV oficial del día.</span></div>
+          <!-- Line 22 -->
+          <div><span class="text-[#6B6B76]">- </span>Sincronización bidireccional de estados de orden vía WebSockets.</div>
+          <!-- Line 23 -->
+          <div><span class="text-[#6B6B76]">- </span>Alerta push de confirmación a los restaurantes en &lt; 3 segundos.</div>
+          <!-- Line 24 -->
+          <div class="text-[#6B6B76]"><!-- Fin del documento v3 --></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANE: Rendered Preview (White surface, 50% width) -->
+    <div class="w-1/2 h-full bg-white flex flex-col overflow-hidden relative">
+      <!-- Preview Header Floating Pill -->
+      <div class="absolute top-4 right-6 z-10 flex items-center space-x-2">
+        <span class="text-[11px] font-medium text-[#6B6B76] bg-[#FAFAFB] border border-[#E8E8EE] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center">
+          <i data-lucide="eye" class="w-3 h-3 mr-1 text-[#9A9AA5] stroke-[1.75]"></i>
+          Vista previa
+        </span>
+      </div>
+
+      <!-- Rendered Document Container -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar-light p-12 max-w-[680px] mx-auto w-full">
+        <!-- Rendered Document Header -->
+        <div class="mb-8 pb-6 border-b border-[#E8E8EE]">
+          <div class="flex items-center space-x-2 text-[12px] text-[#6B6B76] mb-2 font-mono">
+            <span>DOC-0018</span>
+            <span>·</span>
+            <span>Técnico · PRD</span>
+            <span>·</span>
+            <span class="text-[#1F8A4C] font-sans font-medium bg-[#EAF7EE] px-2 py-0.5 rounded-full text-[11px]">En edición</span>
+          </div>
+          <!-- H1: 28px semibold -->
+          <h1 class="text-[28px] font-semibold text-[#0E0E12] leading-[34px] tracking-tight">
+            PRD — App Delivery Kairos
+          </h1>
+          <p class="text-[13px] text-[#6B6B76] mt-2">
+            Documento de requerimientos funcionales y alcance técnico para la versión MVP de la app móvil y panel administrativo.
+          </p>
+        </div>
+
+        <!-- Section 1: Resumen -->
+        <div class="mb-8">
+          <!-- H2: 18px semibold with a hairline under it -->
+          <h2 class="text-[18px] font-semibold text-[#0E0E12] pb-2 border-b border-[#E8E8EE] flex items-center justify-between">
+            <span>1. Resumen</span>
+          </h2>
+          <!-- Body 15px -->
+          <p class="text-[15px] text-[#0E0E12] leading-[24px] mt-3.5">
+            La app permite a los restaurantes aliados de <strong class="font-semibold text-[#0E0E12]">Kairos</strong> gestionar pedidos, repartidores y pagos desde un solo panel.
+          </p>
+        </div>
+
+        <!-- Section 2: Objetivos -->
+        <div class="mb-8">
+          <!-- H2: 18px semibold with a hairline under it -->
+          <h2 class="text-[18px] font-semibold text-[#0E0E12] pb-2 border-b border-[#E8E8EE]">
+            2. Objetivos
+          </h2>
+          <!-- Checklist with rounded checkboxes (two filled black with white checks, one empty) -->
+          <div class="mt-3.5 space-y-2.5">
+            <!-- Checked item 1 -->
+            <div class="flex items-start">
+              <div class="w-[18px] h-[18px] rounded-[5px] bg-[#0E0E12] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                <i data-lucide="check" class="w-3 h-3 stroke-[2.5]"></i>
+              </div>
+              <span class="ml-3 text-[14.5px] text-[#0E0E12] line-through text-[#6B6B76]">
+                Reducir el tiempo de despacho a menos de 25 min
+              </span>
+            </div>
+
+            <!-- Checked item 2 -->
+            <div class="flex items-start">
+              <div class="w-[18px] h-[18px] rounded-[5px] bg-[#0E0E12] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                <i data-lucide="check" class="w-3 h-3 stroke-[2.5]"></i>
+              </div>
+              <div class="ml-3 text-[14.5px] text-[#0E0E12]">
+                Pagos con <span class="font-mono text-[12.5px] bg-[#F1F1F4] text-[#0E0E12] px-2 py-0.5 rounded border border-[#E8E8EE]">Pago Móvil</span> y <span class="font-mono text-[12.5px] bg-[#F1F1F4] text-[#0E0E12] px-2 py-0.5 rounded border border-[#E8E8EE]">Zinli</span>
+              </div>
+            </div>
+
+            <!-- Unchecked item 3 -->
+            <div class="flex items-start">
+              <div class="w-[18px] h-[18px] rounded-[5px] border-[1.5px] border-[#9A9AA5] bg-white flex items-center justify-center shrink-0 mt-0.5"></div>
+              <span class="ml-3 text-[14.5px] text-[#0E0E12]">
+                Seguimiento del repartidor en tiempo real
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Alcance del MVP -->
+        <div class="mb-8">
+          <!-- H2: 18px semibold with a hairline under it -->
+          <h2 class="text-[18px] font-semibold text-[#0E0E12] pb-2 border-b border-[#E8E8EE]">
+            3. Alcance del MVP
+          </h2>
+          <!-- Table: rendered inside a 1px border with 10px radius, light #FAFAFB header row -->
+          <div class="mt-4 border border-[#E8E8EE] rounded-[10px] overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-[#FAFAFB] border-b border-[#E8E8EE] text-[12px] font-semibold text-[#6B6B76] uppercase tracking-wider">
+                  <th class="py-2.5 px-4 font-medium">Módulo</th>
+                  <th class="py-2.5 px-4 font-medium">Prioridad</th>
+                  <th class="py-2.5 px-4 font-medium">Estado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#E8E8EE] text-[13.5px]">
+                <tr class="hover:bg-[#FAFAFB]/60 transition-colors">
+                  <td class="py-3 px-4 font-medium text-[#0E0E12]">Catálogo</td>
+                  <td class="py-3 px-4 text-[#6B6B76]">Alta</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#EAF7EE] text-[#1F8A4C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#1F8A4C] mr-1.5"></span>
+                      Listo
+                    </span>
+                  </td>
+                </tr>
+                <tr class="hover:bg-[#FAFAFB]/60 transition-colors">
+                  <td class="py-3 px-4 font-medium text-[#0E0E12]">Pedidos</td>
+                  <td class="py-3 px-4 text-[#6B6B76]">Alta</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#EEF1FF] text-[#3949AB]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#3949AB] mr-1.5"></span>
+                      En curso
+                    </span>
+                  </td>
+                </tr>
+                <tr class="hover:bg-[#FAFAFB]/60 transition-colors bg-[#FAFAFB]/30">
+                  <td class="py-3 px-4 font-medium text-[#0E0E12]">Reportes</td>
+                  <td class="py-3 px-4 text-[#6B6B76]">Media</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#FFF4E2] text-[#A15C00]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#A15C00] mr-1.5"></span>
+                      Pendiente
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 4: Criterios de Aceptación -->
+        <div class="mb-4">
+          <h2 class="text-[18px] font-semibold text-[#0E0E12] pb-2 border-b border-[#E8E8EE]">
+            4. Criterios de Aceptación
+          </h2>
+          <!-- Blockquote -->
+          <div class="mt-3.5 pl-4 border-l-2 border-[#0E0E12] bg-[#FAFAFB] py-2.5 pr-3 rounded-r-lg text-[13.5px] italic text-[#6B6B76]">
+            Los pagos en bolívares deben calcularse usando la tasa BCV oficial del día.
+          </div>
+          <ul class="mt-3 space-y-1.5 text-[14px] text-[#0E0E12] list-disc list-inside">
+            <li>Sincronización bidireccional de estados de orden vía WebSockets.</li>
+            <li>Alerta push de confirmación a los restaurantes en &lt; 3 segundos.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR (32px, white, top hairline, 12px gray) -->
+  <footer class="h-[32px] bg-white border-t border-[#E8E8EE] px-6 flex items-center justify-between text-[12px] text-[#6B6B76] shrink-0 z-20">
+    <!-- Left Meta Info -->
+    <div class="flex items-center space-x-3">
+      <span class="font-medium text-[#0E0E12]">Markdown</span>
+      <span class="text-[#DCDCE3]">·</span>
+      <span>1.284 palabras</span>
+      <span class="text-[#DCDCE3]">·</span>
+      <span class="font-mono text-[#0E0E12]">Ln 18, Col 24</span>
+      <span class="text-[#DCDCE3]">·</span>
+      <span class="font-mono">UTF-8</span>
+    </div>
+
+    <!-- Right Audit / Publishing Info -->
+    <div class="flex items-center space-x-2">
+      <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#6B6B76] stroke-[1.5]"></i>
+      <span>v3 publicada por <strong class="font-medium text-[#0E0E12]">Andrés Molina</strong> · 2 oct 2026</span>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

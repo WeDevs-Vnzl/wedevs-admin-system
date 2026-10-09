@@ -1,0 +1,26 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+.netlify/
+.turbo/
+
+# Generated
+/graphify-out/
+src/generated/
+
+# Tests
+playwright-report/
+test-results/
+blob-report/
+.lighthouseci/
+
+# Secrets (set by the human, never by agents)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.log

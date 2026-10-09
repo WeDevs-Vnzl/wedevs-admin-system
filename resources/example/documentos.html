@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"error":"#ba1a1a","tertiary-fixed-dim":"#bbc3ff","on-secondary-container":"#62626c","primary":"#000000","on-primary":"#ffffff","surface-container":"#edeef2","outline":"#78767b","surface-container-highest":"#e1e2e6","outline-variant":"#c8c5cb","background":"#f8f9fd","primary-container":"#1b1b1f","on-error":"#ffffff","on-tertiary-fixed":"#000e5e","error-container":"#ffdad6","on-secondary-fixed":"#1a1b23","secondary-container":"#e0deea","secondary-fixed":"#e3e1ed","on-primary-fixed":"#1b1b1f","on-tertiary":"#ffffff","inverse-surface":"#2e3134","surface":"#f8f9fd","surface-dim":"#d9dade","surface-container-low":"#f2f3f7","secondary-fixed-dim":"#c7c5d1","on-tertiary-fixed-variant":"#2c3c9e","on-surface-variant":"#47464b","on-secondary-fixed-variant":"#464650","primary-fixed-dim":"#c8c5cb","on-secondary":"#ffffff","primary-fixed":"#e4e1e7","surface-bright":"#f8f9fd","tertiary-container":"#000e5e","surface-container-lowest":"#ffffff","tertiary-fixed":"#dee0ff","on-background":"#191c1f","on-error-container":"#93000a","inverse-primary":"#c8c5cb","on-surface":"#191c1f","surface-variant":"#e1e2e6","secondary":"#5e5d68","on-primary-fixed-variant":"#47464b","tertiary":"#000000","surface-tint":"#5f5e63","on-primary-container":"#858388","inverse-on-surface":"#eff1f5","surface-container-high":"#e7e8ec","on-tertiary-container":"#6c7ce0"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"margin":"2rem","gutter":"1.5rem","space-md":"1rem","space-sm":"0.75rem","space-2xl":"3rem","space-lg":"1.5rem","space-xs":"0.5rem","gutter-mobile":"1rem","margin-mobile":"1rem","space-xxs":"0.25rem","space-xl":"2rem"},fontFamily:{"label-sm":["Inter"],"display-hero":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"title-md":["Inter"],"mono-tabular":["Inter"],"headline-lg-mobile":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"headline-sm":["Inter"],"label-md":["Inter"]},fontSize:{"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"600"}],"display-hero":["40px",{"lineHeight":"48px","letterSpacing":"-0.03em","fontWeight":"600"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.025em","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.02em","fontWeight":"600"}],"title-md":["15px",{"lineHeight":"20px","letterSpacing":"-0.01em","fontWeight":"600"}],"mono-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-md":["13px",{"lineHeight":"18px","letterSpacing":"0em","fontWeight":"400"}],"body-lg":["15px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"500"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-[248px] bg-surface-container-low border-r border-outline-variant z-50 flex flex-col justify-between select-none"><div class="flex flex-col flex-1 overflow-y-auto px-space-xs py-space-sm"><div class="h-12 flex items-center justify-between px-space-xs mb-space-sm"><div class="flex items-center gap-space-xs"><img alt="WeDevs Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1V3PMJSvyATgJMOlbC8IYIMRXsTV0x9jngFVTGMOKXjiXpJssxDdW22e1ltIqIQYbGUuTiXE-nS9PIJwAcg2QwqsmhbRm0QC5M6l4z04BWSXb6d9TC7lxZOj5zCCLJ5AqscR9r1BkiJoqBmOyPw726PXJ800MgdFEjTXcYNDR5OChpOJc764DwO4yobfRJEFovx6R3da4frbDPUeia8p60aPtsejb7BVtxWXYJ7BTv8dXZIR627w-60YX07"/><span class="font-title-md text-title-md text-on-surface font-semibold tracking-tight">WeDevs Core</span></div><button class="w-7 h-7 flex items-center justify-center rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">first_page</span></button></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-primary text-on-primary font-medium rounded-[10px]"><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="inicio" href="dashboard.html"><span class="material-symbols-outlined text-[18px]">dashboard</span><span class="font-body-md text-body-md">Inicio</span></a><div class="pt-space-sm pb-space-xxs px-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Comercial</span></div><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="clientes" href="clientes.html"><span class="material-symbols-outlined text-[18px]">domain</span><span class="font-body-md text-body-md">Clientes</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="proyectos" href="#"><span class="material-symbols-outlined text-[18px]">folder_special</span><span class="font-body-md text-body-md">Proyectos</span></a><div class="pt-space-sm pb-space-xxs px-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Finanzas</span></div><a class="h-9 px-space-xs flex items-center justify-between rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="facturas" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px]">receipt_long</span><span class="font-body-md text-body-md">Facturas</span></div><span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-[10px] font-semibold">3</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="pagos" href="#"><span class="material-symbols-outlined text-[18px]">payments</span><span class="font-body-md text-body-md">Pagos</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="gastos" href="#"><span class="material-symbols-outlined text-[18px]">credit_card</span><span class="font-body-md text-body-md">Gastos</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="cuentas" href="#"><span class="material-symbols-outlined text-[18px]">account_balance</span><span class="font-body-md text-body-md">Cuentas</span></a><div class="pt-space-sm pb-space-xxs px-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Conocimiento</span></div><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="documentos" href="documentos.html"><span class="material-symbols-outlined text-[18px]">description</span><span class="font-body-md text-body-md">Documentos</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="notas" href="#"><span class="material-symbols-outlined text-[18px]">sticky_note_2</span><span class="font-body-md text-body-md">Notas</span></a><div class="pt-space-sm pb-space-xxs px-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Análisis</span></div><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="grafo" href="grafo.html"><span class="material-symbols-outlined text-[18px]">hub</span><span class="font-body-md text-body-md">Grafo</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="reportes" href="#"><span class="material-symbols-outlined text-[18px]">bar_chart</span><span class="font-body-md text-body-md">Reportes</span></a><a class="h-9 px-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="actividad" href="actividad.html"><span class="material-symbols-outlined text-[18px]">history</span><span class="font-body-md text-body-md">Actividad</span></a></nav></div><div class="px-space-xs py-space-sm border-t border-outline-variant bg-surface-container-low"><a class="h-9 px-space-xs mb-space-xs flex items-center gap-space-xs rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-all" data-path="configuracion" href="#"><span class="material-symbols-outlined text-[18px]">settings</span><span class="font-body-md text-body-md">Configuración</span></a><div class="h-px bg-outline-variant mb-space-xs"></div><div class="flex items-center justify-between px-space-xs"><div class="flex items-center gap-space-xs"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-label-sm text-label-sm text-on-primary font-semibold">AM</div><div class="flex flex-col text-left"><span class="font-body-md text-body-md text-on-surface font-semibold leading-tight">Andrés Molina</span><span class="font-label-sm text-label-sm text-secondary leading-tight">Owner</span></div></div><button class="w-7 h-7 flex items-center justify-center rounded-lg text-secondary hover:text-error hover:bg-error-container transition-colors" title="Cerrar sesión" type="button" onclick="location.href='login.html'"><span class="material-symbols-outlined text-[18px]">logout</span></button></div></div></aside><div class="pl-[248px]"><header class="fixed top-0 left-[248px] right-0 h-[72px] bg-surface-container-lowest border-b border-outline-variant z-40 px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-lg"><nav class="flex items-center gap-2 font-mono-tabular text-mono-tabular text-secondary"><span class="text-secondary hover:text-on-surface cursor-pointer transition-colors">WeDevs Core</span><span class="text-outline-variant">/</span><span class="text-on-surface font-semibold">Panel Principal</span></nav><div class="relative w-[360px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-secondary">search</span><input class="w-full h-10 pl-9 pr-12 rounded-lg bg-surface border border-outline-variant text-on-surface placeholder:text-secondary font-body-md text-body-md focus:outline-none focus:border-primary transition-all" placeholder="Buscar…" type="text"/><kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-outline-variant bg-surface-container font-mono-tabular text-[10px] text-secondary">⌘K</kbd></div></div><div class="flex items-center gap-space-md"><div class="h-8 px-space-sm flex items-center gap-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-mono-tabular text-mono-tabular"><span class="material-symbols-outlined text-[16px] text-secondary">schedule</span><span>Tasa BCV · 1 USD = Bs. 755,16</span></div><div class="flex items-center gap-space-xs"><button class="relative w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant bg-surface hover:bg-surface-container transition-colors text-secondary" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><button class="h-10 px-3 flex items-center justify-center rounded-lg border border-outline-variant bg-surface hover:bg-surface-container text-secondary font-label-md text-label-md uppercase transition-colors" type="button">ES</button><button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant bg-surface hover:bg-surface-container text-secondary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">dark_mode</span></button></div><div class="h-6 w-px bg-outline-variant"></div><button class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-surface-container transition-colors" type="button"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="material-symbols-outlined text-[18px] text-secondary">keyboard_arrow_down</span></button></div></header><main class="w-full pt-[72px] bg-surface min-h-[calc(100vh-48px)] p-space-xl flex flex-col gap-space-lg"><div class="flex flex-col w-full relative -m-space-xl p-space-xl min-h-[calc(100vh-72px)] overflow-hidden">
+<!-- SCRIPT TO SYNC APP SHELL NAVIGATION & BREADCRUMB -->
+<script>
+    (function syncShell() {
+      // Set active navigation to "Clientes"
+      const navLinks = document.querySelectorAll('aside nav a[data-path]');
+      navLinks.forEach(link => {
+        if (link.getAttribute('data-path') === 'clientes') {
+          link.className = 'h-9 px-space-xs flex items-center gap-space-xs rounded-[10px] bg-primary text-on-primary font-medium transition-all shadow-sm';
+          const icon = link.querySelector('.material-symbols-outlined');
+          if (icon) icon.className = 'material-symbols-outlined text-[18px] text-on-primary';
+          const text = link.querySelector('span:not(.material-symbols-outlined)');
+          if (text) text.className = 'font-body-md text-body-md text-on-primary font-medium';
+        } else {
+          link.classList.remove('bg-primary', 'text-on-primary', 'font-medium');
+        }
+      });
+
+      // Update header breadcrumb
+      const breadcrumb = document.querySelector('header nav');
+      if (breadcrumb) {
+        breadcrumb.innerHTML = `
+          <span class="text-secondary hover:text-on-surface cursor-pointer transition-colors">Comercial</span>
+          <span class="text-outline-variant">/</span>
+          <span class="text-secondary hover:text-on-surface cursor-pointer transition-colors">Clientes</span>
+          <span class="text-outline-variant">/</span>
+          <span class="text-on-surface font-semibold">Kairos Studio LLC</span>
+        `;
+      }
+    })();
+  </script>
+<!-- ======================================================== -->
+<!-- BASE LAYER: CLIENT DETAIL "KAIROS STUDIO LLC" -->
+<!-- ======================================================== -->
+<div aria-hidden="true" class="flex flex-col gap-space-lg w-full max-w-[1520px] select-none pointer-events-none">
+<!-- Top Return & Header Panel -->
+<div class="flex flex-col gap-space-sm">
+<!-- Ghost back link -->
+<div class="flex items-center">
+<span class="inline-flex items-center gap-1.5 font-label-md text-label-md text-secondary hover:text-on-surface transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Clientes</span>
+</span>
+</div>
+<!-- Main Profile Header Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<!-- 56px black rounded avatar -->
+<div class="w-14 h-14 rounded-xl bg-primary text-on-primary flex items-center justify-center font-headline-sm text-headline-sm font-semibold tracking-tight shrink-0 shadow-sm">
+            KS
+          </div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-mono-tabular text-label-sm font-semibold">CLI-0007</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Kairos Studio LLC</h1>
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1.5 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Activo
+              </span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-secondary font-label-sm text-label-sm">SaaS</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-secondary font-label-sm text-label-sm">Retainer</span>
+</div>
+<p class="font-body-md text-body-md text-secondary flex items-center gap-2">
+<span>Empresa</span>
+<span>·</span>
+<span>US</span>
+<span>·</span>
+<span class="font-mono-tabular">EIN 88-4410273</span>
+<span>·</span>
+<span>Cliente desde mar 2025</span>
+</p>
+</div>
+</div>
+<!-- Header Actions & View Mode -->
+<div class="flex items-center gap-space-xs self-start md:self-center">
+<div class="flex items-center p-0.5 bg-surface-container rounded-lg">
+<button class="px-3 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm font-medium" onclick="location.href='cliente-detalle.html'">Detalle</button>
+<button class="px-3 py-1.5 rounded-md text-secondary font-label-md text-label-md hover:text-on-surface" onclick="location.href='grafo.html'">Grafo</button>
+</div>
+<button class="h-9 px-3.5 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors inline-flex items-center gap-1.5" onclick="location.href='portal.html'">
+<span class="material-symbols-outlined text-[16px]">share</span>
+<span>Compartir documentos</span>
+</button>
+<button class="h-9 px-3.5 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+<span>Editar</span>
+</button>
+<button class="w-9 h-9 rounded-lg bg-surface-container-low text-secondary hover:text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Underline Tabs Strip -->
+<div class="flex items-center gap-space-lg bg-surface-container-lowest px-space-lg rounded-xl shadow-sm overflow-x-auto">
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors" onclick="location.href='cliente-detalle.html'">Resumen</button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors">Contactos <span class="text-secondary font-mono-tabular text-[11px] ml-1">3</span></button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors">Proyectos <span class="text-secondary font-mono-tabular text-[11px] ml-1">3</span></button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors">Facturas <span class="text-secondary font-mono-tabular text-[11px] ml-1">14</span></button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors">Pagos <span class="text-secondary font-mono-tabular text-[11px] ml-1">11</span></button>
+<!-- ACTIVE TAB -->
+<button class="py-3.5 font-label-md text-label-md text-on-surface font-semibold whitespace-nowrap relative">
+        Documentos <span class="text-on-surface font-mono-tabular text-[11px] ml-1">6</span>
+<div class="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary rounded-full"></div>
+</button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors">Notas <span class="text-secondary font-mono-tabular text-[11px] ml-1">9</span></button>
+<button class="py-3.5 font-label-md text-label-md text-secondary whitespace-nowrap hover:text-on-surface transition-colors" onclick="location.href='actividad.html'">Actividad</button>
+</div>
+<!-- Tab View Content: Documents Sub-dashboard -->
+<div class="flex flex-col gap-space-md">
+<!-- Toolbar: Filters, Search, Action Button -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-1.5 flex-wrap">
+<button class="h-8 px-3 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm">Todos</button>
+<button class="h-8 px-3 rounded-full bg-surface-container-lowest text-secondary font-label-sm text-label-sm hover:text-on-surface">Legal</button>
+<button class="h-8 px-3 rounded-full bg-surface-container-lowest text-secondary font-label-sm text-label-sm hover:text-on-surface">Técnico</button>
+<button class="h-8 px-3 rounded-full bg-surface-container-lowest text-secondary font-label-sm text-label-sm hover:text-on-surface">Comercial</button>
+<button class="h-8 px-3 rounded-full bg-surface-container-lowest text-secondary font-label-sm text-label-sm hover:text-on-surface">Financiero</button>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[17px] text-secondary">search</span>
+<input class="w-full h-9 pl-9 pr-3 rounded-lg bg-surface-container-lowest text-secondary font-body-md text-body-md outline-none cursor-default shadow-sm" readonly="" type="text" value="Buscar documentos..."/>
+</div>
+<button class="h-9 px-3.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold inline-flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[17px]">add</span>
+<span>Adjuntar documento</span>
+</button>
+</div>
+</div>
+<!-- Data Table Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Table Header (Black block style as specified) -->
+<div class="grid grid-cols-12 bg-primary text-on-primary px-space-lg py-3 font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+<div class="col-span-4">Documento</div>
+<div class="col-span-2">Tipo</div>
+<div class="col-span-2">Estado</div>
+<div class="col-span-1 text-center">Versión</div>
+<div class="col-span-2 text-right">Vence</div>
+<div class="col-span-1 text-right">Compartido</div>
+</div>
+<!-- Table Rows -->
+<div class="divide-y-0 text-body-md font-body-md text-on-surface">
+<!-- Row 1 -->
+<div class="grid grid-cols-12 px-space-lg py-3.5 items-center hover:bg-surface-container-low transition-colors">
+<div class="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">description</span>
+<span class="font-title-md text-title-md truncate">Contrato de servicios 2026</span>
+</div>
+<div class="col-span-2 text-secondary">Legal · Contrato</div>
+<div class="col-span-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Firmado
+              </span>
+</div>
+<div class="col-span-1 text-center font-mono-tabular text-secondary font-semibold">v2</div>
+<div class="col-span-2 text-right font-mono-tabular text-secondary">31 dic 2026</div>
+<div class="col-span-1 text-right flex items-center justify-end gap-1 text-secondary font-mono-tabular">
+<span class="material-symbols-outlined text-[16px]">link</span>
+<span>2</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-12 px-space-lg py-3.5 items-center bg-surface-container-low/40">
+<div class="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">article</span>
+<span class="font-title-md text-title-md truncate">PRD — App Delivery Kairos</span>
+</div>
+<div class="col-span-2 text-secondary">Técnico · PRD</div>
+<div class="col-span-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Aprobado
+              </span>
+</div>
+<div class="col-span-1 text-center font-mono-tabular text-secondary font-semibold">v3</div>
+<div class="col-span-2 text-right font-mono-tabular text-secondary">—</div>
+<div class="col-span-1 text-right flex items-center justify-end gap-1 text-secondary font-mono-tabular">
+<span class="material-symbols-outlined text-[16px]">link</span>
+<span>1</span>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-12 px-space-lg py-3.5 items-center">
+<div class="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">timeline</span>
+<span class="font-title-md text-title-md truncate">Roadmap Q4 2026</span>
+</div>
+<div class="col-span-2 text-secondary">Técnico · Roadmap</div>
+<div class="col-span-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container-high text-secondary font-label-sm text-label-sm inline-flex items-center gap-1 font-semibold">
+                Borrador
+              </span>
+</div>
+<div class="col-span-1 text-center font-mono-tabular text-secondary font-semibold">v1</div>
+<div class="col-span-2 text-right font-mono-tabular text-secondary">—</div>
+<div class="col-span-1 text-right font-mono-tabular text-secondary">—</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-12 px-space-lg py-3.5 items-center bg-surface-container-low/40">
+<div class="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">request_quote</span>
+<span class="font-title-md text-title-md truncate">Propuesta comercial fase 2</span>
+</div>
+<div class="col-span-2 text-secondary">Comercial · Propuesta</div>
+<div class="col-span-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Enviado
+              </span>
+</div>
+<div class="col-span-1 text-center font-mono-tabular text-secondary font-semibold">v1</div>
+<div class="col-span-2 text-right font-mono-tabular text-secondary">—</div>
+<div class="col-span-1 text-right font-mono-tabular text-secondary">—</div>
+</div>
+<!-- Row 5 -->
+<div class="grid grid-cols-12 px-space-lg py-3.5 items-center">
+<div class="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">receipt</span>
+<span class="font-title-md text-title-md truncate">Comprobante de retención FAC-0038</span>
+</div>
+<div class="col-span-2 text-secondary">Financiero</div>
+<div class="col-span-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container-high text-secondary font-label-sm text-label-sm inline-flex items-center gap-1 font-semibold">
+                Archivado
+              </span>
+</div>
+<div class="col-span-1 text-center font-mono-tabular text-secondary font-semibold">v1</div>
+<div class="col-span-2 text-right font-mono-tabular text-secondary">—</div>
+<div class="col-span-1 text-right font-mono-tabular text-secondary">—</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ======================================================== -->
+<!-- MODAL BACKDROP SCRIM (32% near-black overlay) -->
+<!-- ======================================================== -->
+<div class="fixed inset-0 top-[72px] left-[248px] bg-primary/35 backdrop-blur-[1px] z-40 transition-opacity" id="modal-backdrop"></div>
+<!-- ======================================================== -->
+<!-- RIGHT-SIDE SHEET / DRAWER (520px wide modal dialog) -->
+<!-- ======================================================== -->
+<aside aria-labelledby="drawer-heading" class="fixed top-[72px] right-0 bottom-0 w-[520px] max-w-[92vw] bg-surface-container-lowest rounded-l-xl shadow-2xl z-50 flex flex-col overflow-hidden animate-slide-in" id="document-drawer">
+<!-- DRAWER HEADER -->
+<header class="p-6 bg-surface-container-lowest flex items-start justify-between shrink-0 shadow-sm relative z-10">
+<div class="flex flex-col gap-0.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight" id="drawer-heading">
+          Adjuntar documento
+        </h2>
+<p class="font-body-md text-body-md text-secondary">
+          Se vinculará a <span class="font-semibold text-on-surface">Kairos Studio LLC</span>
+</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high text-secondary hover:text-on-surface flex items-center justify-center transition-colors" id="close-drawer-btn" title="Cerrar modal" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</header>
+<!-- SCROLLABLE DRAWER BODY -->
+<div class="p-6 space-y-5 overflow-y-auto flex-1 bg-surface-container-lowest">
+<!-- Segmented Control: Nuevo documento vs Vincular existente -->
+<div class="p-1 rounded-xl bg-surface-container-low flex items-center gap-1 shadow-inner">
+<button class="flex-1 py-1.5 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md font-semibold shadow-sm text-center transition-all" type="button">
+          Nuevo documento
+        </button>
+<button class="flex-1 py-1.5 px-3 rounded-lg text-secondary hover:text-on-surface font-label-md text-label-md font-medium text-center transition-all" type="button">
+          Vincular existente
+        </button>
+</div>
+<!-- Field: Formato -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Formato</label>
+<div class="grid grid-cols-3 gap-2.5">
+<!-- Option 1: Archivo (SELECTED) -->
+<button class="relative p-3 rounded-xl bg-surface-container text-on-surface flex flex-col items-center justify-center gap-1.5 shadow-sm transition-all group" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-surface">upload_file</span>
+<span class="font-label-md text-label-md font-semibold">Archivo</span>
+<div class="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[11px] font-bold">check</span>
+</div>
+</button>
+<!-- Option 2: Enlace -->
+<button class="relative p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface flex flex-col items-center justify-center gap-1.5 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">link</span>
+<span class="font-label-md text-label-md font-medium">Enlace</span>
+</button>
+<!-- Option 3: Markdown -->
+<button class="relative p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface flex flex-col items-center justify-center gap-1.5 transition-all" type="button" onclick="location.href='editor.html'">
+<span class="material-symbols-outlined text-[20px]">edit_note</span>
+<span class="font-label-md text-label-md font-medium">Markdown</span>
+</button>
+</div>
+</div>
+<!-- Field: Tipo de documento -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium" for="tipo-doc-select">Tipo de documento</label>
+<div class="relative">
+<div class="w-full h-10 px-3 rounded-xl bg-surface-container-low flex items-center justify-between text-on-surface font-body-md text-body-md cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2 truncate">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<span class="truncate">Legal · Acuerdo de confidencialidad (NDA)</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+<!-- Field: Título -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium" for="titulo-doc-input">Título</label>
+<div class="relative">
+<input class="w-full h-10 px-3.5 rounded-xl bg-surface-container-low font-body-md text-body-md text-on-surface font-medium focus:outline-none focus:bg-surface-container focus:ring-1 focus:ring-primary transition-all" id="titulo-doc-input" type="text" value="NDA Kairos – WeDevs 2026"/>
+</div>
+</div>
+<!-- DROPZONE AREA -->
+<div class="rounded-xl bg-surface-container-low/70 p-5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container transition-colors relative group">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[22px] text-on-surface">cloud_upload</span>
+</div>
+<p class="font-title-md text-title-md text-on-surface font-medium mt-1">
+          Arrastra el archivo o haz clic para buscar
+        </p>
+<p class="font-label-md text-label-md text-secondary mt-0.5">
+          PDF, DOCX o imágenes · máx. 25 MB
+        </p>
+</div>
+<!-- UPLOADED FILE ROW (COMPLETED STATE) -->
+<div class="p-3 bg-surface-container-low rounded-xl flex items-center justify-between gap-3 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<!-- File Type Badge Tile -->
+<div class="w-9 h-9 rounded-lg bg-surface-container text-on-surface flex items-center justify-center font-mono-tabular font-bold text-[11px] shrink-0">
+            PDF
+          </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate leading-tight">NDA_Kairos_firmado.pdf</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm text-secondary font-mono-tabular">2,4 MB</span>
+<span class="text-outline-variant text-[10px]">·</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[13px] text-on-surface font-bold">check_circle</span>
+                Listo
+              </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="w-7 h-7 rounded-lg text-secondary hover:text-error hover:bg-error-container flex items-center justify-center transition-colors" title="Eliminar archivo" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Progress Line (100% complete) -->
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden -mt-3">
+<div class="w-full h-full bg-primary rounded-full"></div>
+</div>
+<!-- Row: Estado & Fecha de firma -->
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Estado</label>
+<div class="h-10 px-3 rounded-xl bg-surface-container-low flex items-center justify-between cursor-pointer hover:bg-surface-container transition-colors">
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1.5 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Firmado
+            </span>
+<span class="material-symbols-outlined text-[16px] text-secondary">unfold_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Fecha de firma</label>
+<div class="h-10 px-3 rounded-xl bg-surface-container-low flex items-center justify-between text-on-surface font-mono-tabular text-body-md">
+<span>02 oct 2026</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">calendar_today</span>
+</div>
+</div>
+</div>
+<!-- Row: Vence & Alertar -->
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Vence</label>
+<div class="h-10 px-3 rounded-xl bg-surface-container-low flex items-center justify-between text-on-surface font-mono-tabular text-body-md">
+<span>02 oct 2027</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">event_repeat</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Alertar</label>
+<div class="h-10 px-3 rounded-xl bg-surface-container-low flex items-center justify-between text-on-surface font-body-md text-body-md cursor-pointer hover:bg-surface-container transition-colors">
+<span>30 días antes</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+<!-- Field: Vínculos -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Vínculos</label>
+<div class="flex flex-wrap items-center gap-2">
+<!-- Permanent Client Chip -->
+<div class="h-7 px-2.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md inline-flex items-center gap-1.5 font-medium shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-secondary">lock</span>
+<span>Cliente · Kairos Studio LLC</span>
+</div>
+<!-- Associated Project Chip -->
+<div class="h-7 px-2.5 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">folder_special</span>
+<span>Proyecto · App Delivery Kairos</span>
+<button class="w-4 h-4 rounded-full hover:bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<!-- Add Link Button -->
+<button class="h-7 px-2.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container-low font-label-md text-label-md inline-flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Añadir vínculo</span>
+</button>
+</div>
+</div>
+<!-- Field: Etiquetas -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-secondary font-medium">Etiquetas</label>
+<div class="flex items-center gap-2">
+<span class="h-6 px-2.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm inline-flex items-center gap-1.5 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Legal
+          </span>
+<button class="w-6 h-6 rounded-full bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container flex items-center justify-center transition-colors" title="Añadir etiqueta" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- STICKY DRAWER FOOTER -->
+<footer class="p-4 px-6 bg-surface-container-lowest flex items-center justify-between shrink-0 shadow-sm relative z-10">
+<div class="flex items-center gap-1.5 text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">history</span>
+<span>Se registrará en Actividad</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-10 px-4 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container font-label-md text-label-md font-medium transition-all" id="cancel-btn" type="button">
+          Cancelar
+        </button>
+<button class="h-10 px-5 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md font-semibold transition-all shadow-md active:scale-[0.98]" type="button">
+          Guardar documento
+        </button>
+</div>
+</footer>
+</aside>
+<!-- Interactive Dismiss Script for Drawer & Backdrop -->
+<script>
+    (function handleDrawerInteraction() {
+      const closeBtn = document.getElementById('close-drawer-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const backdrop = document.getElementById('modal-backdrop');
+      const drawer = document.getElementById('document-drawer');
+
+      function dismiss() {
+        if (drawer && backdrop) {
+          drawer.style.transform = 'translateX(100%)';
+          drawer.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
+          backdrop.style.opacity = '0';
+          backdrop.style.transition = 'opacity 0.24s ease-out';
+          setTimeout(() => {
+            drawer.style.display = 'none';
+            backdrop.style.display = 'none';
+          }, 240);
+        }
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', dismiss);
+      if (cancelBtn) cancelBtn.addEventListener('click', dismiss);
+      if (backdrop) backdrop.addEventListener('click', dismiss);
+    })();
+  </script>
+</div></main><footer class="w-full h-12 bg-surface-container-lowest border-t border-outline-variant px-space-xl flex items-center justify-between text-secondary font-label-sm text-label-sm"><div class="flex items-center gap-2"><span>© 2026 WeDevs · Uso interno</span></div><div class="flex items-center gap-space-sm"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[11px]"><span class="material-symbols-outlined text-[13px] text-on-surface">check_circle</span>Respaldo diario</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-mono-tabular text-[11px]"><span class="material-symbols-outlined text-[13px] text-on-surface">verified</span>v1.0</span></div></footer></div></body></html>
