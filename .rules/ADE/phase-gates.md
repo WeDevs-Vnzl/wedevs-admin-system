@@ -72,7 +72,7 @@ conflict.
     change dependencies (`package.json` + lockfile), only one may change
     `prisma/schema.prisma`, and only one may change each shared file
     listed in `orca-workflow.md` § "Repo topology" (i18n messages, the
-    `(app)` layout, `middleware.ts`, shared validators). The Planner
+    `(app)` layout, `proxy.ts`, shared validators). The Planner
     declares that owner in `TASK.md`.
 11. **Secrets belong to the human.** Real credentials (`CLERK_*`,
     `CLERK_WEBHOOK_SECRET`, `STORAGE_*`, `SHARE_IP_SALT`, `SENTRY_DSN`,

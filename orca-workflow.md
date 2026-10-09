@@ -26,12 +26,12 @@ Packages are defined by the files they touch. The folder layout is the one in PR
 | `src/components/ui/` | shadcn components and the shared kit (data-table, MoneyInput, RateInput, combobox, uploader) | |
 | `src/i18n/` | `messages/es.json`, `messages/en.json`, `next-intl` config | Shared file: one owner per wave |
 | `netlify/functions/` | Scheduled functions (`daily-maintenance`, `cleanup-files`) | Critical (sonnet) |
-| `.github/workflows/`, root config (`package.json`, lockfile, `tsconfig.json`, `eslint`, `next.config.*`, `netlify.toml`, `middleware.ts`) | CI and repo config | Shared files: one owner per wave |
+| `.github/workflows/`, root config (`package.json`, lockfile, `tsconfig.json`, `eslint`, `next.config.*`, `netlify.toml`, `proxy.ts`) | CI and repo config | Shared files: one owner per wave |
 | `PRD-WeDevs-Core.md`, `resources/`, `.rules/ADE/`, `orca-workflow.md`, `.claude/agents/` | Product source, design reference, process and fleet | The user (agents read, never edit) |
 | `.rules/*.md` (outside `ADE/`) | Operational rules derived from the PRD | Written by `wedevs-planner` in batch 0 only; afterwards changed only by the user's decision |
 | `TASK.md` | Waves, atomic tasks and progress | `wedevs-planner` writes; each agent ticks only its own checkboxes |
 
-Shared files (root `package.json` and lockfile, `prisma/schema.prisma`, `src/i18n/messages/*.json`, the `(app)` layout, sidebar and topbar, `middleware.ts`, a validator consumed by several modules) are written with a **single declared owner per wave**. Later packages consume them; if one needs a change, that change is its own package.
+Shared files (root `package.json` and lockfile, `prisma/schema.prisma`, `src/i18n/messages/*.json`, the `(app)` layout, sidebar and topbar, `proxy.ts`, a validator consumed by several modules) are written with a **single declared owner per wave**. Later packages consume them; if one needs a change, that change is its own package.
 
 Environments (PRD §6.5): production deploys from `main` on Netlify; previews per PR. **No agent deploys, migrates a remote database, or touches Netlify, Neon, Clerk, the bucket, DNS or secrets** — those are the user's.
 
@@ -50,7 +50,7 @@ Model routing for the Planner is always written per package, never implied:
 - **Sonnet (critical code only):**
   - anything in `prisma/` (schema, migrations, complementary SQL, sequences, seed of fiscal settings);
   - auth: Clerk middleware, the Clerk webhook (Svix signature), `getCurrentUser`, `can()` and the permission matrix (PRD §4.3);
-  - `middleware.ts` and security headers / CSP (PRD §14);
+  - `proxy.ts` and security headers / CSP (PRD §14);
   - money: `lib/money`, `lib/rates`, and the services and actions of invoices, payments and allocations, accounts and balances, billing plans, installments and recurring charges, expenses and recurring expenses (PRD §8.4–§8.8, §9);
   - the public portal: share links, token resolution, rate limiting, access log (PRD §8.11);
   - file storage: `StorageProvider`, presigned URLs, MIME validation (PRD §14);
@@ -76,15 +76,20 @@ Model routing for the Planner is always written per package, never implied:
 - Playwright Chromium, for the Tester: `pnpm exec playwright install chromium`.
 - Lighthouse CI (if a batch asks for it) needs Chrome; if the system has none, set `CHROME_PATH` to Playwright's Chromium.
 
-Open points for batch 0 (decided there, not here):
+Decided in batch 0 (see `.rules/decisions.md`):
 
-- The PRD uses `@prisma/adapter-neon`. Local and CI Postgres is plain Postgres, so batch 0 decides the adapter strategy (e.g. `@prisma/adapter-pg` locally, Neon adapter in production) and records it in `.rules/decisions.md`.
-- The PRD's CI runs end-to-end tests "against a Neon branch" and applies `prisma migrate deploy` in the production build. Batch 0 decides how that fits with "no agent touches a remote DB" (agents only build and test locally; the human owns CI secrets and the production pipeline).
+- **Database adapter:** plain `@prisma/adapter-pg` in every environment (local, CI, production). The system is database-platform agnostic; Neon is just a Postgres reachable by connection string. No Neon-specific adapter or code path.
+- **CI end-to-end tests** run against a Neon **testing** database that the user owns and wires through CI secrets. Agents never touch it: they run E2E only locally against their podman Postgres. `prisma migrate deploy` in the production build is configured by the user.
 
 ## Batch types
 
-1. **Batch 0 — Rules.** No code. The Planner reads the PRD and writes the operational rules for agents (see "Rule index"), plus the `TASK.md` skeleton that maps PRD §16 phases F0–F5 to future batches. The user approves the rules before any phase batch opens.
-2. **Phase batch.** Delivers one phase of PRD §16 (F0 Foundations, F1 Commercial core, F2 Finance, F3 Documents and portal, F4 Intelligence, F5 Hardening), in waves. A phase may be split into more than one batch if the Planner justifies it.
+Delivery is organized in **two milestones** (user decision DU-01, `.rules/decisions.md`), which replace the PRD §16 phase order F0–F5; the MVP scope (PRD §3.1) is unchanged and `.rules/coverage-matrix.md` maps every capability to both milestones.
+
+- **Milestone 1 (Hito 1) — Complete UI with mock data.** UI batches (`H1-B<n>`) until the whole app is navigable end to end, works on MOCK data (`src/mocks/`, shapes identical to the Zod contracts) and the public portal is usable. It closes with a **fix/change cycle** (`H1-FX<n>` batches opened from user feedback) until the user accepts the UI.
+- **Milestone 2 (Hito 2) — Functionality blocks.** Implementation blocks (`H2-B<n>`) that replace the mocks with real logic module by module. **Each block is verified by a deploy**: the user pushes and opens the PR, CI runs, Netlify publishes the deploy preview, the user verifies it and only then is the next block opened. No agent deploys.
+
+1. **Batch 0 — Rules.** No code. The Planner reads the PRD and writes the operational rules for agents (see "Rule index"), plus the two-milestone `TASK.md` skeleton. The user approves the rules before any milestone batch opens.
+2. **Milestone batch.** One `H1-B<n>` UI batch or one `H2-B<n>` implementation block, in waves, as outlined in `TASK.md`. A batch may be split if the Planner justifies it. An `H2` block is closed only after the user verifies its deploy preview.
 3. **Change / fix batch.** A bounded change or bug fix, usually one package in one wave. If a full `TASK.md` section isn't needed for something that small, the Orchestrator asks the user before skipping the Planner.
 
 Schema changes in any batch are planned as their own package with `prisma/` as the only owner in that wave. Once a migration is on `main`, it is never edited: a fix is a new migration.
@@ -124,4 +129,4 @@ Operational rules (created by the Planner in batch 0, from the PRD):
 - `.rules/data-rules.md`: schema, complementary SQL, sequences, soft delete, search index, migration checklist.
 - `.rules/frontend-patterns.md`: Overview → Table → Detail, data-table, forms, MoneyInput/RateInput, i18n, theme, Cmd+K, alerts (PRD §7).
 - `.rules/decisions.md`: decision log (DT-NN from PRD §6.2), open questions (PRD §17 P1–P9, plus the open points above), IOUs.
-- `.rules/coverage-matrix.md`: fixed MVP scope (which phase delivers each capability, PRD §3.1 and §16). Read-only after batch 0; it changes only if the user changes the MVP scope.
+- `.rules/coverage-matrix.md`: fixed MVP scope (which Hito 1 batch and Hito 2 block deliver each capability, PRD §3.1). Read-only after batch 0; it changes only if the user changes the MVP scope.

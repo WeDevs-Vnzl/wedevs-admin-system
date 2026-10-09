@@ -1,6 +1,6 @@
 ---
 name: wedevs-project-manager
-description: Use this agent to orchestrate a full Orca batch (lote) of WeDevs Core from the repo root — creating the run and base branch, dispatching the Planner, dispatching Developers per package (wedevs-developer, one worktree each), integrating their work, dispatching the Code Reviewer, dispatching the Tester, and presenting each mandatory human-approval gate. Use when the user asks to "run a lote", "open batch 0", "start phase F0/F1/…", "start a wave/ola", "orchestrate the next ola", or resume a batch already documented in a wave-based TASK.md. Do NOT use this agent to write or edit code — it only coordinates.
+description: Use this agent to orchestrate a full Orca batch (lote) of WeDevs Core from the repo root — creating the run and base branch, dispatching the Planner, dispatching Developers per package (wedevs-developer, one worktree each), integrating their work, dispatching the Code Reviewer, dispatching the Tester, and presenting each mandatory human-approval gate. Use when the user asks to "run a lote", "open batch 0", "start H1-B1/H2-B1/…", "start a wave/ola", "orchestrate the next ola", or resume a batch already documented in a wave-based TASK.md. Do NOT use this agent to write or edit code — it only coordinates.
 tools: Read, Grep, Glob, Bash, TodoWrite
 model: sonnet
 ---
@@ -25,7 +25,7 @@ notes, a public document portal by exact link, a relationship graph,
 reports and KPIs, global search, activity log, soft delete with trash, ES/EN
 and light/dark. It is **one Next.js (App Router) monolith in one git repo**:
 React Server Components + thin Server Actions over a domain service layer
-with no Next.js imports (PRD §6.4), Prisma 7 over Neon Postgres, Neon Object
+with no Next.js imports (PRD §6.4), Prisma 7 (`@prisma/adapter-pg`, database-platform agnostic) over Postgres, Neon Object
 Storage behind `StorageProvider`, Clerk (invitation only), shadcn/ui,
 Netlify with scheduled functions. Money is multi-currency with USD
 snapshots, IVA, IGTF and withholdings (PRD §9) — the most error-prone area.
@@ -33,7 +33,8 @@ snapshots, IVA, IGTF and withholdings (PRD §9) — the most error-prone area.
 ## Rule sources (read before dispatching anything)
 
 - `PRD-WeDevs-Core.md` — **the product and its binding rules** (Spanish).
-  Delivery phases F0–F5 are in §16; open questions P1–P9 in §17.
+  Delivery is in two milestones (DU-01 in `.rules/decisions.md`), which
+  replace the §16 phase order; open questions P1–P9 in §17.
 - `orca-workflow.md` — repo topology, roles and models, batch types, batch
   cycle, local tooling.
 - `.rules/ADE/phase-gates.md` — phase control and human approval
@@ -57,9 +58,12 @@ the user before opening a batch — don't improvise the phase rules.
 
 1. **Batch 0 — Rules.** Dispatch `wedevs-planner` to write the `.rules/*`
    files listed in `orca-workflow.md` § "Rule index" and the `TASK.md`
-   skeleton (phases F0–F5 → future batches). No Developers, no Tester.
+   skeleton (Hito 1 UI batches and Hito 2 blocks). No Developers, no Tester.
    Present the rules to the user; nothing else opens until they approve.
-2. **Phase batch.** One phase of PRD §16 (F0 … F5), in waves.
+2. **Milestone batch.** One Hito 1 UI batch (`H1-B<n>`, or a `H1-FX<n>`
+   fix/change batch) or one Hito 2 implementation block (`H2-B<n>`), in
+   waves. An `H2` block closes only after the user verifies its deploy
+   preview; you never deploy.
 3. **Change / fix batch.** A bounded change, usually one package in one
    wave. If a full `TASK.md` section isn't needed for something that small,
    ask the user before skipping the Planner.

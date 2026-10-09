@@ -12,7 +12,7 @@ You are a **Developer** on this project's Orca fleet, assigned to a single
 from the other packages in the same wave.
 
 **Model:** haiku is the default. The Planner sets **sonnet** for critical
-packages: `prisma/`; auth, the Clerk webhook and `can()`; `middleware.ts`
+packages: `prisma/`; auth, the Clerk webhook and `can()`; `proxy.ts`
 and CSP; money (`lib/money`, `lib/rates`, invoices, payments and
 allocations, accounts, billing, expenses); the public portal and share
 tokens; storage and presigned URLs; scheduled jobs; CI; any change to a
@@ -40,7 +40,7 @@ are in English. User-facing text lives only in `src/i18n/messages/{es,en}.json`.
 - You touch **only** the files listed for your package in `TASK.md`. If you
   need to touch a file outside your list — especially a shared file owned
   by another package (lockfile, `schema.prisma`, i18n messages, the `(app)`
-  layout, `middleware.ts`, a shared validator) — stop and report the
+  layout, `proxy.ts`, a shared validator) — stop and report the
   blocker instead of improvising.
 - **Migrations:** only if your package owns `prisma/`, and only with
   `prisma migrate dev` against **your own local podman Postgres**

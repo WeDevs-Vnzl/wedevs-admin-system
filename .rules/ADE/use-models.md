@@ -9,7 +9,7 @@ In this project every role is a Claude Code agent defined in `.claude/agents/wed
 | Tier | Who | Used for |
 |---|---|---|
 | `haiku` (default) | `wedevs-developer`, `wedevs-tester` | shadcn components and screens over the existing kit, CRUD of configurable catalogs, i18n messages, read-only reports, graph UI over an existing contract, tests, adaptations of a known pattern |
-| `sonnet` (critical packages, set by the Planner per package) | `wedevs-developer`; also the Project Manager | `prisma/` (schema, migrations, SQL); auth, `can()`, Clerk webhook; `middleware.ts` and CSP; money (`lib/money`, `lib/rates`, invoices, payments and allocations, accounts, billing, expenses); public portal and share tokens; storage and presigned URLs; scheduled jobs; CI; any change to a shared service signature or validator |
+| `sonnet` (critical packages, set by the Planner per package) | `wedevs-developer`; also the Project Manager | `prisma/` (schema, migrations, SQL); auth, `can()`, Clerk webhook; `proxy.ts` and CSP; money (`lib/money`, `lib/rates`, invoices, payments and allocations, accounts, billing, expenses); public portal and share tokens; storage and presigned URLs; scheduled jobs; CI; any change to a shared service signature or validator |
 | `opus` | **Only** `wedevs-planner` and `wedevs-code-reviewer` | Planning and the wave-close review gate |
 
 - Never `opus` for a developer or the Tester. A borderline package gets `sonnet`, with the reason in the package line; it never goes above `sonnet` for a developer.
