@@ -174,16 +174,16 @@ Files: `package.json`, `pnpm-lock.yaml`, `.nvmrc`, `.npmrc`, `tsconfig.json`, `n
 (registry components only), `src/hooks/*` (only if created by the shadcn CLI), `public/` assets needed by
 pdf.js (worker) if the chosen setup requires a static copy.
 
-- [ ] Create the Next.js 16 App Router project at the repo root (TypeScript `strict` +
+- [x] Create the Next.js 16 App Router project at the repo root (TypeScript `strict` +
       `noUncheckedIndexedAccess`, `src/` dir, alias `@/*`), without touching process files
       (`PRD-WeDevs-Core.md`, `resources/`, `.rules/`, `orca-workflow.md`, `.claude/`, `README.md`,
       `.mcp.json`, `.gitignore`, `graphify-out/`). No `proxy.ts` in Hito 1 (DT-33).
-- [ ] Pin exact versions (`.npmrc` `save-exact=true`); Node LTS 24.x in `.nvmrc`; `packageManager` pnpm
+- [x] Pin exact versions (`.npmrc` `save-exact=true`); Node LTS 24.x in `.nvmrc`; `packageManager` pnpm
       10.x; latest stable Next.js 16.x supported by Netlify's Next.js runtime (verify and report).
-- [ ] Install every dependency marked "H1-B1" in `.rules/stack.md` (application stack, supporting
+- [x] Install every dependency marked "H1-B1" in `.rules/stack.md` (application stack, supporting
       libraries incl. **pdf.js** (`pdfjs-dist`, optionally `react-pdf`), tooling), plus `server-only`.
       Before choosing a supporting library, check with the shadcn MCP whether a registry item covers it.
-- [ ] Add `shadcn` as an exact-pinned devDependency; run `pnpm exec shadcn init` (CSS variables, Tailwind
+- [x] Add `shadcn` as an exact-pinned devDependency; run `pnpm exec shadcn init` (CSS variables, Tailwind
       v4) and add, via `pnpm exec shadcn add`, the registry items the kit and shell need — confirm exact
       names with the MCP: button, input, textarea, label, form/field (whichever the registry currently
       recommends), select, checkbox, radio-group, switch, badge, avatar, card, separator, tabs, toggle,
@@ -191,33 +191,33 @@ pdf.js (worker) if the chosen setup requires a static copy.
       hover-card, table, pagination, skeleton, sonner, calendar, scroll-area, sidebar, breadcrumb,
       chart, progress, collapsible, accordion, resizable, kbd, input-otp, and any
       input-group/empty/spinner items the registry offers.
-- [ ] `src/app/globals.css`: light and dark tokens from `frontend-patterns.md` §1 (brand = wireframes:
+- [x] `src/app/globals.css`: light and dark tokens from `frontend-patterns.md` §1 (brand = wireframes:
       monochrome ink primary, canvas, surfaces, strokes, status tones, chart and sidebar tokens); Inter
       via `next/font` with tabular numerals.
-- [ ] `next.config.ts`: next-intl plugin pointing at `src/i18n/request.ts`; any pdf.js bundling setting
+- [x] `next.config.ts`: next-intl plugin pointing at `src/i18n/request.ts`; any pdf.js bundling setting
       needed for the worker; no experimental flags without a reason in the report. Minimal
       `src/i18n/request.ts` stub so the build passes; wave 2 replaces it.
-- [ ] `src/app/layout.tsx`: html/body, font, `NextIntlClientProvider` only (other providers arrive in
+- [x] `src/app/layout.tsx`: html/body, font, `NextIntlClientProvider` only (other providers arrive in
       wave 5). `src/app/page.tsx`: redirect to `/dashboard`.
-- [ ] `eslint.config.mjs`: `eslint-config-next` + Prettier compat + `no-restricted-imports` rules:
+- [x] `eslint.config.mjs`: `eslint-config-next` + Prettier compat + `no-restricted-imports` rules:
       (a) `@/mocks/*` allowed only in the files listed in C9; (b) `@prisma/*` and `@/generated/prisma/*`
       forbidden outside `src/server/` (C7); (c) `next/*`, `react`, `next-intl`, `@clerk/*` forbidden in
       `src/server/services/**` and `src/mocks/services/**` (C11). A JSX literal-string rule (e.g.
       `i18next/no-literal-string` in JSX-text mode or equivalent) as **error** for `src/app/**`,
       `src/components/**`, `src/features/**` (C1), excluding generated `src/components/ui/*` registry
       files if needed (report the exclusion).
-- [ ] `package.json` scripts: `dev`, `build`, `start`, `lint`, `typecheck` (`tsc --noEmit`),
+- [x] `package.json` scripts: `dev`, `build`, `start`, `lint`, `typecheck` (`tsc --noEmit`),
       `format`, `test` (`vitest run`), `test:coverage`, `test:e2e` (`playwright test`), `i18n:check`
       (`tsx scripts/check-i18n.ts`, script created in wave 2).
-- [ ] `vitest.config.ts`: jsdom for component tests, node for libs; coverage thresholds ≥ 90 % for
+- [x] `vitest.config.ts`: jsdom for component tests, node for libs; coverage thresholds ≥ 90 % for
       `src/lib/money.ts`, `src/lib/rates.ts`, `src/lib/finance/**`. `playwright.config.ts`: Chromium
       only, `baseURL` from env, no `webServer` auto-start (`safeguards.md` rule 1).
-- [ ] `.env.example` with the variable names of `stack.md` § Environments (incl. `SHARE_UNLOCK_SECRET`,
+- [x] `.env.example` with the variable names of `stack.md` § Environments (incl. `SHARE_UNLOCK_SECRET`,
       `APP_URL` placeholder) and placeholder values only, plus a comment that Hito 1 needs none (C5).
       `netlify.toml`: build `pnpm build`, Node version; nothing else.
-- [ ] Tests: `tests/smoke.test.ts` passes; `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` all
+- [x] Tests: `tests/smoke.test.ts` passes; `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` all
       pass.
-- [ ] Report the exact pinned versions (IOU-04) — in particular the exact `shadcn` version for the
+- [x] Report the exact pinned versions (IOU-04) — in particular the exact `shadcn` version for the
       `.mcp.json` pin (DT-49) — the list of registry items added and any registry file edited (C3).
 
 #### Wave 1 close

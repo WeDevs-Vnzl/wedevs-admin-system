@@ -1,0 +1,19 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+public
+src/components/ui
+# Process files (not formatted by tooling)
+PRD-WeDevs-Core.md
+TASK.md
+README.md
+orca-workflow.md
+resources
+.rules
+.claude
+.mcp.json
+graphify-out
