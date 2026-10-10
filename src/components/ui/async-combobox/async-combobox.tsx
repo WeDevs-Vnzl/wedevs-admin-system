@@ -140,6 +140,7 @@ function SecondaryInputs({
   onChange: (next: AsyncComboboxOption[]) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("forms.asyncCombobox");
   if (selected.length === 0) return null;
   return (
     <ul data-slot="async-combobox-secondary" className="mt-2 flex flex-col gap-1.5">
@@ -148,7 +149,7 @@ function SecondaryInputs({
           <span className="min-w-0 flex-1 truncate text-sm">{option.label}</span>
           <Input
             className="h-8 w-40"
-            aria-label={`${config.label}: ${option.label}`}
+            aria-label={t("secondaryLabel", { label: config.label, option: option.label })}
             placeholder={config.placeholder}
             maxLength={config.maxLength}
             disabled={disabled}

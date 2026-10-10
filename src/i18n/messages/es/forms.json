@@ -20,7 +20,8 @@
     "empty": "Sin resultados",
     "create": "Crear «{query}»",
     "clear": "Quitar la selección",
-    "remove": "Quitar {label}"
+    "remove": "Quitar {label}",
+    "secondaryLabel": "{label}: {option}"
   },
   "countryCombobox": {
     "placeholder": "Seleccionar país",

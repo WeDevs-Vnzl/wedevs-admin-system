@@ -30,21 +30,37 @@ const amountAny = moneyAmountSchema({ sign: "any" });
 
 // ───────────────────────────── Masked identifier (C5) ─────────────────────────────
 
-const MASK_MARKS = /[•*…]/;
+/** Characters the masker emits (and that an attacker could prepend to look "already masked"). */
+const MASK_MARKS = /[•*…]/g;
+
+/**
+ * The exact shapes `maskAccountIdentifier` produces. Only a value that matches one of them counts as
+ * already masked; a mask mark anywhere else is not trusted (`*0102-0123-45-6789012345` must not pass).
+ */
+const MASKED_SHAPES = [
+  /^•••• \d{4}$/u, // numeric account: last 4 digits
+  /^.{4}….{4}$/u, // wallet / e-mail: first 4 and last 4
+  /^.….$/u, // short value: first and last character
+  /^•+$/u, // 1–2 characters: all hidden
+];
+
+const isAlreadyMasked = (value: string) => MASKED_SHAPES.some((shape) => shape.test(value));
 
 /**
  * Reduces an account identifier to what may be stored and shown (PRD §8.7, C5): only the last 4 digits
  * of a numeric account (`•••• 1234`), or the first and last characters of a wallet/e-mail (`0x1a…9f3c`).
- * Idempotent: a value that already carries a mask mark is returned as is.
+ * Idempotent: a value that **exactly** matches an output shape is returned as is; anything else has its
+ * mask marks (`•`, `*`, `…`) stripped and is masked again, so a forged "mask" cannot smuggle a full number.
  */
 export function maskAccountIdentifier(raw: string): string {
   const value = raw.trim();
-  if (MASK_MARKS.test(value)) return value;
-  const compact = value.replace(/[\s-]/g, "");
-  if (/^\d+$/.test(compact)) return `•••• ${compact.slice(-4)}`;
-  if (compact.length >= 12) return `${compact.slice(0, 4)}…${compact.slice(-4)}`;
-  if (compact.length >= 3) return `${compact.slice(0, 1)}…${compact.slice(-1)}`;
-  return "•".repeat(compact.length);
+  if (isAlreadyMasked(value)) return value;
+  const chars = [...value.replace(MASK_MARKS, "").replace(/[\s-]/g, "")];
+  const compact = chars.join("");
+  if (/^\d+$/.test(compact)) return `•••• ${chars.slice(-4).join("")}`;
+  if (chars.length >= 12) return `${chars.slice(0, 4).join("")}…${chars.slice(-4).join("")}`;
+  if (chars.length >= 3) return `${chars[0]}…${chars[chars.length - 1]}`;
+  return "•".repeat(chars.length);
 }
 
 /**

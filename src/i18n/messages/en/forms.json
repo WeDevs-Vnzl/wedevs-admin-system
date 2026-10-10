@@ -20,7 +20,8 @@
     "empty": "No results",
     "create": "Create \"{query}\"",
     "clear": "Clear selection",
-    "remove": "Remove {label}"
+    "remove": "Remove {label}",
+    "secondaryLabel": "{label}: {option}"
   },
   "countryCombobox": {
     "placeholder": "Select country",

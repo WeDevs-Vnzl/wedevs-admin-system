@@ -27,8 +27,8 @@ export function KpiCard({ label, value, variation, sparkline, href }: KpiCardPro
   const body = (
     <>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-muted-foreground text-sm font-medium">{label}</CardTitle>
-        {href ? <ArrowUpRight className="text-muted-foreground size-4" aria-hidden /> : null}
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        {href ? <ArrowUpRight className="size-4 text-muted-foreground" aria-hidden /> : null}
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="text-2xl font-semibold tabular-nums">{value}</div>
@@ -49,10 +49,13 @@ export function KpiCard({ label, value, variation, sparkline, href }: KpiCardPro
   );
 
   if (href) {
+    // The card clips overflow, so the focus ring is drawn on the card itself when its link is focused.
     return (
-      <Card className="rounded-2xl transition-shadow hover:shadow-md">
-        <Link href={href} aria-label={`${label} · ${t("open")}`} className="block focus-visible:outline-none">
+      <Card className="rounded-2xl transition-shadow hover:shadow-md has-[a:focus-visible]:ring-[3px] has-[a:focus-visible]:ring-ring/50">
+        <Link href={href} className="block rounded-2xl outline-none">
           {body}
+          {/* No aria-label: the link is named by its content (label, value, variation) plus this hint. */}
+          <span className="sr-only">{t("open")}</span>
         </Link>
       </Card>
     );

@@ -742,7 +742,7 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
 `src/components/ui/async-combobox/async-combobox.tsx`; tests next to them;
 `src/i18n/messages/{es,en}/{table,forms,patterns}.json`. No other file.
 
-- [ ] **B1 (C22)** `shares.ts`: split every portal input in two.
+- [x] **B1 (C22)** `shares.ts`: split every portal input in two.
       - A **client action schema** with only `{ token, documentId[, key] }`.
       - A **service input** type or schema that the adapter extends with server-only metadata:
         `unlockedDocumentIds` from the signed cookie, `ipHash` (or `ip`) and `userAgent`. This covers
@@ -753,11 +753,11 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       - Tests: the client schemas strip or reject `unlockedDocumentIds`, `ip` and `ipHash`; the unlock
         service input carries the IP hash.
       - Keep the existing export names working, or note every rename in `worker_done`.
-- [ ] **B2 (C5)** `accounts.ts`: a value counts as already masked only when it matches the exact output
+- [x] **B2 (C5)** `accounts.ts`: a value counts as already masked only when it matches the exact output
       shapes (`^•••• \d{4}$`, `^.{4}….{4}$`, `^.….$`, all `•`). Anything else has its mask characters
       stripped and is masked again. Tests: each accepted shape, plus a bypass input such as
       `*0102-0123-45-6789012345`, which must come out masked.
-- [ ] **B3 (C1)**:
+- [x] **B3 (C1)**:
       - The date-range facet `<Calendar>` gets the active locale (`es`/`enUS`), the same way
         `date-field.tsx` does.
       - Filter chips format date ranges with `formatDate`, and build the label and range through ICU
@@ -767,7 +767,7 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
         - `async-combobox.tsx` `${config.label}: ${option.label}`;
         - the `+ ` prefix in `related-mini-table.tsx`.
       - Tests: an ES calendar renders Spanish month names; a chip shows a localized range.
-- [ ] **M1 (a11y)** `kpi-card.tsx`: the link gets a visible focus ring (`focus-visible:ring-[3px]
+- [x] **M1 (a11y)** `kpi-card.tsx`: the link gets a visible focus ring (`focus-visible:ring-[3px]
       ring-ring/50` or equivalent). The accessible name includes the KPI value, or the `aria-label` is
       dropped so the content is read.
 

@@ -28,7 +28,8 @@ import { userRefSchema } from "./users";
  *   (wrong key) and `ACCESS_KEY_LOCKED` (5 failures per link, document and IP within 15 minutes → refused
  *   for 15 minutes). A locked document that was not unlocked answers `FORBIDDEN` on view and download.
  * - The unlock state lives in a signed cookie handled by the public action adapter; services receive the
- *   already-unlocked document ids as input and never see the cookie.
+ *   already-unlocked document ids (and the IP hash / user agent) as **server-only** input and never see
+ *   the cookie. Clients can send only the `*ActionSchema` fields (see "Inputs: portal").
  */
 
 // ───────────────────────────── Constants and primitives ─────────────────────────────
@@ -137,50 +138,112 @@ export type ShareIdInput = z.infer<typeof shareIdInputSchema>;
 // ───────────────────────────── Inputs: portal (public) ─────────────────────────────
 
 /**
- * `unlockSharedDocument` (public): the visitor submits the key of one document. Rate limiting and
- * lockout are the service's job; success is remembered by the adapter in the signed cookie.
+ * Every public portal operation has **two** input schemas (C22):
+ *
+ * 1. `*ActionSchema` — what the **client** may send through the public action / `/api/s/*` route: only
+ *    `{ token, documentId[, key | event] }`. The adapter parses the request with this schema, so
+ *    `unlockedDocumentIds`, `ip`, `ipHash` and `userAgent` sent by a visitor are **stripped** and can never
+ *    be forged (an attacker cannot mark documents as unlocked or choose the IP the lockout is keyed on).
+ * 2. `*ServiceInputSchema` — what the **service** receives: the client fields **plus** the server-only
+ *    metadata the adapter adds *after* parsing (`unlockedDocumentIds` from the signed cookie, `ipHash` from
+ *    the request IP and the salt, `userAgent` from the headers).
+ *
+ * **Only the service schemas reach services**; the action schemas never do. The legacy `*InputSchema` /
+ * `*Input` names are kept as aliases of the service schemas/types (they are what `PortalSharesService`
+ * takes), so a service signature is never typed with a client-only shape.
  */
-export const unlockSharedDocumentInputSchema = z.object({
-  token: shareTokenSchema,
-  documentId: idSchema,
-  key: accessKeyInputSchema,
-});
-export type UnlockSharedDocumentInput = z.infer<typeof unlockSharedDocumentInputSchema>;
+
+/** Salted SHA-256 of the visitor IP, lowercase hex. The raw IP never crosses into a service (C20). */
+export const ipHashSchema = z.string().regex(/^[a-f0-9]{64}$/, VALIDATION_MESSAGES.invalidFormat);
 
 /** Ids the visitor already unlocked (read by the adapter from the signed cookie). */
 const unlockedDocumentIdsSchema = z.array(idSchema).max(50).default([]);
 
-/** `resolveShareToken` (public). An unknown, revoked or expired token is a generic 404. */
-export const resolveShareTokenInputSchema = z.object({
-  token: shareTokenSchema,
-  unlockedDocumentIds: unlockedDocumentIdsSchema,
-});
-export type ResolveShareTokenInput = z.infer<typeof resolveShareTokenInputSchema>;
+/** Request metadata added by the adapter (never read from the client payload). */
+const requestMetaShape = {
+  ipHash: ipHashSchema,
+  userAgent: z.string().max(512).optional(),
+};
 
 /**
- * `recordShareAccess` (public): a `VIEW` or `DOWNLOAD`. The adapter passes the raw `ip` and
- * `userAgent`; the service stores only a salted SHA-256 of the IP (C20).
+ * Metadata the adapter adds to every public service call. The C22 lockout (5 failures per link,
+ * document and IP hash within 15 minutes) is keyed on `token` (→ link) + `documentId` + `ipHash` of the
+ * unlock service input.
  */
-export const recordShareAccessInputSchema = z.object({
+export const portalRequestMetaSchema = z.object(requestMetaShape);
+export type PortalRequestMeta = z.infer<typeof portalRequestMetaSchema>;
+
+/** `unlockSharedDocument` (public): the visitor submits the key of one document. */
+export const unlockSharedDocumentActionSchema = z.object({
+  token: shareTokenSchema,
+  documentId: idSchema,
+  key: accessKeyInputSchema,
+});
+export type UnlockSharedDocumentActionInput = z.infer<typeof unlockSharedDocumentActionSchema>;
+
+/**
+ * Service input of `unlockSharedDocument`. Rate limiting and lockout are the service's job, keyed on
+ * `token` + `documentId` + `ipHash`; success is remembered by the adapter in the signed cookie.
+ */
+export const unlockSharedDocumentServiceInputSchema = unlockSharedDocumentActionSchema.extend({
+  ...requestMetaShape,
+});
+export type UnlockSharedDocumentServiceInput = z.infer<
+  typeof unlockSharedDocumentServiceInputSchema
+>;
+export const unlockSharedDocumentInputSchema = unlockSharedDocumentServiceInputSchema;
+export type UnlockSharedDocumentInput = UnlockSharedDocumentServiceInput;
+
+/** `resolveShareToken` (public). An unknown, revoked or expired token is a generic 404. */
+export const resolveShareTokenActionSchema = z.object({ token: shareTokenSchema });
+export type ResolveShareTokenActionInput = z.infer<typeof resolveShareTokenActionSchema>;
+
+export const resolveShareTokenServiceInputSchema = resolveShareTokenActionSchema.extend({
+  unlockedDocumentIds: unlockedDocumentIdsSchema,
+  ...requestMetaShape,
+});
+export type ResolveShareTokenServiceInput = z.infer<typeof resolveShareTokenServiceInputSchema>;
+export const resolveShareTokenInputSchema = resolveShareTokenServiceInputSchema;
+export type ResolveShareTokenInput = ResolveShareTokenServiceInput;
+
+/** `recordShareAccess` (public): a `VIEW` or `DOWNLOAD`. */
+export const recordShareAccessActionSchema = z.object({
   token: shareTokenSchema,
   documentId: idSchema.optional(),
   event: recordableShareEventSchema,
-  ip: z.string().max(64),
-  userAgent: z.string().max(512).optional(),
 });
-export type RecordShareAccessInput = z.infer<typeof recordShareAccessInputSchema>;
+export type RecordShareAccessActionInput = z.infer<typeof recordShareAccessActionSchema>;
+
+/** The service stores only the `ipHash` and `userAgent` the adapter derived (C20). */
+export const recordShareAccessServiceInputSchema = recordShareAccessActionSchema.extend({
+  ...requestMetaShape,
+});
+export type RecordShareAccessServiceInput = z.infer<typeof recordShareAccessServiceInputSchema>;
+export const recordShareAccessInputSchema = recordShareAccessServiceInputSchema;
+export type RecordShareAccessInput = RecordShareAccessServiceInput;
 
 /** `getSharedDocument` (public): content of one document the visitor may open. */
-export const getSharedDocumentInputSchema = z.object({
+export const getSharedDocumentActionSchema = z.object({
   token: shareTokenSchema,
   documentId: idSchema,
-  unlockedDocumentIds: unlockedDocumentIdsSchema,
 });
-export type GetSharedDocumentInput = z.infer<typeof getSharedDocumentInputSchema>;
+export type GetSharedDocumentActionInput = z.infer<typeof getSharedDocumentActionSchema>;
+
+export const getSharedDocumentServiceInputSchema = getSharedDocumentActionSchema.extend({
+  unlockedDocumentIds: unlockedDocumentIdsSchema,
+  ...requestMetaShape,
+});
+export type GetSharedDocumentServiceInput = z.infer<typeof getSharedDocumentServiceInputSchema>;
+export const getSharedDocumentInputSchema = getSharedDocumentServiceInputSchema;
+export type GetSharedDocumentInput = GetSharedDocumentServiceInput;
 
 /** `getSharedDocumentDownload` (public): a 5-minute download for one document. */
-export const getSharedDocumentDownloadInputSchema = getSharedDocumentInputSchema;
-export type GetSharedDocumentDownloadInput = z.infer<typeof getSharedDocumentDownloadInputSchema>;
+export const getSharedDocumentDownloadActionSchema = getSharedDocumentActionSchema;
+export type GetSharedDocumentDownloadActionInput = GetSharedDocumentActionInput;
+export const getSharedDocumentDownloadServiceInputSchema = getSharedDocumentServiceInputSchema;
+export type GetSharedDocumentDownloadServiceInput = GetSharedDocumentServiceInput;
+export const getSharedDocumentDownloadInputSchema = getSharedDocumentDownloadServiceInputSchema;
+export type GetSharedDocumentDownloadInput = GetSharedDocumentDownloadServiceInput;
 
 // ───────────────────────────── Filters ─────────────────────────────
 
@@ -462,7 +525,8 @@ export type SharesService<Ctx = unknown> = {
 
 /**
  * Public portal services. They receive a context whose `user` is `null` and the token as input (C11);
- * they are reachable only through `definePublicAction` / the `/api/s/*` route (C10). Wrong keys answer
+ * they are reachable only through `definePublicAction` / the `/api/s/*` route (C10). Their inputs are the
+ * `*ServiceInput` types (client fields + server-only metadata), never the `*ActionInput` ones. Wrong keys answer
  * `ACCESS_KEY_INVALID`, a lockout `ACCESS_KEY_LOCKED`, a locked document `FORBIDDEN`, and a bad token
  * the generic 404 (`NOT_FOUND`, no reason).
  */
