@@ -736,10 +736,20 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
       typecheck, tests, `i18n:check`, build pass. Merges: 3.7 0bbffa5, 3.5 278b7f5, 3.6 d0791fb, 3.3 8ac969f,
       3.2 b4a64fe, 3.4 013505b, 3.1 b036177. Integrated: 57 files / 1303 tests; i18n parity 32 namespaces;
       build OK.
-- [ ] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
+- [x ] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
       fields are strings; multi-rate invoice contract matches C17; share read DTOs never expose keys;
       3.1/3.2 do not cross-import; kit props match `listQuerySchema` and `files.ts`; namespaces filled in
       both languages; 3.4 `RateLookupResult` is structurally identical to 3.7 `SelectedRate` (DT-67).
+      Planner: READY FOR CODE REVIEW, no blockers. Majors → follow-up package 4.3 (wave 4): M1 data-table
+      facets (`filters[id]`) vs module filter schemas (top-level fields) — bridge `toModuleQuery`; M2
+      `rateLookupDtoSchema` ≠ `SelectedRate`; M3 column preference ↔ `ColumnConfig` converters + one width
+      range; M4 shared helpers duplicated with different rules in `tags.ts`/`catalogs.ts` → `common.ts`;
+      M5 `exportCsv` contract undelivered (coverage-matrix). Minors: m1 3.2 service type maps → H1-B3;
+      m2 sort whitelist on 3.2 filters; m3 IVA adjustment on rate 0; m4 `settings.validation` kept by its
+      later owner; m5 `ProjectsService` financials type param; m6 `documents.validation.*` keys missing.
+      Deviations accepted: 3.7 (a)(b), 3.5 `window.confirm` (H1-FX may restyle), 3.2 (1)(2)(4)(5), 3.1
+      (2)(3). 3.6 real PDF render deferred to H1-B4. nuqs adapter covered by 5.1. Open for the user:
+      IGTF single source (proposed DT-70) and Technology `nameEn` (Δ4 or drop; before H2-B1).
 - [ ] **Code review:** C1, C2, C3, C5, C6, C8, C13, C15, C20 (`activity` read-only), C22 shape (contracts), C23 shape, C25.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
