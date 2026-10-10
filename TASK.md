@@ -12,9 +12,9 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 
 | Batch | Type | Status |
 |---|---|---|
-| Batch 0 — Rules | rules | Revision 1 applied (user decisions); **awaiting final user approval** |
-| H1-B1 — UI foundations | Hito 1 UI batch | Planned in detail below; opens after batch 0 approval |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | Outline |
+| Batch 0 — Rules | rules | Approved |
+| H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | Opened 2026-10-10; Planner writing the detailed plan |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
@@ -1620,12 +1620,12 @@ below.
 
 ### H1-B1 batch close
 
-- [ ] `.mcp.json` pinned by the user to the scaffold's `shadcn` version (DT-49 / IOU-04) — confirm it was
-      done after wave 1; if not, the Orchestrator raises it again now.
-- [ ] User (or the Orchestrator with explicit approval) pushes `batch/h1-b1-ui-foundations` and opens the
-      PR.
-- [ ] CI green; Netlify deploy preview published (mock UI; mock state may reset on cold start — DT-32).
-- [ ] User reviews the preview and merges to `main`. No agent merges.
+- [x] User approves the H1-B1 close after reviewing the UI locally with `pnpm dev` (2026-10-10: "todo en
+      orden, procede").
+- [x] `.mcp.json` pinned to `shadcn@4.21.4` (DT-49 / IOU-04), tracked in the repo — confirmed by the user.
+- [ ] **Deferred to the end of Hito 1 (DT-69):** push `batch/h1-b1-ui-foundations`, open the PR, CI green,
+      Netlify deploy preview (mock UI; DT-32), user merges to `main`. No agent merges. Until then H1-B2
+      branches from `batch/h1-b1-ui-foundations`, not from `main`.
 
 ---
 
