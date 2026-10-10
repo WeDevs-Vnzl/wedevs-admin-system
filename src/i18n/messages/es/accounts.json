@@ -1,1 +1,7 @@
-{}
+{
+  "validation": {
+    "sameAccount": "La cuenta de origen y la de destino deben ser distintas",
+    "partnerRequired": "Indica el socio",
+    "adjustmentNonZero": "Un ajuste no puede ser cero"
+  }
+}

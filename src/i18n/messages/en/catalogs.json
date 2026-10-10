@@ -1,1 +1,10 @@
-{}
+{
+  "validation": {
+    "rateCurrencyIsUsd": "USD is always 1: it takes no exchange rate",
+    "duplicateRateCurrency": "The currency is repeated",
+    "invalidColor": "Invalid color (use #RRGGBB format)",
+    "invalidCode": "Invalid code (uppercase letters, digits and underscore)",
+    "usdRateMustBeOne": "For USD transactions the rate must be 1",
+    "categoryParentIsSelf": "A category cannot be its own parent"
+  }
+}

@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "invalidMonth": "Invalid month (use YYYY-MM)",
+    "seriesLengthMismatch": "The series does not have one value per period"
+  }
+}

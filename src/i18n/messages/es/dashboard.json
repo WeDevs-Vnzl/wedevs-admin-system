@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "invalidMonth": "Mes no válido (usa AAAA-MM)",
+    "seriesLengthMismatch": "La serie no tiene un valor por periodo"
+  }
+}

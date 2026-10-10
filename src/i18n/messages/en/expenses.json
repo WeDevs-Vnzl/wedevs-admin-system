@@ -1,1 +1,7 @@
-{}
+{
+  "validation": {
+    "accountRequiredForPaid": "The payment account is required for a paid expense",
+    "accountAmountRequired": "Enter the amount debited in the account currency",
+    "dueBeforeDate": "The due date cannot be before the expense date"
+  }
+}

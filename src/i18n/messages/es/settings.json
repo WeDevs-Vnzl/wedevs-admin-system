@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "duplicateIvaRate": "La alícuota está repetida",
+    "defaultIvaRateNotAllowed": "La alícuota por defecto debe estar entre las permitidas"
+  }
+}

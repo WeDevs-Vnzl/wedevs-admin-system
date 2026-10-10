@@ -1,1 +1,12 @@
-{}
+{
+  "validation": {
+    "referenceRequired": "La referencia es obligatoria para este método de pago",
+    "igtfExceedsAmount": "El IGTF no puede superar el monto recibido",
+    "feeExceedsAmount": "La comisión no puede superar el monto recibido",
+    "allocationsExceedAllocatable": "Las asignaciones superan el monto asignable",
+    "duplicateInvoiceAllocation": "La factura ya tiene una asignación en este pago"
+  },
+  "warnings": {
+    "duplicate": "Posible pago duplicado: hay otro con la misma referencia, método y cuenta"
+  }
+}

@@ -1,1 +1,13 @@
-{}
+{
+  "validation": {
+    "billingDayRange": "The billing day must be between 1 and 28",
+    "leadDaysRange": "Lead days must be between 0 and 60",
+    "contractAmountRequired": "The contract amount is required for this billing model",
+    "customInstallmentsRequired": "Add at least one installment for a custom template",
+    "templateInstallmentsNotAllowed": "This template generates its own installments",
+    "endBeforeStart": "The end date cannot be before the start date",
+    "adjustmentNonZero": "An adjustment cannot be zero",
+    "installmentKindNotManual": "Recurring installments are generated from a recurring charge",
+    "nothingToUpdate": "There are no changes to save"
+  }
+}

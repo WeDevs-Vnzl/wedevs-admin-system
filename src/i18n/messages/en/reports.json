@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "customRangeRequired": "Enter the dates of the custom range",
+    "rangeInverted": "The end date cannot be before the start date"
+  }
+}

@@ -1,1 +1,12 @@
-{}
+{
+  "validation": {
+    "referenceRequired": "The reference is required for this payment method",
+    "igtfExceedsAmount": "IGTF cannot exceed the amount received",
+    "feeExceedsAmount": "The fee cannot exceed the amount received",
+    "allocationsExceedAllocatable": "The allocations exceed the allocatable amount",
+    "duplicateInvoiceAllocation": "The invoice already has an allocation in this payment"
+  },
+  "warnings": {
+    "duplicate": "Possible duplicate payment: another one has the same reference, method and account"
+  }
+}

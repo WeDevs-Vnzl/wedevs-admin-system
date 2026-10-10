@@ -1,1 +1,12 @@
-{}
+{
+  "validation": {
+    "discountExceedsAmount": "El descuento no puede superar el importe de la línea",
+    "ivaRateNotAllowed": "La alícuota de IVA no está entre las permitidas",
+    "adjustmentOutOfRange": "El ajuste de IVA no puede superar ±0,01",
+    "adjustmentRateNotInLines": "Ninguna línea usa esta alícuota",
+    "duplicateAdjustmentRate": "Ya hay un ajuste para esta alícuota",
+    "dueBeforeIssue": "El vencimiento no puede ser anterior a la emisión",
+    "otherWithheldNoteRequired": "Describe las otras retenciones",
+    "duplicateInstallment": "La cuota está repetida"
+  }
+}

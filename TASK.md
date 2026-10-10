@@ -579,28 +579,28 @@ Package 3.2 → Agent: wedevs-developer · sonnet — Reason: money contracts (m
 
 Files: `src/lib/validators/{catalogs,settings,billing,invoices,payments,accounts,expenses,dashboard,reports}.ts` and their `*.test.ts`.
 
-- [ ] Catalogs (§8.15): currencies, exchange rates with **`source`** (`rateSourceSchema`; one rate per
+- [x] Catalogs (§8.15): currencies, exchange rates with **`source`** (`rateSourceSchema`; one rate per
       date + currency + source, DT-67) (incl. quick daily load and CSV import row), payment
       methods, expense categories (two-level tree). Settings: company; fiscal with **`ivaRates`** (allowed
       VAT rates, default `["16","8","0"]`), `ivaDefaultRate` (`"16"`), IGTF 3, methods/currencies
       proposing IGTF, invoice due days 15 (DT-44).
-- [ ] Billing (§8.4): plan, installments, templates (100, 50/50, 40/30/30, 30/40/30, 3 equal, custom),
+- [x] Billing (§8.4): plan, installments, templates (100, 50/50, 40/30/30, 30/40/30, 3 equal, custom),
       recurring charges (billing day 1–28, lead days default 7), "generate missing periods" input,
       project financial summary DTO (§8.4.4).
-- [ ] Invoices (§8.5 + DT-44): header fields (no header VAT rate); **lines** (description, project,
+- [x] Invoices (§8.5 + DT-44): header fields (no header VAT rate); **lines** (description, project,
       installment, quantity, unit price, line discount ≤ amount, `ivaRate` from the allowed list or
       `null` = exempt); computed line `amount`/`netAmount`; **tax lines** DTO (rate, base, IVA) with an
       input allowing a ±0.01 adjustment per rate; header totals DTO (subtotal, discount, exempt amount,
       tax base, IVA total, total, withholdings IVA/ISLR/other + note, receivable, USD snapshots); file id;
       draft flag; void input (reason required); list/detail DTOs with balance, USD values, days overdue,
       "partial payment" flag; "invoice installments" wizard input.
-- [ ] Payments (§8.6, §9.5, §9.6): fields incl. IGTF, fee, reference (required when the method requires
+- [x] Payments (§8.6, §9.5, §9.6): fields incl. IGTF, fee, reference (required when the method requires
       it), receipt, status; allocations; duplicate-warning DTO.
-- [ ] Accounts (§8.7, §9.7) and expenses (§8.8) as specified in the PRD (masked identifiers,
+- [x] Accounts (§8.7, §9.7) and expenses (§8.8) as specified in the PRD (masked identifiers,
       `accountAmount`, mark-paid, recurring day 1–28, lead days default 5).
-- [ ] Dashboard (§8.1) and reports (§8.13): KPI card DTO, chart series DTOs, report filter schema, report
+- [x] Dashboard (§8.1) and reports (§8.13): KPI card DTO, chart series DTOs, report filter schema, report
       and KPI ids; "taxes registered" report DTO with IVA **per rate**.
-- [ ] Tests: money fields reject numbers and > 2 decimals; rates > 0; line discount > amount rejected;
+- [x] Tests: money fields reject numbers and > 2 decimals; rates > 0; line discount > amount rejected;
       VAT rate outside the allowed list rejected; tax-line adjustment beyond ±0.01 rejected; transfer from
       = to rejected; void without reason rejected; billing day outside 1–28 rejected.
 
