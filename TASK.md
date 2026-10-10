@@ -1040,10 +1040,25 @@ H1-B3. Kit coverage is enforced by the package checklists above, not by the gate
       sort field → `issueDate` (4.3 sort whitelist vs 4.4 test); `async-combobox.test.tsx` debounce
       10 → 200 ms (flaky under host load). Integrated: 103 files / 1721 tests + 1 expected fail
       (4.5: country-combobox does not open on ArrowDown → H1-FX); i18n parity 32 namespaces; build OK.
-- [ ] **Planner coherence review:** mock service signatures use validator types; context shapes = C11;
+- [x ] **Planner coherence review:** mock service signatures use validator types; context shapes = C11;
       `defineAction` / `definePublicAction` sequences = C10; fixture stubs exported under the names later
       batches will own; CI scripts exist in `package.json`; 4.1 still compiles against the 4.3/4.4
       contracts; `toModuleQuery` output parses with module filter schemas.
+      Planner: READY FOR CODE REVIEW, no blockers. All checks PASS except `toModuleQuery` with 2+ values
+      on 3.2 scalar id fields. Majors → fix package 4.6: M1 3.2 filter ids (`invoices` client/project/tag,
+      `payments` client/account/method, `expenses` category/account/project/tag, recurring category) are
+      scalar while the kit facets are always multi → `facetSchema(idSchema)`; M2 `ServiceError` lives in
+      `src/mocks/ctx.ts` (deleted by C9) → framework-free `src/server/errors.ts`, re-exported. Minors:
+      m1 export column id regex ≠ `columnIdSchema` (4.6); m2 client adapters `RateInput` ↔
+      `lookupRateAction` and `UploadAdapter` ↔ file actions (4.6); m3 `confirmUploadInputSchema` (4.6);
+      m4 rate-0 adjustment message key + calculator guard (H1-B3); m5 unused `CATALOG_MESSAGES.invalidColor`
+      (H1-FX); m6 export entity enum incomplete (H1-B2 W1, `exportCsvAction` owner); m7 portal request
+      metadata step in `definePublicAction` vs shares comment (H1-B4); m8 fixture tests use chip schemas
+      only (4.6) and files-fixture ownership (H1-B2 plan). Deviations accepted: 4.1 (1)(3)(4 except
+      `ConfirmUploadInput`)(5)(6), 4.3 money columns skip the CSV guard, 6-digit hex, alias removal (no
+      importer left), 4.4 width 80–1200 and uploader label on Browse. 4.1 (3) `'authenticated'` permission
+      is outside the `can()` matrix: limited to own preferences, reference reads and MOCK actions —
+      proposed DT-71 for the user.
 - [ ] **Code review:** C1, C5, C7, C8, C9, C10, C11, C15, C22, C25; CI has no secrets or remote calls;
       kit accessibility fixes.
 - [ ] **User confirms the Tester may run.**
