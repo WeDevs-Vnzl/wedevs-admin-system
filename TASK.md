@@ -1126,7 +1126,7 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
       `withSortFields` comment wrongly lists `.extend()`. → Planner (next `.rules` update):
       record the `src/server/errors.ts` framework-free exception to "everything under `src/server/`
       imports `server-only`".
-- [ ] **User confirms the Tester may run.**
+- [x] **User confirms the Tester may run.** Confirmed 2026-10-10 ("procede").
 - [ ] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
       `package.json` scripts; kit coverage per area (data-table, uploader, phone-input, patterns ≥ 90 %
       statements). No E2E yet.
