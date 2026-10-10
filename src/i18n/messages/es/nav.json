@@ -1,1 +1,36 @@
-{}
+{
+  "groups": {
+    "commercial": "Comercial",
+    "finance": "Finanzas",
+    "knowledge": "Conocimiento",
+    "analysis": "Análisis"
+  },
+  "items": {
+    "dashboard": "Inicio",
+    "clients": "Clientes",
+    "projects": "Proyectos",
+    "invoices": "Facturas",
+    "payments": "Pagos",
+    "expenses": "Gastos",
+    "accounts": "Cuentas",
+    "documents": "Documentos",
+    "notes": "Notas",
+    "graph": "Grafo",
+    "reports": "Reportes",
+    "activity": "Actividad",
+    "settings": "Configuración"
+  },
+  "segments": {
+    "list": "Tabla",
+    "new": "Nuevo",
+    "edit": "Editar",
+    "graph": "Grafo",
+    "billing": "Cobro",
+    "recurring": "Recurrentes",
+    "editor": "Editor",
+    "versions": "Versiones",
+    "shares": "Enlaces",
+    "transfers": "Transferencias",
+    "movements": "Movimientos"
+  }
+}

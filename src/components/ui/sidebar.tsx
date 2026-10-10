@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { useTranslations } from "next-intl"
 import { cn } from "cn"
 import { Slot } from "radix-ui"
 
@@ -162,6 +163,8 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  // C1 (wave 5): the mobile sheet's sr-only title and description come from the shell namespace.
+  const tShell = useTranslations("shell.sidebar")
 
   if (collapsible === "none") {
     return (
@@ -195,8 +198,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>{tShell("mobileTitle")}</SheetTitle>
+            <SheetDescription>{tShell("mobileDescription")}</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>

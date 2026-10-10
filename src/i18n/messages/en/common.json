@@ -17,6 +17,11 @@
     "empty": "No results",
     "error": "Something went wrong"
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or was moved.",
+    "back": "Back to home"
+  },
   "errors": {
     "UNAUTHENTICATED": "Please sign in to continue",
     "FORBIDDEN": "You don't have permission to do this",

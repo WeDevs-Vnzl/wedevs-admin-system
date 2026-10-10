@@ -11,5 +11,44 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "sidebar": {
+    "label": "Main navigation",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "mobileTitle": "Navigation",
+    "mobileDescription": "Main navigation menu"
+  },
+  "breadcrumbs": {
+    "label": "Breadcrumb"
+  },
+  "rateChip": {
+    "label": "BCV rate",
+    "labelOther": "Exchange rate",
+    "value": "1 USD = Bs. {rate}",
+    "asOf": "As of {date}",
+    "fallback": "Using the rate from {date}",
+    "missing": "No rate for today",
+    "link": "Manage exchange rates"
+  },
+  "alerts": {
+    "label": "Alerts",
+    "title": "Alerts",
+    "description": "Items that need your attention",
+    "empty": "You have no pending alerts",
+    "markAllRead": "Mark all as read",
+    "counter": "{count} alerts"
+  },
+  "userMenu": {
+    "label": "User menu",
+    "role": "Role"
+  },
+  "footer": {
+    "copyright": "© {year} WeDevs · Internal use",
+    "version": "Version {version}"
+  },
+  "dashboardPlaceholder": {
+    "title": "Home",
+    "description": "The dashboard arrives in the next UI batches."
   }
 }

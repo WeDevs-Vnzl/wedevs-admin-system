@@ -1,1 +1,21 @@
-{}
+{
+  "trigger": "Search",
+  "shortcut": "⌘K",
+  "dialogTitle": "Command menu",
+  "dialogDescription": "Go to a section or run a quick action",
+  "placeholder": "Type a command or search…",
+  "navigation": "Go to",
+  "quickActions": "Quick actions",
+  "results": "Results",
+  "resultsPending": "Record search is coming in a later batch.",
+  "empty": "No matches",
+  "actions": {
+    "newClient": "New client",
+    "newProject": "New project",
+    "newInvoice": "New invoice",
+    "newPayment": "Record payment",
+    "newExpense": "New expense",
+    "newNote": "New note",
+    "newDocument": "New document"
+  }
+}
