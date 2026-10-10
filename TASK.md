@@ -417,7 +417,7 @@ Files: `src/lib/dates.ts`, `src/lib/dates.test.ts`, `src/lib/money.ts`, `src/i18
       `` `${number}` `` cast (or no cast); coverage stays 100 %.
 - [x] `scripts/check-i18n.ts`: fail when a key's `{placeholder}` name set differs between ES and EN;
       tests for pass and fail cases.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
 
 #### Package 2.7 — Global Zod error map to i18n keys, upload extension fallback (wave 2 follow-up, Code Review B2, M2, m2, m6, m7)
 
