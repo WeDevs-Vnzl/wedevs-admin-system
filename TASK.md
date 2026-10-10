@@ -1018,15 +1018,15 @@ Files: new test files only — `src/components/patterns/{archived-banner,date-te
 `src/components/ui/date-field/date-field.keyboard.test.tsx`,
 `src/components/ui/phone-input/phone-input.coverage.test.tsx`. No source file, no existing test file.
 
-- [ ] One test file per listed pattern: renders with ES and EN messages, key props, empty/edge states,
+- [x] One test file per listed pattern: renders with ES and EN messages, key props, empty/edge states,
       accessible names; `patterns/**` aggregate ≥ 90 % statements (excluding `confirm-dialog`, owned by
       4.4).
-- [ ] Keyboard tests: country-combobox (open with Enter/ArrowDown, filter, select with Enter, Escape
+- [x] Keyboard tests: country-combobox (open with Enter/ArrowDown, filter, select with Enter, Escape
       closes and returns focus); date-field (open, arrow navigation, Enter selects, Escape closes).
-- [ ] phone-input ≥ 90 % statements.
-- [ ] If a test exposes a source bug, do not fix it: mark the test `it.todo`/`it.fails` with a comment
+- [x] phone-input ≥ 90 % statements.
+- [x] If a test exposes a source bug, do not fix it: mark the test `it.todo`/`it.fails` with a comment
       and report it in `worker_done`.
-- [ ] Gate: lint, typecheck, test.
+- [x] Gate: lint, typecheck, test.
 
 **Coverage gate note:** `vitest.config.ts` keeps `src/lib/finance/**` on purpose (C17 calculators,
 H1-B3; `conventions.md` §testing). The gate stays aggregate until DT-59 switches it to `perFile` in
