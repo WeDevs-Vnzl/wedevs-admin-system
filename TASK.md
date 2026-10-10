@@ -1490,6 +1490,30 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
   - Accessibility and responsive: keyboard through sidebar/topbar/command menu; desktop and tablet;
     dark-mode contrast spot-check.
   - Manual pass (embedded browser): shell golden path in both themes and languages.
+  - **Result (Tester, haiku, 2026-10-10, three phases per safeguards rule 1):**
+    - Phase A (no server): install, i18n:check, build, lint, typecheck PASS. Coverage gate money.ts
+      100/100, rates.ts 97.43/96.42. Full `test:coverage` hit 4–6 jsdom 5 s timeouts in
+      country-combobox and phone-input under parallel load (all pass in isolation and in the
+      Orchestrator's gate runs) → flaky, not a wave 5 regression. Shell scope (20 files, not gated):
+      76.3 % stmts / 73.1 % branches; 0 % on user-menu, alerts-bell, app-footer, not-found-content,
+      theme-provider, section-placeholder, settings-nav component, settings queries. E2E spec
+      `tests/e2e/h1-b1-shell.spec.ts` written (15 tests, c1736b2).
+    - Phase B: `next start` on :3105, ready in 2 s.
+    - Phase C: 15/15 in two runs (2 marked `test.fail()` for known defects; spec-only fix 94d8aa4:
+      hydration waits). Server stopped, port freed. Playwright 1.64 expects chromium-1248; the
+      Tester symlinked the cached chromium-1243 in `~/.cache/ms-playwright` (outside the repo).
+    - **Defects:**
+      - **D1 (major)** tablet 820×1180: topbar overflows (scrollWidth 1007 > 820); rate chip, alerts,
+        language, theme and user menu off-screen (ES and EN).
+      - **D2 (major)** React #418 hydration mismatch on `/dashboard` and `/settings/preferences` (all
+        locales); `/sign-in` clean.
+      - **D3 (major)** R7: `/clients` and `/settings/preferences/x` render the in-shell not-found but
+        answer HTTP 200, not 404 (`test.fail`).
+      - **D4 (minor)** Escape from the command menu does not return focus to the Buscar trigger
+        (`command-menu.tsx` ~L62) (`test.fail`).
+      - **D5 (minor)** sign-in decorative network lines run behind the subtitle text.
+    - Manual pass 1440×900 and 820×1180, light/dark × ES/EN: text translated, dark menus legible,
+      focus rings visible; findings above. No skip-to-content link (WCAG 2.4.1) — not asserted.
 - [ ] **Problem report** (explicit, per agent).
 - [ ] **Summary.**
 
