@@ -65,6 +65,30 @@ describe("masked identifiers (C5)", () => {
     );
   });
 
+  it("accepts as already masked only the exact output shapes", () => {
+    for (const masked of ["•••• 7890", "0x1a…9c0d", "pay@….com", "a…c", "••", "•"]) {
+      expect(maskAccountIdentifier(masked)).toBe(masked);
+    }
+  });
+
+  it("re-masks a forged mask instead of trusting any mask mark (bypass)", () => {
+    expect(maskAccountIdentifier("*0102-0123-45-6789012345")).toBe("•••• 2345");
+    expect(maskAccountIdentifier("••••0102012345678901")).toBe("•••• 8901");
+    expect(maskAccountIdentifier("•••• 0102012345678901")).toBe("•••• 8901");
+    expect(maskAccountIdentifier("0102…6789012345")).toBe("•••• 2345");
+    expect(maskAccountIdentifier("0x1a2b3c4d5e6f7a8b9c0d…")).toBe("0x1a…9c0d");
+    expect(maskAccountIdentifier("*secret@acme.com")).toBe("secr….com");
+    expect(maskAccountIdentifier("•••• 7890\n01020123456789")).not.toMatch(/0102/);
+  });
+
+  it("never leaks more than the mask shows when parsed through the input schema", () => {
+    const parsed = createAccountInputSchema.parse({
+      ...account,
+      identifierMasked: "*0102-0123-45-6789012345",
+    });
+    expect(parsed.identifierMasked).toBe("•••• 2345");
+  });
+
   it("the parsed account input never holds the full identifier", () => {
     const full = "01345678901234567890";
     const parsed = createAccountInputSchema.parse({ ...account, identifierMasked: full });

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { Check, Plus } from "lucide-react";
 import type { DateRange } from "react-day-picker";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { enUS, es } from "react-day-picker/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -181,6 +182,7 @@ function FacetFooter({ value, onChange }: { value: FacetValue; onChange: (value:
 
 function DateRangeBody({ value, onChange }: { value: FacetValue; onChange: (value: FacetValue) => void }) {
   const t = useTranslations("table");
+  const locale = useLocale();
   const selected: DateRange | undefined = value.length === 2
     ? { from: parseISO(value[0] ?? ""), to: parseISO(value[1] ?? "") }
     : undefined;
@@ -189,6 +191,8 @@ function DateRangeBody({ value, onChange }: { value: FacetValue; onChange: (valu
     <div>
       <Calendar
         mode="range"
+        locale={locale.toLowerCase().startsWith("es") ? es : enUS}
+        defaultMonth={selected?.from}
         selected={selected}
         onSelect={(range) => {
           if (!range?.from) return onChange([]);

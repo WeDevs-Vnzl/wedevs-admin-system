@@ -8,15 +8,23 @@ import {
   SHARE_TOKEN_LENGTH,
   createShareLinkInputSchema,
   generatedAccessKeySchema,
+  getSharedDocumentActionSchema,
   getSharedDocumentInputSchema,
+  getSharedDocumentDownloadActionSchema,
+  getSharedDocumentDownloadServiceInputSchema,
+  getSharedDocumentServiceInputSchema,
   portalDocumentContentSchema,
   portalDocumentSchema,
   portalDocumentViewSchema,
   portalDownloadSchema,
   portalShareSchema,
+  recordShareAccessActionSchema,
   recordShareAccessInputSchema,
   recordShareAccessResultSchema,
+  recordShareAccessServiceInputSchema,
+  resolveShareTokenActionSchema,
   resolveShareTokenInputSchema,
+  resolveShareTokenServiceInputSchema,
   setShareDocumentAccessKeyInputSchema,
   setShareDocumentAccessKeyResultSchema,
   shareAccessLogFilterSchema,
@@ -28,12 +36,15 @@ import {
   shareLinkListRowSchema,
   shareLinkMutationResultSchema,
   shareTokenSchema,
+  unlockSharedDocumentActionSchema,
   unlockSharedDocumentInputSchema,
   unlockSharedDocumentResultSchema,
+  unlockSharedDocumentServiceInputSchema,
   updateShareLinkInputSchema,
 } from "./shares";
 
 const TOKEN = "A".repeat(SHARE_TOKEN_LENGTH);
+const HASH = "a".repeat(64);
 const TS = "2026-10-01T10:00:00.000Z";
 const user = { id: "usr_1", name: "Andrés Molina", imageUrl: null };
 const doc = { id: "doc_1", code: "DOC-0001", label: "Contrato", type: "DOCUMENT" };
@@ -221,46 +232,71 @@ describe("unlockSharedDocument (public)", () => {
 
   it("accepts a key of at least 8 characters", () => {
     expect(ACCESS_KEY_MIN_LENGTH).toBe(8);
-    expect(unlockSharedDocumentInputSchema.safeParse(valid).success).toBe(true);
-    expect(unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "12345678" }).success).toBe(
+    expect(unlockSharedDocumentActionSchema.safeParse(valid).success).toBe(true);
+    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "12345678" }).success).toBe(
       true,
     );
   });
 
   it("rejects keys shorter than 8, blank, or absurdly long", () => {
-    expect(unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "1234567" }).success).toBe(
+    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "1234567" }).success).toBe(
       false,
     );
-    expect(unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "        " }).success).toBe(
+    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "        " }).success).toBe(
       false,
     );
-    expect(unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "" }).success).toBe(false);
+    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "" }).success).toBe(false);
     expect(
-      unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "x".repeat(129) }).success,
+      unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "x".repeat(129) }).success,
     ).toBe(false);
   });
 
   it("trims a pasted key before measuring it", () => {
-    expect(unlockSharedDocumentInputSchema.parse({ ...valid, key: "  K7M2-QX9P \n" }).key).toBe(
+    expect(unlockSharedDocumentActionSchema.parse({ ...valid, key: "  K7M2-QX9P \n" }).key).toBe(
       "K7M2-QX9P",
     );
     expect(
-      unlockSharedDocumentInputSchema.safeParse({ ...valid, key: "  1234567  " }).success,
+      unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "  1234567  " }).success,
     ).toBe(false);
   });
 
   it("rejects a malformed token and a missing document", () => {
-    expect(unlockSharedDocumentInputSchema.safeParse({ ...valid, token: "short" }).success).toBe(
+    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, token: "short" }).success).toBe(
       false,
     );
     expect(
-      unlockSharedDocumentInputSchema.safeParse({ token: TOKEN, key: valid.key }).success,
+      unlockSharedDocumentActionSchema.safeParse({ token: TOKEN, key: valid.key }).success,
     ).toBe(false);
   });
 
   it("documents the lockout policy: 5 failures, 15 minutes", () => {
     expect(ACCESS_KEY_MAX_FAILED_ATTEMPTS).toBe(5);
     expect(ACCESS_KEY_LOCKOUT_MINUTES).toBe(15);
+  });
+
+  it("action schema strips server-only fields a visitor tries to send (C22)", () => {
+    const forged = {
+      ...valid,
+      ip: "198.51.100.1",
+      ipHash: HASH,
+      userAgent: "forged",
+      unlockedDocumentIds: ["doc_1"],
+    };
+    expect(unlockSharedDocumentActionSchema.parse(forged)).toEqual(valid);
+  });
+
+  it("service input carries the IP hash the lockout is keyed on", () => {
+    const parsed = unlockSharedDocumentServiceInputSchema.parse({
+      ...valid,
+      ipHash: HASH,
+      userAgent: "Mozilla/5.0",
+    });
+    expect(parsed).toMatchObject({ token: TOKEN, documentId: "doc_1", ipHash: HASH });
+    expect(unlockSharedDocumentServiceInputSchema.safeParse(valid).success).toBe(false);
+    expect(
+      unlockSharedDocumentServiceInputSchema.safeParse({ ...valid, ipHash: "203.0.113.7" }).success,
+    ).toBe(false);
+    expect(unlockSharedDocumentInputSchema).toBe(unlockSharedDocumentServiceInputSchema);
   });
 
   it("result only says the document is unlocked", () => {
@@ -277,31 +313,104 @@ describe("unlockSharedDocument (public)", () => {
 });
 
 describe("other portal inputs", () => {
-  it("resolveShareToken and getSharedDocument default the unlocked ids", () => {
-    expect(resolveShareTokenInputSchema.parse({ token: TOKEN }).unlockedDocumentIds).toEqual([]);
+  const meta = { ipHash: HASH, userAgent: "Mozilla/5.0" };
+
+  it("action schemas accept only client fields and strip the rest (C22)", () => {
+    const forged = {
+      ip: "198.51.100.1",
+      ipHash: HASH,
+      userAgent: "forged",
+      unlockedDocumentIds: ["doc_1"],
+    };
+    expect(resolveShareTokenActionSchema.parse({ token: TOKEN, ...forged })).toEqual({
+      token: TOKEN,
+    });
     expect(
-      getSharedDocumentInputSchema.parse({ token: TOKEN, documentId: "doc_1" }).unlockedDocumentIds,
+      getSharedDocumentActionSchema.parse({ token: TOKEN, documentId: "doc_1", ...forged }),
+    ).toEqual({ token: TOKEN, documentId: "doc_1" });
+    expect(
+      getSharedDocumentDownloadActionSchema.parse({ token: TOKEN, documentId: "doc_1", ...forged }),
+    ).toEqual({ token: TOKEN, documentId: "doc_1" });
+    expect(recordShareAccessActionSchema.parse({ token: TOKEN, event: "VIEW", ...forged })).toEqual(
+      { token: TOKEN, event: "VIEW" },
+    );
+  });
+
+  it("resolveShareToken and getSharedDocument service inputs default the unlocked ids", () => {
+    expect(
+      resolveShareTokenServiceInputSchema.parse({ token: TOKEN, ...meta }).unlockedDocumentIds,
     ).toEqual([]);
-    expect(resolveShareTokenInputSchema.safeParse({ token: "x" }).success).toBe(false);
+    expect(
+      getSharedDocumentServiceInputSchema.parse({ token: TOKEN, documentId: "doc_1", ...meta })
+        .unlockedDocumentIds,
+    ).toEqual([]);
+    expect(
+      getSharedDocumentDownloadServiceInputSchema.parse({
+        token: TOKEN,
+        documentId: "doc_1",
+        unlockedDocumentIds: ["doc_1"],
+        ...meta,
+      }).unlockedDocumentIds,
+    ).toEqual(["doc_1"]);
+    expect(resolveShareTokenActionSchema.safeParse({ token: "x" }).success).toBe(false);
+    expect(resolveShareTokenServiceInputSchema.safeParse({ token: TOKEN }).success).toBe(false);
+    expect(resolveShareTokenInputSchema).toBe(resolveShareTokenServiceInputSchema);
+    expect(getSharedDocumentInputSchema).toBe(getSharedDocumentServiceInputSchema);
   });
 
   it("recordShareAccess accepts only VIEW and DOWNLOAD", () => {
-    const base = { token: TOKEN, documentId: "doc_1", ip: "203.0.113.7", userAgent: "Mozilla/5.0" };
-    expect(recordShareAccessInputSchema.safeParse({ ...base, event: "VIEW" }).success).toBe(true);
-    expect(recordShareAccessInputSchema.safeParse({ ...base, event: "DOWNLOAD" }).success).toBe(
+    const base = { token: TOKEN, documentId: "doc_1" };
+    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "VIEW" }).success).toBe(true);
+    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "DOWNLOAD" }).success).toBe(
       true,
     );
-    expect(recordShareAccessInputSchema.safeParse({ ...base, event: "UNLOCK" }).success).toBe(
+    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "UNLOCK" }).success).toBe(
       false,
     );
     expect(
-      recordShareAccessInputSchema.safeParse({ ...base, event: "UNLOCK_FAILED" }).success,
+      recordShareAccessActionSchema.safeParse({ ...base, event: "UNLOCK_FAILED" }).success,
+    ).toBe(false);
+    expect(recordShareAccessActionSchema.safeParse({ token: TOKEN, event: "VIEW" }).success).toBe(
+      true,
+    );
+    expect(recordShareAccessResultSchema.safeParse({ recorded: true }).success).toBe(true);
+  });
+
+  it("recordShareAccess service input stores the IP hash, never a raw IP", () => {
+    const input = { token: TOKEN, event: "VIEW", ...meta };
+    expect(recordShareAccessServiceInputSchema.parse(input)).toEqual(input);
+    expect(
+      recordShareAccessServiceInputSchema.safeParse({ token: TOKEN, event: "VIEW" }).success,
     ).toBe(false);
     expect(
-      recordShareAccessInputSchema.safeParse({ token: TOKEN, event: "VIEW", ip: "203.0.113.7" })
-        .success,
-    ).toBe(true);
-    expect(recordShareAccessResultSchema.safeParse({ recorded: true }).success).toBe(true);
+      recordShareAccessServiceInputSchema.safeParse({ ...input, ipHash: "203.0.113.7" }).success,
+    ).toBe(false);
+    expect(propertyNames(recordShareAccessServiceInputSchema)).not.toContain("ip");
+    expect(recordShareAccessInputSchema).toBe(recordShareAccessServiceInputSchema);
+  });
+
+  it("only the service inputs carry server-only metadata", () => {
+    for (const action of [
+      unlockSharedDocumentActionSchema,
+      resolveShareTokenActionSchema,
+      getSharedDocumentActionSchema,
+      getSharedDocumentDownloadActionSchema,
+      recordShareAccessActionSchema,
+    ]) {
+      const names = propertyNames(action);
+      for (const forbidden of ["ip", "ipHash", "userAgent", "unlockedDocumentIds"]) {
+        expect(names).not.toContain(forbidden);
+      }
+    }
+    for (const service of [
+      unlockSharedDocumentServiceInputSchema,
+      resolveShareTokenServiceInputSchema,
+      getSharedDocumentServiceInputSchema,
+      getSharedDocumentDownloadServiceInputSchema,
+      recordShareAccessServiceInputSchema,
+    ]) {
+      expect(propertyNames(service)).toContain("ipHash");
+    }
   });
 });
 

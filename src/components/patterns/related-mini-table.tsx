@@ -5,7 +5,14 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type RelatedMiniTableProps = {
   title: string;
@@ -25,13 +32,13 @@ export function RelatedMiniTable({ title, headers, rows, newHref }: RelatedMiniT
         <CardTitle className="text-base">{title}</CardTitle>
         {newHref ? (
           <Button variant="outline" size="sm" asChild>
-            <Link href={newHref}>+ {t("new")}</Link>
+            <Link href={newHref}>{t("new")}</Link>
           </Button>
         ) : null}
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <p className="text-muted-foreground py-6 text-center text-sm">{t("empty")}</p>
+          <p className="py-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
         ) : (
           <Table>
             <TableHeader>

@@ -12,7 +12,9 @@
   },
   "filters": {
     "remove": "Remove {field} filter",
-    "clear": "Clear"
+    "clear": "Clear",
+    "chipLabel": "{field}:",
+    "range": "{from} – {to}"
   },
   "archived": {
     "toggle": "Show archived"
