@@ -479,7 +479,7 @@ their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation te
       `lib/money` string conventions; `can()` resources cover every row of §4.3; no overlap.
       First pass NOT READY (B1 missing validation/common.errors keys, B2 scripts tests not in vitest,
       B3 formatMoney throws on USDT) → packages 2.4/2.5; re-check: B1–B3 CLOSED, READY FOR CODE REVIEW.
-- [ ] **Code review:** C1, C2, C5, C6, C8, C9, C11 shape, C15, C25.
+- [x] **Code review:** C1, C2, C5, C6, C8, C9, C11 shape, C15, C25.
       First pass CHANGES REQUIRED (B1 `addDays` DST bug, B2 C1 Zod default messages in English;
       M1 fixed-USD i18n format, M2 upload MIME fallback) → packages 2.6/2.7. Deferred: m3 (`can()`
       grants update/delete on `activity`, contradicts C20) → pending `can()` vocabulary decision;
@@ -487,6 +487,9 @@ their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation te
       Re-check after 2.6/2.7: CHANGES REQUIRED (B1 error map not installed for enums-only imports;
       M1 `{max}` lost on the schema path) → package 2.8. 2.7 deviations accepted (checkUpload
       `{key, values?}`, generic tooShort/tooLong without params, `mime` without `min(1)`).
+      Third pass after 2.8: READY FOR TESTING, all invariants PASS. Carried to wave 3 (forms kit):
+      n1 ESLint `no-restricted-imports` must also block `zod/*` subpaths; n2 `invalid_type` with
+      `input === null` → `validation.required` (cleared select/combobox) with a test.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
       permission matrix test, `pnpm i18n:check`, `pnpm build`. No E2E.
