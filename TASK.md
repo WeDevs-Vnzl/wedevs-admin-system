@@ -1923,6 +1923,24 @@ Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/ap
       - *Choice (1.3):* `alert` and `item` added (`pnpm dlx shadcn@4.21.4 add`); `attachment` not added: the shadcn MCP gives no usage or example that shows a note/document chip fit, so no attachment component is in this package (the note and document chips are left to their H1-B2 owners). No lockfile or package.json change.
 - [x] Gate. Commit messages without any Claude attribution.
 
+#### Package 1.4 — Code review fixes r2 and r3 (added 2026-10-10, user-approved)
+
+Package 1.4 → Agent: wedevs-developer · haiku — Reason: two small, local fixes found by the wave 1 Code
+Reviewer; no shared signature changes.
+
+Depends on: 1.1, 1.2 (merged).
+
+Files: `src/features/export/use-csv-export.ts` (+ `use-csv-export.test.tsx`); `src/mocks/fixtures/documents.ts`
+(type declaration of `DocumentLinkRow` only). No other file.
+
+- [ ] **r2.** `downloadCsv` revokes the object URL on a later tick (`setTimeout(() =>
+      URL.revokeObjectURL(url), 0)`), not right after `link.click()` (Firefox can cancel the download).
+      Test with fake timers: not revoked synchronously, revoked after the tick.
+- [ ] **r3 (C8).** `DocumentLinkRow` derives from the contract: `Pick<DocumentLinkDTO, "id" | "createdAt">`
+      plus the foreign keys `documentId`, `entityType`, `entityId` (keep the export name and the field set;
+      no fixture data change). If the contract field names differ, keep the derivation and report.
+- [ ] Gate. Commit messages without any Claude attribution.
+
 #### Wave 1 close
 
 - [x] **Integration checklist:** 1.1, 1.2, 1.3 merged into `batch/h1-b2-commercial-core`; no Claude
