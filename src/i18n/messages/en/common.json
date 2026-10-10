@@ -16,5 +16,16 @@
     "loading": "Loading…",
     "empty": "No results",
     "error": "Something went wrong"
+  },
+  "errors": {
+    "UNAUTHENTICATED": "Please sign in to continue",
+    "FORBIDDEN": "You don't have permission to do this",
+    "VALIDATION": "Some fields need your attention",
+    "NOT_FOUND": "The requested record was not found",
+    "CONFLICT": "This change conflicts with the current data",
+    "INTEGRITY_LOCK": "This record is linked to other records and can't be changed this way",
+    "ACCESS_KEY_INVALID": "The access key is not valid",
+    "ACCESS_KEY_LOCKED": "This access key is locked after too many failed attempts",
+    "INTERNAL": "Something went wrong on our side. Please try again"
   }
 }

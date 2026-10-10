@@ -2,11 +2,45 @@
   "required": "Required field",
   "invalidEmail": "Invalid email address",
   "invalidFormat": "Invalid format",
-  "invalidDate": "Invalid date",
-  "invalidId": "Invalid identifier",
   "invalidOption": "Select a valid option",
   "tooShort": "Must be at least {min} characters",
   "tooLong": "Must be at most {max} characters",
   "positive": "Must be greater than zero",
-  "nonNegative": "Cannot be negative"
+  "nonNegative": "Cannot be negative",
+  "id": {
+    "invalid": "Invalid identifier"
+  },
+  "date": {
+    "invalid": "Invalid date"
+  },
+  "sort": {
+    "invalid": "Invalid sort option"
+  },
+  "money": {
+    "invalid": "Invalid amount",
+    "tooManyDecimals": "Too many decimal places",
+    "outOfRange": "Amount is out of range",
+    "mustBePositive": "Must be greater than zero",
+    "mustBeNonNegative": "Cannot be negative"
+  },
+  "rate": {
+    "invalid": "Invalid exchange rate",
+    "tooManyDecimals": "Too many decimal places for a rate",
+    "mustBePositive": "The rate must be greater than zero",
+    "outOfRange": "Rate is out of range"
+  },
+  "percent": {
+    "invalid": "Invalid percentage",
+    "tooManyDecimals": "Too many decimal places for a percentage",
+    "outOfRange": "Percentage is out of range"
+  },
+  "currency": {
+    "invalid": "Invalid currency"
+  },
+  "file": {
+    "nameInvalid": "Invalid file name",
+    "typeNotAllowed": "File type not allowed",
+    "empty": "The file is empty",
+    "tooLarge": "The file is too large"
+  }
 }
