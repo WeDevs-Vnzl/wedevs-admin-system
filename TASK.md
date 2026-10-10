@@ -1046,37 +1046,37 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
 `src/components/ui/uploader/uploader.tsx` (+ tests), `src/i18n/messages/{es,en}/forms.json`,
 `.github/workflows/ci.yml`, tests next to each. No other file.
 
-- [ ] **B1 (C10/C13)** `defineAction`: an empty any-of list never skips `can()`. Type the list as
+- [x] **B1 (C10/C13)** `defineAction`: an empty any-of list never skips `can()`. Type the list as
       `readonly [ActionPermission, ...ActionPermission[]]`; at runtime an empty list → `FORBIDDEN` (or
       throw at definition). Only `"authenticated"` has no `can()` check. Test both.
-- [ ] **M1** 3.2 filter ids that the kit offers as facets accept one or many: `invoices`
+- [x] **M1** 3.2 filter ids that the kit offers as facets accept one or many: `invoices`
       `clientId`/`projectId`/`tagId`, `payments` `clientId`/`accountId`/`methodId`, `expenses`
       `categoryId`/`accountId`/`projectId`/`tagId`, recurring-expense `categoryId` →
       `facetSchema(idSchema)`. `toModuleQuery` test with two values parses against `invoiceFiltersSchema`.
-- [ ] **M2** Move `ServiceError` (and its code type) to framework-free `src/server/errors.ts` (no
+- [x] **M2** Move `ServiceError` (and its code type) to framework-free `src/server/errors.ts` (no
       `server-only`, no imports beyond `lib/validators/common`). `mocks/ctx.ts` and `server/context.ts`
       re-export it under the same name; `define-action.ts` and feature actions import from
       `@/server/errors`.
-- [ ] **m1** One `columnIdSchema` (from `preferences.ts`) used by `export.ts` columns.
-- [ ] **m2** Client adapters, one owner each: `features/catalogs/rate-lookup.ts` turns
+- [x] **m1** One `columnIdSchema` (from `preferences.ts`) used by `export.ts` columns.
+- [x] **m2** Client adapters, one owner each: `features/catalogs/rate-lookup.ts` turns
       `lookupRateAction` into `RateInput`'s `(date, currency) => Promise<RateLookupResult | null>`;
       `features/files/upload-adapter.ts` implements `UploadAdapter` over the file actions (mock `put`
       no-op, `// MOCK` where it is mock-only). Tests.
-- [ ] **m3** `confirmUploadInputSchema` in `validators/files.ts`; used by the mock service and the action
+- [x] **m3** `confirmUploadInputSchema` in `validators/files.ts`; used by the mock service and the action
       (drop the local type and the inline `z.object`).
-- [ ] **m8 tests** Catalog fixture tests parse technology and tag rows with their full DTO schemas
+- [x] **m8 tests** Catalog fixture tests parse technology and tag rows with their full DTO schemas
       (`active`, `createdAt`).
-- [ ] **m-a** `withSortFields` returns its real refined type (no cast to `T`), or the helper documents
+- [x] **m-a** `withSortFields` returns its real refined type (no cast to `T`), or the helper documents
       "derive with `pick`/`partial` from the base object" and a test proves the documented path works.
-- [ ] **m-b / m-c** `ci.yml`: workflow-level `NEXT_TELEMETRY_DISABLED: "1"`; pnpm via
+- [x] **m-b / m-c** `ci.yml`: workflow-level `NEXT_TELEMETRY_DISABLED: "1"`; pnpm via
       `pnpm/action-setup` (reads `packageManager`) before `setup-node` with `cache: pnpm`. Keep version
       tags: SHA pinning needs verified SHAs from GitHub (no network for agents) → H1-B1 batch close, when
       the remote is added (DT-69).
-- [ ] **m-f (WCAG 2.5.3)** Uploader Browse button: the accessible name contains the visible text; the
+- [x] **m-f (WCAG 2.5.3)** Uploader Browse button: the accessible name contains the visible text; the
       caller's label goes to `aria-describedby` or is composed with it via ICU in `forms`.
-- [ ] **m-h** `getRateFor` query parses its input like its siblings.
-- [ ] **nit** `toModuleQuery`: ignore `__proto__`, `constructor`, `prototype` facet ids. Test.
-- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+- [x] **m-h** `getRateFor` query parses its input like its siblings.
+- [x] **nit** `toModuleQuery`: ignore `__proto__`, `constructor`, `prototype` facet ids. Test.
+- [x] Gate: lint, typecheck, test, `i18n:check`, build.
 
 #### Wave 4 close
 
