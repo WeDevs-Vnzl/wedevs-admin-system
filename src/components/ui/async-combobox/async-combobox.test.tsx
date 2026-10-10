@@ -57,7 +57,7 @@ function Single({
       value={value}
       loadOptions={loadOptions}
       onCreate={onCreate}
-      debounceMs={10}
+      debounceMs={200}
       secondaryInput={secondary ? { label: "Version" } : undefined}
       onChange={(next) => {
         setValue(next);
@@ -83,7 +83,7 @@ function Multi({
       aria-label="Technologies"
       value={value}
       loadOptions={loadOptions}
-      debounceMs={10}
+      debounceMs={200}
       secondaryInput={secondary ? { label: "Version" } : undefined}
       onChange={(next) => {
         setValue(next);
