@@ -9,8 +9,8 @@ import { facetOf, hexColorSchema, optionalText, requiredText, withSortFields } f
  * deactivated (C19, INTEGRITY_LOCK).
  *
  * `nameEn` is the optional English name (PRD §7.8: catalogs keep `name` in Spanish and `nameEn`); the
- * UI falls back to `name`. NOTE for H2-B1: PRD §10.2 `Technology` has no `nameEn` column; storing it
- * needs a schema delta (most names are proper nouns, so it may stay unused).
+ * UI falls back to `name`. DT-72: the schema delta (Δ4) adding `nameEn` to `Technology` is decided; until
+ * it lands, and whenever `nameEn` is empty, English display falls back to `name`.
  */
 
 /** `next-js`, `react-native`… */

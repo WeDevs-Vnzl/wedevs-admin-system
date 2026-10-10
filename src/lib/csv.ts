@@ -9,7 +9,8 @@ import { isDecimalString } from "./money";
  * - Formula-injection guard (OWASP): a string cell starting with `=`, `+`, `-`, `@`, tab or CR gets a
  *   leading `'` so a spreadsheet never evaluates it.
  * - Money columns (`type: "money"`) are decimal strings written verbatim (C15): never a JS number, never
- *   rounded, never locale-formatted. Their value is validated as a decimal string, which is also why
+ *   rounded, never locale-formatted (a decimal string such as `1234.50` is the cell, whatever the UI
+ *   locale shows as `1.234,50`). Their value is validated as a decimal string, which is also why
  *   they skip the guard (a negative amount starts with `-` and must stay numeric).
  */
 

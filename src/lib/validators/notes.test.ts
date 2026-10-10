@@ -58,10 +58,52 @@ describe("rich text (Tiptap JSON allowlist, C4)", () => {
             { type: "text", text: "negrita", marks: [{ type: "bold" }] },
           ],
         },
-        { type: "image", attrs: { src: "file_1" } },
+        { type: "image", attrs: { fileId: "file_1", alt: "captura" } },
       ],
     };
     expect(richTextDocSchema.safeParse(rich).success).toBe(true);
+  });
+
+  describe("images (C4)", () => {
+    const image = (attrs: unknown) => ({ type: "doc", content: [{ type: "image", attrs }] });
+
+    it("accepts a fileId image, with the file's own download route as src", () => {
+      expect(richTextDocSchema.safeParse(image({ fileId: "fil_0001" })).success).toBe(true);
+      expect(
+        richTextDocSchema.safeParse(
+          image({ fileId: "fil_0001", alt: "x", src: "/api/files/fil_0001/download" }),
+        ).success,
+      ).toBe(true);
+    });
+
+    it("rejects javascript:, data: and external src, and a src of another file", () => {
+      for (const src of [
+        "javascript:alert(1)",
+        "data:image/png;base64,AAAA",
+        "https://evil.example.com/a.png",
+        "/api/files/fil_0002/download",
+      ]) {
+        expect(richTextDocSchema.safeParse(image({ fileId: "fil_0001", src })).success, src).toBe(
+          false,
+        );
+      }
+    });
+
+    it("requires fileId, caps alt at 200 and rejects any other attribute", () => {
+      expect(richTextDocSchema.safeParse(image({ alt: "x" })).success).toBe(false);
+      expect(
+        richTextDocSchema.safeParse({ type: "doc", content: [{ type: "image" }] }).success,
+      ).toBe(false);
+      expect(
+        richTextDocSchema.safeParse(image({ fileId: "fil_1", alt: "a".repeat(201) })).success,
+      ).toBe(false);
+      expect(richTextDocSchema.safeParse(image({ fileId: "fil_1", onerror: "x()" })).success).toBe(
+        false,
+      );
+      expect(richTextDocSchema.safeParse(image({ fileId: "fil_1", srcset: "a 1x" })).success).toBe(
+        false,
+      );
+    });
   });
 
   it("rejects node types outside the allowlist (script, iframe…)", () => {

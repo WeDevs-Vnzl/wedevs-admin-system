@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EXPORT_ENTITY_VALUES,
+  EXPORT_MAX_ROWS,
+  exportCsvResultSchema,
   MAX_EXPORT_COLUMNS,
   exportCsvInputSchema,
   exportColumnSchema,
@@ -41,9 +43,13 @@ describe("exportCsvInputSchema", () => {
 
   it("uses the same column id schema as the column preferences (dashes included)", () => {
     expect(exportColumnSchema).toBe(columnIdSchema);
-    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["tax-id", "totals.usd"] }).success).toBe(true);
+    expect(
+      exportCsvInputSchema.safeParse({ ...valid, columns: ["tax-id", "totals.usd"] }).success,
+    ).toBe(true);
     expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["1bad"] }).success).toBe(false);
-    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a".repeat(65)] }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a".repeat(65)] }).success).toBe(
+      false,
+    );
   });
 
   it("requires at least one column and no repeats", () => {
@@ -82,5 +88,34 @@ describe("exportCsvInputSchema", () => {
   it("lists exportable entities without repeats", () => {
     expect(new Set(EXPORT_ENTITY_VALUES).size).toBe(EXPORT_ENTITY_VALUES.length);
     expect(exportEntitySchema.safeParse("INVOICE").success).toBe(true);
+  });
+
+  it("covers the tables of PRD §7.3, §8.4 and §8.15", () => {
+    for (const entity of [
+      "TECHNOLOGY",
+      "DOCUMENT_TYPE",
+      "CURRENCY",
+      "PAYMENT_METHOD",
+      "EXPENSE_CATEGORY",
+      "INSTALLMENT",
+      "RECURRING_CHARGE",
+      "USER",
+      "TRASH",
+    ]) {
+      expect(exportEntitySchema.safeParse(entity).success, entity).toBe(true);
+    }
+  });
+
+  it("caps an export at 10,000 rows and shapes its result", () => {
+    expect(EXPORT_MAX_ROWS).toBe(10_000);
+    expect(
+      exportCsvResultSchema.safeParse({
+        filename: "a.csv",
+        content: "",
+        rowCount: 0,
+        truncated: false,
+      }).success,
+    ).toBe(true);
+    expect(exportCsvResultSchema.safeParse({ filename: "a.csv", content: "" }).success).toBe(false);
   });
 });

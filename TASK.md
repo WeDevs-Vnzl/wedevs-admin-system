@@ -1855,43 +1855,43 @@ Files: `src/lib/validators/{common,export,notes,technologies}.ts` (+ tests); `sr
 `src/features/export/use-csv-export.ts` (+ tests); `src/i18n/messages/{es,en}/table.json` (add-only
 block `export`). No other file.
 
-- [ ] **PD-6.** `ActionError` gains `entity?: EntityRef`; `actionError` accepts it; `ServiceError`
+- [x] **PD-6.** `ActionError` gains `entity?: EntityRef`; `actionError` accepts it; `ServiceError`
       accepts `{ entity }`; `toActionError` copies it. Tests: a `CONFLICT` with an entity survives the
       adapter unchanged; nothing else leaks.
-- [ ] **C4, rich-text images** (`notes.ts`, consumed by notes and project descriptions): `image` nodes
+- [x] **C4, rich-text images** (`notes.ts`, consumed by notes and project descriptions): `image` nodes
       require `attrs.fileId` (`idSchema`) and allow `alt` (≤ 200); `src`, when present, must equal
       `/api/files/<fileId>/download`; any other image attribute is rejected. Tests: `javascript:`,
       `data:` and external `src` rejected; a `fileId` image accepted.
-- [ ] **DT-72** `technologies.ts`: replace the stale "NOTE for H2-B1" with DT-72 (Δ4 decided; English
+- [x] **DT-72** `technologies.ts`: replace the stale "NOTE for H2-B1" with DT-72 (Δ4 decided; English
       display falls back to `name`). Comment only.
-- [ ] **m6** `export.ts`: reconcile `EXPORT_ENTITY_VALUES` with every table of PRD §7.3/§8/§8.15 (at least
+- [x] **m6** `export.ts`: reconcile `EXPORT_ENTITY_VALUES` with every table of PRD §7.3/§8/§8.15 (at least
       add `TECHNOLOGY`; check document types, currencies, payment methods, expense categories,
       installments, recurring charges, users, trash). List the final set in `worker_done`.
-- [ ] **PD-2 export contract** in `export.ts`: `EXPORT_MAX_ROWS = 10_000`; `ExportCsvResultDTO =
+- [x] **PD-2 export contract** in `export.ts`: `EXPORT_MAX_ROWS = 10_000`; `ExportCsvResultDTO =
       { filename, content, rowCount, truncated }` (Zod schema + type); a TypeScript `ExportSource` type:
       `{ entity, facets (for toModuleQuery), filterSchema, list(ctx, filter) → Paginated<Row>, columns:
       Record<columnId, { labelKey, type?: "text" | "money", value(row) }> }`.
-- [ ] **PD-2 mock service** `exportCsv(ctx, input, source)` (`// MOCK`, framework-free, C11): `input.entity`
+- [x] **PD-2 mock service** `exportCsv(ctx, input, source)` (`// MOCK`, framework-free, C11): `input.entity`
       must equal `source.entity`; turns `input.query` into the module filter with `toModuleQuery` +
       `source.filterSchema`; pages `source.list` (page size 100) up to 10,000 rows (`truncated` beyond);
       keeps only `input.columns` in the requested order (unknown id → `VALIDATION`); serializes with
       `toCsv` (BOM, CRLF, formula guard; money verbatim); filename `<entity>-<YYYY-MM-DD>.csv` with the
       Caracas date of `ctx.now`. Headers arrive translated in the source (see the factory). No activity
       entry (H2-B6).
-- [ ] `defineCsvExportAction({ entity, permission, source, exportCsv, namespace })`: wraps `defineAction`
+- [x] `defineCsvExportAction({ entity, permission, source, exportCsv, namespace })`: wraps `defineAction`
       (input = `exportCsvInputSchema` narrowed to `entity`); resolves each column's `labelKey` with
       `getTranslations(namespace)`; calls the injected `exportCsv` (this file never imports `@/mocks`,
       C9). `permission` must be a real `can()` grant (DT-71).
-- [ ] `useCsvExport(action)`: client hook returning the kit's `onExport(query, visibleColumns)`: calls
+- [x] `useCsvExport(action)`: client hook returning the kit's `onExport(query, visibleColumns)`: calls
       the action, downloads a `text/csv;charset=utf-8` Blob, toasts success, the "truncated at 10,000
       rows" warning, or `common.errors.<code>`. Strings in `table.export.*` (ES and EN).
-- [ ] `csv.ts` nit: comment that money columns are decimal strings written verbatim, never
+- [x] `csv.ts` nit: comment that money columns are decimal strings written verbatim, never
       locale-formatted.
-- [ ] Tests: export seam with a fake source (filters applied, more than one page, cap with `truncated`,
+- [x] Tests: export seam with a fake source (filters applied, more than one page, cap with `truncated`,
       column order, unknown column → `VALIDATION`, BOM, money verbatim, formula guard, filename date in
       Caracas); factory (headers translated; Member on `{ read, activity }` → `FORBIDDEN`); hook (Blob
       download and toasts with mocked action).
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 1.3 — Breadcrumb labels, entity routes, finance-tab slot and registry items
 
