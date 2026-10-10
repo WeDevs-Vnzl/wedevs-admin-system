@@ -1308,6 +1308,60 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
       `text-foreground/70` because `--muted-foreground` is ~3.2:1 on the light card (token → H1-FX); R7 has no
       unit test (Tester checks `/clients` in-shell not-found).
 
+#### Package 5.4 — Wave 5 Tester defects (D1–D5, skip link)
+
+Package 5.4 → Agent: wedevs-developer · sonnet (`--effort high`) — Reason: D2 (React #418 hydration
+mismatch) and D3 (in-shell not-found answering HTTP 200, likely streaming through `(app)/loading.tsx`)
+need root-cause diagnosis across server/client rendering and Next 16 routing semantics, not a mechanical
+edit; haiku is not enough for that. No money, auth or service-signature change.
+
+Use the shadcn MCP.
+
+Runs alone, after 5.3 and the wave 5 Tester are merged (no other package in flight). Chosen by the user
+2026-10-10 ("Fix package 5.4 now"). For its duration it is the single owner of the files below and of the
+i18n namespace `shell` (add-only for the skip link).
+
+Files: `src/app/layout.tsx`; `src/app/(app)/{layout,loading,not-found}.tsx`;
+`src/app/(app)/[...missing]/page.tsx`; `src/app/(app)/dashboard/page.tsx`;
+`src/app/(app)/settings/**`; `src/app/(auth)/sign-in/[[...sign-in]]/page.tsx`;
+`src/components/app/**` and their tests; `src/features/settings/**`; `src/features/shell/**`;
+`src/i18n/messages/{es,en}/shell.json` (add-only); `tests/e2e/h1-b1-shell.spec.ts` (only to remove the two
+`test.fail()` marks and to assert the skip link). No other file — in particular not `src/components/ui/**`,
+not `src/hooks/**`, not `package.json`/lockfile, not `.gitignore`. If a fix truly needs a file outside this
+list, stop and ask (`question`) instead of editing it.
+
+Constraints: no persistent server and no browser in this worker (safeguards rule 1) — diagnose from source,
+`pnpm build` output and unit tests; the Orchestrator re-runs the E2E afterwards (phases B and C).
+
+- [ ] **D1 (major)** Tablet 820×1180: the topbar must not overflow (today scrollWidth 1007 > 820; rate chip,
+      alerts, language, theme and user menu off-screen in ES and EN). Make the topbar responsive at
+      768–1023 px (e.g. icon-only Cmd+K trigger below `lg`, compact rate chip, breadcrumbs truncating
+      with `min-w-0`, locale/theme folded into the user menu below `lg` — the worker picks the least
+      invasive option and states it). All controls stay reachable and keyboard-operable; no horizontal
+      page scroll at 768, 820 and 1024 px.
+- [ ] **D2 (major)** React #418 hydration mismatch on `/dashboard` and `/settings/preferences` (all locales;
+      `/sign-in` is clean). Find the root cause (suspects: date/number formatting with a server vs client
+      time zone or locale, `Date.now()`/`new Date()` during render, theme-dependent markup before mount,
+      random ids) and fix it at the source — not with blanket `suppressHydrationWarning`. Name the cause
+      in the report. Add a unit test where the cause is testable (e.g. fixed time zone formatting).
+- [ ] **D3 (major)** `/clients` and `/settings/preferences/x` render the in-shell not-found but answer
+      HTTP 200. They must answer 404 while keeping the not-found inside the shell. Diagnose (suspect: the
+      `(app)/loading.tsx` Suspense boundary commits the 200 before `notFound()` runs) and fix (e.g. move
+      the loading boundary below the catch-all, or scope it to the routes that need it). `/`,
+      `/sign-in`, `/dashboard` and `/settings/*` keep their current status codes. Verify with
+      `pnpm build` route output and reasoning in the report; the E2E confirms.
+- [ ] **D4 (minor)** Escape from the command menu returns focus to the Buscar trigger (`command-menu.tsx`
+      ~L62). Unit test it.
+- [ ] **D5 (minor)** Sign-in: the decorative network lines no longer run behind the subtitle (keep them
+      decorative, `aria-hidden`, behind or clear of all text; legible in both themes).
+- [ ] **Skip link (WCAG 2.4.1)** A "Saltar al contenido" / "Skip to content" link, first focusable element
+      of the authenticated shell, visible on focus, moving focus to the page content container (give it
+      an `id` and `tabIndex={-1}`). Keys in `shell.json` ES and EN. Unit test it. (R14 — `<main>`
+      placement — stays in H1-FX; do not restructure `SidebarInset`.)
+- [ ] **E2E spec** Remove `test.fail()` from the 404 and Escape-focus tests; add a skip-link assertion to
+      the keyboard test. Run `pnpm exec playwright test --list` only (no server).
+- [ ] Gate: lint, typecheck, test, `i18n:check`, build. Commit messages without any Claude attribution.
+
 #### Wave 5 close
 
 - [x] **Integration checklist:** 5.1, 5.2 merged; no Claude attribution; worktrees removed; lint,
