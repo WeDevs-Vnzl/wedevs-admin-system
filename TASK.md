@@ -490,7 +490,7 @@ their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation te
       Third pass after 2.8: READY FOR TESTING, all invariants PASS. Carried to wave 3 (forms kit):
       n1 ESLint `no-restricted-imports` must also block `zod/*` subpaths; n2 `invalid_type` with
       `input === null` → `validation.required` (cleared select/combobox) with a test.
-- [ ] **User confirms the Tester may run.**
+- [x] **User confirms the Tester may run.** Confirmed 2026-10-09 ("mcp reconectado, procede").
 - [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
       permission matrix test, `pnpm i18n:check`, `pnpm build`. No E2E.
 - [ ] **Problem report** (explicit, per agent).
