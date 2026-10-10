@@ -1,1 +1,22 @@
-{}
+{
+  "badge": {
+    "label": "Datos de prueba",
+    "description": "Esta versión usa datos ficticios que no se guardan de forma permanente."
+  },
+  "menu": {
+    "title": "Modo de prueba"
+  },
+  "viewAs": {
+    "label": "Ver como rol",
+    "description": "Cambia tu rol solo para esta sesión de prueba. No modifica ningún usuario.",
+    "current": "Viendo como {role}",
+    "changed": "Ahora ves la aplicación como {role}"
+  },
+  "reset": {
+    "label": "Restablecer datos de prueba",
+    "title": "¿Restablecer los datos de prueba?",
+    "description": "Se descartan todos los cambios hechos en esta sesión y se vuelven a cargar los datos de ejemplo.",
+    "confirm": "Restablecer",
+    "success": "Datos de prueba restablecidos"
+  }
+}
