@@ -615,17 +615,17 @@ search, view options/column config, pagination, selection + bulk bar, export but
 skeleton, `use-table-url-state.ts`), `src/i18n/messages/{es,en}/table.json`, tests under
 `src/components/ui/data-table/`.
 
-- [ ] Follow the registry data-table example (MCP) with TanStack Table, **manual** (server)
+- [x] Follow the registry data-table example (MCP) with TanStack Table, **manual** (server)
       pagination/sorting/filtering; page sizes 25/50/100; state in the URL through `nuqs` parsers that
       round-trip `listQuerySchema` (`frontend-patterns.md` §5).
-- [ ] Faceted filters as "+ Field" buttons that become removable chips and "Limpiar"; date-range and
+- [x] Faceted filters as "+ Field" buttons that become removable chips and "Limpiar"; date-range and
       async-option facets supported via props.
-- [ ] Column visibility, order and width; `onColumnsChange` / `initialColumns` props. Multi-select with a
+- [x] Column visibility, order and width; `onColumnsChange` / `initialColumns` props. Multi-select with a
       bulk-action bar. Export button calls `onExport(query, visibleColumns)`. "Show archived" toggle only
       when a prop allows it.
-- [ ] Empty state with CTA slot and skeleton rows; sticky header; horizontal scroll with code/name
+- [x] Empty state with CTA slot and skeleton rows; sticky header; horizontal scroll with code/name
       pinned on narrow screens.
-- [ ] Strings from `table` (C1). Tests: URL state round trip; page-size guard; column state callback.
+- [x] Strings from `table` (C1). Tests: URL state round trip; page-size guard; column state callback.
 
 #### Package 3.4 — Kit: money, rate, combobox, date, phone, country, uploader
 
