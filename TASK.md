@@ -534,6 +534,7 @@ and the shared UI kit, all built only on wave 1–2 outputs.
 | `src/components/ui/{money-input,rate-input,async-combobox,date-field,phone-input,country-combobox,uploader}/**`, i18n namespace `forms` | 3.4 |
 | `src/components/patterns/**` (incl. `use-unsaved-changes.ts`), i18n namespace `patterns` | 3.5 |
 | `src/components/ui/pdf-viewer/**`, i18n namespace `common` (only to add the `pdfViewer` key block; sole `common` owner this wave) | 3.6 |
+| `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions.ts`, `src/server/auth/permissions.test.ts`, `src/lib/validators/zod-config.ts` (+ its test), `eslint.config.mjs` | 3.7 |
 | `src/lib/validators/{common,enums,money,files}.ts` | nobody (read-only this wave) |
 | `package.json` / lockfile | nobody |
 
@@ -578,7 +579,8 @@ Package 3.2 → Agent: wedevs-developer · sonnet — Reason: money contracts (m
 
 Files: `src/lib/validators/{catalogs,settings,billing,invoices,payments,accounts,expenses,dashboard,reports}.ts` and their `*.test.ts`.
 
-- [ ] Catalogs (§8.15): currencies, exchange rates (incl. quick daily load and CSV import row), payment
+- [ ] Catalogs (§8.15): currencies, exchange rates with **`source`** (`rateSourceSchema`; one rate per
+      date + currency + source, DT-67) (incl. quick daily load and CSV import row), payment
       methods, expense categories (two-level tree). Settings: company; fiscal with **`ivaRates`** (allowed
       VAT rates, default `["16","8","0"]`), `ivaDefaultRate` (`"16"`), IGTF 3, methods/currencies
       proposing IGTF, invoice due days 15 (DT-44).
@@ -641,6 +643,14 @@ Files: `src/components/ui/money-input/**`, `src/components/ui/rate-input/**`,
       works with react-hook-form `Controller`. Never stores a `number` (C15).
 - [ ] `RateInput`: `lookupRate(date, currency)` prop; prefill, "Usando tasa del dd/mm" on fallback,
       manual when `null`, USD locked at 1, > 10 % deviation warning.
+      **DT-67:** `lookupRate` resolves to `RateLookupResult | null`, a type declared in `rate-input`
+      (do not import it from `lib/rates`; 3.7 changes that file in parallel and the shapes must match
+      structurally): `{ usdRate: string; isFallback: boolean; effectiveDate: string; source: RateSource
+      | null; options: { source: RateSource; usdRate: string; createdAt: string }[] }`, with `RateSource`
+      from `@/lib/validators/enums`. When `options.length > 1`, show a source selector (labels from
+      `enums.RateSource`) that preselects `source`; picking a source sets that rate. Typing a value by hand
+      still works. Test: two options → selector shown with BCV preselected; switching source updates the
+      value.
 - [ ] `AsyncCombobox` (single and multi): debounced `loadOptions(q)`, keyboard navigation, optional
       "Crear nuevo" (`onCreate(q)`), grouped options, optional per-item secondary input.
 - [ ] `DateField` (`YYYY-MM-DD`, display time zone prop, default Caracas), `PhoneInput` (E.164),
@@ -690,15 +700,43 @@ Files: `src/components/ui/pdf-viewer/**`, the `pdfViewer` key block in
 - [ ] Works in both themes; fits its container (portal panel, invoice "Archivo" tab, receipts).
 - [ ] Tests: toolbar state (page bounds, zoom steps) with pdf.js mocked; `onDownload` called.
 
+#### Package 3.7 — Wave 2 decisions and carry-over (DT-66, DT-67, n1, n2)
+
+Package 3.7 → Agent: wedevs-developer · sonnet — Reason: touches the money-critical rate selection (C15, ≥ 90 % coverage) and the auth matrix (C13).
+
+Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions.ts`,
+`src/server/auth/permissions.test.ts`, `src/lib/validators/zod-config.ts` and its test,
+`eslint.config.mjs`. No i18n files.
+
+- [ ] **DT-67** `lib/rates.ts`: `RateRow` gains `source: RateSource` (from `@/lib/validators/enums`)
+      and `createdAt: string` (ISO). `SelectedRate` gains `source: RateSource | null` and
+      `options: RateOption[]`, where `RateOption = { source; usdRate; createdAt }`. `selectRate` picks the
+      effective date per §9.2 (exact, else the latest earlier date as a fallback, else `null`). It then
+      returns every usable rate of that date and currency as `options`, ordered `BCV` first, then by
+      `createdAt` descending. The selected `usdRate`/`source` is `options[0]`. USD returns
+      `{ usdRate: "1", source: null, options: [] }`. Update the JSDoc, which today says "the first row
+      wins".
+- [ ] Tests (≥ 90 % coverage kept): several sources on the exact date (BCV wins; without BCV the most
+      recent `createdAt` wins); several sources on the fallback date; non-positive rows excluded from
+      `options`; USD.
+- [ ] **DT-66 / m3** `permissions.ts`: `activity` grants only `read` to Owner and Admin, and nothing to
+      Member or Viewer. Update the JSDoc with the action vocabulary (DT-66). The matrix test asserts that
+      `create`/`update`/`delete`/`restore` on `activity` are denied for every role.
+- [ ] **n2** `zod-config.ts`: `invalid_type` with `input === null` or `undefined` maps to
+      `validation.required`. Test with a nullable-cleared enum/select field.
+- [ ] **n1** `eslint.config.mjs`: `no-restricted-imports` also blocks `zod/*` subpaths (pattern),
+      with the same exceptions (`src/lib/validators/zod.ts`, `zod-config.ts`). Verify by linting a scratch
+      import (and remove it).
+
 #### Wave 3 close
 
-- [ ] **Integration checklist:** 3.1–3.6 merged; no Claude attribution; worktrees removed; lint,
+- [ ] **Integration checklist:** 3.1–3.7 merged; no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass.
 - [ ] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
       fields are strings; multi-rate invoice contract matches C17; share read DTOs never expose keys;
       3.1/3.2 do not cross-import; kit props match `listQuerySchema` and `files.ts`; namespaces filled in
-      both languages.
-- [ ] **Code review:** C1, C2, C3, C5, C6, C8, C15, C22 shape (contracts), C23 shape, C25.
+      both languages; 3.4 `RateLookupResult` is structurally identical to 3.7 `SelectedRate` (DT-67).
+- [ ] **Code review:** C1, C2, C3, C5, C6, C8, C13, C15, C20 (`activity` read-only), C22 shape (contracts), C23 shape, C25.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
       a11y spot-check of kit components (labels, keyboard on combobox, date field, PDF toolbar). No E2E.

@@ -168,6 +168,7 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51.
 | D10 | §8.11 rate limiting (no store named) | Netlify rate limiting | DT-47 |
 | D11 | §8.11 "PDF incrustado" | pdf.js viewer with custom toolbar | DT-50 |
 | D12 | §7.1 "tres secciones" but four listed | cosmetic; the sidebar follows the four listed groups + Configuración | — |
+| D13 | §9.2 rate prefill | several rates per day by source, selector with BCV default | DT-67 |
 
 ## 9. H1-B1 wave 1 findings (rules revision requested by the user)
 
@@ -189,3 +190,12 @@ unless their row says so.
 | DT-63 | DECIDED | **`chart.tsx` colors** come from theme tokens only, never from user data. |
 | DT-64 | **OPEN** (non-blocking) | **pnpm ignored build scripts** for `@parcel/watcher`, `@swc/core`, `esbuild`, `unrs-resolver`. No impact so far; revisit if a tool misbehaves. |
 | DT-65 | DECIDED (process) | **shadcn MCP in subagent sessions.** The MCP is available to Orca worker sessions but was not loaded in Agent-tool subagent sessions (Planner, Code Reviewer) because the root session started before `.mcp.json` existed; the user restarts the root session to fix it. Until then the Code Reviewer verifies registry usage via `pnpm exec shadcn` (DU-02 still applies). |
+
+## 10. H1-B1 wave 2 decisions (user, 2026-10-09)
+
+| Id | Status | Decision |
+|---|---|---|
+| DT-66 | DECIDED (user) | **`can()` vocabulary.** The PRD names no actions. Actions are `create`, `read`, `update`, `delete` (soft delete / archive) and `restore` (out of the trash). Resources are finer than the PRD §4.3 rows (`client`, `contact`, `project`, `billing`, `invoice`, `payment`, `account`, `expense`, `document`, `share`, `note`, `report`, `activity`, `settings`, `user`, `trash`). Resources that share a PRD row share its grants. **`activity` grants only `read` (Owner, Admin)**: the log is append-only (C20) and written only by services through `logActivity`, never through a `can()` grant. Fix in package 3.7 (review finding m3). |
+| DT-67 | DECIDED (user) | **Several exchange rates per day.** A date and currency may have one rate per source (`MANUAL`, `BCV`, `OTRA`), per `@@unique([date, currency, source])`. Prefill follows PRD §9.2 at the date level (exact date, else the latest earlier date with "Usando tasa del dd/mm", else manual). Within the chosen date, **every usable rate is offered in a selector labelled by source**. The default is `BCV`, or else the most recent `createdAt`. The user can pick another source or type the rate. The snapshot stores the chosen value (PRD §9.2 unchanged). Supersedes the "first row wins" note in `lib/rates.ts`. Implemented in packages 3.7 (`selectRate`) and 3.4 (`RateInput`). Amends PRD §9.2 (drift D13). |
+| DT-68 | DECIDED (user) | **`.mcp.json` pins `shadcn@4.21.4`**, the version the project's registry components come from. |
+| DT-69 | DECIDED (user) | **Git remote and push are deferred to the end of Hito 1.** Every branch (`main`, `batch/0-rules`, `batch/h1-b1-ui-foundations`, …) stays local until then. No push or PR is proposed earlier. |

@@ -205,7 +205,7 @@ example):
 - On success: toast + navigate to detail; on `CONFLICT` show the error with a link to the existing
   record (HU-03 CA3); non-blocking warnings inline.
 - **`MoneyInput`**: currency + amount as a decimal string; live USD equivalent via `lib/money` (C15).
-- **`RateInput`**: prefill per §9.2 (exact → latest previous with "Usando tasa del dd/mm" → manual),
+- **`RateInput`**: prefill per §9.2 + DT-67 (exact → latest previous with "Usando tasa del dd/mm" → manual; source selector, BCV default),
   editable, 8 decimals, > 10 % deviation warning; USD fixed at 1.
 - **Invoice lines (P2)**: an editable line grid — description, project, installment, quantity, unit
   price, line discount, **VAT rate select** (the allowed rates from fiscal settings: 16 %, 8 %, 0 %, plus
