@@ -32,18 +32,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { initialsOf } from "@/components/app/app-sidebar";
 import { resetMockDataAction, setMockRoleAction } from "@/features/session/actions";
 import { USER_ROLE_VALUES, userRoleSchema, type UserRole } from "@/lib/validators/enums";
 import type { SessionUser } from "@/server/auth/types";
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 // The user menu of the topbar. MOCK parts (Hito 1 only, DT-32, DT-40): "View as role" and "Reset mock
 // data" call the session actions; sign-out only navigates to /sign-in until Clerk arrives in Hito 2.
@@ -154,6 +146,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
           <AlertDialogFooter>
             <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
+              disabled={isPending}
               onClick={(event) => {
                 event.preventDefault();
                 resetData();

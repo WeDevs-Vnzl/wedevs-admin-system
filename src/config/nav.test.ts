@@ -55,6 +55,12 @@ describe("nav config", () => {
     expect(visibleQuickActions(userWithRole("VIEWER"))).toHaveLength(0);
   });
 
+  it("offers configuration to every signed-in role (M1: the settings frame filters its sections)", () => {
+    for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
+      expect(visibleNavItems(userWithRole(role)).map((item) => item.key)).toContain("settings");
+    }
+  });
+
   it("resolves a route to the longest matching nav entry", () => {
     expect(findNavItem("/clients/123/edit")?.key).toBe("clients");
     expect(findNavItem("/settings/rates")?.key).toBe("settings");

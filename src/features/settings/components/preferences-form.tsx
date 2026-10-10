@@ -9,7 +9,13 @@ import { toast } from "sonner";
 import { FormPage } from "@/components/patterns/form-page";
 import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { setPreferenceAction } from "@/features/preferences/actions";
@@ -90,7 +96,7 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
       <FormPage
         title={t("nav.label")}
         description={t("preferences.description")}
-        backHref="/settings"
+        backHref="/dashboard"
         dirty={form.formState.isDirty}
         footer={
           <Button type="submit" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
@@ -103,13 +109,15 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
             control={form.control}
             name="locale"
             render={({ field }) => (
-              <Field>
-                <FieldLabel id="preferences-locale-label">{t("preferences.language.label")}</FieldLabel>
-                <p className="text-muted-foreground text-sm">{t("preferences.language.description")}</p>
+              <FieldSet>
+                <FieldLegend>{t("preferences.language.label")}</FieldLegend>
+                <FieldDescription id="preferences-locale-description">
+                  {t("preferences.language.description")}
+                </FieldDescription>
                 <RadioGroup
                   value={field.value}
                   onValueChange={field.onChange}
-                  aria-labelledby="preferences-locale-label"
+                  aria-describedby="preferences-locale-description"
                   className="grid gap-2 sm:grid-cols-2"
                 >
                   {LOCALE_VALUES.map((locale) => (
@@ -121,7 +129,7 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
                     </Field>
                   ))}
                 </RadioGroup>
-              </Field>
+              </FieldSet>
             )}
           />
 
@@ -129,13 +137,15 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
             control={form.control}
             name="theme"
             render={({ field }) => (
-              <Field>
-                <FieldLabel id="preferences-theme-label">{t("preferences.theme.label")}</FieldLabel>
-                <p className="text-muted-foreground text-sm">{t("preferences.theme.description")}</p>
+              <FieldSet>
+                <FieldLegend>{t("preferences.theme.label")}</FieldLegend>
+                <FieldDescription id="preferences-theme-description">
+                  {t("preferences.theme.description")}
+                </FieldDescription>
                 <RadioGroup
                   value={field.value}
                   onValueChange={field.onChange}
-                  aria-labelledby="preferences-theme-label"
+                  aria-describedby="preferences-theme-description"
                   className="grid gap-2 sm:grid-cols-3"
                 >
                   {THEME_VALUES.map((theme) => (
@@ -147,7 +157,7 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
                     </Field>
                   ))}
                 </RadioGroup>
-              </Field>
+              </FieldSet>
             )}
           />
 
@@ -157,9 +167,15 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
             render={({ field }) => (
               <Field>
                 <FieldLabel htmlFor="preferences-timezone">{t("preferences.timezone.label")}</FieldLabel>
-                <p className="text-muted-foreground text-sm">{t("preferences.timezone.description")}</p>
+                <FieldDescription id="preferences-timezone-description">
+                  {t("preferences.timezone.description")}
+                </FieldDescription>
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="preferences-timezone" className="w-full sm:w-80">
+                  <SelectTrigger
+                    id="preferences-timezone"
+                    aria-describedby="preferences-timezone-description"
+                    className="w-full sm:w-80"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

@@ -1243,64 +1243,64 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
 (+ its test); `src/i18n/messages/{es,en}/shell.json`. No other file — in particular not
 `src/components/ui/**` and not `src/features/preferences/**`.
 
-- [ ] **M1** `SETTINGS_NAV_ITEM.resource = null`: every signed-in user sees Configuración in the sidebar
+- [x] **M1** `SETTINGS_NAV_ITEM.resource = null`: every signed-in user sees Configuración in the sidebar
       footer and in Cmd+K (the settings frame already filters its sections with `can()`, so Member and
       Viewer land on Preferencias only). Update the comment. Tests: Member and Viewer see the entry; the
       existing per-role tests for module items still pass.
-- [ ] **M2** Cmd+K items filter on what the user reads: `CommandItem` `value` = the translated label
+- [x] **M2** Cmd+K items filter on what the user reads: `CommandItem` `value` = the translated label
       (navigation and quick actions), the key kept as a `keywords` entry. Tests with ES messages: typing
       "factu" lists Facturas; typing "pago" lists "Registrar pago"; EN "invoices" still works.
-- [ ] **M3** One preference, one behaviour: the topbar `LocaleSwitcher` and `ThemeToggle` also persist
+- [x] **M3** One preference, one behaviour: the topbar `LocaleSwitcher` and `ThemeToggle` also persist
       through `setPreferenceAction({ key: "locale" | "theme", value })` after the local change (on
       `!ok` a toast with `common.errors.<code>`; the local change stays). `preferences/page.tsx` takes the
       initial `locale` from the active request locale (`getLocale()`, the cookie wins in Hito 1,
       frontend-patterns §15), not from the store. Tests: each switcher calls the action with the chosen
       value; the form's initial language equals the active locale.
-- [ ] **m1** Breadcrumbs under `/settings/<slug>` label the section with `settings.nav.<labelKey>` from
+- [x] **m1** Breadcrumbs under `/settings/<slug>` label the section with `settings.nav.<labelKey>` from
       `findSettingsSection` (ES: "WeDevs Core / Configuración / Preferencias"); other unknown segments
       unchanged. Test.
-- [ ] **m2** `RateChip` gets a `canManage` prop computed in `(app)/layout.tsx` as
+- [x] **m2** `RateChip` gets a `canManage` prop computed in `(app)/layout.tsx` as
       `can(shell.user, "read", "settings")`; it links to `/settings/rates` only when true and renders the
       same chip without a link otherwise. Tests for both.
-- [ ] **m3** Sidebar footer user block per wireframe 4.2 / frontend-patterns §2, below Configuración:
+- [x] **m3** Sidebar footer user block per wireframe 4.2 / frontend-patterns §2, below Configuración:
       avatar with initials, name, role (`enums.UserRole`), sign-out button (→ `/sign-in`, MOCK until
       Clerk); avatar only in icon mode. Registry items only (`avatar`, `sidebar` menu, `button`); move
       `initialsOf` out of `user-menu.tsx` as a named export and reuse it. Labels from existing keys
       (`shell.userMenu.*`, `auth.signOut`). Test: the block renders name and role and signs out.
-- [ ] **m4** `AppSidebar` passes translated `aria-label` and `title` to `SidebarRail` (new key
+- [x] **m4** `AppSidebar` passes translated `aria-label` and `title` to `SidebarRail` (new key
       `shell.sidebar.toggle`, ES "Mostrar u ocultar la barra lateral", EN "Toggle sidebar"); the rail
       spreads `...props` last, so no registry edit.
-- [ ] **m5** `PreferencesForm` back link → `/dashboard` (`/settings` redirects to the same page).
-- [ ] **R1 (review)** `command-menu.tsx`: `<Command label={t("dialogTitle")}>` and
+- [x] **m5** `PreferencesForm` back link → `/dashboard` (`/settings` redirects to the same page).
+- [x] **R1 (review)** `command-menu.tsx`: `<Command label={t("dialogTitle")}>` and
       `<CommandList label={…}>` with a new `search.listLabel` (ES "Resultados de búsqueda", EN "Search
       results") — **extends** this package to `search.json` (es/en, add-only). Test: the combobox and
       listbox have the translated names.
-- [ ] **R2 (review)** Planner m4 is a C1 blocker; same fix (translated `aria-label`/`title` on
+- [x] **R2 (review)** Planner m4 is a C1 blocker; same fix (translated `aria-label`/`title` on
       `SidebarRail`).
-- [ ] **R3 (review)** Sidebar brand link gets `aria-label={tCommon("app.name")}` (named in icon mode).
+- [x] **R3 (review)** Sidebar brand link gets `aria-label={tCommon("app.name")}` (named in icon mode).
       Test: collapsed sidebar, the link is reachable by name.
-- [ ] **R4 + R12a (review)** Sign-in page (**extends** Files: `src/app/(auth)/sign-in/[[...sign-in]]/page.tsx`):
+- [x] **R4 + R12a (review)** Sign-in page (**extends** Files: `src/app/(auth)/sign-in/[[...sign-in]]/page.tsx`):
       theme tokens (`bg-card`, `text-muted-foreground`, `bg-border`, …) instead of fixed `neutral-*`/
       `bg-white`, AA in both themes; right column wrapped in `<main>`.
-- [ ] **R5 (review)** Compose the Cmd+K dialog from registry `Dialog`/`DialogContent`/`DialogHeader`
+- [x] **R5 (review)** Compose the Cmd+K dialog from registry `Dialog`/`DialogContent`/`DialogHeader`
       (sr-only)/`DialogTitle`/`DialogDescription` + `Command` with the title **inside** the content
       (no registry edit). Test: closed menu renders no heading; open dialog's name and description
       are its translated title/description and both nodes are inside the dialog.
-- [ ] **R6 (review)** `RateChip`: accessible name includes the visible text (drop the overriding
+- [x] **R6 (review)** `RateChip`: accessible name includes the visible text (drop the overriding
       `aria-label`; the link purpose goes in the tooltip/`aria-describedby`); with m2's non-link variant
       the chip stays keyboard-focusable so the date/fallback tooltip opens on focus. Test both variants.
-- [ ] **R7 (review)** In-shell not-found for unmatched URLs: new `src/app/(app)/[...missing]/page.tsx`
+- [x] **R7 (review)** In-shell not-found for unmatched URLs: new `src/app/(app)/[...missing]/page.tsx`
       that only calls `notFound()` (**extends** Files). Test or E2E note for the Tester: `/clients`
       renders the not-found inside the sidebar shell; `/`, `/sign-in`, `/settings/*` unaffected.
-- [ ] **R8 (review)** Settings footer link sets `aria-current="page"` when active.
-- [ ] **R9 (review)** The "results pending" note moves out of the listbox group (e.g. below the list or
+- [x] **R8 (review)** Settings footer link sets `aria-current="page"` when active.
+- [x] **R9 (review)** The "results pending" note moves out of the listbox group (e.g. below the list or
       as a disabled `CommandItem`) so `listbox` holds only options/groups.
-- [ ] **R10 (review)** `PreferencesForm`: language and theme as registry `FieldSet` + `FieldLegend`,
+- [x] **R10 (review)** `PreferencesForm`: language and theme as registry `FieldSet` + `FieldLegend`,
       descriptions as `FieldDescription` linked to the control (`aria-describedby` for the time-zone
       select). Existing tests stay green.
-- [ ] **R11 (review)** `shell.alerts.counter` as ICU plural in ES and EN
+- [x] **R11 (review)** `shell.alerts.counter` as ICU plural in ES and EN
       (`{count, plural, one {# alerta} other {# alertas}}`).
-- [ ] **R12b (review)** `UserMenu` reset confirm disabled while the transition is pending.
+- [x] **R12b (review)** `UserMenu` reset confirm disabled while the transition is pending.
 - [ ] Gate: lint, typecheck, test, `i18n:check`, build.
 
 #### Wave 5 close

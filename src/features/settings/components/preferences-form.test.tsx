@@ -90,6 +90,22 @@ describe("PreferencesForm", () => {
     expect(mocks.refresh).toHaveBeenCalled();
   });
 
+  it("starts the language from the active locale, not the stored one (M3)", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ settings: enSettings }}>
+        <PreferencesForm initial={{ ...initial, locale: "en" }} timezones={timezones} />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByLabelText("English")).toBeChecked();
+    expect(screen.getByLabelText("Español")).not.toBeChecked();
+  });
+
+  it("describes the time-zone select with its description (R10)", () => {
+    renderForm();
+    const select = screen.getByRole("combobox", { name: "Zona horaria" });
+    expect(select).toHaveAccessibleDescription(esSettings.preferences.timezone.description);
+  });
+
   it("keeps the theme as it was and reports the error when the action fails", async () => {
     vi.mocked(setPreferenceAction).mockResolvedValue({
       ok: false,

@@ -17,7 +17,8 @@
     "collapse": "Contraer barra lateral",
     "expand": "Expandir barra lateral",
     "mobileTitle": "Navegación",
-    "mobileDescription": "Menú de navegación principal"
+    "mobileDescription": "Menú de navegación principal",
+    "toggle": "Mostrar u ocultar la barra lateral"
   },
   "breadcrumbs": {
     "label": "Ruta de navegación"
@@ -37,7 +38,7 @@
     "description": "Elementos que requieren tu atención",
     "empty": "No tienes alertas pendientes",
     "markAllRead": "Marcar leídas",
-    "counter": "{count} alertas"
+    "counter": "{count, plural, one {# alerta} other {# alertas}}"
   },
   "userMenu": {
     "label": "Menú de usuario",

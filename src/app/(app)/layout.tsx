@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/app/theme-toggle";
 import { UserMenu } from "@/components/app/user-menu";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getShellData } from "@/features/shell/queries";
+import { can } from "@/server/auth/permissions";
 
 // The authenticated shell (PRD §7.1, frontend-patterns §2, wireframes 4.2/4.4): sidebar, topbar with the
 // Cmd+K trigger, rate chip, alerts, locale and theme, user menu, and the footer.
@@ -24,7 +25,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <AppBreadcrumbs />
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2">
             <CommandMenu user={shell.user} />
-            <RateChip rate={shell.vesRate} missing={shell.vesRateMissing} />
+            <RateChip
+              rate={shell.vesRate}
+              missing={shell.vesRateMissing}
+              canManage={can(shell.user, "read", "settings")}
+            />
             <AlertsBell count={shell.alertCount} />
             <LocaleSwitcher />
             <ThemeToggle />
