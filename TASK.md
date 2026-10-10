@@ -1184,24 +1184,24 @@ Use the shadcn MCP.
 
 Files: see the owners table (5.1 rows) plus tests in `src/components/app/`.
 
-- [ ] Root layout providers: `NextIntlClientProvider`, `ThemeProvider`, `NuqsAdapter`, `Toaster`,
+- [x] Root layout providers: `NextIntlClientProvider`, `ThemeProvider`, `NuqsAdapter`, `Toaster`,
       `TooltipProvider`.
-- [ ] `src/config/nav.ts`: every sidebar item and group of §7.1 with lucide icons per
+- [x] `src/config/nav.ts`: every sidebar item and group of §7.1 with lucide icons per
       `frontend-patterns.md` §1a, i18n keys, route, and the `can()` resource used to hide it; also feeds
       breadcrumbs and Cmd+K navigation.
-- [ ] `(app)/layout.tsx` with registry `sidebar` (collapsible, icon mode, mobile sheet), topbar
+- [x] `(app)/layout.tsx` with registry `sidebar` (collapsible, icon mode, mobile sheet), topbar
       (breadcrumbs, search trigger with `⌘K`, BCV `RateChip`, `AlertsBell` with counter and empty panel,
       locale switcher, theme toggle, `UserMenu`), footer (copyright, version, "Mock data" badge; no
       "Respaldo diario", DT-48). Match wireframes 4.2/4.4 and the brand (DT-51).
-- [ ] `UserMenu` (MOCK parts marked): name/role, "View as role", "Reset mock data", sign out (→
+- [x] `UserMenu` (MOCK parts marked): name/role, "View as role", "Reset mock data", sign out (→
       `/sign-in`).
-- [ ] `CommandMenu` (registry `command` in a dialog): `⌘K`/`Ctrl+K` and the trigger; navigation from
+- [x] `CommandMenu` (registry `command` in a dialog): `⌘K`/`Ctrl+K` and the trigger; navigation from
       `nav.ts`; quick actions filtered by `can()`; results area with an empty state until H1-B5.
-- [ ] `(auth)/sign-in/[[...sign-in]]/page.tsx` per wireframe 4.1 **without counters or any data**
+- [x] `(auth)/sign-in/[[...sign-in]]/page.tsx` per wireframe 4.1 **without counters or any data**
       (DT-48); buttons navigate to `/dashboard` (mock). `(app)/dashboard/page.tsx` placeholder.
       Not-found pages in and outside the shell; `(app)/loading.tsx` skeleton.
-- [ ] Strings only from i18n (C1); logo from the wireframes (DT-51).
-- [ ] Tests: nav items hidden per role via `can()`; command menu opens with the shortcut.
+- [x] Strings only from i18n (C1); logo from the wireframes (DT-51).
+- [x] Tests: nav items hidden per role via `can()`; command menu opens with the shortcut.
 
 #### Package 5.2 — Settings frame and preferences
 
