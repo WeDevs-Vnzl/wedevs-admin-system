@@ -693,12 +693,12 @@ Use the shadcn MCP.
 Files: `src/components/ui/pdf-viewer/**`, the `pdfViewer` key block in
 `src/i18n/messages/{es,en}/common.json`, tests in `src/components/ui/pdf-viewer/`.
 
-- [ ] `PdfViewer` client component, lazy-loaded, rendering a PDF from a URL with pdf.js (DT-50); toolbar
+- [x] `PdfViewer` client component, lazy-loaded, rendering a PDF from a URL with pdf.js (DT-50); toolbar
       per wireframe 4.8: page x / y with previous/next, zoom − / 100 % / +, download (calls an
       `onDownload` prop — the viewer never builds download URLs itself), fullscreen; loading skeleton and
       error state; keyboard-operable toolbar; worker served from the app origin.
-- [ ] Works in both themes; fits its container (portal panel, invoice "Archivo" tab, receipts).
-- [ ] Tests: toolbar state (page bounds, zoom steps) with pdf.js mocked; `onDownload` called.
+- [x] Works in both themes; fits its container (portal panel, invoice "Archivo" tab, receipts).
+- [x] Tests: toolbar state (page bounds, zoom steps) with pdf.js mocked; `onDownload` called.
 
 #### Package 3.7 — Wave 2 decisions and carry-over (DT-66, DT-67, n1, n2)
 
