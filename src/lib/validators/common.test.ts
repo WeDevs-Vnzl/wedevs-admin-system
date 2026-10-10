@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { z } from "./zod";
 import {
   DEFAULT_PAGE_SIZE,
   ERROR_CODE_VALUES,

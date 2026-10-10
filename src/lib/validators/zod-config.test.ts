@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { z } from "./zod";
 import { VALIDATION_MESSAGES, dateOnlySchema, idSchema, listQuerySchema } from "./common";
 import { ENUM_REGISTRY, clientKindSchema, userRoleSchema } from "./enums";
 import { requestUploadInputSchema, uploadContextSchema } from "./files";
@@ -35,7 +35,14 @@ describe("global Zod error map → validation.* keys (C1)", () => {
     expect(messages(z.string().min(3), "a")).toEqual([VALIDATION_MESSAGES.tooShort]);
     expect(messages(z.string().max(3), "abcd")).toEqual([VALIDATION_MESSAGES.tooLong]);
     expect(messages(z.array(z.string()).min(1), [])).toEqual([VALIDATION_MESSAGES.tooShort]);
+    expect(messages(z.string().min(2), "")).toEqual([VALIDATION_MESSAGES.tooShort]);
     expect(messages(z.array(z.string()).max(1), ["a", "b"])).toEqual([VALIDATION_MESSAGES.tooLong]);
+  });
+
+  it("too_small on a string with minimum 1 (empty required text) → required", () => {
+    expect(messages(z.string().min(1), "")).toEqual([VALIDATION_MESSAGES.required]);
+    expect(messages(z.string().nonempty(), "")).toEqual([VALIDATION_MESSAGES.required]);
+    expect(messages(z.string().min(1, "custom.short"), "")).toEqual(["custom.short"]);
   });
 
   it("too_small / too_big: numbers use tooSmall/tooLarge, with positive/nonNegative at zero", () => {

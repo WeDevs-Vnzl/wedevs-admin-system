@@ -43,6 +43,7 @@
     "nameInvalid": "Invalid file name",
     "typeNotAllowed": "File type not allowed",
     "empty": "The file is empty",
-    "tooLarge": "The file exceeds the maximum size of {max}"
+    "tooLarge": "The file is too large",
+    "tooLargeMax": "The file exceeds the maximum size of {max} MB"
   }
 }

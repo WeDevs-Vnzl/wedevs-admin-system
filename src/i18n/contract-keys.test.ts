@@ -54,8 +54,9 @@ describe.each(locales)("contract keys (%s)", (locale) => {
     expect(leaves.sort()).toEqual([...registered].sort());
   });
 
-  it("validation.file.tooLarge interpolates {max}", () => {
-    expect(resolveKey(locale, VALIDATION_MESSAGES.fileTooLarge)).toContain("{max}");
+  it("validation.file.tooLarge has no placeholder; tooLargeMax interpolates {max}", () => {
+    expect(resolveKey(locale, VALIDATION_MESSAGES.fileTooLarge)).not.toContain("{");
+    expect(resolveKey(locale, VALIDATION_MESSAGES.fileTooLargeMax)).toContain("{max}");
   });
 
   it.each(ERROR_CODE_VALUES)("common.errors.%s resolves to a non-empty string", (code) => {

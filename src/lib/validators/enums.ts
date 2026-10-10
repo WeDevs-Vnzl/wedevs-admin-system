@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./zod";
 
 /**
  * Mirrors the Prisma enums of PRD §10.2 value by value (C8), plus the approved delta of

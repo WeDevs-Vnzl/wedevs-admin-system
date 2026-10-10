@@ -453,21 +453,21 @@ Files: `src/lib/validators/zod.ts` (new), `src/lib/validators/{common,enums,mone
 their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation test),
 `src/i18n/messages/{es,en}/validation.json`, `src/i18n/contract-keys.test.ts`, `eslint.config.mjs`.
 
-- [ ] `src/lib/validators/zod.ts`: `import "./zod-config"; export { z } from "zod";` — every validator
+- [x] `src/lib/validators/zod.ts`: `import "./zod-config"; export { z } from "zod";` — every validator
       module imports `z` from it (never `"zod"` directly); `zod-config.ts` and `zod.ts` are the only
       `"zod"` importers in `src/` besides tests that need the raw module.
-- [ ] `eslint.config.mjs`: `no-restricted-imports` forbids `"zod"` in `src/**` except
+- [x] `eslint.config.mjs`: `no-restricted-imports` forbids `"zod"` in `src/**` except
       `src/lib/validators/{zod,zod-config}.ts` (message points to `@/lib/validators/zod`).
-- [ ] Isolation test: a test file importing only `./enums` asserts enum parse errors start with
+- [x] Isolation test: a test file importing only `./enums` asserts enum parse errors start with
       `validation.` (no `common.ts` import in that file).
-- [ ] Size message on the schema path: `file.tooLarge` without placeholder (schema/`fieldErrors` path),
+- [x] Size message on the schema path: `file.tooLarge` without placeholder (schema/`fieldErrors` path),
       new `file.tooLargeMax` with `{max}` returned by `checkUpload`; ES and EN; registered in
       `VALIDATION_MESSAGES`; test that the schema path yields `validation.file.tooLarge` and resolves
       without values.
-- [ ] `zod-config.ts`: `too_small` on strings with `minimum === 1` and `input === null` map to
-      `validation.required`; tests.
-- [ ] `checkUpload` passes the size as a number (`{max: 25}`), the unit "MB" lives in the message text.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+- [x] `zod-config.ts`: `too_small` on strings with `minimum === 1` and `input === null` map to
+      `validation.required`; tests. Note: implemented on string `too_small` with `minimum === 1` (empty text); `input === null` never reaches `too_small` (null is `invalid_type`, kept as `invalidFormat`).
+- [x] `checkUpload` passes the size as a number (`{max: 25}`), the unit "MB" lives in the message text.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
 
 #### Wave 2 close
 
