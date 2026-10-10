@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { locales } from "../src/i18n/config";
 import { namespaces } from "../src/i18n/namespaces";
-import { checkCatalogs, loadCatalogs, type Catalogs } from "./check-i18n";
+import { checkCatalogs, loadCatalogs, placeholderNames, type Catalogs } from "./check-i18n";
 
 const fixtureNamespaces = ["common", "shell"] as const;
 
@@ -101,6 +101,75 @@ describe("checkCatalogs", () => {
     expect(run(fixture(), ["es/legacy.json"])).toEqual([
       "unknown namespace file (not in namespaces.ts): es/legacy.json",
     ]);
+  });
+});
+
+describe("placeholder parity", () => {
+  const withGreeting = (es: string, en: string) =>
+    fixture({
+      es: {
+        common: { actions: { save: es, cancel: "Cancelar" } },
+        shell: { themeToggle: { label: "Cambiar tema" } },
+      },
+      en: {
+        common: { actions: { save: en, cancel: "Cancel" } },
+        shell: { themeToggle: { label: "Switch theme" } },
+      },
+    });
+
+  it("passes when both locales use the same placeholders in any order", () => {
+    expect(run(withGreeting("Hola {name}, tienes {count}", "{count} for you, {name}"))).toEqual([]);
+  });
+
+  it("passes for plural messages with the same argument and different branch text", () => {
+    const es = "{count, plural, one {# factura} other {# facturas de {client}}}";
+    const en = "{count, plural, =0 {none} one {# invoice} other {# invoices of {client}}}";
+
+    expect(run(withGreeting(es, en))).toEqual([]);
+  });
+
+  it("reports a placeholder missing from one locale", () => {
+    expect(run(withGreeting("Hola {name}", "Hello"))).toEqual([
+      "placeholder mismatch in en/common.json: actions.save (es {name} vs en {})",
+    ]);
+  });
+
+  it("reports a renamed placeholder", () => {
+    expect(run(withGreeting("Hola {name}", "Hello {user}"))).toEqual([
+      "placeholder mismatch in en/common.json: actions.save (es {name} vs en {user})",
+    ]);
+  });
+
+  it("reports a placeholder that only appears in the second locale", () => {
+    expect(run(withGreeting("Hola", "Hello {name}"))).toEqual([
+      "placeholder mismatch in en/common.json: actions.save (es {} vs en {name})",
+    ]);
+  });
+});
+
+describe("placeholderNames", () => {
+  it("returns no names for plain text", () => {
+    expect([...placeholderNames("Guardar cambios")]).toEqual([]);
+  });
+
+  it("reads simple, typed and plural/select arguments", () => {
+    expect([...placeholderNames("{a} {b, number} {c, date, short}")]).toEqual(["a", "b", "c"]);
+    expect([...placeholderNames("{n, plural, one {# item} other {{x} items}}")].sort()).toEqual([
+      "n",
+      "x",
+    ]);
+    expect([...placeholderNames("{g, select, male {He} other {They}}")]).toEqual(["g"]);
+  });
+
+  it("does not treat branch selectors as placeholders", () => {
+    expect([...placeholderNames("{n, plural, one {item} other {items}}")]).toEqual(["n"]);
+  });
+
+  it("tolerates malformed or truncated braces without throwing", () => {
+    expect(() => placeholderNames("{n, plural, one {x")).not.toThrow();
+    expect(() => placeholderNames("{n, plural, one x}")).not.toThrow();
+    expect(() => placeholderNames("{n, number")).not.toThrow();
+    expect([...placeholderNames("{ name }")]).toEqual(["name"]);
   });
 });
 

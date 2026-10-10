@@ -31,6 +31,8 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
+          // Non-UTC on purpose: date-only logic must not depend on the process time zone.
+          env: { TZ: "America/New_York" },
           include: ["tests/**/*.test.ts", "src/**/*.test.ts", "scripts/**/*.test.ts"],
           exclude: ["node_modules", ".next", "tests/e2e/**"],
         },

@@ -4,7 +4,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { locales } from "../src/i18n/config";
 import { namespaces } from "../src/i18n/namespaces";
 
-// C2: every key exists in every locale, every namespace file exists, and no value is empty.
+// C2: every key exists in every locale, every namespace file exists, no value is empty, and the
+// ICU argument names ({name}, {count, plural, ...}) of each key match across locales.
 
 export type Catalog = Record<string, unknown>;
 
@@ -30,6 +31,74 @@ function collectLeaves(node: unknown, prefix = ""): Leaf[] {
   );
 }
 
+const BRANCH_TYPES = new Set(["plural", "select", "selectordinal"]);
+
+// Collects the ICU argument names of a message. Plural/select branch bodies are parsed as messages
+// too, so `one {# item} other {{count} items}` yields only `count` (branch selectors are not names).
+export function placeholderNames(message: string): Set<string> {
+  const names = new Set<string>();
+  let i = 0;
+
+  const skipSpace = () => {
+    while (i < message.length && /\s/.test(message[i]!)) i++;
+  };
+  const readWord = () => {
+    const start = i;
+    while (i < message.length && /[^\s,{}]/.test(message[i]!)) i++;
+    return message.slice(start, i);
+  };
+
+  // Parses message text until the closing `}` of the enclosing group (or the end of the string).
+  const parseText = () => {
+    while (i < message.length) {
+      const char = message[i]!;
+      if (char === "}") return;
+      i++;
+      if (char === "{") parseArgument();
+    }
+  };
+
+  // Called just after an opening `{`.
+  const parseArgument = () => {
+    skipSpace();
+    const name = readWord();
+    if (name !== "") names.add(name);
+    skipSpace();
+    if (message[i] === ",") {
+      i++;
+      skipSpace();
+      const type = readWord();
+      skipSpace();
+      if (message[i] === ",") i++;
+      if (BRANCH_TYPES.has(type)) {
+        skipSpace();
+        while (i < message.length && message[i] !== "}") {
+          readWord(); // selector, e.g. `one`, `=0`, `other`, or `offset:1`
+          skipSpace();
+          if (message[i] !== "{") break;
+          i++;
+          parseText();
+          if (message[i] === "}") i++;
+          skipSpace();
+        }
+      } else {
+        // number/date/time style argument: skip to the closing brace.
+        while (i < message.length && message[i] !== "}") i++;
+      }
+    }
+    if (message[i] === "}") i++;
+  };
+
+  parseText();
+  return names;
+}
+
+function sameNames(a: Set<string>, b: Set<string>): boolean {
+  return a.size === b.size && [...a].every((name) => b.has(name));
+}
+
+const formatNames = (names: Set<string>) => `{${[...names].sort().join(", ")}}`;
+
 export function checkCatalogs({
   catalogs,
   locales: localeList,
@@ -44,6 +113,7 @@ export function checkCatalogs({
 
   for (const namespace of namespaceList) {
     const keysByLocale = new Map<string, Set<string>>();
+    const stringsByLocale = new Map<string, Map<string, string>>();
 
     for (const locale of localeList) {
       const catalog = catalogs[locale]?.[namespace];
@@ -61,6 +131,14 @@ export function checkCatalogs({
         }
       }
       keysByLocale.set(locale, new Set(leaves.map((leaf) => leaf.key)));
+      stringsByLocale.set(
+        locale,
+        new Map(
+          leaves.flatMap(({ key, value }) =>
+            typeof value === "string" ? [[key, value] as const] : [],
+          ),
+        ),
+      );
     }
 
     const [reference, ...others] = localeList;
@@ -77,6 +155,22 @@ export function checkCatalogs({
       for (const key of keys) {
         if (!referenceKeys.has(key))
           problems.push(`extra key in ${locale}/${namespace}.json: ${key}`);
+      }
+
+      const referenceStrings = stringsByLocale.get(reference);
+      const strings = stringsByLocale.get(locale);
+      if (referenceStrings === undefined || strings === undefined) continue;
+      for (const [key, referenceValue] of referenceStrings) {
+        const value = strings.get(key);
+        if (value === undefined) continue;
+        const expected = placeholderNames(referenceValue);
+        const actual = placeholderNames(value);
+        if (!sameNames(expected, actual)) {
+          problems.push(
+            `placeholder mismatch in ${locale}/${namespace}.json: ${key} ` +
+              `(${reference} ${formatNames(expected)} vs ${locale} ${formatNames(actual)})`,
+          );
+        }
       }
     }
   }

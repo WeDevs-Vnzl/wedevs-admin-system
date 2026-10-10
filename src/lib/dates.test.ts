@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
   addDays,
@@ -83,6 +83,38 @@ describe("addDays / daysBetween", () => {
     expect(daysBetween("2026-01-01", "2027-01-01")).toBe(365);
   });
 });
+
+describe.each(["Europe/Madrid", "America/New_York"])(
+  "addDays / daysBetween under TZ=%s",
+  (zone) => {
+    const originalZone = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = zone;
+    });
+    afterAll(() => {
+      if (originalZone === undefined) delete process.env.TZ;
+      else process.env.TZ = originalZone;
+    });
+
+    it("is not shifted by a DST change", () => {
+      expect(addDays("2026-03-07", 2)).toBe("2026-03-09"); // US DST starts 2026-03-08
+      expect(addDays("2026-03-27", 2)).toBe("2026-03-29"); // EU DST starts 2026-03-29
+      expect(addDays("2026-03-28", 2)).toBe("2026-03-30");
+      expect(addDays("2026-03-10", 30)).toBe("2026-04-09");
+      expect(addDays("2026-10-24", 2)).toBe("2026-10-26"); // EU DST ends 2026-10-25
+      expect(addDays("2026-10-31", 2)).toBe("2026-11-02"); // US DST ends 2026-11-01
+      expect(addDays("2026-03-09", -2)).toBe("2026-03-07");
+    });
+
+    it("counts whole days across a DST change", () => {
+      expect(daysBetween("2026-03-07", "2026-03-09")).toBe(2);
+      expect(daysBetween("2026-03-28", "2026-03-30")).toBe(2);
+      expect(daysBetween("2026-10-31", "2026-11-02")).toBe(2);
+      expect(daysBetween("2026-03-09", "2026-03-07")).toBe(-2);
+      expect(daysBetween("2026-01-01", "2027-01-01")).toBe(365);
+    });
+  },
+);
 
 describe("isBusinessDay", () => {
   it("is Monday to Friday", () => {
