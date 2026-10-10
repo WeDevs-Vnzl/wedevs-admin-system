@@ -732,8 +732,10 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
 
 #### Wave 3 close
 
-- [ ] **Integration checklist:** 3.1–3.7 merged; no Claude attribution; worktrees removed; lint,
-      typecheck, tests, `i18n:check`, build pass.
+- [x] **Integration checklist:** 3.1–3.7 merged; no Claude attribution; worktrees removed; lint,
+      typecheck, tests, `i18n:check`, build pass. Merges: 3.7 0bbffa5, 3.5 278b7f5, 3.6 d0791fb, 3.3 8ac969f,
+      3.2 b4a64fe, 3.4 013505b, 3.1 b036177. Integrated: 57 files / 1303 tests; i18n parity 32 namespaces;
+      build OK.
 - [ ] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
       fields are strings; multi-rate invoice contract matches C17; share read DTOs never expose keys;
       3.1/3.2 do not cross-import; kit props match `listQuerySchema` and `files.ts`; namespaces filled in
