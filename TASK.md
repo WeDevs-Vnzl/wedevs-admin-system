@@ -874,34 +874,34 @@ Files: `src/mocks/store.ts`, `src/mocks/ctx.ts`, `src/mocks/ids.ts`, `src/mocks/
 `src/features/files/actions.ts`, `src/features/session/actions.ts`,
 `src/i18n/messages/{es,en}/mock.json`, tests next to each file.
 
-- [ ] `store.ts` (`// MOCK`): `globalThis` singleton, lazily built from fixtures, one typed collection per
+- [x] `store.ts` (`// MOCK`): `globalThis` singleton, lazily built from fixtures, one typed collection per
       model the UI needs (incl. `invoiceTaxLines` and share-document key hashes as Δ1/Δ2 shapes);
       `resetMockStore()`; a `derive` hook list for later packages (`data-rules.md` §2).
-- [ ] `ids.ts`: stable readable ids and a mock sequence per prefix (`CLI`, `PRY`, `FAC`, `PAG`, `GAS`,
+- [x] `ids.ts`: stable readable ids and a mock sequence per prefix (`CLI`, `PRY`, `FAC`, `PAG`, `GAS`,
       `DOC`).
-- [ ] `fixtures/catalogs.ts`: currencies (USD, VES, EUR, USDT, COP), exchange rates for the last ~90
+- [x] `fixtures/catalogs.ts`: currencies (USD, VES, EUR, USDT, COP), exchange rates for the last ~90
       days (VES around 755.16, with one missing business day), payment methods, document categories and
       types (§8.9.1), expense categories (§8.8), ~60 technologies, tags, fiscal settings with `ivaRates`
       `["16","8","0"]` and default 16, company settings, mock users. Every row parses with its Zod schema.
-- [ ] Module fixture stubs: typed empty arrays under stable names (owned later by module packages).
-- [ ] `ctx.ts` + `server/context.ts`: `getServiceContext()` → `{ db, user, now }` and
+- [x] Module fixture stubs: typed empty arrays under stable names (owned later by module packages).
+- [x] `ctx.ts` + `server/context.ts`: `getServiceContext()` → `{ db, user, now }` and
       `getPublicServiceContext()` → `{ db, user: null, now }` (C11).
-- [ ] `define-action.ts`: `defineAction({ permission, input, revalidate, handler })` — session →
+- [x] `define-action.ts`: `defineAction({ permission, input, revalidate, handler })` — session →
       `can()` → Zod → handler(ctx, data) → revalidate → `ActionResult`; maps domain errors; never throws
       to the client (C10).
-- [ ] `define-public-action.ts`: `definePublicAction({ input, handler })` — resolve share token through a
+- [x] `define-public-action.ts`: `definePublicAction({ input, handler })` — resolve share token through a
       `resolveToken` function supplied by the shares module (generic `NOT_FOUND` on failure, no reason) →
       Zod → handler(publicCtx, { shareLink, data }) → `ActionResult`; never reads the session (C10
       exception). Unit-tested with a stub resolver.
-- [ ] Mock services (`fn(ctx, input)`): catalogs (`getRateFor`, `listCurrencies`, `listPaymentMethods`,
+- [x] Mock services (`fn(ctx, input)`): catalogs (`getRateFor`, `listCurrencies`, `listPaymentMethods`,
       `listTechnologies`, `listDocumentTypes`, `listExpenseCategories`, `listTags`, `getFiscalSettings`),
       preferences (get/set `table:<id>:columns`, theme, timezone), files (`requestUpload` returning a mock
       file id and no upload URL, `confirmUpload`), session (`setMockRole`, `resetMockData`).
-- [ ] Features: `shell/queries.ts#getShellData()` (user, latest VES rate with date and missing flag,
+- [x] Features: `shell/queries.ts#getShellData()` (user, latest VES rate with date and missing flag,
       alert count `0` until H1-B2), `preferences` queries/actions, `catalogs` queries + read actions
       (`lookupRateAction`), `files/actions.ts`, `session/actions.ts` (MOCK) — all through `defineAction`.
-- [ ] `mock` namespace strings in ES/EN.
-- [ ] Tests: `defineAction` order (`UNAUTHENTICATED`; Viewer on a write → `FORBIDDEN`, handler not
+- [x] `mock` namespace strings in ES/EN.
+- [x] Tests: `defineAction` order (`UNAUTHENTICATED`; Viewer on a write → `FORBIDDEN`, handler not
       called; bad input → `VALIDATION`; success → revalidate called); `definePublicAction` (unknown token
       → generic `NOT_FOUND`, no session access); store reset; fixtures parse; `getRateFor` fallback;
       ESLint import restrictions hold.

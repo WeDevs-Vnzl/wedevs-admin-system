@@ -1,1 +1,22 @@
-{}
+{
+  "badge": {
+    "label": "Mock data",
+    "description": "This version uses fictitious data that is not stored permanently."
+  },
+  "menu": {
+    "title": "Mock mode"
+  },
+  "viewAs": {
+    "label": "View as role",
+    "description": "Change your role for this mock session only. It does not modify any user.",
+    "current": "Viewing as {role}",
+    "changed": "You are now viewing the app as {role}"
+  },
+  "reset": {
+    "label": "Reset mock data",
+    "title": "Reset the mock data?",
+    "description": "Every change made in this session is discarded and the sample data is loaded again.",
+    "confirm": "Reset",
+    "success": "Mock data reset"
+  }
+}
