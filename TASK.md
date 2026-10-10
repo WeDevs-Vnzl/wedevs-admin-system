@@ -1474,7 +1474,10 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
       - Confirmed R16 → H1-B2: white on dark `--destructive` is 3.04:1 (counter badge).
       - Tester E2E additions: `/clients` and `/settings/preferences/x` render the in-shell not-found
         with status 404; `/`, `/sign-in`, `/dashboard`, `/settings/*` unaffected.
-- [ ] **User confirms the Tester may run.**
+- [x] **User confirms the Tester may run.** Confirmed 2026-10-10. Same answer, N1 decided by the user:
+      `--muted-foreground` (light theme) becomes `#686874` for AA (≥ 4.67:1 on card, page and muted
+      surfaces); routed to H1-FX (`src/app/globals.css`), then drop the sign-in `text-foreground/70`
+      workaround.
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage`, `i18n:check`, build.
   - E2E (`tests/e2e/h1-b1-shell.spec.ts`, written by the Tester), local only, two workers per
