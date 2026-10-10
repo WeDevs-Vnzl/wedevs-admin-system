@@ -1941,10 +1941,16 @@ Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/ap
       `satisfies` contract check on activity/tags/technologies mock services → 2.4/2.5/2.6; m3
       `listDocumentCategories(ctx)` keeps no input (accepted). Nits n1–n5 folded into the wave 2 specs.
       Attachment decision recorded in "Wave 1 facts".)*
-- [ ] **Code review** (`wedevs-code-reviewer`, integrated branch): C1, C3 (registry installs, no
+- [x] **Code review** (`wedevs-code-reviewer`, integrated branch): C1, C3 (registry installs, no
       hand-written equivalents), C4 (image attributes), C5 (fixture data, IP ranges, `// MOCK`
       headers), C6, C7, C8, C9 (export factory imports no mocks), C10 (error mapping), C11, C15, C20 (no
-      update/delete in the activity service), C25.
+      update/delete in the activity service), C25. *(2026-10-10, Code Reviewer: READY FOR TESTING. No
+      blockers. `shadcn@4.21.4 add alert item --dry-run --diff` = no changes. Minor: r1 the C4 image rule
+      rejects Tiptap's `null` attr defaults (`alt`/`title`) → 2.3 must emit only `fileId`/`alt`/`src` and
+      drop nulls, or the schema accepts `alt: null`; r2 `useCsvExport` revokes the Blob URL synchronously
+      after `click()` → defer it; r3 `DocumentLinkRow` hand-declares `id`/`createdAt` instead of
+      `Pick<DocumentLinkDTO, …>` (C8). Nits: `/reports/[report]` slugs now crumb as "Detalle"; `diffFields`
+      compares arrays as ordered JSON.)*
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (report `mocks/`, `lib/activity-diff.ts`,
       `mocks/services/export.ts`, `features/export/**`), `i18n:check`, build, lint, typecheck. No E2E (no
