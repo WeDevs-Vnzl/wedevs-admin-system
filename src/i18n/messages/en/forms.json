@@ -21,7 +21,9 @@
     "create": "Create \"{query}\"",
     "clear": "Clear selection",
     "remove": "Remove {label}",
-    "secondaryLabel": "{label}: {option}"
+    "secondaryLabel": "{label}: {option}",
+    "label": "Search",
+    "createFailed": "Could not create the item"
   },
   "countryCombobox": {
     "placeholder": "Select country",
@@ -34,7 +36,9 @@
     "placeholder": "412 123 4567"
   },
   "dateField": {
-    "placeholder": "Select date"
+    "placeholder": "Select date",
+    "label": "Date",
+    "valueLabel": "Date: {value}"
   },
   "uploader": {
     "dropTitle": "Drag files here",

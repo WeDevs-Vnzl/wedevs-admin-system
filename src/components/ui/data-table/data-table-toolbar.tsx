@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -48,6 +48,7 @@ export function DataTableToolbar({
   onExport,
 }: DataTableToolbarProps) {
   const t = useTranslations("table");
+  const archivedId = useId();
   const [labels] = useState<FacetLabelCache>(() => new Map());
   const values = facetValuesOf(query.filters);
   const hasActive =
@@ -90,11 +91,11 @@ export function DataTableToolbar({
         {showArchivedToggle ? (
           <div className="flex items-center gap-2">
             <Switch
-              id="table-show-archived"
+              id={archivedId}
               checked={query.includeArchived}
               onCheckedChange={(checked) => onQueryChange({ includeArchived: checked === true })}
             />
-            <Label htmlFor="table-show-archived" className="font-normal">
+            <Label htmlFor={archivedId} className="font-normal">
               {t("archived.toggle")}
             </Label>
           </div>

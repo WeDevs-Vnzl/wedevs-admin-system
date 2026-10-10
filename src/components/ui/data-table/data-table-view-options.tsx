@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, useState } from "react";
 import { ArrowDown, ArrowUp, Columns3, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import {
   DEFAULT_COLUMN_WIDTH,
+  MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
   moveColumn,
   setColumnVisible,
@@ -35,6 +37,7 @@ interface DataTableViewOptionsProps {
  */
 export function DataTableViewOptions({ columns, config, defaults, onChange }: DataTableViewOptionsProps) {
   const t = useTranslations("table");
+  const idPrefix = useId();
   const labelOf = (id: string) => columns.find((column) => column.id === id)?.label ?? id;
   const hideableOf = (id: string) => columns.find((column) => column.id === id)?.hideable ?? false;
 
@@ -54,27 +57,19 @@ export function DataTableViewOptions({ columns, config, defaults, onChange }: Da
             return (
               <li key={column.id} className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-muted">
                 <Checkbox
-                  id={`table-col-${column.id}`}
+                  id={`${idPrefix}-col-${column.id}`}
                   checked={column.visible}
                   disabled={!hideable}
                   onCheckedChange={(checked) => onChange(setColumnVisible(config, column.id, checked === true))}
                 />
-                <Label htmlFor={`table-col-${column.id}`} className="flex-1 truncate font-normal">
+                <Label htmlFor={`${idPrefix}-col-${column.id}`} className="flex-1 truncate font-normal">
                   {label}
                 </Label>
-                <Input
-                  type="number"
-                  min={MIN_COLUMN_WIDTH}
-                  step={10}
-                  className="h-7 w-20"
-                  aria-label={t("columns.width", { column: label })}
-                  value={column.width ?? DEFAULT_COLUMN_WIDTH}
-                  onChange={(event) => {
-                    const width = Number(event.target.value);
-                    if (Number.isFinite(width) && width >= MIN_COLUMN_WIDTH) {
-                      onChange(setColumnWidth(config, column.id, width));
-                    }
-                  }}
+                <WidthField
+                  key={column.width ?? DEFAULT_COLUMN_WIDTH}
+                  label={t("columns.width", { column: label })}
+                  width={column.width ?? DEFAULT_COLUMN_WIDTH}
+                  onCommit={(width) => onChange(setColumnWidth(config, column.id, width))}
                 />
                 <Button
                   variant="ghost"
@@ -106,5 +101,49 @@ export function DataTableViewOptions({ columns, config, defaults, onChange }: Da
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * Width input with a local draft: typing never touches the config; the value commits (clamped to the shared
+ * 80–1200 px range) on blur or Enter, and an unparsable draft goes back to the current width.
+ */
+function WidthField({
+  label,
+  width,
+  onCommit,
+}: {
+  label: string;
+  width: number;
+  onCommit: (width: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(width));
+
+  const commit = () => {
+    const next = Number(draft);
+    if (draft.trim() === "" || !Number.isFinite(next)) return setDraft(String(width));
+    const clamped = Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.round(next)));
+    setDraft(String(clamped));
+    if (clamped !== width) onCommit(clamped);
+  };
+
+  return (
+    <Input
+      type="number"
+      min={MIN_COLUMN_WIDTH}
+      max={MAX_COLUMN_WIDTH}
+      step={10}
+      className="h-7 w-20"
+      aria-label={label}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          commit();
+        }
+      }}
+    />
   );
 }

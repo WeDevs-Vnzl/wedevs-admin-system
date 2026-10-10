@@ -21,7 +21,9 @@
     "create": "Crear «{query}»",
     "clear": "Quitar la selección",
     "remove": "Quitar {label}",
-    "secondaryLabel": "{label}: {option}"
+    "secondaryLabel": "{label}: {option}",
+    "label": "Buscar",
+    "createFailed": "No se pudo crear el elemento"
   },
   "countryCombobox": {
     "placeholder": "Seleccionar país",
@@ -34,7 +36,9 @@
     "placeholder": "412 123 4567"
   },
   "dateField": {
-    "placeholder": "Seleccionar fecha"
+    "placeholder": "Seleccionar fecha",
+    "label": "Fecha",
+    "valueLabel": "Fecha: {value}"
   },
   "uploader": {
     "dropTitle": "Arrastra archivos aquí",

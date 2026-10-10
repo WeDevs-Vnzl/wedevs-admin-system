@@ -8,7 +8,10 @@
     "searchPlaceholder": "Buscar {field}…",
     "empty": "Sin resultados",
     "loading": "Cargando…",
-    "clear": "Quitar filtro"
+    "clear": "Quitar filtro",
+    "searchLabel": "Buscar {field}",
+    "error": "No se pudieron cargar las opciones",
+    "retry": "Reintentar"
   },
   "filters": {
     "remove": "Quitar filtro {field}",

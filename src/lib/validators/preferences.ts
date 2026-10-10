@@ -75,8 +75,12 @@ export const columnIdSchema = z
   .regex(/^[A-Za-z][A-Za-z0-9_.-]*$/, VALIDATION_MESSAGES.invalidFormat)
   .max(64, VALIDATION_MESSAGES.invalidFormat);
 
+/** Width range (px) a column can be given; the data-table kit clamps to the same bounds. */
+export const MIN_COLUMN_WIDTH = 80;
+export const MAX_COLUMN_WIDTH = 1200;
+
 /** Pixel width of a resized column. */
-export const columnWidthSchema = z.number().int().min(40).max(1200);
+export const columnWidthSchema = z.number().int().min(MIN_COLUMN_WIDTH).max(MAX_COLUMN_WIDTH);
 
 /**
  * Value of a `table:<id>:columns` preference. Columns absent from `order` keep their default position;

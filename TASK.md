@@ -985,29 +985,29 @@ Files: `src/components/ui/data-table/**`, `src/components/ui/async-combobox/**`,
 `src/lib/validators/preferences.ts`, new `src/lib/table-query.ts`, tests next to them (existing test files
 of these components may be edited), `src/i18n/messages/{es,en}/{table,forms,patterns}.json`. No other file.
 
-- [ ] **M1** `src/lib/table-query.ts`: `toModuleQuery(query, facets)` flattens `query.filters` into
+- [x] **M1** `src/lib/table-query.ts`: `toModuleQuery(query, facets)` flattens `query.filters` into
       top-level fields and maps each date-range facet to its own keys. Add optional `fromKey` / `toKey` to
       the date-range facet config (default `<id>From` / `<id>To`). The facet descriptor type lives in
       `lib` (the kit imports it; `lib` never imports from `components`). Tests against
       `invoiceFiltersSchema` and `shareFilterSchema`.
-- [ ] **M3** One width range 80–1200 shared by the kit and `preferences.ts` (export the constants from
+- [x] **M3** One width range 80–1200 shared by the kit and `preferences.ts` (export the constants from
       `preferences.ts`). `columnConfigToPreference` / `preferenceToColumnConfig` in `column-config.ts`,
       round-trip tested. **m3** The width field keeps a local draft and commits on blur or Enter.
-- [ ] **Reviewer M2** Display-only columns (`select`, row actions) carry `meta.exportable === false` and
+- [x] **Reviewer M2** Display-only columns (`select`, row actions) carry `meta.exportable === false` and
       never reach `onExport`. Test.
-- [ ] **m1** Faceted filter search matches the visible label (`keywords={[option.label]}`). **m2** Async
+- [x] **m1** Faceted filter search matches the visible label (`keywords={[option.label]}`). **m2** Async
       facet: catch `loadOptions` rejection (error state, retry) and debounce the search.
-- [ ] **m12** Pagination clamps a hand-edited `page` beyond `pageCount` (send to the last page).
-- [ ] **m4** `RateInput` deviation warning formats the rate for the locale (`formatDecimalForInput`).
-- [ ] **m6** `ConfirmDialog` resets reason and checkbox when it opens; ids from `useId`. Same for the
+- [x] **m12** Pagination clamps a hand-edited `page` beyond `pageCount` (send to the last page).
+- [x] **m4** `RateInput` deviation warning formats the rate for the locale (`formatDecimalForInput`).
+- [x] **m6** `ConfirmDialog` resets reason and checkbox when it opens; ids from `useId`. Same for the
       toolbar's `table-show-archived` id.
-- [ ] **m9** `AsyncCombobox`: default accessible name from i18n when no `id`/`aria-label`; a failing
+- [x] **m9** `AsyncCombobox`: default accessible name from i18n when no `id`/`aria-label`; a failing
       `onCreate` is caught and shown with a toast.
-- [ ] **Tester a11y:** faceted-filter `CommandInput` gets an `aria-label`; `DateField` default i18n name;
+- [x] **Tester a11y:** faceted-filter `CommandInput` gets an `aria-label`; `DateField` default i18n name;
       the uploader's hidden file input is `aria-hidden` (the Browse button stays the only control).
-- [ ] **Coverage:** raise data-table (faceted-filter, export-button, view-options, toolbar, pagination)
+- [x] **Coverage:** raise data-table (faceted-filter, export-button, view-options, toolbar, pagination)
       and uploader to ≥ 90 % statements with tests next to them.
-- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+- [x] Gate: lint, typecheck, test, `i18n:check`, build.
 
 #### Package 4.5 — Kit test coverage (Tester gaps)
 

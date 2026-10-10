@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { Check, Plus } from "lucide-react";
 import type { DateRange } from "react-day-picker";
@@ -54,6 +54,17 @@ export function DataTableFacetedFilter({ facet, value, labels, onChange }: DataT
   );
 }
 
+const ASYNC_DEBOUNCE_MS = 250;
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 function toggle(value: FacetValue, option: string): FacetValue {
   return value.includes(option) ? value.filter((item) => item !== option) : [...value, option];
 }
@@ -74,8 +85,11 @@ function OptionsBody({
   const t = useTranslations("table");
   options.forEach((option) => labels.set(option.value, option.label));
   return (
-    <Command>
-      <CommandInput placeholder={t("facet.searchPlaceholder", { field: facet.label })} />
+    <Command label={t("facet.searchLabel", { field: facet.label })}>
+      <CommandInput
+        placeholder={t("facet.searchPlaceholder", { field: facet.label })}
+        aria-label={t("facet.searchLabel", { field: facet.label })}
+      />
       <CommandList>
         <CommandEmpty>{t("facet.empty")}</CommandEmpty>
         <CommandGroup>
@@ -102,35 +116,55 @@ function AsyncBody({
 }) {
   const t = useTranslations("table");
   const [search, setSearch] = useState("");
-  const [result, setResult] = useState<{ search: string; options: FacetOption[] } | null>(null);
+  const debounced = useDebouncedValue(search, ASYNC_DEBOUNCE_MS);
+  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState<
+    { search: string; attempt: number; options: FacetOption[]; failed: boolean } | null
+  >(null);
 
   useEffect(() => {
     let active = true;
-    facet.loadOptions(search).then((loaded) => {
-      if (!active) return;
-      loaded.forEach((option) => labels.set(option.value, option.label));
-      setResult({ search, options: loaded });
-    });
+    facet.loadOptions(debounced).then(
+      (loaded) => {
+        if (!active) return;
+        loaded.forEach((option) => labels.set(option.value, option.label));
+        setResult({ search: debounced, attempt, options: loaded, failed: false });
+      },
+      () => {
+        if (active) setResult({ search: debounced, attempt, options: [], failed: true });
+      },
+    );
     return () => {
       active = false;
     };
     // loadOptions is supplied by the page; re-running on identity change would refetch on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [debounced, attempt]);
 
-  // Loading until the result belongs to the current search string.
-  const loading = result?.search !== search;
+  // Loading until the result belongs to the current (debounced) search string and attempt.
+  const loading = debounced !== search || result?.search !== debounced || result.attempt !== attempt;
+  const failed = !loading && result?.failed === true;
   const options = result?.options ?? [];
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   return (
-    <Command shouldFilter={false}>
+    <Command shouldFilter={false} label={t("facet.searchLabel", { field: facet.label })}>
       <CommandInput
         placeholder={t("facet.searchPlaceholder", { field: facet.label })}
+        aria-label={t("facet.searchLabel", { field: facet.label })}
         onValueChange={setSearch}
       />
       <CommandList>
         {loading ? <div className="px-2 py-6 text-center text-sm text-muted-foreground">{t("facet.loading")}</div> : null}
-        {!loading && options.length === 0 ? <CommandEmpty>{t("facet.empty")}</CommandEmpty> : null}
+        {failed ? (
+          <div role="alert" className="flex flex-col items-center gap-2 px-2 py-6 text-center text-sm text-muted-foreground">
+            <span>{t("facet.error")}</span>
+            <Button variant="outline" size="sm" onClick={retry}>
+              {t("facet.retry")}
+            </Button>
+          </div>
+        ) : null}
+        {!loading && !failed && options.length === 0 ? <CommandEmpty>{t("facet.empty")}</CommandEmpty> : null}
         <CommandGroup>
           {options.map((option) => (
             <OptionItem key={option.value} option={option} value={value} onChange={onChange} />
@@ -153,7 +187,7 @@ function OptionItem({
 }) {
   const selected = value.includes(option.value);
   return (
-    <CommandItem value={option.value} onSelect={() => onChange(toggle(value, option.value))}>
+    <CommandItem value={option.value} keywords={[option.label]} onSelect={() => onChange(toggle(value, option.value))}>
       <span
         className={cn(
           "flex size-4 items-center justify-center rounded-sm border",

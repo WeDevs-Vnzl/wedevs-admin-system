@@ -114,4 +114,70 @@ describe("DataTable", () => {
       vi.useRealTimers();
     }
   });
+
+  it("never sends display-only columns (selection, meta.exportable === false) to onExport", async () => {
+    const withActions: DataTableColumnDef<Row>[] = [
+      ...columns,
+      helper.display({
+        id: "actions",
+        header: "Actions",
+        cell: () => <button type="button">Edit</button>,
+        meta: { label: "Actions", hideable: false, exportable: false },
+      }),
+    ];
+    const onExport = vi.fn();
+    renderTable({ columns: withActions, onExport });
+
+    await userEvent.click(screen.getByRole("button", { name: en.export.label }));
+
+    expect(onExport).toHaveBeenCalledTimes(1);
+    expect(onExport.mock.calls[0]?.[1]).toEqual(["code", "name", "email"]);
+  });
+
+  it("exports only the visible exportable columns, in display order", async () => {
+    const onExport = vi.fn();
+    renderTable({
+      onExport,
+      initialColumns: [
+        { id: "email", visible: true },
+        { id: "code", visible: false },
+        { id: "name", visible: true },
+      ],
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: en.export.label }));
+    expect(onExport.mock.calls[0]?.[1]).toEqual(["email", "name"]);
+  });
+
+  it("walks sort asc → desc → none through the query", async () => {
+    const asc = renderTable({ query: listQuerySchema.parse({ sort: "code:asc" }) });
+    await userEvent.click(screen.getByRole("button", { name: "Sort by Code" }));
+    expect(asc.onQueryChange).toHaveBeenLastCalledWith({ sort: "code:desc" });
+    asc.unmount();
+
+    const desc = renderTable({ query: listQuerySchema.parse({ sort: "code:desc" }) });
+    await userEvent.click(screen.getByRole("button", { name: "Sort by Code" }));
+    expect(desc.onQueryChange).toHaveBeenLastCalledWith({ sort: undefined });
+  });
+
+  it("clears the selection when the query scope changes", async () => {
+    const { rerender, onQueryChange } = renderTable({ bulkActions: () => <span>bulk</span> });
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select row c-1" }));
+    expect(screen.getByRole("region", { name: en.bulk.region })).toBeInTheDocument();
+
+    rerender(
+      <NextIntlClientProvider locale="en" messages={{ table: en }} timeZone="UTC">
+        <DataTable<Row>
+          data={rows}
+          columns={columns}
+          getRowId={(row) => row.id}
+          total={rows.length}
+          query={listQuerySchema.parse({ q: "acme" })}
+          onQueryChange={onQueryChange}
+          emptyState={{ title: "none" }}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.queryByRole("region", { name: en.bulk.region })).toBeNull();
+  });
 });

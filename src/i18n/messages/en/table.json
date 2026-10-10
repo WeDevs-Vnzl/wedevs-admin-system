@@ -8,7 +8,10 @@
     "searchPlaceholder": "Search {field}…",
     "empty": "No results",
     "loading": "Loading…",
-    "clear": "Remove filter"
+    "clear": "Remove filter",
+    "searchLabel": "Search {field}",
+    "error": "Could not load the options",
+    "retry": "Retry"
   },
   "filters": {
     "remove": "Remove {field} filter",

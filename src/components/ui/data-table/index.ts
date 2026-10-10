@@ -20,9 +20,12 @@ export {
 } from "./use-table-url-state";
 export {
   DEFAULT_COLUMN_WIDTH,
+  MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
+  columnConfigToPreference,
   defaultColumnConfig,
   moveColumn,
+  preferenceToColumnConfig,
   resolveColumnConfig,
   setColumnVisible,
   setColumnWidth,

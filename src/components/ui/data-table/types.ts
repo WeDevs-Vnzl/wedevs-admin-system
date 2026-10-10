@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { DateRangeFacetKeys } from "@/lib/table-query";
 import type { ListQuery } from "@/lib/validators/common";
 
 export interface ColumnConfig {
@@ -22,12 +23,13 @@ interface FacetBase {
 
 /**
  * Facet kinds. `options` = static list; `async` = options loaded per search string (clients, tags…);
- * `dateRange` = `[from, to]` as `YYYY-MM-DD`.
+ * `dateRange` = `[from, to]` as `YYYY-MM-DD`, sent to the module query as `fromKey` / `toKey`
+ * (default `<id>From` / `<id>To`, see `toModuleQuery`).
  */
 export type FacetConfig =
   | (FacetBase & { kind: "options"; options: FacetOption[] })
   | (FacetBase & { kind: "async"; loadOptions: (search: string) => Promise<FacetOption[]> })
-  | (FacetBase & { kind: "dateRange" });
+  | (FacetBase & { kind: "dateRange" } & DateRangeFacetKeys);
 
 /** Partial update of the list query; the kit resets `page` to 1 whenever a filter/search/sort changes. */
 export type ListQueryPatch = Partial<

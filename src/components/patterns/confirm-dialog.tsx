@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertDialog,
@@ -45,6 +45,20 @@ export function ConfirmDialog({
   const t = useTranslations("patterns.confirm");
   const [reason, setReason] = useState("");
   const [extraChecked, setExtraChecked] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  const baseId = useId();
+  const reasonId = `${baseId}-reason`;
+  const reasonErrorId = `${baseId}-reason-error`;
+  const extraId = `${baseId}-extra`;
+
+  // Each time the dialog opens it starts clean, whatever the parent left typed or checked last time.
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setReason("");
+      setExtraChecked(false);
+    }
+  }
 
   const reasonMissing = requireReason && reason.trim().length === 0;
 
@@ -58,16 +72,16 @@ export function ConfirmDialog({
 
         {requireReason ? (
           <div className="grid gap-2">
-            <Label htmlFor="confirm-dialog-reason">{t("reason")}</Label>
+            <Label htmlFor={reasonId}>{t("reason")}</Label>
             <Textarea
-              id="confirm-dialog-reason"
+              id={reasonId}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               aria-invalid={reasonMissing || undefined}
-              aria-describedby={reasonMissing ? "confirm-dialog-reason-error" : undefined}
+              aria-describedby={reasonMissing ? reasonErrorId : undefined}
             />
             {reasonMissing ? (
-              <p id="confirm-dialog-reason-error" className="text-destructive text-xs">
+              <p id={reasonErrorId} className="text-destructive text-xs">
                 {t("reasonRequired")}
               </p>
             ) : null}
@@ -77,11 +91,11 @@ export function ConfirmDialog({
         {extraCheckboxLabel ? (
           <div className="flex items-center gap-2">
             <Checkbox
-              id="confirm-dialog-extra"
+              id={extraId}
               checked={extraChecked}
               onCheckedChange={(checked) => setExtraChecked(checked === true)}
             />
-            <Label htmlFor="confirm-dialog-extra">{extraCheckboxLabel}</Label>
+            <Label htmlFor={extraId}>{extraCheckboxLabel}</Label>
           </div>
         ) : null}
 

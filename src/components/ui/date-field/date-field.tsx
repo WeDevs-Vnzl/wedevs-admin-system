@@ -69,6 +69,11 @@ export function DateField({
   const minDate = min ? toLocalDate(min) : undefined;
   const maxDate = max ? toLocalDate(max) : undefined;
 
+  // Default name when the caller gave neither `aria-label` nor an `id` (a `<label for>` target).
+  const accessibleName =
+    aria["aria-label"] ??
+    (id ? undefined : selected ? t("valueLabel", { value: formatDate(value, locale, "medium") }) : t("label"));
+
   return (
     <Popover
       open={open}
@@ -84,7 +89,7 @@ export function DateField({
           type="button"
           variant="outline"
           disabled={disabled}
-          aria-label={aria["aria-label"]}
+          aria-label={accessibleName}
           aria-invalid={aria["aria-invalid"]}
           aria-haspopup="dialog"
           data-slot="date-field"

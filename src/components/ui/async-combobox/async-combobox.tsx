@@ -3,6 +3,7 @@
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import { XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import {
   Combobox,
   ComboboxChip,
@@ -79,10 +80,18 @@ function useListModel(props: AsyncComboboxProps) {
   const grouped = state.options.some((option) => option.group !== undefined);
 
   async function create() {
-    const created = await props.onCreate?.(trimmed);
-    state.setQuery("");
-    return created ?? null;
+    try {
+      const created = await props.onCreate?.(trimmed);
+      state.setQuery("");
+      return created ?? null;
+    } catch {
+      toast.error(t("createFailed"));
+      return null;
+    }
   }
+
+  /** Name for screen readers when the caller gave neither `aria-label` nor an `id` (a `<label for>` target). */
+  const accessibleName = props["aria-label"] ?? (props.id ? undefined : t("label"));
 
   return {
     ...state,
@@ -90,6 +99,7 @@ function useListModel(props: AsyncComboboxProps) {
     items,
     groups: grouped ? buildGroups(state.options, createItem) : null,
     create,
+    accessibleName,
     emptyText: state.loading ? t("loading") : t("empty"),
   };
 }
@@ -199,7 +209,7 @@ function SingleCombobox(props: AsyncComboboxSingleProps) {
         <ComboboxInput
           id={props.id}
           placeholder={props.placeholder ?? t("placeholder")}
-          aria-label={props["aria-label"]}
+          aria-label={model.accessibleName}
           aria-invalid={props["aria-invalid"]}
           showTrigger={false}
         >
@@ -280,7 +290,7 @@ function MultiCombobox(props: AsyncComboboxMultiProps) {
                 <ComboboxChipsInput
                   id={props.id}
                   placeholder={selected.length === 0 ? (props.placeholder ?? t("placeholder")) : ""}
-                  aria-label={props["aria-label"]}
+                  aria-label={model.accessibleName}
                   aria-invalid={props["aria-invalid"]}
                 />
               </>

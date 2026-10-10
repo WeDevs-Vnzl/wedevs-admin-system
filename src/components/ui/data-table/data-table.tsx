@@ -47,7 +47,7 @@ export interface DataTableProps<TData extends RowData> {
   selectable?: boolean;
   /** Bulk-action slot, rendered with the selected ids. */
   bulkActions?: (selectedIds: string[]) => ReactNode;
-  /** Export button handler: receives the query and the visible column ids (in display order). */
+  /** Export button handler: receives the query and the visible column ids (in display order), without display-only columns (`meta.exportable === false`). */
   onExport?: (query: ListQuery, visibleColumns: string[]) => void;
   emptyState: DataTableEmptyConfig;
   /** Saved column state; merged with the definitions by `resolveColumnConfig`. */
@@ -85,7 +85,7 @@ export function DataTable<TData extends RowData>({
     () =>
       helper.display({
         id: "select",
-        meta: { hideable: false, label: t("select.column") },
+        meta: { hideable: false, exportable: false, label: t("select.column") },
         size: 40,
         header: ({ table }) => (
           <Checkbox
@@ -190,6 +190,8 @@ export function DataTable<TData extends RowData>({
   };
 
   const visibleIds = visibleColumnIds(config);
+  const exportIds = new Set(allColumns.filter((def) => def.meta?.exportable !== false).map(columnIdOf));
+  const exportableIds = visibleIds.filter((id) => exportIds.has(id));
   const visibleCount = visibleIds.length;
   const hasRows = data.length > 0;
 
@@ -205,7 +207,7 @@ export function DataTable<TData extends RowData>({
         columnConfig={config}
         defaultColumnConfig={defaults}
         onColumnConfigChange={updateConfig}
-        onExport={onExport ? () => onExport(query, visibleIds) : undefined}
+        onExport={onExport ? () => onExport(query, exportableIds) : undefined}
       />
 
       {selectable && selectedIds.length > 0 ? (
@@ -304,6 +306,7 @@ export function DataTable<TData extends RowData>({
         page={query.page}
         pageSize={query.pageSize}
         total={total}
+        clamp={!loading}
         onPageChange={(page) => onQueryChange({ page })}
         onPageSizeChange={(pageSize) => onQueryChange({ pageSize, page: 1 })}
       />
