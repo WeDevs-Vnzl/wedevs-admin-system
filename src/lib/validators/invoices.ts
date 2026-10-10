@@ -461,10 +461,10 @@ export const INVOICE_SORT_FIELDS = [
 export const invoiceFiltersSchema = withSortFields(
   listQuerySchema.extend({
     status: facetSchema(invoiceStatusSchema),
-    clientId: idSchema.optional(),
-    projectId: idSchema.optional(),
+    clientId: facetSchema(idSchema),
+    projectId: facetSchema(idSchema),
     currency: facetSchema(currencyCodeSchema),
-    tagId: idSchema.optional(),
+    tagId: facetSchema(idSchema),
     /** Issue date range. */
     dateFrom: dateOnlySchema.optional(),
     dateTo: dateOnlySchema.optional(),

@@ -288,9 +288,9 @@ export const PAYMENT_SORT_FIELDS = [
 export const paymentFiltersSchema = withSortFields(
   listQuerySchema.extend({
     status: facetSchema(paymentStatusSchema),
-    clientId: idSchema.optional(),
-    accountId: idSchema.optional(),
-    methodId: idSchema.optional(),
+    clientId: facetSchema(idSchema),
+    accountId: facetSchema(idSchema),
+    methodId: facetSchema(idSchema),
     currency: facetSchema(currencyCodeSchema),
     dateFrom: dateOnlySchema.optional(),
     dateTo: dateOnlySchema.optional(),

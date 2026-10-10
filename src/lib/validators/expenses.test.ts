@@ -328,6 +328,23 @@ describe("expense DTOs", () => {
 describe("sort whitelist (m2)", () => {
   it("accepts the listed fields and rejects any other, for both lists", () => {
     expect(expenseFiltersSchema.safeParse({}).success).toBe(true);
+    expect(
+      expenseFiltersSchema.parse({
+        categoryId: ["k1", "k2"],
+        accountId: ["a1", "a2"],
+        projectId: "p1",
+        tagId: ["t1", "t2"],
+      }),
+    ).toMatchObject({
+      categoryId: ["k1", "k2"],
+      accountId: ["a1", "a2"],
+      projectId: ["p1"],
+      tagId: ["t1", "t2"],
+    });
+    expect(recurringExpenseFiltersSchema.parse({ categoryId: ["k1", "k2"] }).categoryId).toEqual([
+      "k1",
+      "k2",
+    ]);
     expect(recurringExpenseFiltersSchema.safeParse({}).success).toBe(true);
     for (const field of EXPENSE_SORT_FIELDS) {
       expect(expenseFiltersSchema.safeParse({ sort: `${field}:desc` }).success, field).toBe(true);

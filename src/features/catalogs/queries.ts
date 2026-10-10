@@ -1,5 +1,5 @@
 import "server-only";
-import type { GetRateForInput } from "@/lib/validators/catalogs";
+import { getRateForInputSchema, type GetRateForInput } from "@/lib/validators/catalogs";
 import {
   documentTypeFilterSchema,
   type DocumentTypeFilterInput,
@@ -13,7 +13,7 @@ import { getServiceContext } from "@/server/context";
 // Managing it is a different matter: that goes through the `settings` actions (Owner and Admin).
 
 export async function getRateFor(input: GetRateForInput) {
-  return catalogs.getRateFor(await getServiceContext(), input);
+  return catalogs.getRateFor(await getServiceContext(), getRateForInputSchema.parse(input));
 }
 
 export async function listCurrencies() {

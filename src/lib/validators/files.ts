@@ -159,6 +159,10 @@ export const requestUploadInputSchema = z
   });
 export type RequestUploadInput = z.infer<typeof requestUploadInputSchema>;
 
+/** `confirmUpload` input: the file the browser finished uploading. */
+export const confirmUploadInputSchema = z.object({ fileId: idSchema });
+export type ConfirmUploadInput = z.infer<typeof confirmUploadInputSchema>;
+
 // ───────────────────────────── DTOs and adapter ─────────────────────────────
 
 export const fileDtoSchema = z.object({

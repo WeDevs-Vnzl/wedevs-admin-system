@@ -74,6 +74,32 @@ describe("toModuleQuery", () => {
     expect(flat).toMatchObject({ tagId: "TAG-1", q: "x", page: 1 });
   });
 
+  it("two values of a facet id parse against invoiceFiltersSchema", () => {
+    const flat = toModuleQuery(query({ filters: { clientId: ["CLI-1", "CLI-2"], tagId: "TAG-1" } }), [
+      { id: "clientId", kind: "async" },
+      { id: "tagId", kind: "async" },
+    ]);
+    const parsed = invoiceFiltersSchema.safeParse(flat);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.clientId).toEqual(["CLI-1", "CLI-2"]);
+      expect(parsed.data.tagId).toEqual(["TAG-1"]);
+    }
+  });
+
+  it("ignores __proto__, constructor and prototype facet ids", () => {
+    const filters = JSON.parse(
+      '{"__proto__":["x"],"constructor":"y","prototype":"z","tagId":"TAG-1"}',
+    ) as Record<string, unknown>;
+    const flat = toModuleQuery(query({ filters }), [{ id: "__proto__", kind: "options" }]);
+    expect(Object.getPrototypeOf(flat)).toBe(Object.prototype);
+    expect(Object.keys(flat).sort()).toEqual(["includeArchived", "page", "pageSize", "tagId"]);
+    const asDateRange = toModuleQuery(query({ filters: { d: ["2026-01-01", "2026-01-02"] } }), [
+      { id: "d", kind: "dateRange", fromKey: "__proto__", toKey: "constructor" },
+    ]);
+    expect(Object.keys(asDateRange).sort()).toEqual(["includeArchived", "page", "pageSize"]);
+  });
+
   it("handles a half-open date range", () => {
     const flat = toModuleQuery(query({ filters: { date: ["2026-03-01"] } }), [
       { id: "date", kind: "dateRange", fromKey: "dateFrom", toKey: "dateTo" },

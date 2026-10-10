@@ -1,5 +1,6 @@
 import { z } from "./zod";
 import { listQuerySchema, VALIDATION_MESSAGES } from "./common";
+import { columnIdSchema } from "./preferences";
 
 /**
  * CSV export contract (PRD §12 `exportCsv(entity, filters, columns)`). The input is the same list query
@@ -29,11 +30,8 @@ export const EXPORT_ENTITY_VALUES = [
 export const exportEntitySchema = z.enum(EXPORT_ENTITY_VALUES);
 export type ExportEntity = z.infer<typeof exportEntitySchema>;
 
-/** Column id as the table knows it (`accessorKey`/`id`): a property name or dotted path. */
-export const exportColumnSchema = z
-  .string()
-  .regex(/^[A-Za-z][A-Za-z0-9_.]*$/)
-  .max(64);
+/** Column id as the table knows it: the same `columnIdSchema` the column preferences use. */
+export const exportColumnSchema = columnIdSchema;
 
 export const MAX_EXPORT_COLUMNS = 100;
 

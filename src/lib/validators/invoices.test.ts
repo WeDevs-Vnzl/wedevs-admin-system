@@ -512,6 +512,18 @@ describe("invoice filters", () => {
     expect(parsed.pageSize).toBe(25);
     expect(invoiceFiltersSchema.safeParse({ status: "ATRASADA" }).success).toBe(false);
   });
+
+  it("accepts one or many client, project and tag ids (kit facets are multi)", () => {
+    const one = invoiceFiltersSchema.parse({ clientId: "c1" });
+    expect(one.clientId).toEqual(["c1"]);
+    const many = invoiceFiltersSchema.parse({
+      clientId: ["c1", "c2"],
+      projectId: ["p1", "p2"],
+      tagId: ["t1", "t2"],
+    });
+    expect(many).toMatchObject({ clientId: ["c1", "c2"], projectId: ["p1", "p2"], tagId: ["t1", "t2"] });
+    expect(invoiceFiltersSchema.safeParse({ clientId: ["c1", "bad id"] }).success).toBe(false);
+  });
 });
 
 describe("IVA adjustment on a 0 % rate (m3)", () => {

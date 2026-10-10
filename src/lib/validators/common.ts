@@ -272,7 +272,13 @@ export function sortsBy(sort: string | undefined, fields: readonly string[]): bo
   return sort === undefined || (parsed !== null && fields.includes(parsed.field));
 }
 
-/** Adds the sort whitelist (`fields`) to a list-query-shaped schema's `sort`. */
+/**
+ * Adds the sort whitelist (`fields`) to a list-query-shaped schema's `sort`.
+ *
+ * The result is a refined schema: it parses and infers like `T`, but Zod 4 throws at runtime if you call
+ * `.pick()`, `.omit()`, `.partial()` or `.extend()` on a refined object. Derive variants from the **base**
+ * object (before wrapping) with `pick`/`partial`/`extend`, then wrap each with `withSortFields`.
+ */
 export function withSortFields<T extends z.ZodType<{ sort?: string | undefined }>>(
   schema: T,
   fields: readonly string[],

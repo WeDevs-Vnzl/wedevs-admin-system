@@ -3,13 +3,13 @@ import "server-only";
 // comes from the mock session; this file is one of the few allowed to import `@/mocks/**` (C9). Hito 2
 // swaps the body for the Prisma client and the Clerk-backed session; the signatures stay.
 import {
-  ServiceError,
   createMockContext,
   createMockPublicContext,
   type MockPublicServiceContext,
   type MockServiceContext,
 } from "@/mocks/ctx";
 import { requireSessionUser } from "@/server/auth/session";
+import { ServiceError } from "@/server/errors";
 
 /** `ctx = { db, user, now }`: what every service receives (C11). `now` is the only clock a service may read. */
 export type ServiceContext = MockServiceContext;
@@ -17,7 +17,7 @@ export type ServiceContext = MockServiceContext;
 /** Context of the public portal services: `user` is `null`, the share link travels in the service input. */
 export type PublicServiceContext = MockPublicServiceContext;
 
-/** Thrown by services for domain failures (`CONFLICT`, `NOT_FOUND`, …); the action adapters map it. */
+/** Thrown by services for domain failures (`CONFLICT`, `NOT_FOUND`, …); defined in `@/server/errors`. */
 export { ServiceError };
 
 /**

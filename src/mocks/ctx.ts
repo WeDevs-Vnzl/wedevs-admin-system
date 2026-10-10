@@ -2,7 +2,7 @@
 // the in-memory store, in Hito 2 the Prisma client or transaction. Only `src/server/context.ts` builds it
 // for the app; services receive it and never create one. Framework-free: no `next/*`, `react`,
 // `next-intl` or `@clerk/*`. Deleted with `src/mocks/` at the close of Hito 2 (C9).
-import { errorMessageKey, type ErrorCode, type FieldErrors } from "@/lib/validators/common";
+import { ServiceError } from "@/server/errors";
 import type { SessionUser } from "@/server/auth/types";
 import { getMockStore, type MockStore } from "./store";
 
@@ -35,19 +35,5 @@ export function createMockPublicContext(options: {
   return { db: options.db ?? getMockStore(), user: null, now: options.now };
 }
 
-/**
- * A failure of a service (`CONFLICT`, `NOT_FOUND`, `INTEGRITY_LOCK`, …). Services throw it, never return
- * it as a DTO; the action adapter maps it to an `ActionResult` error (C10). `message` is an i18n key and
- * defaults to `common.errors.<CODE>`. Hito 2 services reuse the same class.
- */
-export class ServiceError extends Error {
-  readonly code: ErrorCode;
-  readonly fieldErrors?: FieldErrors;
-
-  constructor(code: ErrorCode, options: { message?: string; fieldErrors?: FieldErrors } = {}) {
-    super(options.message ?? errorMessageKey(code));
-    this.name = "ServiceError";
-    this.code = code;
-    if (options.fieldErrors) this.fieldErrors = options.fieldErrors;
-  }
-}
+/** The shared service error lives in `src/server/errors.ts`; re-exported here under the same name. */
+export { ServiceError };
