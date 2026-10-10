@@ -1,1 +1,10 @@
-{}
+{
+  "validation": {
+    "rateCurrencyIsUsd": "USD siempre vale 1: no admite tasa de cambio",
+    "duplicateRateCurrency": "La moneda está repetida",
+    "invalidColor": "Color no válido (usa formato #RRGGBB)",
+    "invalidCode": "Código no válido (mayúsculas, números y guion bajo)",
+    "usdRateMustBeOne": "Para transacciones en USD la tasa debe ser 1",
+    "categoryParentIsSelf": "Una categoría no puede ser su propia categoría padre"
+  }
+}

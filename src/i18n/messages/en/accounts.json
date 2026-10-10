@@ -1,1 +1,7 @@
-{}
+{
+  "validation": {
+    "sameAccount": "The source and destination accounts must be different",
+    "partnerRequired": "Select the partner",
+    "adjustmentNonZero": "An adjustment cannot be zero"
+  }
+}

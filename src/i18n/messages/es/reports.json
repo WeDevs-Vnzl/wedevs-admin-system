@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "customRangeRequired": "Indica las fechas del rango personalizado",
+    "rangeInverted": "La fecha final no puede ser anterior a la inicial"
+  }
+}

@@ -1,1 +1,6 @@
-{}
+{
+  "validation": {
+    "duplicateIvaRate": "The VAT rate is repeated",
+    "defaultIvaRateNotAllowed": "The default VAT rate must be one of the allowed rates"
+  }
+}

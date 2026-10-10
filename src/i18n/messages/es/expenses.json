@@ -1,1 +1,7 @@
-{}
+{
+  "validation": {
+    "accountRequiredForPaid": "La cuenta de pago es obligatoria para un gasto pagado",
+    "accountAmountRequired": "Indica el monto debitado en la moneda de la cuenta",
+    "dueBeforeDate": "El vencimiento no puede ser anterior a la fecha del gasto"
+  }
+}

@@ -1,1 +1,12 @@
-{}
+{
+  "validation": {
+    "discountExceedsAmount": "The discount cannot exceed the line amount",
+    "ivaRateNotAllowed": "The VAT rate is not one of the allowed rates",
+    "adjustmentOutOfRange": "The VAT adjustment cannot exceed ±0.01",
+    "adjustmentRateNotInLines": "No line uses this rate",
+    "duplicateAdjustmentRate": "There is already an adjustment for this rate",
+    "dueBeforeIssue": "The due date cannot be before the issue date",
+    "otherWithheldNoteRequired": "Describe the other withholdings",
+    "duplicateInstallment": "The installment is repeated"
+  }
+}
