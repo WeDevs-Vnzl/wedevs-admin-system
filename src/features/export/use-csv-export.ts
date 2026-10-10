@@ -19,7 +19,8 @@ function download(filename: string, content: string): void {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Revoke on a later tick: Firefox can cancel the download if the URL is gone before it starts.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 /**
