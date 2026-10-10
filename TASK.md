@@ -1224,8 +1224,9 @@ Files: `src/app/(app)/settings/layout.tsx`, `src/app/(app)/settings/page.tsx`,
 
 #### Wave 5 close
 
-- [ ] **Integration checklist:** 5.1, 5.2 merged; no Claude attribution; worktrees removed; lint,
+- [x] **Integration checklist:** 5.1, 5.2 merged; no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass.
+      Result: 111 test files, 1761 tests + 1 expected fail; i18n 32 namespaces in parity; build OK.
 - [ ] **Planner coherence review:** nav routes = PRD §11; settings sections = §8.15; shell uses
       `getShellData` (no mock imports in components); icons per §1a; namespaces filled in both languages.
 - [ ] **Code review:** C1, C2, C3, C5, C6, C7, C9, C10, C25; accessibility of sidebar, topbar and
