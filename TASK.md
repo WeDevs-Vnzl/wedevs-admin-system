@@ -375,16 +375,16 @@ Package 2.4 → Agent: wedevs-developer · haiku — Reason: i18n messages plus 
 Files: `src/i18n/messages/{es,en}/validation.json`, `src/i18n/messages/{es,en}/common.json`,
 `src/i18n/contract-keys.test.ts` (new), `vitest.config.ts`. Read-only: `src/lib/validators/{common,enums}.ts`.
 
-- [ ] `validation.json` (ES and EN): add every key in `VALIDATION_MESSAGES` as nested objects
+- [x] `validation.json` (ES and EN): add every key in `VALIDATION_MESSAGES` as nested objects
       (`id.invalid`, `date.invalid`, `sort.invalid`, `money.*`, `rate.*`, `percent.*`, `currency.invalid`,
       `file.*`); keep `required`; remove the unused flat duplicates `invalidDate` and `invalidId`.
-- [ ] `common.json` (ES and EN): add `errors.<CODE>` for all 9 values of `ERROR_CODE_VALUES`.
-- [ ] `src/i18n/contract-keys.test.ts`: per locale, every `VALIDATION_MESSAGES` value and every
+- [x] `common.json` (ES and EN): add `errors.<CODE>` for all 9 values of `ERROR_CODE_VALUES`.
+- [x] `src/i18n/contract-keys.test.ts`: per locale, every `VALIDATION_MESSAGES` value and every
       `common.errors.<CODE>` resolves to a non-empty string; `enums` catalog keys equal `ENUM_REGISTRY`.
-- [ ] `vitest.config.ts`: add `scripts/**/*.test.ts` to the node project `include`; if `.vitest/` comes
+- [x] `vitest.config.ts`: add `scripts/**/*.test.ts` to the node project `include`; if `.vitest/` comes
       from a configurable Vitest option, send it to an ignored location, otherwise report it (no
       `.gitignore` edit).
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check` pass; the `check-i18n` and
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check` pass; the `check-i18n` and
       `contract-keys` suites appear in the run.
 
 #### Package 2.5 — formatMoney for non-ISO currency codes (wave 2 follow-up, blocker B3)

@@ -16,5 +16,16 @@
     "loading": "Cargando…",
     "empty": "Sin resultados",
     "error": "Algo salió mal"
+  },
+  "errors": {
+    "UNAUTHENTICATED": "Debes iniciar sesión para continuar",
+    "FORBIDDEN": "No tienes permiso para realizar esta acción",
+    "VALIDATION": "Revisa los campos marcados",
+    "NOT_FOUND": "No se encontró el registro solicitado",
+    "CONFLICT": "Este cambio entra en conflicto con los datos actuales",
+    "INTEGRITY_LOCK": "Este registro está vinculado a otros registros y no puede modificarse de esta forma",
+    "ACCESS_KEY_INVALID": "La clave de acceso no es válida",
+    "ACCESS_KEY_LOCKED": "Esta clave de acceso está bloqueada tras demasiados intentos fallidos",
+    "INTERNAL": "Algo salió mal de nuestro lado. Inténtalo de nuevo"
   }
 }
