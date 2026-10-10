@@ -110,13 +110,23 @@ export function isNegativeMoney(value: MoneyString): boolean {
   return toDecimal(value).isNegative() && !toDecimal(value).isZero();
 }
 
-/** Display only: formats the rounded string with Intl.NumberFormat (no number conversion). */
+const ISO_CURRENCY_CODE = /^[A-Za-z]{3}$/;
+
+/**
+ * Display only: formats the rounded string with Intl.NumberFormat (no number conversion).
+ * Codes that are not a 3-letter ISO 4217 code (e.g. `USDT`) make `style: "currency"` throw, so they
+ * fall back to a 2-decimal locale number with the code appended.
+ */
 export function formatMoney(amount: MoneyString, currency: string, locale: string): string {
   const rounded = roundMoney(amount);
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
+  const isIso = ISO_CURRENCY_CODE.test(currency);
+  const formatter = new Intl.NumberFormat(locale, {
+    ...(isIso ? { style: "currency" as const, currency } : {}),
     minimumFractionDigits: MONEY_DECIMALS,
     maximumFractionDigits: MONEY_DECIMALS,
-  }).format(rounded as unknown as Parameters<Intl.NumberFormat["format"]>[0]);
+  });
+  const formatted = formatter.format(
+    rounded as unknown as Parameters<Intl.NumberFormat["format"]>[0],
+  );
+  return isIso ? formatted : `${formatted} ${currency}`;
 }
