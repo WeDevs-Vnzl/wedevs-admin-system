@@ -730,9 +730,50 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
       with the same exceptions (`src/lib/validators/zod.ts`, `zod-config.ts`). Verify by linting a scratch
       import (and remove it).
 
+#### Package 3.8 — Wave 3 review fixes (B1–B3, M1)
+
+Package 3.8 → Agent: wedevs-developer · sonnet — Reason: portal security contract (C22), masking of financial identifiers (C5) and i18n of shared kit components (C1).
+
+Use the shadcn MCP.
+
+Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and their tests;
+`src/components/ui/data-table/{data-table-faceted-filter,data-table-filter-chips}.tsx`;
+`src/components/patterns/{kpi-card,related-mini-table}.tsx`;
+`src/components/ui/async-combobox/async-combobox.tsx`; tests next to them;
+`src/i18n/messages/{es,en}/{table,forms,patterns}.json`. No other file.
+
+- [ ] **B1 (C22)** `shares.ts`: split every portal input in two.
+      - A **client action schema** with only `{ token, documentId[, key] }`.
+      - A **service input** type or schema that the adapter extends with server-only metadata:
+        `unlockedDocumentIds` from the signed cookie, `ipHash` (or `ip`) and `userAgent`. This covers
+        `resolveShareToken`, `getSharedDocument`, `recordShareAccess` and `unlockSharedDocument`. The C22
+        lockout (5 failures per link, document and IP hash in 15 min) must be keyable from the service
+        input.
+      - Document that only the service schema reaches services.
+      - Tests: the client schemas strip or reject `unlockedDocumentIds`, `ip` and `ipHash`; the unlock
+        service input carries the IP hash.
+      - Keep the existing export names working, or note every rename in `worker_done`.
+- [ ] **B2 (C5)** `accounts.ts`: a value counts as already masked only when it matches the exact output
+      shapes (`^•••• \d{4}$`, `^.{4}….{4}$`, `^.….$`, all `•`). Anything else has its mask characters
+      stripped and is masked again. Tests: each accepted shape, plus a bypass input such as
+      `*0102-0123-45-6789012345`, which must come out masked.
+- [ ] **B3 (C1)**:
+      - The date-range facet `<Calendar>` gets the active locale (`es`/`enUS`), the same way
+        `date-field.tsx` does.
+      - Filter chips format date ranges with `formatDate`, and build the label and range through ICU
+        messages in `table`, not `"{label}:"` / `" – "` in code.
+      - Move these composed labels into ICU messages in es and en:
+        - `kpi-card.tsx` `${label} · open`;
+        - `async-combobox.tsx` `${config.label}: ${option.label}`;
+        - the `+ ` prefix in `related-mini-table.tsx`.
+      - Tests: an ES calendar renders Spanish month names; a chip shows a localized range.
+- [ ] **M1 (a11y)** `kpi-card.tsx`: the link gets a visible focus ring (`focus-visible:ring-[3px]
+      ring-ring/50` or equivalent). The accessible name includes the KPI value, or the `aria-label` is
+      dropped so the content is read.
+
 #### Wave 3 close
 
-- [x] **Integration checklist:** 3.1–3.7 merged; no Claude attribution; worktrees removed; lint,
+- [x] **Integration checklist:** 3.1–3.7 merged (3.8 follow-up below); no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass. Merges: 3.7 0bbffa5, 3.5 278b7f5, 3.6 d0791fb, 3.3 8ac969f,
       3.2 b4a64fe, 3.4 013505b, 3.1 b036177. Integrated: 57 files / 1303 tests; i18n parity 32 namespaces;
       build OK.
@@ -751,6 +792,17 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
       (2)(3). 3.6 real PDF render deferred to H1-B4. nuqs adapter covered by 5.1. Open for the user:
       IGTF single source (proposed DT-70) and Technology `nameEn` (Δ4 or drop; before H2-B1).
 - [ ] **Code review:** C1, C2, C3, C5, C6, C8, C13, C15, C20 (`activity` read-only), C22 shape (contracts), C23 shape, C25.
+      First pass CHANGES REQUIRED: B1 portal input schemas mix client and server-only fields
+      (`unlockedDocumentIds`, `ip`) and the unlock contract lacks an IP for the lockout (C22); B2 account
+      mask bypass (C5); B3 calendar without locale and composed labels in code (C1); M1 KPI card focus
+      ring and accessible name → package 3.8. Planner M1–M5 / m1–m6 confirmed (4.3).
+      Carried to 4.3: M2 export includes the `select` column; m1 facet search by label (`keywords`);
+      m2 async facet error handling and debounce; m3 width input draft; m4 deviation warning formatting;
+      m6 `ConfirmDialog` reset on open and `useId`; m9 combobox fallback name and `onCreate` error;
+      m12 pagination clamp. Carried to H1-FX: m5 extra decimals in MoneyInput; m7 `aria-sort` and
+      row label; m8 ToggleGroup of links → ButtonGroup + `aria-current`; m10 dial `aria-label`.
+      H1-B4: m11 verify the pdf.js worker under Turbopack. Nits n1 (`logActivity` signature) and
+      n2 (document the server-only salt) → 4.3.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
       a11y spot-check of kit components (labels, keyboard on combobox, date field, PDF toolbar). No E2E.
