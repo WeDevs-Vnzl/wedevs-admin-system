@@ -87,9 +87,10 @@ export default defineConfig([
   // C1: no literal strings in JSX text; user-facing copy comes from next-intl messages.
   {
     files: ["src/app/**/*.tsx", "src/components/**/*.tsx", "src/features/**/*.tsx"],
-    // Exclusion: registry-generated files keep their built-in English sr-only strings until a later
-    // package localizes them (C3 allows i18n edits to generated files).
-    ignores: ["**/*.test.tsx", "src/components/ui/**"],
+    // Exclusion: only the flat registry-generated files (src/components/ui/*.tsx) keep their built-in
+    // English sr-only strings until a later package localizes them (C3 allows i18n edits to generated
+    // files). Hand-written kit subfolders (src/components/ui/<name>/**) stay linted for C1.
+    ignores: ["**/*.test.tsx", "src/components/ui/*.tsx"],
     plugins: { i18next },
     rules: {
       "i18next/no-literal-string": ["error", { mode: "jsx-text-only" }],
