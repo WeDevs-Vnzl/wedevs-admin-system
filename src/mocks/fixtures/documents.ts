@@ -16,6 +16,7 @@
 import { addDays, todayInCaracas, type DateOnly } from "@/lib/dates";
 import type {
   DocumentDetailDTO,
+  DocumentLinkDTO,
   DocumentLinkEntityType,
   DocumentVersionDetailDTO,
 } from "@/lib/validators/documents";
@@ -52,12 +53,10 @@ export type DocumentVersionRow = Omit<
 };
 
 /** Link row (`DocumentLink`): the target travels as type + id and is resolved to an `EntityRef`. */
-export interface DocumentLinkRow {
-  id: string;
+export interface DocumentLinkRow extends Pick<DocumentLinkDTO, "id" | "createdAt"> {
   documentId: string;
   entityType: DocumentLinkEntityType;
   entityId: string;
-  createdAt: string;
 }
 
 // ───────────────────────────── Files ─────────────────────────────

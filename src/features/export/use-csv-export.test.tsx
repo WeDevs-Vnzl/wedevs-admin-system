@@ -43,9 +43,26 @@ beforeEach(() => {
     clicked.push({ download: this.download, href: this.href });
   });
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("useCsvExport", () => {
+  it("revokes the object URL on a later tick, not synchronously after click()", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const action = vi.fn(async () => ({
+      ok: true as const,
+      data: { filename: "c.csv", content: "a", rowCount: 1, truncated: false },
+    }));
+    const { result } = renderHook(() => useCsvExport(action, "CLIENT"), { wrapper });
+    await result.current(query, ["name"]);
+    expect(clicked).toHaveLength(1);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    vi.runOnlyPendingTimers();
+    expect(URL.revokeObjectURL).toHaveBeenCalledExactlyOnceWith("blob:mock");
+  });
+
   it("calls the action, downloads a text/csv Blob and toasts success", async () => {
     const action = vi.fn(async () => ({
       ok: true as const,
@@ -59,7 +76,7 @@ describe("useCsvExport", () => {
       "a\r\n".padStart(4, "﻿").slice(0) === "" ? "" : await blobs[0]!.text(),
     );
     expect(clicked).toEqual([{ download: "client-2026-10-09.csv", href: "blob:mock" }]);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock");
+    await vi.waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock"));
     expect(toast.success).toHaveBeenCalledWith("Exported 1 row");
   });
 
