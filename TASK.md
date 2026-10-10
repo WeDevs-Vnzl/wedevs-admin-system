@@ -401,10 +401,14 @@ Files: `src/lib/money.ts`, `src/lib/money.test.ts`.
 
 #### Wave 2 close
 
-- [ ] **Integration checklist:** 2.1, 2.2, 2.3 merged; no Claude attribution; worktrees removed;
+- [x] **Integration checklist:** 2.1, 2.2, 2.3 merged; no Claude attribution; worktrees removed;
       `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
-- [ ] **Planner coherence review:** `enums` namespace keys ↔ `enums.ts` values; `money.ts` schemas ↔
+      Follow-ups 2.4 (merge 5b93fbe) and 2.5 (merge 9e59339) merged the same way; integrated checks
+      re-run green (13 files, 554 tests; i18n parity 32 namespaces; build OK).
+- [x] **Planner coherence review:** `enums` namespace keys ↔ `enums.ts` values; `money.ts` schemas ↔
       `lib/money` string conventions; `can()` resources cover every row of §4.3; no overlap.
+      First pass NOT READY (B1 missing validation/common.errors keys, B2 scripts tests not in vitest,
+      B3 formatMoney throws on USDT) → packages 2.4/2.5; re-check: B1–B3 CLOSED, READY FOR CODE REVIEW.
 - [ ] **Code review:** C1, C2, C5, C6, C8, C9, C11 shape, C15, C25.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
