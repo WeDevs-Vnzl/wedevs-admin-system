@@ -1222,13 +1222,115 @@ Files: `src/app/(app)/settings/layout.tsx`, `src/app/(app)/settings/page.tsx`,
 - **Note:** `settings.json` already holds a `validation` block (3.2). Extend the namespace; keep
   `validation` intact.
 
+#### Package 5.3 — Wave 5 coherence fixes (Planner M1–M3, m1–m5)
+
+Package 5.3 → Agent: wedevs-developer · haiku — Reason: shell and settings screens over the existing kit, config and preferences action; no new service signature, no money or auth logic (`can()` is only read as a cosmetic filter, C13).
+
+Use the shadcn MCP.
+
+Runs alone, after 5.1 and 5.2 are merged (no other package in flight). For its duration it is the single
+owner of the files below and of the i18n namespace `shell`; it reads `nav`, `search`, `settings`,
+`auth`, `common`, `enums`, `mock` without changing them.
+
+Files: `src/config/nav.ts` (+ `nav.test.ts`);
+`src/components/app/{app-sidebar,command-menu,app-breadcrumbs,rate-chip,locale-switcher,theme-toggle,user-menu}.tsx`
+and their tests (existing test files may be edited; new `app-breadcrumbs.test.tsx`, `rate-chip.test.tsx`,
+`locale-switcher.test.tsx`, `theme-toggle.test.tsx` as needed); `src/app/(app)/layout.tsx`;
+`src/app/(app)/settings/preferences/page.tsx`; `src/features/settings/components/preferences-form.tsx`
+(+ its test); `src/i18n/messages/{es,en}/shell.json`. No other file — in particular not
+`src/components/ui/**` and not `src/features/preferences/**`.
+
+- [ ] **M1** `SETTINGS_NAV_ITEM.resource = null`: every signed-in user sees Configuración in the sidebar
+      footer and in Cmd+K (the settings frame already filters its sections with `can()`, so Member and
+      Viewer land on Preferencias only). Update the comment. Tests: Member and Viewer see the entry; the
+      existing per-role tests for module items still pass.
+- [ ] **M2** Cmd+K items filter on what the user reads: `CommandItem` `value` = the translated label
+      (navigation and quick actions), the key kept as a `keywords` entry. Tests with ES messages: typing
+      "factu" lists Facturas; typing "pago" lists "Registrar pago"; EN "invoices" still works.
+- [ ] **M3** One preference, one behaviour: the topbar `LocaleSwitcher` and `ThemeToggle` also persist
+      through `setPreferenceAction({ key: "locale" | "theme", value })` after the local change (on
+      `!ok` a toast with `common.errors.<code>`; the local change stays). `preferences/page.tsx` takes the
+      initial `locale` from the active request locale (`getLocale()`, the cookie wins in Hito 1,
+      frontend-patterns §15), not from the store. Tests: each switcher calls the action with the chosen
+      value; the form's initial language equals the active locale.
+- [ ] **m1** Breadcrumbs under `/settings/<slug>` label the section with `settings.nav.<labelKey>` from
+      `findSettingsSection` (ES: "WeDevs Core / Configuración / Preferencias"); other unknown segments
+      unchanged. Test.
+- [ ] **m2** `RateChip` gets a `canManage` prop computed in `(app)/layout.tsx` as
+      `can(shell.user, "read", "settings")`; it links to `/settings/rates` only when true and renders the
+      same chip without a link otherwise. Tests for both.
+- [ ] **m3** Sidebar footer user block per wireframe 4.2 / frontend-patterns §2, below Configuración:
+      avatar with initials, name, role (`enums.UserRole`), sign-out button (→ `/sign-in`, MOCK until
+      Clerk); avatar only in icon mode. Registry items only (`avatar`, `sidebar` menu, `button`); move
+      `initialsOf` out of `user-menu.tsx` as a named export and reuse it. Labels from existing keys
+      (`shell.userMenu.*`, `auth.signOut`). Test: the block renders name and role and signs out.
+- [ ] **m4** `AppSidebar` passes translated `aria-label` and `title` to `SidebarRail` (new key
+      `shell.sidebar.toggle`, ES "Mostrar u ocultar la barra lateral", EN "Toggle sidebar"); the rail
+      spreads `...props` last, so no registry edit.
+- [ ] **m5** `PreferencesForm` back link → `/dashboard` (`/settings` redirects to the same page).
+- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+
 #### Wave 5 close
 
 - [x] **Integration checklist:** 5.1, 5.2 merged; no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass.
       Result: 111 test files, 1761 tests + 1 expected fail; i18n 32 namespaces in parity; build OK.
-- [ ] **Planner coherence review:** nav routes = PRD §11; settings sections = §8.15; shell uses
+- [x] **Planner coherence review:** nav routes = PRD §11; settings sections = §8.15; shell uses
       `getShellData` (no mock imports in components); icons per §1a; namespaces filled in both languages.
+      Planner (2026-10-10, read-only on 688a325): **READY FOR CODE REVIEW, no blockers**; three majors and
+      five minors → fix package 5.3.
+      PASS: `nav.ts` groups, items and routes = §7.1 and §11 (Inicio; Comercial, Finanzas, Conocimiento,
+      Análisis; Configuración pinned to the footer), quick-action routes exist in §11; `settings-nav.ts`
+      12 slugs = §11 `/settings/*` in §8.15 order, users Owner-only (`can(read, user)`), trash on
+      `trash`; `(app)/layout.tsx` reads only `getShellData`; no file under `src/app/**`,
+      `src/components/**` or `src/features/*/components/**` imports `@/mocks/**` (remaining importers are
+      the C9-listed queries/actions); icons match §1a (`Cpu` technologies, `SlidersHorizontal`
+      preferences, `Clock` rate chip, `Settings`, `LogOut`; `Users`, `Tags`, `Trash2`, `Percent`,
+      `ArrowRightLeft`, `FolderTree`, `DollarSign` have no mockup symbol or follow the table — accepted);
+      namespaces `nav`, `shell`, `auth`, `common`, `search`, `settings` filled in ES and EN with no
+      English left in ES (the endonyms "English"/"Español" are intended); `settings.validation` intact;
+      settings layout nested inside the `(app)` shell; `/settings` → `/settings/preferences`; 5.2 writes
+      the same `NEXT_LOCALE` cookie as `LocaleSwitcher` and uses the same next-themes `setTheme` as
+      `ThemeToggle`.
+      Findings:
+      - **M1 (major → 5.3)** Member and Viewer cannot reach their own Preferences: `SETTINGS_NAV_ITEM`
+        uses resource `settings` (Owner/Admin only), which hides the sidebar and Cmd+K entries, and the
+        user menu has no Preferences link — yet the settings frame offers Preferences to every role
+        (§8.15 "por usuario").
+      - **M2 (major → 5.3)** Cmd+K items use `value="nav <key>"` / `"action <key>"`, so cmdk filters on
+        English keys: "Facturas" or "Registrar pago" typed in ES find nothing (§7.6, HU-30).
+      - **M3 (major → 5.3)** Two writers of the same preference disagree: the topbar switchers change the
+        cookie / local theme without saving the preference, while the Preferences form starts from the
+        store; after a topbar switch the form shows the old language/theme and cannot save the one in
+        use (§7.8 "se guarda por usuario").
+      - **m1 (minor → 5.3)** Breadcrumbs print raw slugs under settings (`/settings/preferences` →
+        "preferences" in the ES UI, C1). Labels for detail ids/codes → H1-B2 (first detail routes).
+      - **m2 (minor → 5.3)** The rate chip links every role to `/settings/rates`, which is the in-shell
+        not-found for Member/Viewer.
+      - **m3 (minor → 5.3)** The sidebar footer lacks the user block of wireframe 4.2 /
+        frontend-patterns §2 (avatar, name, role, sign-out).
+      - **m4 (minor → 5.3)** `SidebarRail` keeps the registry's English `aria-label`/`title` "Toggle
+        Sidebar" (visible tooltip, C1); fixable through props without touching the registry file.
+      - **m5 (minor → 5.3)** `PreferencesForm` `backHref="/settings"` redirects back to the same page.
+      Worker deviations:
+      - **(a) ACCEPTED** `src/features/settings/queries.ts` lies inside the 5.2 owners-table row
+        (`src/features/settings/**`); it is the C10/C11-shaped reader the layout and the `[section]` page
+        need (`getServiceContext` + `can()`, no mocks). Same for `src/app/(app)/settings/[section]/page.tsx`
+        (placeholder for the 11 later sections, inside `src/app/(app)/settings/**`).
+      - **(b) ACCEPTED** code-drawn "W": the repo has no logo asset; the mockups load the mark from an
+        external hosted image (not usable: no remote assets, CSP), and frontend-patterns §1 defines the
+        logo as the black circular "W" + "WeDevs Core" as drawn in the wireframes, which `BrandMark`
+        reproduces (with a dark-mode inverse). A user-supplied SVG can replace it in H1-FX.
+      - **(c) ACCEPTED** the `sidebar.tsx` edit is i18n of built-in strings, allowed by
+        frontend-patterns §0 rule 4 (C3) and reported; the `<Command>` wrapper is required because this
+        registry version's `CommandDialog` does not wrap its children. Code Review: confirm the dialog's
+        title/description wiring in the a11y pass.
+      - **(d) ACCEPTED** the chip's target route exists through 5.2's `[section]` placeholder and matches
+        frontend-patterns §1; only the per-role link is wrong (m2).
+      Notes: the topbar persistence in M3 uses the existing `setPreferenceAction` (`'authenticated'`, own
+      preferences only), within proposed DT-71 — still to be recorded by the user with DT-70. Code Review
+      may run on 688a325 now and its findings be folded into 5.3 before dispatch (as in wave 4), or after
+      5.3 merges; the Orchestrator declares which.
 - [ ] **Code review:** C1, C2, C3, C5, C6, C7, C9, C10, C25; accessibility of sidebar, topbar and
       command menu.
 - [ ] **User confirms the Tester may run.**
