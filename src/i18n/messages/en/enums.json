@@ -1,0 +1,184 @@
+{
+  "UserRole": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "MEMBER": "Member",
+    "VIEWER": "Viewer"
+  },
+  "ClientKind": {
+    "PERSONA": "Person",
+    "EMPRESA": "Company"
+  },
+  "ClientStatus": {
+    "PROSPECTO": "Prospect",
+    "ACTIVO": "Active",
+    "INACTIVO": "Inactive"
+  },
+  "ProjectStatus": {
+    "PROPUESTA": "Proposal",
+    "EN_CURSO": "In progress",
+    "PAUSADO": "Paused",
+    "ENTREGADO": "Delivered",
+    "MANTENIMIENTO": "Maintenance",
+    "CANCELADO": "Cancelled"
+  },
+  "ProjectLinkGroup": {
+    "REPOSITORIO": "Repository",
+    "ENTORNO": "Environment",
+    "DISENO": "Design",
+    "GESTION": "Management",
+    "DOCUMENTACION": "Documentation",
+    "INFRAESTRUCTURA": "Infrastructure",
+    "COMUNICACION": "Communication",
+    "OTRO": "Other"
+  },
+  "TechCategory": {
+    "LENGUAJE": "Language",
+    "FRONTEND": "Frontend",
+    "BACKEND": "Backend",
+    "BASE_DE_DATOS": "Database",
+    "INFRAESTRUCTURA": "Infrastructure",
+    "MOBILE": "Mobile",
+    "IA": "AI",
+    "TESTING": "Testing",
+    "HERRAMIENTA": "Tool",
+    "OTRO": "Other"
+  },
+  "BillingModel": {
+    "PRECIO_FIJO": "Fixed price",
+    "RECURRENTE": "Recurring",
+    "MIXTO": "Mixed"
+  },
+  "InstallmentKind": {
+    "ANTICIPO": "Advance",
+    "HITO": "Milestone",
+    "CUOTA": "Installment",
+    "FINAL": "Final",
+    "RECURRENTE": "Recurring",
+    "AJUSTE": "Adjustment"
+  },
+  "InstallmentStatus": {
+    "PENDIENTE": "Pending",
+    "FACTURADA": "Invoiced",
+    "COBRADA_PARCIAL": "Partially collected",
+    "COBRADA": "Collected",
+    "CANCELADA": "Cancelled"
+  },
+  "Frequency": {
+    "MENSUAL": "Monthly",
+    "TRIMESTRAL": "Quarterly",
+    "SEMESTRAL": "Semiannual",
+    "ANUAL": "Annual"
+  },
+  "RecurringStatus": {
+    "ACTIVO": "Active",
+    "PAUSADO": "Paused",
+    "FINALIZADO": "Finished"
+  },
+  "InvoiceStatus": {
+    "BORRADOR": "Draft",
+    "EMITIDA": "Issued",
+    "PARCIAL": "Partial",
+    "PAGADA": "Paid",
+    "VENCIDA": "Overdue",
+    "ANULADA": "Voided"
+  },
+  "PaymentStatus": {
+    "PENDIENTE_VERIFICACION": "Pending verification",
+    "CONFIRMADO": "Confirmed",
+    "ANULADO": "Voided"
+  },
+  "AccountType": {
+    "BANCO_NACIONAL": "Domestic bank",
+    "BANCO_INTERNACIONAL": "International bank",
+    "BILLETERA_DIGITAL": "Digital wallet",
+    "WALLET_CRIPTO": "Crypto wallet",
+    "EFECTIVO": "Cash"
+  },
+  "AccountMovementType": {
+    "APORTE_CAPITAL": "Capital contribution",
+    "RETIRO_SOCIO": "Partner withdrawal",
+    "AJUSTE": "Adjustment"
+  },
+  "ExpenseStatus": {
+    "PENDIENTE": "Pending",
+    "PAGADO": "Paid",
+    "ANULADO": "Voided"
+  },
+  "DocumentStatus": {
+    "BORRADOR": "Draft",
+    "EN_REVISION": "In review",
+    "APROBADO": "Approved",
+    "ENVIADO": "Sent",
+    "FIRMADO": "Signed",
+    "VENCIDO": "Expired",
+    "ANULADO": "Voided"
+  },
+  "DocumentFormat": {
+    "MARKDOWN": "Markdown",
+    "ARCHIVO": "File",
+    "ENLACE": "Link"
+  },
+  "FileStatus": {
+    "PENDING": "Pending",
+    "READY": "Ready"
+  },
+  "RateSource": {
+    "MANUAL": "Manual",
+    "BCV": "BCV",
+    "OTRA": "Other"
+  },
+  "ShareEvent": {
+    "VIEW": "Viewed",
+    "DOWNLOAD": "Downloaded",
+    "UNLOCK": "Unlocked",
+    "UNLOCK_FAILED": "Unlock failed"
+  },
+  "ActorType": {
+    "USER": "User",
+    "SYSTEM": "System",
+    "PUBLIC": "Public"
+  },
+  "EntityType": {
+    "CLIENT": "Client",
+    "CONTACT": "Contact",
+    "PROJECT": "Project",
+    "INVOICE": "Invoice",
+    "PAYMENT": "Payment",
+    "EXPENSE": "Expense",
+    "RECURRING_EXPENSE": "Recurring expense",
+    "ACCOUNT": "Account",
+    "TRANSFER": "Transfer",
+    "ACCOUNT_MOVEMENT": "Account movement",
+    "DOCUMENT": "Document",
+    "NOTE": "Note",
+    "FILE": "File",
+    "SHARE_LINK": "Share link",
+    "BILLING_PLAN": "Billing plan",
+    "INSTALLMENT": "Installment",
+    "RECURRING_CHARGE": "Recurring charge",
+    "TAG": "Tag",
+    "SETTING": "Setting",
+    "USER": "User"
+  },
+  "ActivityAction": {
+    "CREATE": "Created",
+    "UPDATE": "Updated",
+    "DELETE": "Deleted",
+    "RESTORE": "Restored",
+    "STATUS_CHANGE": "Status change",
+    "LINK": "Linked",
+    "UNLINK": "Unlinked",
+    "UPLOAD": "Uploaded",
+    "VERSION_PUBLISH": "Published version",
+    "SHARE_CREATE": "Shared",
+    "SHARE_REVOKE": "Revoked share",
+    "ALLOCATE": "Allocated",
+    "DEALLOCATE": "Deallocated",
+    "EXPORT": "Exported",
+    "LOGIN": "Sign-in",
+    "SETTINGS_CHANGE": "Settings changed",
+    "SYSTEM_JOB": "System job",
+    "PORTAL_ACCESS": "Portal access"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "localeSwitcher": {
+    "label": "Idioma",
+    "locales": {
+      "es": "Español",
+      "en": "English"
+    }
+  },
+  "themeToggle": {
+    "label": "Cambiar tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  }
+}
