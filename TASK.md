@@ -1032,9 +1032,55 @@ Files: new test files only — `src/components/patterns/{archived-banner,date-te
 H1-B3; `conventions.md` §testing). The gate stays aggregate until DT-59 switches it to `perFile` in
 H1-B3. Kit coverage is enforced by the package checklists above, not by the gate.
 
+#### Package 4.6 — Wave 4 review fixes (Code Review B1; Planner M1, M2, m1–m3, m8; Reviewer m-a, m-b, m-c, m-f, m-h, nit)
+
+Package 4.6 → Agent: wedevs-developer · sonnet — Reason: fixes the central authorization adapter (C10/C13), the shared service error type and shared filter contracts every module builds on.
+
+Use the shadcn MCP (uploader).
+
+Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts` (+ test),
+`src/server/context.ts`, `src/mocks/ctx.ts`, `src/lib/validators/{common,invoices,payments,expenses,export,preferences,files}.ts`
+(+ tests), `src/lib/table-query.ts` (+ test), `src/features/catalogs/{queries,actions}.ts`, new
+`src/features/catalogs/rate-lookup.ts`, `src/features/files/actions.ts`, new
+`src/features/files/upload-adapter.ts`, `src/mocks/services/files.ts`, `src/mocks/fixtures/catalogs.test.ts`,
+`src/components/ui/uploader/uploader.tsx` (+ tests), `src/i18n/messages/{es,en}/forms.json`,
+`.github/workflows/ci.yml`, tests next to each. No other file.
+
+- [ ] **B1 (C10/C13)** `defineAction`: an empty any-of list never skips `can()`. Type the list as
+      `readonly [ActionPermission, ...ActionPermission[]]`; at runtime an empty list → `FORBIDDEN` (or
+      throw at definition). Only `"authenticated"` has no `can()` check. Test both.
+- [ ] **M1** 3.2 filter ids that the kit offers as facets accept one or many: `invoices`
+      `clientId`/`projectId`/`tagId`, `payments` `clientId`/`accountId`/`methodId`, `expenses`
+      `categoryId`/`accountId`/`projectId`/`tagId`, recurring-expense `categoryId` →
+      `facetSchema(idSchema)`. `toModuleQuery` test with two values parses against `invoiceFiltersSchema`.
+- [ ] **M2** Move `ServiceError` (and its code type) to framework-free `src/server/errors.ts` (no
+      `server-only`, no imports beyond `lib/validators/common`). `mocks/ctx.ts` and `server/context.ts`
+      re-export it under the same name; `define-action.ts` and feature actions import from
+      `@/server/errors`.
+- [ ] **m1** One `columnIdSchema` (from `preferences.ts`) used by `export.ts` columns.
+- [ ] **m2** Client adapters, one owner each: `features/catalogs/rate-lookup.ts` turns
+      `lookupRateAction` into `RateInput`'s `(date, currency) => Promise<RateLookupResult | null>`;
+      `features/files/upload-adapter.ts` implements `UploadAdapter` over the file actions (mock `put`
+      no-op, `// MOCK` where it is mock-only). Tests.
+- [ ] **m3** `confirmUploadInputSchema` in `validators/files.ts`; used by the mock service and the action
+      (drop the local type and the inline `z.object`).
+- [ ] **m8 tests** Catalog fixture tests parse technology and tag rows with their full DTO schemas
+      (`active`, `createdAt`).
+- [ ] **m-a** `withSortFields` returns its real refined type (no cast to `T`), or the helper documents
+      "derive with `pick`/`partial` from the base object" and a test proves the documented path works.
+- [ ] **m-b / m-c** `ci.yml`: workflow-level `NEXT_TELEMETRY_DISABLED: "1"`; pnpm via
+      `pnpm/action-setup` (reads `packageManager`) before `setup-node` with `cache: pnpm`; third-party
+      actions pinned by full commit SHA with the version in a comment (resolve SHAs from local knowledge
+      or `git ls-remote` only if network is allowed; otherwise keep tags and say so).
+- [ ] **m-f (WCAG 2.5.3)** Uploader Browse button: the accessible name contains the visible text; the
+      caller's label goes to `aria-describedby` or is composed with it via ICU in `forms`.
+- [ ] **m-h** `getRateFor` query parses its input like its siblings.
+- [ ] **nit** `toModuleQuery`: ignore `__proto__`, `constructor`, `prototype` facet ids. Test.
+- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+
 #### Wave 4 close
 
-- [x] **Integration checklist:** 4.1–4.5 merged; no Claude attribution; worktrees removed; lint,
+- [x] **Integration checklist:** 4.1–4.5 merged (4.6 follow-up below); no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass. Merges: 4.2 6f09c0a, 4.3 22f0655, 4.5 8013d8f,
       4.4 977c9ce, 4.1 43b49a9. Integration fixes by the Orchestrator (test-only): `table-query.test.ts`
       sort field → `issueDate` (4.3 sort whitelist vs 4.4 test); `async-combobox.test.tsx` debounce
@@ -1059,8 +1105,20 @@ H1-B3. Kit coverage is enforced by the package checklists above, not by the gate
       importer left), 4.4 width 80–1200 and uploader label on Browse. 4.1 (3) `'authenticated'` permission
       is outside the `can()` matrix: limited to own preferences, reference reads and MOCK actions —
       proposed DT-71 for the user.
-- [ ] **Code review:** C1, C5, C7, C8, C9, C10, C11, C15, C22, C25; CI has no secrets or remote calls;
+- [x] **Code review:** C1, C5, C7, C8, C9, C10, C11, C15, C22, C25; CI has no secrets or remote calls;
       kit accessibility fixes.
+      First pass CHANGES REQUIRED: B1 `defineAction` any-of permission list `[]` fails open (skips
+      `can()`) → 4.6. Planner M1, M2, m1–m8 confirmed. Minors → 4.6: m-a `withSortFields` casts away the
+      refinement (`.pick()`/`.partial()` throw at runtime); m-b `NEXT_TELEMETRY_DISABLED` in CI; m-c CI
+      pnpm setup via `pnpm/action-setup` + actions pinned by SHA; m-f uploader Browse name must contain
+      the visible text (WCAG 2.5.3); m-h `getRateFor` query parses its input; nit `BASE_KEYS` hardening
+      (`__proto__`, `constructor`, `prototype`). → H1-B4: m-d public adapter parses the token with
+      `shareTokenSchema` before `resolveToken`; m-e public adapter never leaks a specific `NOT_FOUND`
+      reason (C22). → H1-B2: m-g catalog list services filter inactive rows and take `(ctx, input)`;
+      nit `toCsv` comment on money columns. → H1-FX: dead key `forms.uploader.inputLabel`; pagination
+      clamp stable callback; async-combobox debounce test with fake timers. Notes: MOCK role cookie
+      without `secure`, reset open to every role (DT-40 intent), no VIEWER mock user, upload FORBIDDEN
+      check inside the handler (acceptable).
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
       `package.json` scripts; kit coverage per area (data-table, uploader, phone-input, patterns ≥ 90 %
