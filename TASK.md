@@ -393,10 +393,10 @@ Package 2.5 → Agent: wedevs-developer · sonnet — Reason: change to `lib/mon
 
 Files: `src/lib/money.ts`, `src/lib/money.test.ts`.
 
-- [ ] `formatMoney`: when `currency` is not a well-formed 3-letter ISO 4217 code (e.g. `USDT`), format
+- [x] `formatMoney`: when `currency` is not a well-formed 3-letter ISO 4217 code (e.g. `USDT`), format
       the rounded string as a 2-decimal locale number with the code appended (no exception); ISO codes
       unchanged. No number conversion for math (C15).
-- [ ] Tests: `formatMoney("1234.5", "USDT", "en-US")` and `"es-VE"`; ISO cases unchanged; `money.ts`
+- [x] Tests: `formatMoney("1234.5", "USDT", "en-US")` and `"es-VE"`; ISO cases unchanged; `money.ts`
       coverage stays ≥ 90 %.
 
 #### Wave 2 close

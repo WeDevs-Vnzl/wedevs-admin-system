@@ -190,4 +190,19 @@ describe("formatMoney (display only)", () => {
   it("formats VES", () => {
     expect(formatMoney("75516", "VES", "en-US")).toContain("75,516.00");
   });
+
+  it("formats non-ISO codes as a 2-decimal locale number with the code appended", () => {
+    expect(formatMoney("1234.5", "USDT", "en-US")).toBe("1,234.50 USDT");
+    expect(formatMoney("1234.5", "USDT", "es-VE")).toBe("1.234,50 USDT");
+    expect(formatMoney("1.005", "USDT", "en-US")).toBe("1.01 USDT");
+    expect(formatMoney("-0.004", "USDT", "en-US")).toBe("0.00 USDT");
+    expect(formatMoney("12345678901234567.89", "USDT", "en-US")).toBe(
+      "12,345,678,901,234,567.89 USDT",
+    );
+  });
+
+  it("does not throw for non-ISO codes with digits or length != 3", () => {
+    expect(() => formatMoney("1", "USD1", "en-US")).not.toThrow();
+    expect(() => formatMoney("1", "A1", "en-US")).not.toThrow();
+  });
 });
