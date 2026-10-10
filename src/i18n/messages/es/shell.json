@@ -51,5 +51,8 @@
   "dashboardPlaceholder": {
     "title": "Inicio",
     "description": "El panel llega con los siguientes lotes de la interfaz."
+  },
+  "skipLink": {
+    "label": "Saltar al contenido"
   }
 }

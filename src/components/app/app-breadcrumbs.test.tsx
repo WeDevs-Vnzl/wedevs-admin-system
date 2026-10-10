@@ -37,7 +37,10 @@ describe("AppBreadcrumbs", () => {
 
   it("labels the settings section from settings.nav (m1)", () => {
     renderAt("/settings/preferences");
-    expect(screen.getByRole("link", { name: "Configuración" })).toHaveAttribute("href", "/settings");
+    expect(screen.getByRole("link", { name: "Configuración" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
     expect(screen.getByText("Preferencias")).toHaveAttribute("aria-current", "page");
     const trail = screen.getByRole("navigation", { name: esShell.breadcrumbs.label });
     expect(within(trail).getByRole("link", { name: esCommon.app.name })).toBeInTheDocument();

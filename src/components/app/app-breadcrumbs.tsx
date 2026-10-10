@@ -36,7 +36,8 @@ export function AppBreadcrumbs() {
   const rest = item ? pathname.slice(item.href.length) : pathname;
   const segments = rest.split("/").filter(Boolean);
   // Under /settings the first segment is a section slug, labelled from `settings.nav` (m1).
-  const section = item?.key === SETTINGS_NAV_ITEM.key ? findSettingsSection(segments[0] ?? "") : undefined;
+  const section =
+    item?.key === SETTINGS_NAV_ITEM.key ? findSettingsSection(segments[0] ?? "") : undefined;
   let href = item?.href ?? "";
   for (const [index, segment] of segments.entries()) {
     href = `${href}/${segment}`;

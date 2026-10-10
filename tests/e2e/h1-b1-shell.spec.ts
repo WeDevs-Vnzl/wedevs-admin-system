@@ -97,10 +97,7 @@ test.describe("routing and sign-in", () => {
     await expect(page.getByRole("combobox", { name: "Zona horaria" })).toBeVisible();
   });
 
-  // KNOWN DEFECT (wave 5 R7, TASK.md Tester E2E addition): the catch-all `[...missing]/page.tsx` calls notFound()
-  // after the shell has streamed, so `next start` answers 200 instead of 404 for /clients and
-  // /settings/preferences/x (body shows "Página no encontrada"). Expected 404, actual 200. Keep until product fix.
-  test.fail("unknown routes return the in-shell not-found with HTTP 404; the other routes stay unaffected", async ({
+  test("unknown routes return the in-shell not-found with HTTP 404; the other routes stay unaffected", async ({
     page,
   }) => {
     for (const path of ["/clients", "/settings/preferences/x"]) {
@@ -257,6 +254,9 @@ test.describe("keyboard", () => {
       );
     }
 
+    // WCAG 2.4.1: the skip link is the first focusable element of the shell.
+    expect(focused[0], "the skip link is the first Tab stop").toBe("Saltar al contenido");
+
     const order = [
       "Inicio",
       "Configuración",
@@ -279,10 +279,19 @@ test.describe("keyboard", () => {
     }
   });
 
-  // KNOWN DEFECT (minor, judgment call): after Escape the command menu closes but the "Buscar" trigger does not get
-  // focus back (trigger is a plain Button with onClick, not a DialogTrigger, in command-menu.tsx ~L62-74). TASK.md:1024
-  // requires "Escape closes and returns focus" for the other dialogs. Expected trigger focused, actual not focused.
-  test.fail("Escape closes the command menu and returns focus to the trigger", async ({ page }) => {
+  test("the skip link moves focus to the page content", async ({ page }) => {
+    await page.goto("/dashboard");
+    await page.waitForLoadState("networkidle");
+    await page.keyboard.press("Tab");
+    const skipLink = page.getByRole("link", { name: "Saltar al contenido", exact: true });
+    await expect(skipLink).toBeFocused();
+    await expect(skipLink).toBeVisible();
+
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#main-content")).toBeFocused();
+  });
+
+  test("Escape closes the command menu and returns focus to the trigger", async ({ page }) => {
     await page.goto("/dashboard");
     // Enter only opens the menu once React has hydrated the trigger's onClick; wait for that first.
     await page.waitForLoadState("networkidle");

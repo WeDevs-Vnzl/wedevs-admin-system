@@ -51,5 +51,8 @@
   "dashboardPlaceholder": {
     "title": "Home",
     "description": "The dashboard arrives in the next UI batches."
+  },
+  "skipLink": {
+    "label": "Skip to content"
   }
 }
