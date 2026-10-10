@@ -61,9 +61,19 @@ describe("Uploader accessibility", () => {
     expect(screen.getByRole("button", { name: enForms.uploader.browse })).toBeInTheDocument();
   });
 
-  it("puts id and aria-label on the Browse button", () => {
+  it("keeps the visible text as the Browse name and describes it with the caller's label (WCAG 2.5.3)", () => {
     setup({ id: "attachments", "aria-label": "Attachments" });
-    expect(screen.getByRole("button", { name: "Attachments" })).toHaveAttribute("id", "attachments");
+    const button = screen.getByRole("button", { name: enForms.uploader.browse });
+    expect(button).toHaveAttribute("id", "attachments");
+    expect(button).not.toHaveAttribute("aria-label");
+    expect(button).toHaveAccessibleDescription("Attachments");
+  });
+
+  it("has no description when the caller passes no label", () => {
+    setup();
+    expect(screen.getByRole("button", { name: enForms.uploader.browse })).not.toHaveAttribute(
+      "aria-describedby",
+    );
   });
 
   it("opens the native picker from the Browse button", async () => {

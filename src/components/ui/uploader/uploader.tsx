@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type DragEvent } from "react";
+import { useId, useRef, useState, type DragEvent } from "react";
 import { CloudUploadIcon, FileTextIcon, XIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,8 @@ export function Uploader({
   const t = useTranslations();
   const locale = useLocale();
   const rules = getUploadRules(context);
+  const labelId = useId();
+  const callerLabel = aria["aria-label"];
 
   const [items, setItems] = useState<UploadItem[]>(() => defaultFiles.map(fileDtoToItem));
   const [dragging, setDragging] = useState(false);
@@ -214,11 +216,17 @@ export function Uploader({
           size="sm"
           disabled={disabled}
           id={id}
-          aria-label={aria["aria-label"]}
+          aria-describedby={callerLabel ? labelId : undefined}
           onClick={() => inputRef.current?.click()}
         >
           {t("forms.uploader.browse")}
         </Button>
+        {/* WCAG 2.5.3: the button's name stays its visible text; the caller's label is its description. */}
+        {callerLabel ? (
+          <span id={labelId} className="sr-only">
+            {callerLabel}
+          </span>
+        ) : null}
         <input
           ref={inputRef}
           data-slot="uploader-input"

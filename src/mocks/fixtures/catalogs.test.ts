@@ -12,8 +12,8 @@ import {
 import { documentCategoryRefSchema, documentTypeRefSchema } from "@/lib/validators/document-types";
 import { userRoleSchema } from "@/lib/validators/enums";
 import { companySettingsSchema, fiscalSettingsSchema } from "@/lib/validators/settings";
-import { tagChipSchema } from "@/lib/validators/tags";
-import { technologyChipSchema } from "@/lib/validators/technologies";
+import { tagListRowSchema } from "@/lib/validators/tags";
+import { technologyListRowSchema } from "@/lib/validators/technologies";
 import { userDetailSchema } from "@/lib/validators/users";
 import { MOCK_USERS } from "../session";
 import {
@@ -42,6 +42,10 @@ function expectAllParse(
     if (!result.success) throw new Error(`Fixture does not parse: ${JSON.stringify(row)}`);
   }
 }
+
+// Store rows are the list-row DTOs without the usage count, which services derive from the records.
+const technologyRowSchema = technologyListRowSchema.omit({ usageCount: true });
+const tagRowSchema = tagListRowSchema.omit({ usageCount: true });
 
 function expectUniqueIds(rows: { id: string }[]) {
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
@@ -104,7 +108,7 @@ describe("catalog fixtures parse with their contract schemas", () => {
   });
 
   it("about 60 technologies with valid, unique slugs", () => {
-    expectAllParse(technologyChipSchema, fixtures.technologies);
+    expectAllParse(technologyRowSchema, fixtures.technologies);
     expect(TECHNOLOGY_FIXTURES.length).toBeGreaterThanOrEqual(55);
     expect(TECHNOLOGY_FIXTURES.length).toBeLessThanOrEqual(70);
     expectUniqueIds(fixtures.technologies);
@@ -114,7 +118,7 @@ describe("catalog fixtures parse with their contract schemas", () => {
   });
 
   it("tags", () => {
-    expectAllParse(tagChipSchema, fixtures.tags);
+    expectAllParse(tagRowSchema, fixtures.tags);
     expectUniqueIds(fixtures.tags);
   });
 
