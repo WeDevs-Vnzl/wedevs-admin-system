@@ -445,6 +445,30 @@ Files: `src/lib/validators/common.ts`, `src/lib/validators/files.ts`, `src/lib/v
 - [x] `src/mocks/session.ts`: default user declared as its own typed constant (no `as SessionUser`).
 - [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
 
+#### Package 2.8 — Guaranteed Zod error-map install, schema-path size message (wave 2 follow-up, Code Review re-check B1, M1, m1, m2)
+
+Package 2.8 → Agent: wedevs-developer · sonnet — Reason: change to shared validators (contract for every form and Server Action) and a root lint rule guarding it.
+
+Files: `src/lib/validators/zod.ts` (new), `src/lib/validators/{common,enums,money,files,zod-config}.ts`,
+their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation test),
+`src/i18n/messages/{es,en}/validation.json`, `src/i18n/contract-keys.test.ts`, `eslint.config.mjs`.
+
+- [ ] `src/lib/validators/zod.ts`: `import "./zod-config"; export { z } from "zod";` — every validator
+      module imports `z` from it (never `"zod"` directly); `zod-config.ts` and `zod.ts` are the only
+      `"zod"` importers in `src/` besides tests that need the raw module.
+- [ ] `eslint.config.mjs`: `no-restricted-imports` forbids `"zod"` in `src/**` except
+      `src/lib/validators/{zod,zod-config}.ts` (message points to `@/lib/validators/zod`).
+- [ ] Isolation test: a test file importing only `./enums` asserts enum parse errors start with
+      `validation.` (no `common.ts` import in that file).
+- [ ] Size message on the schema path: `file.tooLarge` without placeholder (schema/`fieldErrors` path),
+      new `file.tooLargeMax` with `{max}` returned by `checkUpload`; ES and EN; registered in
+      `VALIDATION_MESSAGES`; test that the schema path yields `validation.file.tooLarge` and resolves
+      without values.
+- [ ] `zod-config.ts`: `too_small` on strings with `minimum === 1` and `input === null` map to
+      `validation.required`; tests.
+- [ ] `checkUpload` passes the size as a number (`{max: 25}`), the unit "MB" lives in the message text.
+- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+
 #### Wave 2 close
 
 - [x] **Integration checklist:** 2.1, 2.2, 2.3 merged; no Claude attribution; worktrees removed;
@@ -460,6 +484,9 @@ Files: `src/lib/validators/common.ts`, `src/lib/validators/files.ts`, `src/lib/v
       M1 fixed-USD i18n format, M2 upload MIME fallback) → packages 2.6/2.7. Deferred: m3 (`can()`
       grants update/delete on `activity`, contradicts C20) → pending `can()` vocabulary decision;
       m4 (date-only check duplicated in `common.ts` and `dates.ts`) → H1-FX.
+      Re-check after 2.6/2.7: CHANGES REQUIRED (B1 error map not installed for enums-only imports;
+      M1 `{max}` lost on the schema path) → package 2.8. 2.7 deviations accepted (checkUpload
+      `{key, values?}`, generic tooShort/tooLong without params, `mime` without `min(1)`).
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
       permission matrix test, `pnpm i18n:check`, `pnpm build`. No E2E.
@@ -975,7 +1002,10 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
 - Clerk in **`src/proxy.ts`** (DT-33, public routes per DT-42), sign-in with Clerk styled to wireframe
   4.1 without counters (IOU-05), webhook with Svix → `User` sync and `LOGIN`, `session.ts`/`context.ts`
   swap to Clerk + Prisma, `can()` enforcement (C13), `logActivity`, `reindexEntity`, `StorageProvider` +
-  presigned uploads/downloads + magic-byte MIME, `/api/files/[id]/download`, preferences (incl.
+  presigned uploads/downloads + magic-byte MIME (`confirmUpload` detects the type from magic bytes,
+  checks it against the context allowlist and stores the detected type, never the client MIME; downloads
+  served with `X-Content-Type-Options: nosniff` and `Content-Disposition: attachment` — Code Review
+  H1-B1 w2), `/api/files/[id]/download`, preferences (incl.
   `timezone`)/columns/alert dismissals on `UserPreference`/`AlertDismissal`, company settings, users and
   roles, security headers/CSP baseline (`worker-src 'self'`). Origins from `APP_URL` (DT-52). Auth,
   proxy, webhook, storage: sonnet.
