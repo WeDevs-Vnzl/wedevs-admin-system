@@ -1925,9 +1925,12 @@ Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/ap
 
 #### Wave 1 close
 
-- [ ] **Integration checklist:** 1.1, 1.2, 1.3 merged into `batch/h1-b2-commercial-core`; no Claude
+- [x] **Integration checklist:** 1.1, 1.2, 1.3 merged into `batch/h1-b2-commercial-core`; no Claude
       attribution; worktrees removed; lockfile unchanged (`git diff 6acc4d8 -- pnpm-lock.yaml` empty);
-      lint, typecheck, test, `i18n:check`, build pass.
+      lint, typecheck, test, `i18n:check`, build pass. *(2026-10-10: merges ae6df41, 6015035 and 1.1;
+      128 files, 1930 tests + 1 expected fail; lockfile diff empty. Deviations: 1.1 test-only fixes in
+      `files.test.ts`, `features/files/{actions,upload-adapter}.test.ts` approved by the Orchestrator; 1.2
+      `useCsvExport(action, entity)`; 1.3 `attachment` not installed — 2.3/2.8 decide.)*
 - [ ] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): row types derive from the
       contracts (no invented field besides foreign keys); fixtures assemble into valid DTOs; every
       catalog export name still resolves; `logActivity` matches the `ActivityService` contract signature;
