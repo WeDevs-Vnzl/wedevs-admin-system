@@ -853,7 +853,13 @@ fixtures, preferences/catalog/files/session actions, both action adapters, and t
 | `src/features/{shell,preferences,catalogs,files,session}/{queries,actions}.ts` | 4.1 |
 | i18n namespace `mock` | 4.1 |
 | `.github/workflows/ci.yml` | 4.2 |
-| `package.json` / lockfile | nobody |
+| `src/lib/validators/**` except `preferences.ts`; `src/lib/csv.ts`; i18n namespace `documents` | 4.3 |
+| `src/lib/validators/preferences.ts`, `src/lib/table-query.ts`, `src/components/ui/{data-table,async-combobox,date-field,uploader,rate-input}/**` (source), `src/components/patterns/confirm-dialog.tsx`; i18n namespaces `table`, `forms`, `patterns` | 4.4 |
+| New test files only: `src/components/patterns/*.test.tsx` (14 patterns listed in 4.5), `src/components/ui/{country-combobox,date-field,phone-input}/*.keyboard.test.tsx` / `*.coverage.test.tsx` | 4.5 |
+| `package.json` / lockfile, `vitest.config.ts` | nobody |
+
+**Cross-package rule (wave 4):** 4.3 and 4.4 keep every existing export name of the files they edit
+(re-export when a helper moves), so 4.1's imports keep compiling after the merge.
 
 #### Package 4.1 — Mock store, service context, action adapters and foundation features
 
@@ -899,6 +905,15 @@ Files: `src/mocks/store.ts`, `src/mocks/ctx.ts`, `src/mocks/ids.ts`, `src/mocks/
       called; bad input → `VALIDATION`; success → revalidate called); `definePublicAction` (unknown token
       → generic `NOT_FOUND`, no session access); store reset; fixtures parse; `getRateFor` fallback;
       ESLint import restrictions hold.
+- **Notes from the wave 3 review (binding):**
+  - `getRateFor` and `lookupRateAction` return `SelectedRate | null` from `src/lib/rates.ts` (DT-67), the
+    shape `RateInput` consumes. Do not use `rateLookupDtoSchema` (4.3 realigns it in parallel).
+  - Invoice/fiscal input schemas that need data are built with the 3.2 factories
+    (`createInvoiceInputSchemaFor` etc.) from `getFiscalSettings().ivaRates`, never a hard-coded list.
+  - Preferences store the column layout in the `preferences.ts` shape; 4.4 adds the converters to and
+    from the kit's `ColumnConfig` in parallel — import the schema by name only.
+  - Use the share **service** input schemas only inside services; `definePublicAction` parses the
+    **action** schemas (C22, 3.8).
 
 #### Package 4.2 — CI workflow (no database yet)
 
@@ -916,17 +931,121 @@ Files: `.github/workflows/ci.yml`.
       added in H2-B1. Concurrency group per branch.
 - [ ] Validate the YAML locally (e.g. `actionlint` if available; otherwise state that it was not run).
 
+#### Package 4.3 — Contract follow-ups from wave 3 (Planner M1-schema side, M2, M4, M5, m2, m3, m6; Reviewer second-pass M3, n1, n2)
+
+Package 4.3 → Agent: wedevs-developer · sonnet — Reason: edits shared contracts every module and the portal import (helper consolidation, share schemas, multi-rate invoice rule, CSV export contract).
+
+Files: `src/lib/validators/{common,tags,catalogs,invoices,shares,activity}.ts` and the 3.2 filter files
+that need a sort whitelist (`catalogs,settings,billing,invoices,payments,accounts,expenses,dashboard,reports`),
+new `src/lib/validators/export.ts`, new `src/lib/csv.ts`, new `src/lib/validators/validation-keys.test.ts`,
+tests next to each, `src/i18n/messages/{es,en}/documents.json`. No other file.
+
+- [ ] **M4** Move the shared helpers into `common.ts` with one behaviour each: `timestampSchema` strict
+      ISO, `hexColorSchema` 6 digits, `optionalText` nullish, one facet helper. `tags.ts` and
+      `catalogs.ts` re-export them under their current names. Tests for each rule.
+- [ ] **m2** Add `withSortFields` (sort whitelist) to every 3.2 filter schema, as 3.1 does.
+- [ ] **M2** Align `rateLookupDtoSchema` to `SelectedRate` (`usdRate`, `source`, `isFallback`,
+      `effectiveDate`, `options[{source, usdRate, createdAt}]`; a missing rate is `null`, not a nullable
+      date). Add a compile-time assertion that `z.infer<typeof rateLookupDtoSchema>` and `SelectedRate`
+      are mutually assignable.
+- [ ] **m3** `ivaAdjustmentSchema`: reject an adjustment on a rate whose base IVA is 0 (tax-line
+      `ivaAmount` must stay ≥ 0). Test.
+- [ ] **M5 contract** `export.ts`: `exportCsvInputSchema = { entity, query: listQuerySchema, columns:
+      string[] (non-empty, unique) }` (PRD `exportCsv(entity, filters, columns)`). `csv.ts`: pure
+      `toCsv(rows, columns)` — RFC 4180 quoting, CRLF, UTF-8 BOM, and formula-injection guard (prefix `'`
+      to cells starting with `= + - @` tab or CR). Money columns are written as decimal strings. ≥ 90 %
+      coverage. The mock export **action** is out of scope (see the M5 note below).
+- [ ] **Reviewer M3 (second pass)** `shares.ts`: remove the legacy `*InputSchema` / `*Input` aliases that
+      point at the **service** schemas (`unlockSharedDocumentInputSchema`, `resolveShareTokenInputSchema`
+      and the like). Keep the `*ActionSchema` / `*ServiceInputSchema` names. Update the tests; list every
+      removed name in `worker_done`.
+- [ ] **n1** `activity.ts`: one signature for `logActivity` — `(tx, input)` in the transaction (C8);
+      fix the `ActivityService` type to match.
+- [ ] **n2** `shares.ts`: document that the IP-hash salt is server-only and never reaches the client.
+- [ ] **m6** Add `documents.validation.{signedAtNotAllowed,expiresAtNotAllowed,signedStatusNotAllowed}` in
+      ES and EN. New `validation-keys.test.ts`: every `<ns>.validation.*` key exported by a validator
+      exists in both languages.
+- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+
+**M5 note (planning gap, recorded):** the coverage matrix places "export (`exportCsv`)" in H1-B1 as the
+kit export over mock queries. No H1-B1 module has list data yet, so H1-B1 delivers the contract and the
+serializer (4.3) and the kit side (`onExport` without display-only columns, 4.4). The generic
+`exportCsvAction` with a per-entity registry of mock queries is added in **H1-B2 wave 1** with the first
+module list (clients).
+
+#### Package 4.4 — Kit follow-ups from wave 3 (Planner M1-kit side, M3; Reviewer M2, m1–m4, m6, m9, m12; Tester a11y)
+
+Package 4.4 → Agent: wedevs-developer · sonnet — Reason: fixes shared kit components every screen uses (table query bridge, column preferences, accessibility) and owns the preferences contract they share.
+
+Use the shadcn MCP.
+
+Files: `src/components/ui/data-table/**`, `src/components/ui/async-combobox/**`,
+`src/components/ui/date-field/date-field.tsx`, `src/components/ui/uploader/**`,
+`src/components/ui/rate-input/rate-input.tsx`, `src/components/patterns/confirm-dialog.tsx` (+ its test),
+`src/lib/validators/preferences.ts`, new `src/lib/table-query.ts`, tests next to them (existing test files
+of these components may be edited), `src/i18n/messages/{es,en}/{table,forms,patterns}.json`. No other file.
+
+- [ ] **M1** `src/lib/table-query.ts`: `toModuleQuery(query, facets)` flattens `query.filters` into
+      top-level fields and maps each date-range facet to its own keys. Add optional `fromKey` / `toKey` to
+      the date-range facet config (default `<id>From` / `<id>To`). The facet descriptor type lives in
+      `lib` (the kit imports it; `lib` never imports from `components`). Tests against
+      `invoiceFiltersSchema` and `shareFilterSchema`.
+- [ ] **M3** One width range 80–1200 shared by the kit and `preferences.ts` (export the constants from
+      `preferences.ts`). `columnConfigToPreference` / `preferenceToColumnConfig` in `column-config.ts`,
+      round-trip tested. **m3** The width field keeps a local draft and commits on blur or Enter.
+- [ ] **Reviewer M2** Display-only columns (`select`, row actions) carry `meta.exportable === false` and
+      never reach `onExport`. Test.
+- [ ] **m1** Faceted filter search matches the visible label (`keywords={[option.label]}`). **m2** Async
+      facet: catch `loadOptions` rejection (error state, retry) and debounce the search.
+- [ ] **m12** Pagination clamps a hand-edited `page` beyond `pageCount` (send to the last page).
+- [ ] **m4** `RateInput` deviation warning formats the rate for the locale (`formatDecimalForInput`).
+- [ ] **m6** `ConfirmDialog` resets reason and checkbox when it opens; ids from `useId`. Same for the
+      toolbar's `table-show-archived` id.
+- [ ] **m9** `AsyncCombobox`: default accessible name from i18n when no `id`/`aria-label`; a failing
+      `onCreate` is caught and shown with a toast.
+- [ ] **Tester a11y:** faceted-filter `CommandInput` gets an `aria-label`; `DateField` default i18n name;
+      the uploader's hidden file input is `aria-hidden` (the Browse button stays the only control).
+- [ ] **Coverage:** raise data-table (faceted-filter, export-button, view-options, toolbar, pagination)
+      and uploader to ≥ 90 % statements with tests next to them.
+- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+
+#### Package 4.5 — Kit test coverage (Tester gaps)
+
+Package 4.5 → Agent: wedevs-developer · haiku — Reason: test-only package over finished components; no source or shared signature changes.
+
+Files: new test files only — `src/components/patterns/{archived-banner,date-text,detail-header,empty-state,entity-code-chip,financial-summary-card,form-page,money-text,overview-layout,overview-table-toggle,page-header,section-card,side-panel-card,stat-card}.test.tsx`,
+`src/components/ui/country-combobox/country-combobox.keyboard.test.tsx`,
+`src/components/ui/date-field/date-field.keyboard.test.tsx`,
+`src/components/ui/phone-input/phone-input.coverage.test.tsx`. No source file, no existing test file.
+
+- [ ] One test file per listed pattern: renders with ES and EN messages, key props, empty/edge states,
+      accessible names; `patterns/**` aggregate ≥ 90 % statements (excluding `confirm-dialog`, owned by
+      4.4).
+- [ ] Keyboard tests: country-combobox (open with Enter/ArrowDown, filter, select with Enter, Escape
+      closes and returns focus); date-field (open, arrow navigation, Enter selects, Escape closes).
+- [ ] phone-input ≥ 90 % statements.
+- [ ] If a test exposes a source bug, do not fix it: mark the test `it.todo`/`it.fails` with a comment
+      and report it in `worker_done`.
+- [ ] Gate: lint, typecheck, test.
+
+**Coverage gate note:** `vitest.config.ts` keeps `src/lib/finance/**` on purpose (C17 calculators,
+H1-B3; `conventions.md` §testing). The gate stays aggregate until DT-59 switches it to `perFile` in
+H1-B3. Kit coverage is enforced by the package checklists above, not by the gate.
+
 #### Wave 4 close
 
-- [ ] **Integration checklist:** 4.1, 4.2 merged; no Claude attribution; worktrees removed; lint,
+- [ ] **Integration checklist:** 4.1–4.5 merged; no Claude attribution; worktrees removed; lint,
       typecheck, tests, `i18n:check`, build pass.
 - [ ] **Planner coherence review:** mock service signatures use validator types; context shapes = C11;
       `defineAction` / `definePublicAction` sequences = C10; fixture stubs exported under the names later
-      batches will own; CI scripts exist in `package.json`.
-- [ ] **Code review:** C5, C7, C8, C9, C10, C11, C15, C25; CI has no secrets or remote calls.
+      batches will own; CI scripts exist in `package.json`; 4.1 still compiles against the 4.3/4.4
+      contracts; `toModuleQuery` output parses with module filter schemas.
+- [ ] **Code review:** C1, C5, C7, C8, C9, C10, C11, C15, C22, C25; CI has no secrets or remote calls;
+      kit accessibility fixes.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
-      `package.json` scripts. No E2E yet.
+      `package.json` scripts; kit coverage per area (data-table, uploader, phone-input, patterns ≥ 90 %
+      statements). No E2E yet.
 - [ ] **Problem report** (explicit, per agent).
 - [ ] **Summary.**
 
@@ -992,6 +1111,8 @@ Files: `src/app/(app)/settings/layout.tsx`, `src/app/(app)/settings/page.tsx`,
       preference, DT-43) saved through `preferences/actions.ts`; language change also sets
       `NEXT_LOCALE` and refreshes; uses `FormPage` and the unsaved-changes guard.
 - [ ] Tests: form submits through the action; theme change applies.
+- **Note:** `settings.json` already holds a `validation` block (3.2). Extend the namespace; keep
+  `validation` intact.
 
 #### Wave 5 close
 
