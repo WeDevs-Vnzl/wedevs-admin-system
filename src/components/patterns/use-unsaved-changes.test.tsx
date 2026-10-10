@@ -15,6 +15,8 @@ function DirtyForm() {
   return (
     <>
       <input aria-label="Name" {...register("name")} />
+      {/* A native anchor on purpose: the hook intercepts plain link clicks. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/clients">Back to list</a>
     </>
   );
