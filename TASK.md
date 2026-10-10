@@ -1931,12 +1931,16 @@ Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/ap
       128 files, 1930 tests + 1 expected fail; lockfile diff empty. Deviations: 1.1 test-only fixes in
       `files.test.ts`, `features/files/{actions,upload-adapter}.test.ts` approved by the Orchestrator; 1.2
       `useCsvExport(action, entity)`; 1.3 `attachment` not installed — 2.3/2.8 decide.)*
-- [ ] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): row types derive from the
+- [x] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): row types derive from the
       contracts (no invented field besides foreign keys); fixtures assemble into valid DTOs; every
       catalog export name still resolves; `logActivity` matches the `ActivityService` contract signature;
       `ExportSource` fits `toModuleQuery` and each H1-B2 filter schema; `ActionError.entity` reaches the
       client; the image rule does not reject the 1.1 project descriptions; `entityHref` routes = PRD §11;
-      i18n blocks in both languages.
+      i18n blocks in both languages. *(2026-10-10, Planner: READY FOR CODE REVIEW. No blockers. Minor: m1
+      rich-text helpers duplicated in `mocks/entity-refs.ts` → canonical in 2.3 `lib/rich-text.ts`; m2 no
+      `satisfies` contract check on activity/tags/technologies mock services → 2.4/2.5/2.6; m3
+      `listDocumentCategories(ctx)` keeps no input (accepted). Nits n1–n5 folded into the wave 2 specs.
+      Attachment decision recorded in "Wave 1 facts".)*
 - [ ] **Code review** (`wedevs-code-reviewer`, integrated branch): C1, C3 (registry installs, no
       hand-written equivalents), C4 (image attributes), C5 (fixture data, IP ranges, `// MOCK`
       headers), C6, C7, C8, C9 (export factory imports no mocks), C10 (error mapping), C11, C15, C20 (no
@@ -1967,9 +1971,9 @@ and the *Documentos* tab with its attach sheet.
 | `src/mocks/services/{clients,contacts}.ts`, `src/features/clients/{queries,actions,columns}.ts`, `src/features/contacts/{queries,actions}.ts`, i18n `clients`, `contacts` | 2.1 |
 | `src/mocks/services/projects.ts`, `src/features/projects/{queries,actions,columns}.ts`, i18n `projects` | 2.2 |
 | new `src/lib/rich-text.ts`, new `src/components/ui/rich-text/**`, `src/mocks/services/notes.ts`, `src/features/notes/**`, i18n `notes`, `forms` (add-only block `richText`) | 2.3 |
-| `src/mocks/services/activity.ts` (adds `listActivity`; `logActivity`/`mockTx` unchanged), `src/features/activity/**`, `src/app/(app)/activity/**`, i18n `activity` | 2.4 |
-| `src/mocks/services/tags.ts`, `src/features/tags/**`, `src/app/(app)/settings/tags/**`, i18n `tags` | 2.5 |
-| `src/mocks/services/technologies.ts`, `src/features/technologies/**`, `src/app/(app)/settings/technologies/**`, i18n `catalogs` (block `technologies`) | 2.6 |
+| `src/mocks/services/activity.ts` (adds `listActivity`; `logActivity`, `mockTx`, `MockTx`, `toActivityEntryDTO` unchanged), `src/features/activity/**`, `src/app/(app)/activity/**`, i18n `activity` | 2.4 |
+| `src/mocks/services/tags.ts` (keeps `listTags`, `getTag`, `tagUsage`), `src/features/tags/**`, `src/app/(app)/settings/tags/**`, i18n `tags` | 2.5 |
+| `src/mocks/services/technologies.ts` (keeps `listTechnologies`, `getTechnology`, `technologyUsage`), `src/features/technologies/**`, `src/app/(app)/settings/technologies/**`, i18n `catalogs` (block `technologies`) | 2.6 |
 | `src/mocks/services/alerts.ts`, `src/features/alerts/**`, `src/features/shell/queries.ts`, `src/components/app/alerts-bell.tsx`, i18n `alerts`, `shell` (block `alerts`, add-only) | 2.7 |
 | `src/mocks/services/documents.ts`, `src/features/documents/**`, i18n `documents` (keep `validation`) | 2.8 |
 | `src/mocks/store.ts`, `src/mocks/fixtures/**`, `src/mocks/entity-refs.ts`, `src/mocks/services/{catalogs,export,files}.ts`, `src/features/{catalogs,export,files}/**`, `src/lib/validators/**`, `src/server/**`, `src/components/app/**` (except `alerts-bell.tsx`), `src/components/{ui,patterns}/**` (except `ui/rich-text/**`), `src/app/(app)/layout.tsx`, `src/config/**`, `package.json` / lockfile | nobody (read-only) |
@@ -1977,6 +1981,39 @@ and the *Documentos* tab with its attach sheet.
 **Cross-package rule (wave 2):** a package that needs a fixture case, a contract field or a shared-file
 change does not edit it: it stops and reports (fix package after the wave). Mock services read other
 modules' rows through `ctx.db` and `entity-refs.ts`, never through another W2 service.
+
+**Wave 1 facts every W2 package builds on (Planner coherence review, 2026-10-10):**
+
+- Rows (re-exported by `src/mocks/store.ts`): `ClientRow` (`tagIds`, `deletedById`), `ContactRow` (`tagIds`; no
+  `deletedById`, PRD §10 `Contact`), `ProjectRow` + `ProjectClientRow { clientId, role }` (`technologyIds`,
+  `tagIds`, `deletedById`), `NoteRow` (`authorId`, `tagIds`, `links: NoteLinkTarget[]`, `attachmentFileIds`,
+  `deletedById`; no `contentText`), `DocumentRow` (`typeId`, `currentVersionId`, `tagIds`, `createdById`,
+  `deletedById`), `DocumentVersionRow` (`fileId`, `createdById`), `DocumentLinkRow`, `ActivityRow` (`actorType`,
+  `actorId`), `AlertDismissalRow` (DTO + `userId`), `TagRow`, `TechnologyRow` (carries `nameEn`). Factories
+  `create*Fixtures(now)`; `fileFixtures` lives in `fixtures/documents.ts` (m8).
+- Seams: `resolveEntityRef(db, type, id)`, `richTextToPlainText`, `firstWords` (`src/mocks/entity-refs.ts`);
+  `mockTx(ctx) → MockTx`, `logActivity(tx, input)`, `toActivityEntryDTO(db, row)` (`src/mocks/services/activity.ts`);
+  `diffFields(before, after, { fields, longText?, exclude? })` (`src/lib/activity-diff.ts`); `tagUsage`, `getTag`
+  (`services/tags.ts`); `technologyUsage`, `getTechnology` (`services/technologies.ts`); `catalogs.ts` re-exports
+  the reads; `listDocumentCategories(ctx)` takes no input.
+- Errors: `ServiceError(code, { message?, fieldErrors?, entity? })` (from `src/mocks/ctx`); `entity` reaches
+  `ActionError.entity`.
+- Export: `defineCsvExportAction({ entity, permission, source, exportCsv, namespace })`; `source:
+  ExportSource<Row, Filter, ServiceContext> = { entity, facets, filterSchema, list, columns }`; the module's
+  `actions.ts` injects `exportCsv` from `@/mocks/services/export`. Convention: `namespace: "<module>"`, each
+  `labelKey` = `columns.<id>` (the same keys `columns.ts` gives the W3 table). `source.columns` holds every column
+  id the W3 table can export (the kit sends the visible columns except `meta.exportable === false`; an unknown
+  id → `VALIDATION`); `facets` use the W3 table's facet ids; a `dateRange` facet declares `fromKey`/`toKey` when
+  the filter keys are not `<id>From`/`<id>To`. Client: `useCsvExport(action, entity)` — `entity` is the 2nd arg.
+- Routes: `entityHref({ type, id })` is `null` for `CONTACT`, `FILE`, `TAG`, `USER`, `SETTING`, `TRANSFER`,
+  `ACCOUNT_MOVEMENT`, `BILLING_PLAN`, `INSTALLMENT`, `RECURRING_CHARGE`: render the label or chip without a link.
+- Registry: `alert` and `item` are installed; `attachment` is **not**. **Attachment decision (Planner):** W2 does
+  not install it (`src/components/ui/**` is read-only in W2). Note and document attachment chips are compositions
+  of installed registry items (`item`, `badge`, `button`, `tooltip`), DU-02, after consulting the shadcn MCP
+  (2026-10-10: `@shadcn/attachment` exists, deps `cn` + `radix-ui`, no demo or usage example). **Decision owner:
+  2.3** (chips in `NoteCard` / `NoteComposer`), reported in `worker_done`; 2.8 follows the same composition in
+  its own file (no cross-import). If either finds `attachment` necessary, it stops and reports; the install
+  becomes a single-owner fix package after W2.
 
 #### Package 2.1 — Clients and contacts: mock services and adapters
 
@@ -2000,7 +2037,9 @@ No UI file.
         `INTEGRITY_LOCK` (`clients.errors.archiveNeedsConfirm`); with `confirm: true` archives the client
         and its contacts (count in the result), `DELETE` entries (C19).
       - `restoreClient`: `CONFLICT` (with entity) when an active client now holds the same tax id +
-        country; restores the contacts archived by the same cascade; `RESTORE`.
+        country; restores the contacts archived by the same cascade (contacts carry no `deletedById` or cascade
+        marker, PRD §10 `Contact`: the cascade set = the client's contacts whose `archivedAt` equals the
+        client's `archivedAt`); `RESTORE`.
       - `listClients` (every `clientFilterSchema` filter; `includeArchived` honoured only when
         `can(ctx.user, "restore", "trash")`), `getClient` (contacts primary first), `getClientFinancials`,
         `getClientsOverview`. PD-4: USD metrics from the finance collections with `sumMoney` over stored
@@ -2012,7 +2051,9 @@ No UI file.
       archive `{ delete, client }`; restore `{ restore, trash }`; contacts `{ … , contact }`; read actions
       `searchClientsAction` (`{ read, client }`, `q`, ≤ 20 `EntityRef` options) and
       `searchContactsAction` (`{ read, contact }`); `exportClientsCsvAction` through the 1.2 factory
-      (`{ read, client }`). Revalidate `/clients` paths.
+      (`{ read, client }`, `namespace: "clients"`, source = `listClients` + `clientFilterSchema` +
+      `clients/columns.ts`); no `CONTACT` export (`contactFilterSchema` requires `clientId`). Mutations log
+      through `mockTx(ctx)` + `logActivity`; `UPDATE` diffs with `diffFields`. Revalidate `/clients` paths.
 - [ ] `queries.ts`: `listClients`, `getClient` (`NOT_FOUND` lets the page call `notFound()`),
       `getClientsOverview`, `getClientFinancials`, `listContacts`.
 - [ ] `clients/columns.ts`: table column ids of PRD §8.2 "Tabla", label keys `clients.columns.*`,
@@ -2048,7 +2089,9 @@ Files: `src/mocks/services/projects.ts` (+ test); `src/features/projects/{querie
         filter incl. `technologyId`, HU-06 CA2), `getProject`, `getProjectsOverview`. PD-4 financial
         headline from the finance collections (`"0.00"` now).
 - [ ] Adapters: `{ create, project }`, `{ update, project }` (Member RU), `{ delete, project }`;
-      `searchProjectsAction` (`{ read, project }`); `exportProjectsCsvAction` (`{ read, project }`).
+      `searchProjectsAction` (`{ read, project }`); `exportProjectsCsvAction` (`{ read, project }`,
+      `namespace: "projects"`, source = `listProjects` + `projectFilterSchema` + `projects/columns.ts`;
+      `technologyId` is a facet).
 - [ ] `projects/columns.ts`: column ids of PRD §8.3 "Tabla", label keys, money flags.
 - [ ] i18n `projects` (ES and EN): errors, hints, column labels, toast keys.
 - [ ] Tests: allowed and refused transitions, required dates, hints, cancel options, reorder per group,
@@ -2072,7 +2115,11 @@ viewer, extension allowlist, + tests); `src/mocks/services/notes.ts` (+ test);
 block `richText`). No other file.
 
 - [ ] `lib/rich-text.ts` (pure): `richTextToPlainText(doc)`, `richTextExcerpt(doc, max)`,
-      `noteDisplayTitle(title, doc)` (first words when there is no title, PRD §8.10).
+      `noteDisplayTitle(title, doc)` (first words when there is no title, PRD §8.10). Canonical copies (lib
+      never imports `@/mocks`): `richTextToPlainText` keeps the semantics of the mock copy in
+      `src/mocks/entity-refs.ts` (text nodes, blocks joined by one space) and `noteDisplayTitle` uses the
+      same six first words as `resolveEntityRef`, so a note's card title and its `EntityRef` label agree.
+      The mock copy stays mock-only (deleted with `src/mocks/` in Hito 2).
 - [ ] `RichTextEditor`: Tiptap with exactly the extensions that produce `RICH_TEXT_NODE_TYPES` and
       `RICH_TEXT_MARK_TYPES` (StarterKit configured, task list, table, link limited to `http`, `https`,
       `mailto`, image limited to `fileId`/`alt`, placeholder); `immediatelyRender: false` (no hydration
@@ -2089,12 +2136,16 @@ block `richText`). No other file.
       `updateNote` (author immutable; content diff recorded as `"changed"`), `pinNote`, `linkNote`,
       `unlinkNote` (the last link is refused), `attachFile` (`UPLOAD`), `archiveNote` (`DELETE`),
       `listNotes` (entity feed: pinned first, then newest; table filters), `getNote`; `contentText` and
-      `excerpt` derived with `lib/rich-text`.
+      `excerpt` derived with `lib/rich-text`. Rows are `NoteRow` (`authorId`, `links`,
+      `attachmentFileIds`) assembled into DTOs; activity through `mockTx` + `logActivity`; the `updateNote`
+      diff through `diffFields(…, { longText: ["content"] })`; `exportNotesCsvAction` with
+      `namespace: "notes"`.
 - [ ] Adapters: create/update/pin/link/unlink/attach `{ create | update, note }`; archive
       `{ delete, note }` with `ownerOf` = the author (Member deletes only own notes, PRD §4.3);
       `listNotesAction` (`{ read, note }`, "Cargar más"); `exportNotesCsvAction` (`{ read, note }`).
 - [ ] Components: `NotesFeed` and `NoteCard` (avatar, author · date with `DateText`, pin, title,
-      expandable preview through `RichTextView`, tag chips, attachment chips, actions filtered by
+      expandable preview through `RichTextView`, tag chips, attachment chips (composition of installed `item`/`badge`/`button`; 2.3
+      owns the attachment decision, see "Wave 1 facts"), actions filtered by
       `can()`); `NoteComposer` in a `sheet` (title, editor, attachments through the `Uploader`, pinned,
       links prefilled; **no tag picker in W2** — 3.3 adds it); `EntityNotesTab({ entity })` ("+ Nueva
       nota" pre-linked, feed, empty state). Viewer sees no write action.
@@ -2116,7 +2167,8 @@ Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/feat
 (+ tests); new `src/app/(app)/activity/page.tsx` (+ `loading.tsx` if needed);
 `src/i18n/messages/{es,en}/activity.json`. No other file.
 
-- [ ] `listActivity` per `activityFilterSchema` (actor, actor type, action, entity type, entity pair,
+- [ ] `listActivity` per `activityFilterSchema` (rows assembled with `toActivityEntryDTO`; type test
+      `satisfies Pick<ActivityService<MockServiceContext, MockTx>, "logActivity" | "listActivity">`) (actor, actor type, action, entity type, entity pair,
       Caracas date range; newest first). No update or delete function anywhere (C20).
 - [ ] `/activity` per wireframe 4.7 and frontend-patterns §13: stat cards; filters (user, action, entity
       type, dates) in the URL through `nuqs`; list grouped by day (time, actor avatar or "Sistema" /
@@ -2125,7 +2177,9 @@ Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/feat
       marker as text), technical context (action, masked IP such as `192.0.2.•••`, browser from the user
       agent, event id), link to the entity and the immutability note (`Lock`); "Cargar más" through
       `listActivityAction` (`{ read, activity }`); "Exportar CSV" through `exportActivityCsvAction`
-      (`ACTIVITY`, `{ read, activity }`). `generateMetadata` title (R15).
+      (`ACTIVITY`, `{ read, activity }`, `namespace: "activity"`; the date facet is
+      `{ kind: "dateRange", fromKey: "from", toKey: "to" }`, matching `activityFilterSchema`);
+      `EntityCodeChip` without a link when `entityHref` is `null`. `generateMetadata` title (R15).
 - [ ] Access: the page checks `can(user, "read", "activity")` on the server and calls `notFound()`
       otherwise (Member, Viewer).
 - [ ] `EntityActivityTab({ entity })`: the same feed for one record with a readable diff ("Estado:
@@ -2149,7 +2203,9 @@ Files: `src/mocks/services/tags.ts` (adds `createTag`, `updateTag`, `assignTags`
 (+ tests); new `src/app/(app)/settings/tags/page.tsx`; `src/i18n/messages/{es,en}/tags.json`. No other
 file.
 
-- [ ] Service: `createTag` (case-insensitive unique name → `CONFLICT` with entity), `updateTag`,
+- [ ] Service (keeps `listTags`, `getTag`, `tagUsage`, re-exported by `catalogs.ts`; type test
+      `satisfies TagsService<MockServiceContext>`; assignments write the rows' `tagIds`; finance types
+      answer `NOT_FOUND` until H1-B3): `createTag` (case-insensitive unique name → `CONFLICT` with entity), `updateTag`,
       `assignTags` / `unassignTag` for every taggable type whose collection has rows (unknown or archived
       entity → `NOT_FOUND`; `LINK`/`UNLINK` entries). The service also checks
       `can(ctx.user, "update", <resource of the entity type>)` (a Member may tag projects and notes, not
@@ -2182,7 +2238,9 @@ Files: `src/mocks/services/technologies.ts` (adds create, update, set active, de
 (+ tests); new `src/app/(app)/settings/technologies/page.tsx`; `src/i18n/messages/{es,en}/catalogs.json`
 (block `technologies`; keep `validation`). No other file.
 
-- [ ] Service (`TechnologiesService`): `createTechnology` (unique name and slug → `CONFLICT`; slug
+- [ ] Service (`TechnologiesService`; keeps `listTechnologies`, `getTechnology`, `technologyUsage`,
+      re-exported by `catalogs.ts`; `deleteTechnology` uses `technologyUsage`; `TechnologyRow` already
+      carries `nameEn` (no store change); type test `satisfies TechnologiesService<MockServiceContext>`): `createTechnology` (unique name and slug → `CONFLICT`; slug
       derived when omitted), `updateTechnology`, `setTechnologyActive`, `deleteTechnology` (in use by a
       non-archived project → `INTEGRITY_LOCK` `catalogs.technologies.errors.inUse`, HU-06 CA3; otherwise
       removed — catalog rows are not soft-deleted, `data-rules.md` §6); `SETTINGS_CHANGE` entries on
@@ -2210,7 +2268,8 @@ Package 2.7 → Agent: wedevs-developer · sonnet — Reason: nine live rules wi
 
 Use the shadcn MCP.
 
-Depends on: 1.1 (rows, dismissals collection), 1.3 (`entityHref`).
+Depends on: 1.1 (rows, `alertDismissals` of `AlertDismissalRow` = DTO + `userId`, `resolveEntityRef`
+for labels), 1.3 (`entityHref`).
 
 Files: new `src/mocks/services/alerts.ts` (+ test); new `src/features/alerts/{queries,actions}.ts`
 (+ tests); new `src/features/alerts/components/{alert-list,alert-item,alert-snooze-menu}.tsx` (+ tests);
@@ -2255,13 +2314,18 @@ Files: new `src/mocks/services/documents.ts` (+ test); new `src/features/documen
 (+ tests); new `src/features/documents/components/{entity-documents-tab,attach-document-sheet,document-row-actions}.tsx`
 (+ tests); `src/i18n/messages/{es,en}/documents.json` (keep `validation`). No other file.
 
-- [ ] Minimal service with PRD §12 names (H1-B4 extends this file): `listDocuments` (by linked entity,
-      category/type facets, archived left out), `createDocument` (`ARCHIVO` format only here; type rules
+- [ ] Minimal service with PRD §12 names (H1-B4 extends this file): `listDocuments` (by linked entity
+      through the `clientId` / `projectId` facets of `documentFilterSchema` — the contract has no generic
+      entity pair; a tab for another type → stop and report; category/type facets; archived left out;
+      rows `DocumentRow` / `DocumentVersionRow` / `DocumentLinkRow` assembled into DTOs), `createDocument` (`ARCHIVO` format only here; type rules
       through `createDocumentInputSchemaFor`; `DOC-####`; `CREATE`, `UPLOAD`, `LINK`), `linkDocument`,
-      `unlinkDocument` (`UNLINK`; other links untouched, HU-20 CA2), `searchDocuments`.
+      `unlinkDocument` (`UNLINK`; other links untouched, HU-20 CA2). No `searchDocuments` service (not a
+      `DocumentsService` name, C9): `searchDocumentsAction` reads `listDocuments` with `q`.
 - [ ] Adapters: `{ create, document }`, link/unlink `{ update, document }` (Member CRU),
       `searchDocumentsAction` (`{ read, document }`).
-- [ ] `EntityDocumentsTab({ entity })` per wireframe 4.6: category chips with counts, table (code, title,
+- [ ] `EntityDocumentsTab({ entity })` per wireframe 4.6: category chips with counts (from
+      `listDocumentCategories()`, no input; file chips follow the 2.3 attachment composition, see "Wave 1
+      facts"), table (code, title,
       type, status badge, version, updated), "Adjuntar documento" `sheet` with two modes — upload a new
       file (`Uploader`, 25 MB general context; type grouped by category; title; dates per the type rules)
       or link an existing document (`AsyncCombobox`); unlink through `ConfirmDialog`; Viewer read-only.
