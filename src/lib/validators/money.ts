@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./zod";
 import { VALIDATION_MESSAGES } from "./common";
 
 /**

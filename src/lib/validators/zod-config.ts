@@ -5,8 +5,9 @@ import { z } from "zod";
  * that carries no custom message to a `validation.*` i18n key, so a schema never leaks prose to the UI.
  * Custom messages (schema- or check-level) keep precedence over this map.
  *
- * Imported for its side effect by `common.ts`, which every validator module already imports. Keys here
- * have no interpolation: a Zod message is a plain string, so limits are not available to the translation.
+ * Installed by `./zod`, the only module validators import `z` from (ESLint forbids `"zod"` elsewhere in
+ * `src/`), so every schema is built after the map exists. Keys here have no interpolation: a Zod message
+ * is a plain string, so limits are not available to the translation.
  */
 
 /** Generic keys (namespace `validation`) produced by the global error map; merged into `VALIDATION_MESSAGES`. */
@@ -37,6 +38,7 @@ export function genericIssueMessage(issue: RawIssue): string {
     case "invalid_value":
       return M.invalidOption;
     case "too_small":
+      if (issue.origin === "string" && issue.minimum === 1) return M.required; // `.min(1)` = non-empty
       if (LENGTH_ORIGINS.has(issue.origin)) return M.tooShort;
       if (issue.origin === "number" && issue.minimum === 0) {
         return issue.inclusive ? M.nonNegative : M.positive;

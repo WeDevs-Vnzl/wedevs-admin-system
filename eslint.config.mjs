@@ -15,6 +15,13 @@ const prismaImports = {
   message: "Prisma is only reachable inside src/server/ (C7).",
 };
 
+// Exact-name `paths` entry: a `patterns` group named "zod" would also match the relative "./zod".
+const zodImports = {
+  name: "zod",
+  message:
+    'Import { z } from "@/lib/validators/zod": it guarantees the global Zod error map (i18n keys) is installed (C1, C2).',
+};
+
 const frameworkImports = {
   group: [
     "next",
@@ -30,8 +37,15 @@ const frameworkImports = {
   message: "Services are framework-free (C11): no next/*, react, next-intl or @clerk/*.",
 };
 
-const restrict = (...patterns) => ({
-  "no-restricted-imports": ["error", { patterns }],
+// Entries with a `name` become `paths` (exact module); entries with a `group` become `patterns`.
+const restrict = (...entries) => ({
+  "no-restricted-imports": [
+    "error",
+    {
+      paths: entries.filter((entry) => entry.name),
+      patterns: entries.filter((entry) => entry.group),
+    },
+  ],
 });
 
 export default defineConfig([
@@ -52,12 +66,12 @@ export default defineConfig([
   // C7 + C9: default for every source file.
   {
     files: ["**/*.{ts,tsx,mts,mjs}"],
-    rules: restrict(mocksImports, prismaImports),
+    rules: restrict(mocksImports, prismaImports, zodImports),
   },
   // C7: Prisma is allowed inside src/server/ (mocks stay restricted there).
   {
     files: ["src/server/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports),
+    rules: restrict(mocksImports, zodImports),
   },
   // C9: the only files outside src/mocks/ allowed to import @/mocks/**.
   {
@@ -68,20 +82,27 @@ export default defineConfig([
       "tests/**/*.{ts,tsx}",
       "**/*.test.{ts,tsx}",
     ],
-    rules: restrict(prismaImports),
+    rules: restrict(prismaImports, zodImports),
   },
   {
     files: ["src/server/context.ts", "src/server/auth/session.ts"],
-    rules: { "no-restricted-imports": "off" },
+    rules: restrict(zodImports),
   },
   // C11: services are framework-free (Hito 2 services and Hito 1 mock services).
   {
     files: ["src/server/services/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, frameworkImports),
+    rules: restrict(mocksImports, frameworkImports, zodImports),
   },
   {
     files: ["src/mocks/services/**/*.{ts,tsx}"],
-    rules: restrict(prismaImports, frameworkImports),
+    rules: restrict(prismaImports, frameworkImports, zodImports),
+  },
+
+  // C1, C2: the only modules that import the raw "zod" package; every other file imports `z` from
+  // `@/lib/validators/zod`.
+  {
+    files: ["src/lib/validators/zod.ts", "src/lib/validators/zod-config.ts"],
+    rules: restrict(mocksImports, prismaImports),
   },
 
   // C1: no literal strings in JSX text; user-facing copy comes from next-intl messages.

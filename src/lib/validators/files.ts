@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./zod";
 import { VALIDATION_MESSAGES, idSchema, type ActionResult } from "./common";
 import { fileStatusSchema } from "./enums";
 
@@ -74,7 +74,7 @@ export interface UploadCandidate {
 export type UploadViolation =
   | { key: typeof VALIDATION_MESSAGES.fileTypeNotAllowed }
   | { key: typeof VALIDATION_MESSAGES.fileEmpty }
-  | { key: typeof VALIDATION_MESSAGES.fileTooLarge; values: { max: string } };
+  | { key: typeof VALIDATION_MESSAGES.fileTooLargeMax; values: { max: number } };
 
 /** `application/pdf; charset=binary` → `application/pdf`. */
 function normalizeMime(mime: string): string {
@@ -98,7 +98,8 @@ function isMimeAllowed(candidate: UploadCandidate, rules: UploadRules): boolean 
 
 /**
  * Checks a file against the rules of its context. Returns the first violation (an i18n key and the values
- * it interpolates), or `null` when the file is acceptable. Shared by the uploader (client) and
+ * it interpolates; `max` is a number of MB, the unit lives in the message), or `null` when the file is
+ * acceptable. Shared by the uploader (client) and
  * `requestUploadInputSchema`. MIME parameters are ignored; an empty or `application/octet-stream` MIME
  * falls back to the extension. Hito 2 still validates the real type by magic bytes at confirm time.
  */
@@ -111,8 +112,8 @@ export function checkUpload(
   if (candidate.size <= 0) return { key: VALIDATION_MESSAGES.fileEmpty };
   if (candidate.size > rules.maxBytes) {
     return {
-      key: VALIDATION_MESSAGES.fileTooLarge,
-      values: { max: `${rules.maxBytes / MB} MB` },
+      key: VALIDATION_MESSAGES.fileTooLargeMax,
+      values: { max: rules.maxBytes / MB },
     };
   }
   return null;
@@ -146,9 +147,13 @@ export const requestUploadInputSchema = z
   .superRefine((input, ctx) => {
     const violation = checkUpload(input, input.context);
     if (!violation) return;
+    // `fieldErrors` carry keys, not values, so the schema path uses the placeholder-free size key.
     ctx.addIssue({
       code: "custom",
-      message: violation.key,
+      message:
+        violation.key === VALIDATION_MESSAGES.fileTooLargeMax
+          ? VALIDATION_MESSAGES.fileTooLarge
+          : violation.key,
       path: [violation.key === VALIDATION_MESSAGES.fileTypeNotAllowed ? "mime" : "size"],
     });
   });

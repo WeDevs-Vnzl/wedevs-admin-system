@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from "./zod";
 import { entityTypeSchema } from "./enums";
-import { GENERIC_VALIDATION_MESSAGES } from "./zod-config"; // also installs the global Zod error map
+import { GENERIC_VALIDATION_MESSAGES } from "./zod-config";
 
 /**
  * Shared contract primitives (C8, C10): action results, error codes, ids, date-only strings, list
@@ -34,7 +34,10 @@ export const VALIDATION_MESSAGES = {
   fileNameInvalid: "validation.file.nameInvalid",
   fileTypeNotAllowed: "validation.file.typeNotAllowed",
   fileEmpty: "validation.file.empty",
+  /** Schema/`fieldErrors` path: no placeholder, a Zod message carries no values. */
   fileTooLarge: "validation.file.tooLarge",
+  /** `checkUpload` path (uploader): interpolates `{max}` in MB. */
+  fileTooLargeMax: "validation.file.tooLargeMax",
 } as const;
 
 export type ValidationMessageKey = (typeof VALIDATION_MESSAGES)[keyof typeof VALIDATION_MESSAGES];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { VALIDATION_MESSAGES } from "./common";
+import { VALIDATION_MESSAGES, zodFieldErrors } from "./common";
 import {
   UPLOAD_RULES,
   checkUpload,
@@ -76,20 +76,20 @@ describe("checkUpload", () => {
     ).toBeNull();
   });
 
-  it("rejects files over the limit and provides the interpolated {max}", () => {
+  it("rejects files over the limit and provides {max} as a number of MB", () => {
     expect(checkUpload({ ...pdf, size: 25 * MB + 1 }, "general")).toEqual({
-      key: VALIDATION_MESSAGES.fileTooLarge,
-      values: { max: "25 MB" },
+      key: VALIDATION_MESSAGES.fileTooLargeMax,
+      values: { max: 25 },
     });
     expect(
       checkUpload({ name: "r.pdf", mime: pdf.mime, size: 10 * MB + 1 }, "payment_receipt"),
-    ).toEqual({ key: VALIDATION_MESSAGES.fileTooLarge, values: { max: "10 MB" } });
+    ).toEqual({ key: VALIDATION_MESSAGES.fileTooLargeMax, values: { max: 10 } });
   });
 
   it("applies the limit of the context, not a global one", () => {
     expect(checkUpload({ ...pdf, size: 20 * MB }, "general")).toBeNull();
     expect(checkUpload({ ...pdf, size: 20 * MB }, "payment_receipt")).toMatchObject({
-      key: VALIDATION_MESSAGES.fileTooLarge,
+      key: VALIDATION_MESSAGES.fileTooLargeMax,
     });
     expect(
       checkUpload({ name: "a.zip", mime: "application/zip", size: 1 * MB }, "payment_receipt"),
@@ -168,6 +168,8 @@ describe("requestUploadInputSchema", () => {
         path: ["size"],
         message: VALIDATION_MESSAGES.fileTooLarge,
       });
+      // fieldErrors carry keys only: the schema path must use the key without a {max} placeholder.
+      expect(zodFieldErrors(tooBig.error)).toEqual({ size: ["validation.file.tooLarge"] });
     }
   });
 
