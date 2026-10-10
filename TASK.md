@@ -1069,9 +1069,9 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
 - [ ] **m-a** `withSortFields` returns its real refined type (no cast to `T`), or the helper documents
       "derive with `pick`/`partial` from the base object" and a test proves the documented path works.
 - [ ] **m-b / m-c** `ci.yml`: workflow-level `NEXT_TELEMETRY_DISABLED: "1"`; pnpm via
-      `pnpm/action-setup` (reads `packageManager`) before `setup-node` with `cache: pnpm`; third-party
-      actions pinned by full commit SHA with the version in a comment (resolve SHAs from local knowledge
-      or `git ls-remote` only if network is allowed; otherwise keep tags and say so).
+      `pnpm/action-setup` (reads `packageManager`) before `setup-node` with `cache: pnpm`. Keep version
+      tags: SHA pinning needs verified SHAs from GitHub (no network for agents) → H1-B1 batch close, when
+      the remote is added (DT-69).
 - [ ] **m-f (WCAG 2.5.3)** Uploader Browse button: the accessible name contains the visible text; the
       caller's label goes to `aria-describedby` or is composed with it via ICU in `forms`.
 - [ ] **m-h** `getRateFor` query parses its input like its siblings.
