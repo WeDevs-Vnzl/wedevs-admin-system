@@ -1,1 +1,21 @@
-{}
+{
+  "trigger": "Buscar",
+  "shortcut": "⌘K",
+  "dialogTitle": "Menú de comandos",
+  "dialogDescription": "Ir a una sección o ejecutar una acción rápida",
+  "placeholder": "Escribe un comando o busca…",
+  "navigation": "Ir a",
+  "quickActions": "Acciones rápidas",
+  "results": "Resultados",
+  "resultsPending": "La búsqueda de registros llega en un lote posterior.",
+  "empty": "Sin coincidencias",
+  "actions": {
+    "newClient": "Nuevo cliente",
+    "newProject": "Nuevo proyecto",
+    "newInvoice": "Nueva factura",
+    "newPayment": "Registrar pago",
+    "newExpense": "Nuevo gasto",
+    "newNote": "Nueva nota",
+    "newDocument": "Nuevo documento"
+  }
+}

@@ -17,6 +17,11 @@
     "empty": "Sin resultados",
     "error": "Algo salió mal"
   },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o fue movida.",
+    "back": "Volver al inicio"
+  },
   "errors": {
     "UNAUTHENTICATED": "Debes iniciar sesión para continuar",
     "FORBIDDEN": "No tienes permiso para realizar esta acción",

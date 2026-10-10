@@ -11,5 +11,44 @@
     "light": "Claro",
     "dark": "Oscuro",
     "system": "Sistema"
+  },
+  "sidebar": {
+    "label": "Navegación principal",
+    "collapse": "Contraer barra lateral",
+    "expand": "Expandir barra lateral",
+    "mobileTitle": "Navegación",
+    "mobileDescription": "Menú de navegación principal"
+  },
+  "breadcrumbs": {
+    "label": "Ruta de navegación"
+  },
+  "rateChip": {
+    "label": "Tasa BCV",
+    "labelOther": "Tasa de cambio",
+    "value": "1 USD = Bs. {rate}",
+    "asOf": "Al {date}",
+    "fallback": "Usando la tasa del {date}",
+    "missing": "Sin tasa para hoy",
+    "link": "Gestionar tasas de cambio"
+  },
+  "alerts": {
+    "label": "Alertas",
+    "title": "Alertas",
+    "description": "Elementos que requieren tu atención",
+    "empty": "No tienes alertas pendientes",
+    "markAllRead": "Marcar leídas",
+    "counter": "{count} alertas"
+  },
+  "userMenu": {
+    "label": "Menú de usuario",
+    "role": "Rol"
+  },
+  "footer": {
+    "copyright": "© {year} WeDevs · Uso interno",
+    "version": "Versión {version}"
+  },
+  "dashboardPlaceholder": {
+    "title": "Inicio",
+    "description": "El panel llega con los siguientes lotes de la interfaz."
   }
 }
