@@ -7,6 +7,7 @@ import {
   LEDGER_ENTRY_KIND_VALUES,
   accountBalanceDtoSchema,
   accountDtoSchema,
+  LEDGER_SORT_FIELDS,
   accountLedgerQuerySchema,
   accountsOverviewDtoSchema,
   createAccountInputSchema,
@@ -356,5 +357,22 @@ describe("ledger, balance and reconciliation", () => {
       reconciliationDtoSchema.safeParse({ ...dto, difference: "0.00", suggestedAdjustment: null })
         .success,
     ).toBe(true);
+  });
+});
+
+describe("sort whitelist (m2)", () => {
+  it("accepts the ledger columns and rejects any other", () => {
+    for (const field of LEDGER_SORT_FIELDS) {
+      expect(
+        accountLedgerQuerySchema.safeParse({ accountId: "acc1", sort: `${field}:asc` }).success,
+        field,
+      ).toBe(true);
+    }
+    const result = accountLedgerQuerySchema.safeParse({ accountId: "acc1", sort: "source:asc" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({
+      message: VALIDATION_MESSAGES.invalidSort,
+      path: ["sort"],
+    });
   });
 });

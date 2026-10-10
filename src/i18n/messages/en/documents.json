@@ -1,1 +1,7 @@
-{}
+{
+  "validation": {
+    "signedAtNotAllowed": "This document type does not require a signature, so it takes no signed date",
+    "expiresAtNotAllowed": "This document type does not expire, so it takes no expiration date",
+    "signedStatusNotAllowed": "This document type does not require a signature, so it cannot be signed"
+  }
+}

@@ -9,11 +9,18 @@ import {
   dateOnlySchema,
   entityRefSchema,
   errorMessageKey,
+  facetOf,
+  hexColorSchema,
   idSchema,
   isValidDateOnly,
   listQuerySchema,
+  optionalText,
   paginated,
   parseSort,
+  requiredText,
+  sortsBy,
+  timestampSchema,
+  withSortFields,
   zodFieldErrors,
   type ActionResult,
 } from "./common";
@@ -215,5 +222,84 @@ describe("parseSort and paginated", () => {
       pageCount: 3,
     });
     expect(paginated([], 0, { page: 1, pageSize: 25 }).pageCount).toBe(1);
+  });
+});
+
+describe("shared form and list primitives (M4)", () => {
+  const messagesOf = (result: { error?: { issues: { message: string }[] } }) =>
+    (result.error?.issues ?? []).map((issue) => issue.message);
+
+  it("timestampSchema is strict ISO 8601 UTC", () => {
+    for (const ok of ["2026-10-09T14:30:00.000Z", "2026-10-09T14:30:00Z"]) {
+      expect(timestampSchema.safeParse(ok).success, ok).toBe(true);
+    }
+    for (const bad of [
+      "2026-10-09",
+      "2026-10-09T14:30:00+02:00",
+      "2026-10-09 14:30:00",
+      "",
+      "yesterday",
+    ]) {
+      expect(timestampSchema.safeParse(bad).success, bad).toBe(false);
+    }
+    expect(timestampSchema.safeParse(1760000000000).success).toBe(false);
+  });
+
+  it("hexColorSchema accepts exactly #RRGGBB", () => {
+    for (const ok of ["#000000", "#1A2b3C", "#ffffff"]) {
+      expect(hexColorSchema.safeParse(ok).success, ok).toBe(true);
+    }
+    for (const bad of ["#fff", "#12345", "#1234567", "123456", "#GGGGGG", "blue", ""]) {
+      expect(hexColorSchema.safeParse(bad).success, bad).toBe(false);
+    }
+    expect(messagesOf(hexColorSchema.safeParse("#fff"))).toEqual([
+      VALIDATION_MESSAGES.invalidFormat,
+    ]);
+  });
+
+  it("requiredText trims, rejects blank and bounds the length", () => {
+    const schema = requiredText(5);
+    expect(schema.parse("  abc ")).toBe("abc");
+    expect(messagesOf(schema.safeParse("   "))).toEqual([VALIDATION_MESSAGES.required]);
+    expect(schema.safeParse("123456").success).toBe(false);
+    expect(schema.safeParse(undefined).success).toBe(false);
+  });
+
+  it("optionalText trims, bounds, and turns empty, null and missing into undefined", () => {
+    const schema = z.object({ note: optionalText(5) });
+    expect(schema.parse({ note: " hi " })).toEqual({ note: "hi" });
+    expect(schema.parse({ note: "" }).note).toBeUndefined();
+    expect(schema.parse({ note: "   " }).note).toBeUndefined();
+    expect(schema.parse({ note: null }).note).toBeUndefined();
+    expect(schema.parse({}).note).toBeUndefined();
+    expect(schema.safeParse({ note: "123456" }).success).toBe(false);
+    expect(schema.safeParse({ note: 5 }).success).toBe(false);
+  });
+
+  it("facetOf normalizes one value or a list to a list and keeps undefined", () => {
+    const schema = z.object({ status: facetOf(z.enum(["A", "B"])) });
+    expect(schema.parse({ status: "A" }).status).toEqual(["A"]);
+    expect(schema.parse({ status: ["A", "B"] }).status).toEqual(["A", "B"]);
+    expect(schema.parse({ status: [] }).status).toEqual([]);
+    expect(schema.parse({}).status).toBeUndefined();
+    expect(schema.safeParse({ status: "C" }).success).toBe(false);
+    expect(schema.safeParse({ status: ["A", "C"] }).success).toBe(false);
+  });
+
+  it("sortsBy and withSortFields whitelist the sort field", () => {
+    expect(sortsBy(undefined, ["name"])).toBe(true);
+    expect(sortsBy("name:asc", ["name"])).toBe(true);
+    expect(sortsBy("other:asc", ["name"])).toBe(false);
+    expect(sortsBy("garbage", ["name"])).toBe(false);
+
+    const schema = withSortFields(listQuerySchema, ["name", "createdAt"]);
+    expect(schema.safeParse({}).success).toBe(true);
+    expect(schema.safeParse({ sort: "createdAt:desc" }).success).toBe(true);
+    const bad = schema.safeParse({ sort: "secret:asc" });
+    expect(bad.success).toBe(false);
+    expect(bad.error?.issues[0]).toMatchObject({
+      message: VALIDATION_MESSAGES.invalidSort,
+      path: ["sort"],
+    });
   });
 });

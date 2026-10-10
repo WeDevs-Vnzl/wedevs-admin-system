@@ -11,6 +11,8 @@ import {
   createExpenseInputSchemaFor,
   createRecurringExpenseInputSchema,
   expenseDetailDtoSchema,
+  EXPENSE_SORT_FIELDS,
+  RECURRING_EXPENSE_SORT_FIELDS,
   expenseFiltersSchema,
   expenseListRowSchema,
   expensesOverviewDtoSchema,
@@ -320,5 +322,29 @@ describe("expense DTOs", () => {
       upcoming: [row],
     };
     expect(expensesOverviewDtoSchema.safeParse(overview).success).toBe(true);
+  });
+});
+
+describe("sort whitelist (m2)", () => {
+  it("accepts the listed fields and rejects any other, for both lists", () => {
+    expect(expenseFiltersSchema.safeParse({}).success).toBe(true);
+    expect(recurringExpenseFiltersSchema.safeParse({}).success).toBe(true);
+    for (const field of EXPENSE_SORT_FIELDS) {
+      expect(expenseFiltersSchema.safeParse({ sort: `${field}:desc` }).success, field).toBe(true);
+    }
+    for (const field of RECURRING_EXPENSE_SORT_FIELDS) {
+      expect(
+        recurringExpenseFiltersSchema.safeParse({ sort: `${field}:desc` }).success,
+        field,
+      ).toBe(true);
+    }
+    for (const schema of [expenseFiltersSchema, recurringExpenseFiltersSchema]) {
+      const result = schema.safeParse({ sort: "receiptFileId:asc" });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]).toMatchObject({
+        message: VALIDATION_MESSAGES.invalidSort,
+        path: ["sort"],
+      });
+    }
   });
 });

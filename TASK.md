@@ -940,32 +940,32 @@ that need a sort whitelist (`catalogs,settings,billing,invoices,payments,account
 new `src/lib/validators/export.ts`, new `src/lib/csv.ts`, new `src/lib/validators/validation-keys.test.ts`,
 tests next to each, `src/i18n/messages/{es,en}/documents.json`. No other file.
 
-- [ ] **M4** Move the shared helpers into `common.ts` with one behaviour each: `timestampSchema` strict
+- [x] **M4** Move the shared helpers into `common.ts` with one behaviour each: `timestampSchema` strict
       ISO, `hexColorSchema` 6 digits, `optionalText` nullish, one facet helper. `tags.ts` and
       `catalogs.ts` re-export them under their current names. Tests for each rule.
-- [ ] **m2** Add `withSortFields` (sort whitelist) to every 3.2 filter schema, as 3.1 does.
-- [ ] **M2** Align `rateLookupDtoSchema` to `SelectedRate` (`usdRate`, `source`, `isFallback`,
+- [x] **m2** Add `withSortFields` (sort whitelist) to every 3.2 filter schema, as 3.1 does.
+- [x] **M2** Align `rateLookupDtoSchema` to `SelectedRate` (`usdRate`, `source`, `isFallback`,
       `effectiveDate`, `options[{source, usdRate, createdAt}]`; a missing rate is `null`, not a nullable
       date). Add a compile-time assertion that `z.infer<typeof rateLookupDtoSchema>` and `SelectedRate`
       are mutually assignable.
-- [ ] **m3** `ivaAdjustmentSchema`: reject an adjustment on a rate whose base IVA is 0 (tax-line
+- [x] **m3** `ivaAdjustmentSchema`: reject an adjustment on a rate whose base IVA is 0 (tax-line
       `ivaAmount` must stay ≥ 0). Test.
-- [ ] **M5 contract** `export.ts`: `exportCsvInputSchema = { entity, query: listQuerySchema, columns:
+- [x] **M5 contract** `export.ts`: `exportCsvInputSchema = { entity, query: listQuerySchema, columns:
       string[] (non-empty, unique) }` (PRD `exportCsv(entity, filters, columns)`). `csv.ts`: pure
       `toCsv(rows, columns)` — RFC 4180 quoting, CRLF, UTF-8 BOM, and formula-injection guard (prefix `'`
       to cells starting with `= + - @` tab or CR). Money columns are written as decimal strings. ≥ 90 %
       coverage. The mock export **action** is out of scope (see the M5 note below).
-- [ ] **Reviewer M3 (second pass)** `shares.ts`: remove the legacy `*InputSchema` / `*Input` aliases that
+- [x] **Reviewer M3 (second pass)** `shares.ts`: remove the legacy `*InputSchema` / `*Input` aliases that
       point at the **service** schemas (`unlockSharedDocumentInputSchema`, `resolveShareTokenInputSchema`
       and the like). Keep the `*ActionSchema` / `*ServiceInputSchema` names. Update the tests; list every
       removed name in `worker_done`.
-- [ ] **n1** `activity.ts`: one signature for `logActivity` — `(tx, input)` in the transaction (C8);
+- [x] **n1** `activity.ts`: one signature for `logActivity` — `(tx, input)` in the transaction (C8);
       fix the `ActivityService` type to match.
-- [ ] **n2** `shares.ts`: document that the IP-hash salt is server-only and never reaches the client.
-- [ ] **m6** Add `documents.validation.{signedAtNotAllowed,expiresAtNotAllowed,signedStatusNotAllowed}` in
+- [x] **n2** `shares.ts`: document that the IP-hash salt is server-only and never reaches the client.
+- [x] **m6** Add `documents.validation.{signedAtNotAllowed,expiresAtNotAllowed,signedStatusNotAllowed}` in
       ES and EN. New `validation-keys.test.ts`: every `<ns>.validation.*` key exported by a validator
       exists in both languages.
-- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+- [x] Gate: lint, typecheck, test, `i18n:check`, build.
 
 **M5 note (planning gap, recorded):** the coverage matrix places "export (`exportCsv`)" in H1-B1 as the
 kit export over mock queries. No H1-B1 module has list data yet, so H1-B1 delivers the contract and the

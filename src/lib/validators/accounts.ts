@@ -5,6 +5,7 @@ import {
   idSchema,
   listQuerySchema,
   VALIDATION_MESSAGES,
+  withSortFields,
 } from "./common";
 import { accountMovementTypeSchema, accountTypeSchema } from "./enums";
 import { currencyCodeSchema, moneyAmountSchema, rateSchema } from "./money";
@@ -249,12 +250,17 @@ export const ledgerEntryKindSchema = z.enum(LEDGER_ENTRY_KIND_VALUES);
 export type LedgerEntryKind = z.infer<typeof ledgerEntryKindSchema>;
 
 /** `getAccountLedger` filters: date range and entry type (PRD §8.7). */
-export const accountLedgerQuerySchema = listQuerySchema.extend({
-  accountId: idSchema,
-  kind: facetSchema(ledgerEntryKindSchema),
-  dateFrom: dateOnlySchema.optional(),
-  dateTo: dateOnlySchema.optional(),
-});
+export const LEDGER_SORT_FIELDS = ["date", "kind", "amount", "balance"] as const;
+
+export const accountLedgerQuerySchema = withSortFields(
+  listQuerySchema.extend({
+    accountId: idSchema,
+    kind: facetSchema(ledgerEntryKindSchema),
+    dateFrom: dateOnlySchema.optional(),
+    dateTo: dateOnlySchema.optional(),
+  }),
+  LEDGER_SORT_FIELDS,
+);
 export type AccountLedgerQuery = z.infer<typeof accountLedgerQuerySchema>;
 
 export const ledgerRowSchema = z.object({

@@ -218,3 +218,67 @@ export function paginated<T>(
     pageCount: Math.max(1, Math.ceil(total / query.pageSize)),
   };
 }
+
+// ───────────────────────────── Shared form and list primitives ─────────────────────────────
+
+/**
+ * Helpers every module contract needs. They live here with exactly one behaviour each; `tags.ts` and
+ * `catalogs.ts` re-export them under their historical names so existing imports keep compiling.
+ */
+
+/** ISO 8601 UTC timestamp (`2026-10-09T14:30:00.000Z`), as every DTO timestamp. Strict: no offsets. */
+export const timestampSchema = z.iso.datetime();
+export type Timestamp = z.infer<typeof timestampSchema>;
+
+/** Required free text: trimmed, 1…`max` characters. */
+export function requiredText(max: number) {
+  return z.string().trim().min(1, VALIDATION_MESSAGES.required).max(max);
+}
+
+/**
+ * Optional free text from a form: trimmed, bounded; `""`, `null` and a missing value all become
+ * `undefined`, so forms can send `""` for an empty field.
+ */
+export function optionalText(max: number) {
+  return z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((value) => (value ? value : undefined));
+}
+
+/** `#RRGGBB` colour (tags, technologies, categories, chart accents): exactly 6 hex digits. */
+export const hexColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, VALIDATION_MESSAGES.invalidFormat);
+
+/**
+ * Multi-value table facet. URL state delivers a single string or a list; both normalize to a list (or
+ * `undefined` when the facet is not set): `status=ACTIVO` and `status=ACTIVO&status=PROSPECTO`.
+ */
+export function facetOf<T extends z.ZodType>(item: T) {
+  return z
+    .union([item, z.array(item)])
+    .optional()
+    .transform((value): z.output<T>[] | undefined =>
+      value === undefined ? undefined : Array.isArray(value) ? value : [value],
+    );
+}
+
+/** `true` when the query's `sort` is absent or sorts by one of `fields`. */
+export function sortsBy(sort: string | undefined, fields: readonly string[]): boolean {
+  const parsed = parseSort(sort);
+  return sort === undefined || (parsed !== null && fields.includes(parsed.field));
+}
+
+/** Adds the sort whitelist (`fields`) to a list-query-shaped schema's `sort`. */
+export function withSortFields<T extends z.ZodType<{ sort?: string | undefined }>>(
+  schema: T,
+  fields: readonly string[],
+): T {
+  return schema.refine((query) => sortsBy(query.sort, fields), {
+    message: VALIDATION_MESSAGES.invalidSort,
+    path: ["sort"],
+  }) as unknown as T;
+}

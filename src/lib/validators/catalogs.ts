@@ -1,15 +1,28 @@
 import { z } from "./zod";
-import { dateOnlySchema, idSchema, listQuerySchema, VALIDATION_MESSAGES } from "./common";
+import {
+  dateOnlySchema,
+  facetOf,
+  hexColorSchema,
+  idSchema,
+  listQuerySchema,
+  optionalText,
+  requiredText,
+  timestampSchema,
+  VALIDATION_MESSAGES,
+  withSortFields,
+} from "./common";
 import { rateSourceSchema } from "./enums";
 import { currencyCodeSchema, rateSchema } from "./money";
 import { isDecimalString, toDecimal } from "../money";
+import type { SelectedRate } from "../rates";
 
 /**
  * Catalog contracts (PRD §8.15, §9.2, DT-67): currencies, exchange rates (one per date + currency +
  * **source**), quick daily load, CSV import, payment methods and the two-level expense category tree.
  *
- * Also hosts the small helpers shared by the finance contracts (`optionalText`, `facetSchema`,
- * `addUsdRateIssue`, `hexColorSchema`) so each file does not redefine them. Pure and framework-free.
+ * Also re-exports the shared helpers the finance contracts import from here (`requiredText`,
+ * `optionalText`, `facetSchema`, `hexColorSchema`, `timestampSchema`; defined once in `common.ts`) and
+ * hosts `addUsdRateIssue`. Pure and framework-free.
  */
 
 // ───────────────────────────── Validation message keys ─────────────────────────────
@@ -26,42 +39,14 @@ export const CATALOG_MESSAGES = {
 
 // ───────────────────────────── Shared helpers of the finance contracts ─────────────────────────────
 
-/** Required trimmed text, 1…`max` characters. */
-export function requiredText(max: number) {
-  return z.string().trim().min(1, VALIDATION_MESSAGES.required).max(max);
-}
+// One behaviour each, defined in `common.ts`; kept importable from here under their historical names.
+export { optionalText, requiredText, timestampSchema, hexColorSchema };
 
 /**
- * Optional trimmed text for inputs: an empty or `null` value becomes `undefined`, so forms can send `""`
- * for an empty field.
+ * Faceted filter value: a single value or a list (the URL carries either), normalized to an array
+ * (`undefined` when not set). Alias of `facetOf`.
  */
-export function optionalText(max: number) {
-  return z
-    .string()
-    .trim()
-    .max(max)
-    .nullish()
-    .transform((value) => (value ? value : undefined));
-}
-
-/**
- * Faceted filter value: a single value or a list (the URL carries either), normalized to an array.
- * Used by the module filter schemas that extend `listQuerySchema`.
- */
-export function facetSchema<T extends z.ZodType>(item: T) {
-  return z
-    .union([item, z.array(item)])
-    .transform((value): z.output<T>[] => (Array.isArray(value) ? value : [value]) as z.output<T>[])
-    .optional();
-}
-
-/** `#RGB` or `#RRGGBB` hex color (catalog colors, chart accents). */
-export const hexColorSchema = z
-  .string()
-  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, CATALOG_MESSAGES.invalidColor);
-
-/** ISO 8601 UTC timestamp as it travels in DTOs (same shape as `FileDTO.createdAt`). */
-export const timestampSchema = z.string();
+export const facetSchema = facetOf;
 
 /** True when a decimal string equals exactly 1 (`"1"`, `"1.0"`, `"1.00000000"`). */
 function isOne(value: string): boolean {
@@ -193,12 +178,23 @@ export const importRatesCsvResultSchema = z.object({
 });
 export type ImportRatesCsvResult = z.infer<typeof importRatesCsvResultSchema>;
 
-export const exchangeRateFiltersSchema = listQuerySchema.extend({
-  currency: facetSchema(currencyCodeSchema),
-  source: facetSchema(rateSourceSchema),
-  dateFrom: dateOnlySchema.optional(),
-  dateTo: dateOnlySchema.optional(),
-});
+export const EXCHANGE_RATE_SORT_FIELDS = [
+  "date",
+  "currency",
+  "usdRate",
+  "source",
+  "createdAt",
+] as const;
+
+export const exchangeRateFiltersSchema = withSortFields(
+  listQuerySchema.extend({
+    currency: facetSchema(currencyCodeSchema),
+    source: facetSchema(rateSourceSchema),
+    dateFrom: dateOnlySchema.optional(),
+    dateTo: dateOnlySchema.optional(),
+  }),
+  EXCHANGE_RATE_SORT_FIELDS,
+);
 export type ExchangeRateFilters = z.infer<typeof exchangeRateFiltersSchema>;
 
 /** `getRateFor(date, currency)` input. */
@@ -210,27 +206,33 @@ export type GetRateForInput = z.infer<typeof getRateForInputSchema>;
 
 /**
  * `getRateFor` result (PRD §9.2 + DT-67): the rates of the effective date, one per source, for the
- * `RateInput` selector. `effectiveDate` is `null` when there is no rate on or before the date; then
- * `options` is empty and the user types the rate.
+ * `RateInput` selector. Same shape as `SelectedRate` (`lib/rates`); a missing rate (no rate on or before
+ * the date) is `null` for the whole result, not a nullable date, and the user types the rate. USD is
+ * `{ usdRate: "1", source: null, isFallback: false, options: [] }`.
  */
 export const rateLookupDtoSchema = z.object({
-  currency: currencyCodeSchema,
-  requestedDate: dateOnlySchema,
-  effectiveDate: dateOnlySchema.nullable(),
-  /** True when `effectiveDate` is earlier than `requestedDate` ("Usando tasa del dd/mm"). */
+  /** Units of the currency per 1 USD; equals `options[0].usdRate` outside USD. */
+  usdRate: rateSchema,
+  /** Source of `usdRate` (`options[0]`: `BCV` when present, else the latest created); `null` for USD. */
+  source: rateSourceSchema.nullable(),
+  /** True when `effectiveDate` is earlier than the requested date ("Usando tasa del dd/mm"). */
   isFallback: z.boolean(),
+  effectiveDate: dateOnlySchema,
+  /** Every usable rate of `effectiveDate`, default first; empty for USD. */
   options: z.array(
     z.object({
-      id: idSchema,
       source: rateSourceSchema,
       usdRate: rateSchema,
       createdAt: timestampSchema,
     }),
   ),
-  /** Source preselected: `BCV` when present, else the most recently created. */
-  defaultSource: rateSourceSchema.nullable(),
 });
 export type RateLookupDTO = z.infer<typeof rateLookupDtoSchema>;
+
+/** Compile-time check: the DTO and `lib/rates` `SelectedRate` stay mutually assignable. */
+type Assert<T extends true> = T;
+type Mutual<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+export type RateLookupMatchesSelectedRate = Assert<Mutual<RateLookupDTO, SelectedRate>>;
 
 // ───────────────────────────── Payment methods ─────────────────────────────
 

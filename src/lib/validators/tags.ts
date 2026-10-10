@@ -1,10 +1,26 @@
 import { z } from "./zod";
 import {
   VALIDATION_MESSAGES,
+  facetOf,
+  hexColorSchema,
   idSchema,
   listQuerySchema,
-  parseSort,
+  requiredText,
+  timestampSchema,
+  withSortFields,
   type Paginated,
+} from "./common";
+
+// Shared helpers live in `common.ts` (one behaviour each); re-exported under their historical names.
+export {
+  facetOf,
+  hexColorSchema,
+  optionalText,
+  requiredText,
+  sortsBy,
+  timestampSchema,
+  withSortFields,
+  type Timestamp,
 } from "./common";
 
 /**
@@ -13,31 +29,11 @@ import {
  * Tags are global (name + colour) and can be assigned to clients, contacts, projects, invoices, payments,
  * expenses, documents and notes. They are managed from Settings and created inline.
  *
- * `common.ts` is read-only in wave 3, so the list/form primitives every 3.1 module needs live in the
- * "Shared primitives" section below (timestamps, optional text/email/phone-free helpers, http(s) URLs,
- * hex colours, multi-value facets, sort whitelist). They are candidates for promotion to `common.ts`.
+ * The text, timestamp, colour, facet and sort-whitelist helpers moved to `common.ts` and are re-exported
+ * from here; the e-mail, http(s) URL and unique-id helpers remain in the "Shared primitives" section.
  */
 
 // ───────────────────────────── Shared primitives ─────────────────────────────
-
-/** ISO 8601 UTC timestamp (`2026-10-09T14:30:00.000Z`), as every DTO timestamp. */
-export const timestampSchema = z.iso.datetime();
-export type Timestamp = z.infer<typeof timestampSchema>;
-
-/** Optional free text from a form: trimmed, bounded, and `""` becomes `undefined`. */
-export function optionalText(max: number) {
-  return z
-    .string()
-    .trim()
-    .max(max)
-    .optional()
-    .transform((value) => (value ? value : undefined));
-}
-
-/** Required free text: trimmed, non-empty, bounded. */
-export function requiredText(max: number) {
-  return z.string().trim().min(1).max(max);
-}
 
 const EMAIL_PATTERN = z.email();
 
@@ -78,11 +74,6 @@ export const optionalHttpUrlSchema = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
-/** `#RRGGBB` colour (tags, technologies, categories). */
-export const hexColorSchema = z
-  .string()
-  .regex(/^#[0-9A-Fa-f]{6}$/, VALIDATION_MESSAGES.invalidFormat);
-
 /** A list of ids with no repeats. */
 export function uniqueIds(options: { min?: number; max?: number } = {}) {
   let schema = z.array(idSchema);
@@ -91,36 +82,6 @@ export function uniqueIds(options: { min?: number; max?: number } = {}) {
   return schema.refine((ids) => new Set(ids).size === ids.length, {
     message: VALIDATION_MESSAGES.invalidOption,
   });
-}
-
-/**
- * Multi-value table facet. URL state delivers a single string or a list; both normalize to a list (or
- * `undefined` when the facet is not set): `status=ACTIVO` and `status=ACTIVO&status=PROSPECTO`.
- */
-export function facetOf<T extends z.ZodType>(item: T) {
-  return z
-    .union([item, z.array(item)])
-    .optional()
-    .transform((value): z.output<T>[] | undefined =>
-      value === undefined ? undefined : Array.isArray(value) ? value : [value],
-    );
-}
-
-/** `true` when the query's `sort` is absent or sorts by one of `fields`. */
-export function sortsBy(sort: string | undefined, fields: readonly string[]): boolean {
-  const parsed = parseSort(sort);
-  return sort === undefined || (parsed !== null && fields.includes(parsed.field));
-}
-
-/** Adds the sort whitelist (`fields`) to a list-query-shaped schema's `sort`. */
-export function withSortFields<T extends z.ZodType<{ sort?: string | undefined }>>(
-  schema: T,
-  fields: readonly string[],
-): T {
-  return schema.refine((query) => sortsBy(query.sort, fields), {
-    message: VALIDATION_MESSAGES.invalidSort,
-    path: ["sort"],
-  }) as unknown as T;
 }
 
 /** Row selected in a bulk action (PRD §7.3): at least one, no repeats, bounded. */

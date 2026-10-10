@@ -18,6 +18,7 @@ import {
   paymentsOverviewDtoSchema,
   setPaymentStatusInputSchema,
   updatePaymentInputSchema,
+  PAYMENT_SORT_FIELDS,
 } from "./payments";
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -308,5 +309,20 @@ describe("payment DTOs", () => {
       unallocatedTotalUsd: "200.00",
     };
     expect(paymentsOverviewDtoSchema.safeParse(overview).success).toBe(true);
+  });
+});
+
+describe("sort whitelist (m2)", () => {
+  it("accepts the listed fields and rejects any other", () => {
+    expect(paymentFiltersSchema.safeParse({}).success).toBe(true);
+    for (const field of PAYMENT_SORT_FIELDS) {
+      expect(paymentFiltersSchema.safeParse({ sort: `${field}:asc` }).success, field).toBe(true);
+    }
+    const result = paymentFiltersSchema.safeParse({ sort: "receiptFileId:asc" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({
+      message: VALIDATION_MESSAGES.invalidSort,
+      path: ["sort"],
+    });
   });
 });

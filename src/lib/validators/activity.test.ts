@@ -1,11 +1,12 @@
 import type { ActivityService } from "./activity";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   ACTIVITY_CHANGED_MARKER,
   activityChangesSchema,
   activityEntrySchema,
   activityFilterSchema,
   logActivityInputSchema,
+  type LogActivityInput,
 } from "./activity";
 import { ACTIVITY_ACTION_VALUES } from "./enums";
 
@@ -153,5 +154,16 @@ describe("ActivityService (PRD §12 service names)", () => {
       "listActivity",
     ] as const satisfies readonly (keyof ActivityService)[];
     expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+describe("logActivity signature (n1)", () => {
+  it("is (tx, input): the transaction client, never a service context", () => {
+    type Tx = { transaction: true };
+    type Ctx = { user: null };
+    type Service = ActivityService<Ctx, Tx>;
+    expectTypeOf<Service["logActivity"]>().parameters.toEqualTypeOf<[Tx, LogActivityInput]>();
+    expectTypeOf<Service["listActivity"]>().parameters.items.toBeObject();
+    expectTypeOf<Service["listActivity"]>().parameter(0).toEqualTypeOf<Ctx>();
   });
 });

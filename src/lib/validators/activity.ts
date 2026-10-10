@@ -46,7 +46,8 @@ export type ActivityMetadata = z.infer<typeof activityMetadataSchema>;
 // ───────────────────────────── logActivity (internal) ─────────────────────────────
 
 /**
- * Input of `logActivity(tx, input)`: internal, called by services inside their transaction. Never wired
+ * Input of `logActivity(tx, input)`: internal, called by services with the transaction client of their
+ * mutation (`tx`, never a service context). Never wired
  * to a Server Action. `USER` events carry the actor id; `SYSTEM` (jobs) and `PUBLIC` (portal visitors)
  * carry none.
  */
@@ -146,11 +147,13 @@ export type ActivityListRowDTO = z.infer<typeof activityListRowSchema>;
 // ───────────────────────────── Services (PRD §12 `activity`) ─────────────────────────────
 
 /**
- * Activity services. Every service is `fn(ctx, input)`. `listActivity` is the only one reachable from
- * the UI (Owner/Admin); `logActivity` is internal and returns nothing the UI uses. There is no update or
- * delete (C20). CSV export of the log goes through the `export` module (`exportCsv`).
+ * Activity services. `listActivity` is `fn(ctx, input)` like every service and the only one reachable
+ * from the UI (Owner/Admin). `logActivity` is internal and has **one** signature, `(tx, input)` (C8,
+ * C12): it runs on the transaction client of the mutation that caused the event, so the entry commits
+ * or rolls back with it; it takes no service context and returns nothing the UI uses. There is no
+ * update or delete (C20). CSV export of the log goes through the `export` module (`exportCsv`).
  */
-export type ActivityService<Ctx = unknown> = {
-  logActivity: (ctx: Ctx, input: LogActivityInput) => Promise<ActivityEntryDTO>;
+export type ActivityService<Ctx = unknown, Tx = unknown> = {
+  logActivity: (tx: Tx, input: LogActivityInput) => Promise<ActivityEntryDTO>;
   listActivity: (ctx: Ctx, input: ActivityFilter) => Promise<Paginated<ActivityListRowDTO>>;
 };

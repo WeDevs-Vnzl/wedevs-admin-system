@@ -5,6 +5,7 @@ import { VALIDATION_MESSAGES } from "./common";
 import { CATALOG_MESSAGES } from "./catalogs";
 import {
   INVOICE_MESSAGES,
+  INVOICE_SORT_FIELDS,
   createInvoiceInputSchema,
   createInvoiceInputSchemaFor,
   invoiceDetailDtoSchema,
@@ -15,6 +16,7 @@ import {
   invoiceListRowSchema,
   invoiceTaxLineDtoSchema,
   invoiceTotalsDtoSchema,
+  ivaAdjustmentSchema,
   openInvoiceRowSchema,
   quantitySchema,
   updateInvoiceInputSchema,
@@ -509,5 +511,61 @@ describe("invoice filters", () => {
     expect(parsed.currency).toEqual(["USD", "VES"]);
     expect(parsed.pageSize).toBe(25);
     expect(invoiceFiltersSchema.safeParse({ status: "ATRASADA" }).success).toBe(false);
+  });
+});
+
+describe("IVA adjustment on a 0 % rate (m3)", () => {
+  it("rejects any adjustment on a rate whose IVA is 0", () => {
+    for (const ivaRate of ["0", "0.00"]) {
+      for (const adjustment of ["0.01", "-0.01", "0"]) {
+        const result = ivaAdjustmentSchema.safeParse({ ivaRate, adjustment });
+        expect(result.success, `${ivaRate}/${adjustment}`).toBe(false);
+        expect(result.error?.issues[0]).toMatchObject({
+          path: ["ivaRate"],
+          message: INVOICE_MESSAGES.adjustmentRateNotInLines,
+        });
+      }
+    }
+  });
+
+  it("still accepts ±0.01 on a taxed rate", () => {
+    for (const ivaRate of ["16", "8", "0.5"]) {
+      expect(ivaAdjustmentSchema.safeParse({ ivaRate, adjustment: "-0.01" }).success, ivaRate).toBe(
+        true,
+      );
+    }
+  });
+
+  it("an invoice cannot carry an adjustment on a 0 % line", () => {
+    const result = createInvoiceInputSchema.safeParse({
+      ...invoice,
+      lines: [{ ...line, ivaRate: "0" }],
+      taxAdjustments: [{ ivaRate: "0", adjustment: "-0.01" }],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.path.join("."))).toContain("taxAdjustments.0.ivaRate");
+  });
+});
+
+describe("sort whitelist (m2)", () => {
+  it("accepts the listed fields in both directions and no sort", () => {
+    expect(invoiceFiltersSchema.safeParse({}).success).toBe(true);
+    for (const field of INVOICE_SORT_FIELDS) {
+      for (const direction of ["asc", "desc"]) {
+        expect(
+          invoiceFiltersSchema.safeParse({ sort: `${field}:${direction}` }).success,
+          field,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("rejects a field that is not a column", () => {
+    const result = invoiceFiltersSchema.safeParse({ sort: "withholdings:asc" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({
+      message: VALIDATION_MESSAGES.invalidSort,
+      path: ["sort"],
+    });
   });
 });
