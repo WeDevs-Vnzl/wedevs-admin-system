@@ -1908,19 +1908,20 @@ Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/ap
 `src/i18n/messages/{es,en}/nav.json`; `src/i18n/messages/{es,en}/patterns.json` (add-only block
 `financeSlot`). No other file.
 
-- [ ] **m1.** `BreadcrumbLabelProvider` (client) wraps the shell content in `(app)/layout.tsx`;
+- [x] **m1.** `BreadcrumbLabelProvider` (client) wraps the shell content in `(app)/layout.tsx`;
       `<BreadcrumbLabel segment label />` lets a detail page name its id segment (e.g. "CLI-0007 ·
       Kairos Studio"). Until a label is registered, an id segment shows `nav.segments.detail`
       ("Detalle" / "Detail"), the same markup on the server and the first client render (no hydration
       mismatch; cf. 5.4 D2). Unregisters on unmount. Tests.
-- [ ] `lib/entity-routes.ts`: pure `entityHref({ type, id })` for every `EntityType` with its own route in
+- [x] `lib/entity-routes.ts`: pure `entityHref({ type, id })` for every `EntityType` with its own route in
       PRD §11; `null` for types without one (e.g. `CONTACT`, `FILE`, `TAG`, `SETTING`). Test every type.
-- [ ] `FinanceTabSlot`: `EmptyState` for finance tabs not built yet (title and description per tab kind
+- [x] `FinanceTabSlot`: `EmptyState` for finance tabs not built yet (title and description per tab kind
       from `patterns.financeSlot.*`), so H1-B3 replaces one component.
-- [ ] Registry: `pnpm exec shadcn add alert item`; `attachment` only if the MCP shows it fits note and
+- [x] Registry: `pnpm exec shadcn add alert item`; `attachment` only if the MCP shows it fits note and
       document attachment chips (report the choice). Verify that `package.json` and `pnpm-lock.yaml` are
       unchanged; if not, revert and report. Report any registry file edit (C3).
-- [ ] Gate. Commit messages without any Claude attribution.
+      - *Choice (1.3):* `alert` and `item` added (`pnpm dlx shadcn@4.21.4 add`); `attachment` not added: the shadcn MCP gives no usage or example that shows a note/document chip fit, so no attachment component is in this package (the note and document chips are left to their H1-B2 owners). No lockfile or package.json change.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 1 close
 

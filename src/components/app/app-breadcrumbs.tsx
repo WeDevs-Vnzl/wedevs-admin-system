@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useBreadcrumbLabels } from "@/components/app/breadcrumb-label";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,12 +22,14 @@ interface Crumb {
 }
 
 // Breadcrumbs of the topbar, derived from the route and the nav entry it belongs to (`nav.ts`). Segments
-// with a translated label under `nav.segments` use it; ids and unknown segments show as they appear in the URL.
+// with a translated label under `nav.segments` use it. Any other segment is an id: it shows the label its
+// detail page registered (`BreadcrumbLabel`), or `nav.segments.detail` until one is registered.
 export function AppBreadcrumbs() {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const tSettings = useTranslations("settings");
   const tShell = useTranslations("shell.breadcrumbs");
+  const registeredLabels = useBreadcrumbLabels();
   const pathname = usePathname();
 
   const item = findNavItem(pathname);
@@ -45,7 +48,9 @@ export function AppBreadcrumbs() {
       crumbs.push({ label: tSettings(`nav.${section.labelKey}`), href });
       continue;
     }
-    const label = t.has(`segments.${segment}`) ? t(`segments.${segment}`) : segment;
+    const label = t.has(`segments.${segment}`)
+      ? t(`segments.${segment}`)
+      : (registeredLabels[segment] ?? t("segments.detail"));
     crumbs.push({ label, href });
   }
 
