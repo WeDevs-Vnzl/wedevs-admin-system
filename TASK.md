@@ -491,10 +491,29 @@ their tests (`src/lib/validators/*.test.ts`, incl. a new enums-only isolation te
       n1 ESLint `no-restricted-imports` must also block `zod/*` subpaths; n2 `invalid_type` with
       `input === null` → `validation.required` (cleared select/combobox) with a test.
 - [x] **User confirms the Tester may run.** Confirmed 2026-10-09 ("mcp reconectado, procede").
-- [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
+- [x] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
       permission matrix test, `pnpm i18n:check`, `pnpm build`. No E2E.
-- [ ] **Problem report** (explicit, per agent).
-- [ ] **Summary.**
+      Tester (wedevs-tester · haiku) on acd2167: ALL PASS, no commits. 15 files / 646 tests, 0 failed.
+      `money.ts` 100 % stmts (37/37), branches (16/16), funcs (18/18), lines (35/35);
+      `rates.ts` 100 % stmts (26/26), branches (24/24), funcs (3/3), lines (21/21).
+      `permissions.test.ts` 262 tests pass (PRD §4.3 matrix). i18n:check es/en × 32 namespaces in
+      parity; build (Next 16.4, Turbopack) OK; lint and typecheck OK.
+- [x] **Problem report** (explicit, per agent).
+      - Developers 2.1–2.3: Planner blockers B1–B3 (missing validation/common.errors keys, scripts tests
+        outside vitest, formatMoney throwing on USDT) → fixed by 2.4/2.5.
+      - Code Reviewer pass 1: `addDays` DST bug, Zod default English messages, fixed-USD i18n format,
+        upload MIME fallback → fixed by 2.6/2.7. Pass 2: error map not guaranteed for enums-only
+        imports, `{max}` lost on schema path → fixed by 2.8.
+      - Orca restart lost two in-flight dispatches (terminal_missing); resumed on the same worktrees.
+      - shadcn MCP timed out for part of the wave (reviewer used `pnpm exec shadcn view`); reconnected.
+      - Tester: none.
+      - Open, carried: n1, n2 → wave 3 forms kit; m3 → pending `can()` vocabulary decision (C20);
+        m4 → H1-FX.
+- [x] **Summary.** Wave 2 delivered the shared foundations: enums + i18n `enums` namespace, Decimal
+      money/rates helpers with full coverage, UTC date helpers, `can()` matrix per PRD §4.3, common
+      validators with a guaranteed global Zod error map to `validation.*` keys (raw `zod` import
+      blocked by ESLint), upload checks, ICU placeholder parity in `i18n:check`. 8 packages
+      (2.1–2.8), 3 review passes, all invariants PASS; closed 2026-10-09.
 
 🛑 **MANDATORY STOP** — wave 3 does not start without the user's explicit approval.
 
