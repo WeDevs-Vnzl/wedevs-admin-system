@@ -1161,6 +1161,8 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
 
 ### WAVE 5 — Application shell, sign-in and settings/preferences
 
+**Approved by the user 2026-10-10 ("procede").**
+
 **Objective:** the navigable authenticated shell (DU-01 Hito 1 baseline) and the settings frame with
 working preferences.
 
