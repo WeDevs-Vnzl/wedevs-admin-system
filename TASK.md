@@ -777,7 +777,7 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       typecheck, tests, `i18n:check`, build pass. Merges: 3.7 0bbffa5, 3.5 278b7f5, 3.6 d0791fb, 3.3 8ac969f,
       3.2 b4a64fe, 3.4 013505b, 3.1 b036177. Integrated: 57 files / 1303 tests; i18n parity 32 namespaces;
       build OK.
-- [x ] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
+- [x] **Planner coherence review:** service names in contracts = PRD §12 (+ portal additions); DTO money
       fields are strings; multi-rate invoice contract matches C17; share read DTOs never expose keys;
       3.1/3.2 do not cross-import; kit props match `listQuerySchema` and `files.ts`; namespaces filled in
       both languages; 3.4 `RateLookupResult` is structurally identical to 3.7 `SelectedRate` (DT-67).
@@ -806,7 +806,7 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       Second pass after 3.8 (merge 0dc22ec): READY FOR TESTING; B1–B3 and M1 fixed; C1, C2, C5, C6,
       C22 shape, C25 PASS. New M3 → 4.3: remove the legacy `shares` `*InputSchema`/`*Input` aliases
       that point at service schemas (risk of a portal action parsing client input with them).
-- [ ] **User confirms the Tester may run.**
+- [x] **User confirms the Tester may run.** Confirmed 2026-10-10 ("procede").
 - [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
       a11y spot-check of kit components (labels, keyboard on combobox, date field, PDF toolbar). No E2E.
 - [ ] **Problem report** (explicit, per agent).
