@@ -1784,7 +1784,7 @@ Files: `src/mocks/store.ts` (+ `store.test.ts`); `src/mocks/fixtures/{clients,co
 (+ tests); `src/features/catalogs/queries.ts` (+ `catalogs.test.ts`); `src/lib/validators/catalogs.ts`
 (list-input schemas only, + test); new `src/lib/activity-diff.ts` (+ test). No other file.
 
-- [ ] **PD-3 Store rows.** In `store.ts`, the collections `clients`, `contacts`, `projects`, `notes`,
+- [x] **PD-3 Store rows.** In `store.ts`, the collections `clients`, `contacts`, `projects`, `notes`,
       `documents`, `documentVersions`, `documentLinks` and `activity` hold row types declared next to
       their fixtures. Rows are derived from the contract types (`Pick`/`Omit` of the DTOs, C8) plus
       foreign keys only: client rows without `contacts`, `financials` and embedded tags (`tagIds`);
@@ -1793,7 +1793,7 @@ Files: `src/mocks/store.ts` (+ `store.test.ts`); `src/mocks/fixtures/{clients,co
       (derived); note rows with `authorId`, `tagIds`, `links: NoteLinkTarget[]`, `attachmentFileIds`,
       without `contentText`; document rows with ids instead of embedded refs; `deletedById` where the
       schema has it. Finance collections are not touched. List the final row types in `worker_done`.
-- [ ] **Dataset** (`// MOCK`, fictional; the wireframes' names are allowed; every row valid against its
+- [x] **Dataset** (`// MOCK`, fictional; the wireframes' names are allowed; every row valid against its
       contract once assembled). Dates relative to the store's build `now` where they drive status or
       alerts (factories like `createCatalogFixtures`):
       - ≥ 60 clients: both kinds, several countries (VE with valid RIFs), every `ClientStatus` (≥ 3
@@ -1815,33 +1815,33 @@ Files: `src/mocks/store.ts` (+ `store.test.ts`); `src/mocks/fixtures/{clients,co
         `CREATE`, `UPDATE` (with diffs), `DELETE`, `RESTORE`, `STATUS_CHANGE`, `LINK`, `UNLINK`, `UPLOAD`,
         `LOGIN`, `SYSTEM_JOB`, `PORTAL_ACCESS`; IPs only from 192.0.2.0/24 and 198.51.100.0/24 (C5); no
         sensitive field in any diff; long texts as the `"changed"` marker.
-- [ ] **m8 decision:** `fileFixtures` (in `fixtures/documents.ts`) belongs to the dataset in H1-B2 (note
+- [x] **m8 decision:** `fileFixtures` (in `fixtures/documents.ts`) belongs to the dataset in H1-B2 (note
       attachments, document files); runtime uploads are appended by `services/files.ts` (unchanged);
       H1-B4 takes ownership of `fixtures/documents.ts`. Write this in the file header.
-- [ ] `entity-refs.ts`: `resolveEntityRef(db, entityType, id): EntityRef | null` for every `EntityType`
+- [x] `entity-refs.ts`: `resolveEntityRef(db, entityType, id): EntityRef | null` for every `EntityType`
       that has a collection (H1-B2 ones now; finance ones answer from their collections when filled).
       `label` = trade name / name / title or first words; `code` when the entity has one.
-- [ ] `services/activity.ts`: `mockTx(ctx)` → `{ db, now }` and `logActivity(tx, input)` (the contract
+- [x] `services/activity.ts`: `mockTx(ctx)` → `{ db, now }` and `logActivity(tx, input)` (the contract
       signature, C8): parses with `logActivityInputSchema`, appends an `ActivityEntryDTO` (id from
       `nextMockId`, `createdAt` = `tx.now`), returns it. No update or delete function (C20).
-- [ ] `lib/activity-diff.ts`: pure, framework-free `diffFields(before, after, { fields, longText?,
+- [x] `lib/activity-diff.ts`: pure, framework-free `diffFields(before, after, { fields, longText?,
       exclude? })` → `ActivityChanges | undefined`: values only strings, booleans or `null` (money stays
       a decimal string, C15); long texts → `"changed"`; excluded fields never appear. Reused by H2-B3.
-- [ ] **Catalog split.** Move `listTags` (+ new `getTag`, usage count) to `services/tags.ts` and
+- [x] **Catalog split.** Move `listTags` (+ new `getTag`, usage count) to `services/tags.ts` and
       `listTechnologies` (+ new `getTechnology`, usage count) to `services/technologies.ts`, adapted to
       the new rows (usage counts non-archived records only). `catalogs.ts` re-exports both under the same
       names; document-type usage adapted to the new document rows.
-- [ ] **m-g.** Every catalog list service takes `(ctx, input)`. New list-input schemas in
+- [x] **m-g.** Every catalog list service takes `(ctx, input)`. New list-input schemas in
       `validators/catalogs.ts` (e.g. `includeInactive`, default `false`) for currencies, payment methods
       and expense categories; pickers get active rows only, settings screens ask for all explicitly.
       `listTechnologies` / `listDocumentTypes` keep their filter schemas (`active` facet).
       `features/catalogs/queries.ts` updated; existing callers keep working.
-- [ ] Tests: every fixture assembles into a DTO that parses with its contract; referential integrity
+- [x] Tests: every fixture assembles into a DTO that parses with its contract; referential integrity
       (every id resolves; at most one primary contact per client; every note has ≥ 1 link; every active
       project has ≥ 1 non-archived client); dataset counts and required cases above; `logActivity`
       validates and appends; `diffFields` cases (money string, long text, excluded field, unchanged →
       `undefined`); catalog re-exports; m-g inactive filtering; reset rebuilds the new collections.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 1.2 — Contract follow-ups, error with link and the CSV export seam
 

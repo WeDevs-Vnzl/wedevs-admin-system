@@ -15,17 +15,16 @@ describe("requestUpload", () => {
     const { ctx, db, user } = makeTestContext();
     const target = await requestUpload(ctx, input);
     expect(target).toEqual({ fileId: "fil_0001", url: null });
-    expect(db.files).toEqual([
-      {
-        id: "fil_0001",
-        originalName: "contrato.pdf",
-        mimeType: "application/pdf",
-        sizeBytes: 1024,
-        status: "PENDING",
-        uploadedById: user.id,
-        createdAt: FIXED_NOW.toISOString(),
-      },
-    ]);
+    // The dataset already holds the file fixtures (m8): the upload is appended after them.
+    expect(db.files.at(-1)).toEqual({
+      id: "fil_0001",
+      originalName: "contrato.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 1024,
+      status: "PENDING",
+      uploadedById: user.id,
+      createdAt: FIXED_NOW.toISOString(),
+    });
   });
 
   it("hands out a new id every time and never reuses a taken one", async () => {
@@ -48,7 +47,7 @@ describe("requestUpload", () => {
   it("stores a generic type when the browser reported none", async () => {
     const { ctx, db } = makeTestContext();
     await requestUpload(ctx, { ...input, name: "notas.md", mime: "" });
-    expect(db.files[0]?.mimeType).toBe("application/octet-stream");
+    expect(db.files.at(-1)?.mimeType).toBe("application/octet-stream");
   });
 });
 
@@ -58,7 +57,7 @@ describe("confirmUpload", () => {
     const { fileId } = await requestUpload(ctx, input);
     const file = await confirmUpload(ctx, { fileId });
     expect(file.status).toBe("READY");
-    expect(db.files[0]?.status).toBe("READY");
+    expect(db.files.find((row) => row.id === fileId)?.status).toBe("READY");
     expect(await confirmUpload(ctx, { fileId })).toEqual(file); // idempotent
   });
 
@@ -80,6 +79,6 @@ describe("confirmUpload", () => {
     await expect(confirmUpload(ctx, { fileId: "fil_foreign" })).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
-    expect(db.files[0]?.status).toBe("PENDING");
+    expect(db.files.find((row) => row.id === "fil_foreign")?.status).toBe("PENDING");
   });
 });

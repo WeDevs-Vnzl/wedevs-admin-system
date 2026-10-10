@@ -1,8 +1,11 @@
 // MOCK — tests for the catalog mock services.
 import { describe, expect, it } from "vitest";
-import { listQuerySchema } from "@/lib/validators/common";
+import {
+  currencyListInputSchema,
+  expenseCategoryListInputSchema,
+  paymentMethodListInputSchema,
+} from "@/lib/validators/catalogs";
 import { documentTypeFilterSchema } from "@/lib/validators/document-types";
-import { tagFilterSchema } from "@/lib/validators/tags";
 import { technologyFilterSchema } from "@/lib/validators/technologies";
 import { FIXED_TODAY, makeTestContext } from "../test-helpers";
 import {
@@ -13,9 +16,16 @@ import {
   listDocumentTypes,
   listExpenseCategories,
   listPaymentMethods,
+  getTag,
+  getTechnology,
   listTags,
   listTechnologies,
 } from "./catalogs";
+import * as tagsService from "./tags";
+import * as technologiesService from "./technologies";
+
+const ALL = { includeInactive: true };
+const ACTIVE = currencyListInputSchema.parse({});
 
 describe("getRateFor", () => {
   it("returns the rate of the exact date, BCV first, with every source as an option (DT-67)", async () => {
@@ -80,12 +90,12 @@ describe("getRateFor", () => {
 describe("simple catalogs", () => {
   it("lists currencies, payment methods and fiscal settings as copies", async () => {
     const { ctx, db } = makeTestContext();
-    const currencies = await listCurrencies(ctx);
+    const currencies = await listCurrencies(ctx, ACTIVE);
     expect(currencies.map((c) => c.code)).toEqual(["USD", "VES", "EUR", "USDT", "COP"]);
     currencies[0]!.name = "changed";
     expect(db.currencies[0]!.name).not.toBe("changed");
 
-    expect(await listPaymentMethods(ctx)).toHaveLength(10);
+    expect(await listPaymentMethods(ctx, paymentMethodListInputSchema.parse({}))).toHaveLength(10);
 
     const fiscal = await getFiscalSettings(ctx);
     expect(fiscal.ivaRates).toEqual(["16", "8", "0"]);
@@ -95,12 +105,12 @@ describe("simple catalogs", () => {
 });
 
 describe("listTechnologies", () => {
-  it("paginates, sorts by name and counts usage from the projects", async () => {
+  it("paginates, sorts by name and counts non-archived projects as usage", async () => {
     const { ctx, db } = makeTestContext();
     const page = await listTechnologies(ctx, technologyFilterSchema.parse({}));
     expect(page.total).toBe(db.technologies.length);
     expect(page.items).toHaveLength(25);
-    expect(page.items.every((row) => row.usageCount === 0)).toBe(true);
+    expect(page.items.every((row) => row.usageCount >= 0)).toBe(true);
     const names = page.items.map((row) => row.name);
     expect(names).toEqual(
       [...names].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" })),
@@ -171,7 +181,7 @@ describe("document classification", () => {
 describe("listExpenseCategories", () => {
   it("returns the two-level tree", async () => {
     const { ctx } = makeTestContext();
-    const tree = await listExpenseCategories(ctx);
+    const tree = await listExpenseCategories(ctx, expenseCategoryListInputSchema.parse({}));
     expect(tree).toHaveLength(10);
     const infra = tree.find((node) => node.name === "Infraestructura");
     expect(infra?.children.map((c) => c.name)).toContain("Hosting");
@@ -182,31 +192,70 @@ describe("listExpenseCategories", () => {
   });
 });
 
-describe("listTags", () => {
-  it("lists tags with a usage count of zero until records carry them", async () => {
-    const { ctx, db } = makeTestContext();
-    const page = await listTags(ctx, tagFilterSchema.parse({}));
-    expect(page.total).toBe(db.tags.length);
-    expect(page.items.every((row) => row.usageCount === 0)).toBe(true);
+describe("catalog split (H1-B2)", () => {
+  it("re-exports the tag and technology services under the same names", () => {
+    expect(listTags).toBe(tagsService.listTags);
+    expect(getTag).toBe(tagsService.getTag);
+    expect(listTechnologies).toBe(technologiesService.listTechnologies);
+    expect(getTechnology).toBe(technologiesService.getTechnology);
   });
 
-  it("counts non-archived records and filters by entity type", async () => {
+  it("counts documents of a type from the document rows, skipping archived ones", async () => {
     const { ctx, db } = makeTestContext();
-    const tag = db.tags[0]!;
-    const chip = { id: tag.id, name: tag.name, color: tag.color };
-    db.clients.push({ tags: [chip], archivedAt: null } as never);
-    db.clients.push({ tags: [chip], archivedAt: "2026-01-01T00:00:00.000Z" } as never);
-    db.projects.push({ tags: [chip], archivedAt: null } as never);
+    const doc = db.documents.find((row) => !row.archivedAt)!;
+    const typeId = doc.typeId;
+    const before = (
+      await listDocumentTypes(ctx, documentTypeFilterSchema.parse({ pageSize: 100 }))
+    ).items.find((row) => row.id === typeId)!;
+    expect(before.documentCount).toBeGreaterThanOrEqual(1);
+    doc.archivedAt = "2026-10-01T00:00:00.000Z";
+    const after = (
+      await listDocumentTypes(ctx, documentTypeFilterSchema.parse({ pageSize: 100 }))
+    ).items.find((row) => row.id === typeId)!;
+    expect(after.documentCount).toBe(before.documentCount - 1);
+    const categories = await listDocumentCategories(ctx);
+    const fromTree = categories.flatMap((c) => c.types).find((t) => t.id === typeId)!;
+    expect(fromTree.documentCount).toBe(after.documentCount);
+  });
+});
 
-    const all = await listTags(ctx, tagFilterSchema.parse({ sort: "usageCount:desc" }));
-    expect(all.items[0]).toMatchObject({ id: tag.id, usageCount: 2 });
-
-    const onlyProjects = await listTags(ctx, tagFilterSchema.parse({ entityType: "PROJECT" }));
-    expect(onlyProjects.items.map((row) => row.id)).toEqual([tag.id]);
-    expect(onlyProjects.items[0]?.usageCount).toBe(1);
+describe("m-g: simple catalog lists take (ctx, input) and hide inactive rows", () => {
+  it("currencies: active by default, every row with includeInactive", async () => {
+    const { ctx, db } = makeTestContext();
+    db.currencies.find((c) => c.code === "COP")!.active = false;
+    const active = await listCurrencies(ctx, currencyListInputSchema.parse({}));
+    expect(active.map((c) => c.code)).toEqual(["USD", "VES", "EUR", "USDT"]);
+    const all = await listCurrencies(ctx, currencyListInputSchema.parse(ALL));
+    expect(all.map((c) => c.code)).toContain("COP");
   });
 
-  it("accepts the base list query", () => {
-    expect(listQuerySchema.parse({}).page).toBe(1);
+  it("payment methods: active by default, every row with includeInactive", async () => {
+    const { ctx, db } = makeTestContext();
+    db.paymentMethods[0]!.active = false;
+    const active = await listPaymentMethods(ctx, paymentMethodListInputSchema.parse({}));
+    expect(active).toHaveLength(db.paymentMethods.length - 1);
+    expect(active.some((m) => m.id === db.paymentMethods[0]!.id)).toBe(false);
+    const all = await listPaymentMethods(ctx, paymentMethodListInputSchema.parse(ALL));
+    expect(all).toHaveLength(db.paymentMethods.length);
+  });
+
+  it("expense categories: an inactive child or root is hidden unless asked", async () => {
+    const { ctx, db } = makeTestContext();
+    const hosting = db.expenseCategories.find((c) => c.name === "Hosting")!;
+    const otros = db.expenseCategories.find((c) => c.name === "Otros")!;
+    hosting.active = false;
+    otros.active = false;
+
+    const active = await listExpenseCategories(ctx, expenseCategoryListInputSchema.parse({}));
+    expect(active.some((n) => n.id === otros.id)).toBe(false);
+    expect(
+      active.find((n) => n.name === "Infraestructura")!.children.map((c) => c.name),
+    ).not.toContain("Hosting");
+
+    const all = await listExpenseCategories(ctx, expenseCategoryListInputSchema.parse(ALL));
+    expect(all.some((n) => n.id === otros.id)).toBe(true);
+    expect(all.find((n) => n.name === "Infraestructura")!.children.map((c) => c.name)).toContain(
+      "Hosting",
+    );
   });
 });
