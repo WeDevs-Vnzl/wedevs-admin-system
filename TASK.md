@@ -368,6 +368,37 @@ Files: `src/i18n/config.ts`, `src/i18n/namespaces.ts`, `src/i18n/request.ts`,
 - [x] Tests: the parity script on fixtures. The `enums` keys are written from the PRD §10.2 list + Δ2
       (2.1 is built in parallel); the Planner checks `enums` ↔ `enums.ts` at the wave close.
 
+#### Package 2.4 — Contract i18n keys and parity-test wiring (wave 2 follow-up, Planner coherence blockers B1, B2)
+
+Package 2.4 → Agent: wedevs-developer · haiku — Reason: i18n messages plus a one-line test-include change and a key-existence test over existing contracts.
+
+Files: `src/i18n/messages/{es,en}/validation.json`, `src/i18n/messages/{es,en}/common.json`,
+`src/i18n/contract-keys.test.ts` (new), `vitest.config.ts`. Read-only: `src/lib/validators/{common,enums}.ts`.
+
+- [ ] `validation.json` (ES and EN): add every key in `VALIDATION_MESSAGES` as nested objects
+      (`id.invalid`, `date.invalid`, `sort.invalid`, `money.*`, `rate.*`, `percent.*`, `currency.invalid`,
+      `file.*`); keep `required`; remove the unused flat duplicates `invalidDate` and `invalidId`.
+- [ ] `common.json` (ES and EN): add `errors.<CODE>` for all 9 values of `ERROR_CODE_VALUES`.
+- [ ] `src/i18n/contract-keys.test.ts`: per locale, every `VALIDATION_MESSAGES` value and every
+      `common.errors.<CODE>` resolves to a non-empty string; `enums` catalog keys equal `ENUM_REGISTRY`.
+- [ ] `vitest.config.ts`: add `scripts/**/*.test.ts` to the node project `include`; if `.vitest/` comes
+      from a configurable Vitest option, send it to an ignored location, otherwise report it (no
+      `.gitignore` edit).
+- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check` pass; the `check-i18n` and
+      `contract-keys` suites appear in the run.
+
+#### Package 2.5 — formatMoney for non-ISO currency codes (wave 2 follow-up, blocker B3)
+
+Package 2.5 → Agent: wedevs-developer · sonnet — Reason: change to `lib/money` (money-critical, C15, ≥ 90 % coverage).
+
+Files: `src/lib/money.ts`, `src/lib/money.test.ts`.
+
+- [ ] `formatMoney`: when `currency` is not a well-formed 3-letter ISO 4217 code (e.g. `USDT`), format
+      the rounded string as a 2-decimal locale number with the code appended (no exception); ISO codes
+      unchanged. No number conversion for math (C15).
+- [ ] Tests: `formatMoney("1234.5", "USDT", "en-US")` and `"es-VE"`; ISO cases unchanged; `money.ts`
+      coverage stays ≥ 90 %.
+
 #### Wave 2 close
 
 - [ ] **Integration checklist:** 2.1, 2.2, 2.3 merged; no Claude attribution; worktrees removed;
