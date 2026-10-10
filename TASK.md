@@ -921,15 +921,15 @@ Package 4.2 → Agent: wedevs-developer · sonnet — Reason: CI workflows are c
 
 Files: `.github/workflows/ci.yml`.
 
-- [ ] On pull requests and pushes to `main`: checkout, corepack + pnpm, Node from `.nvmrc`,
+- [x] On pull requests and pushes to `main`: checkout, corepack + pnpm, Node from `.nvmrc`,
       `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`,
       `pnpm i18n:check`, `pnpm build`.
-- [ ] E2E job (Hito 1, mocks, no DB): install Playwright Chromium, `pnpm build`, start `next start` in the
+- [x] E2E job (Hito 1, mocks, no DB): install Playwright Chromium, `pnpm build`, start `next start` in the
       background with a readiness poll (fail after 60 s), `pnpm test:e2e --pass-with-no-tests`, always
       kill the server.
-- [ ] No secrets, no database, no deploy step, no Netlify/Neon calls. The Neon-testing-DB E2E (DT-46) is
+- [x] No secrets, no database, no deploy step, no Netlify/Neon calls. The Neon-testing-DB E2E (DT-46) is
       added in H2-B1. Concurrency group per branch.
-- [ ] Validate the YAML locally (e.g. `actionlint` if available; otherwise state that it was not run).
+- [x] Validate the YAML locally (e.g. `actionlint` if available; otherwise state that it was not run).
 
 #### Package 4.3 — Contract follow-ups from wave 3 (Planner M1-schema side, M2, M4, M5, m2, m3, m6; Reviewer second-pass M3, n1, n2)
 
