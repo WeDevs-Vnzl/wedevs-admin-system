@@ -16,7 +16,7 @@ describe("toModuleQuery", () => {
     const flat = toModuleQuery(
       query({
         page: 2,
-        sort: "number:desc",
+        sort: "issueDate:desc",
         q: "acme",
         filters: { status: ["EMITIDA", "PAGADA"], clientId: ["CLI-0001"], date: ["2026-03-01", "2026-03-31"] },
       }),
@@ -25,7 +25,7 @@ describe("toModuleQuery", () => {
 
     expect(flat).toMatchObject({
       page: 2,
-      sort: "number:desc",
+      sort: "issueDate:desc",
       q: "acme",
       status: ["EMITIDA", "PAGADA"],
       clientId: "CLI-0001",
