@@ -673,15 +673,15 @@ Files: `src/components/patterns/**` (`page-header`, `overview-table-toggle`, `ov
 `archived-banner`, `form-page`, `use-unsaved-changes.ts`, `section-card`, `money-text`, `date-text`),
 `src/i18n/messages/{es,en}/patterns.json`, tests next to the components.
 
-- [ ] Build each pattern per `frontend-patterns.md` §1, §1a (lucide mapping), §3, §4, §6, §9 and
+- [x] Build each pattern per `frontend-patterns.md` §1, §1a (lucide mapping), §3, §4, §6, §9 and
       wireframes 4.2, 4.4, 4.5: `DetailHeader` with the always-visible **Detalle | Grafo** toggle,
       `DetailTabs` with counts and `?tab=` via `nuqs`, `OverviewTableToggle`, dark `FinancialSummaryCard`.
-- [ ] `StatusBadge`: every enum value of `enums.ts` → tone + `enums.*` label; secondary indicator
+- [x] `StatusBadge`: every enum value of `enums.ts` → tone + `enums.*` label; secondary indicator
       ("Pago parcial").
-- [ ] `ConfirmDialog`: archive/void/cancel variants, optional required reason, optional extra checkbox.
-- [ ] `MoneyText`/`DateText` through `formatMoney`/`formatDate` with the current locale and display zone.
-- [ ] `FormPage` (title, sections, sticky footer actions) + `use-unsaved-changes.ts`.
-- [ ] Strings from `patterns` (+ `enums`, read-only). Tests: `StatusBadge` covers every enum value;
+- [x] `ConfirmDialog`: archive/void/cancel variants, optional required reason, optional extra checkbox.
+- [x] `MoneyText`/`DateText` through `formatMoney`/`formatDate` with the current locale and display zone.
+- [x] `FormPage` (title, sections, sticky footer actions) + `use-unsaved-changes.ts`.
+- [x] Strings from `patterns` (+ `enums`, read-only). Tests: `StatusBadge` covers every enum value;
       `DetailTabs` reads/writes `?tab=`; the unsaved-changes guard fires on a dirty form.
 
 #### Package 3.6 — Kit: PDF viewer (pdf.js)
