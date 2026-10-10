@@ -12,6 +12,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
   verify:
     name: Lint, types, tests, i18n, build
@@ -20,8 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm pinned by packageManager)
-        run: corepack enable
+      # Reads the pnpm version from `packageManager`; must run before setup-node so `cache: pnpm` finds pnpm.
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
@@ -45,8 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable corepack (pnpm pinned by packageManager)
-        run: corepack enable
+      # Reads the pnpm version from `packageManager`; must run before setup-node so `cache: pnpm` finds pnpm.
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:

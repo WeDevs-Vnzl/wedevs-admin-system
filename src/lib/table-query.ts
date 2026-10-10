@@ -19,6 +19,9 @@ export type TableFacetDescriptor =
 /** Keys the list query owns; a stray filter with one of these names never overrides them. */
 const BASE_KEYS = new Set(["page", "pageSize", "sort", "q", "includeArchived", "filters"]);
 
+/** Keys that would reach the prototype chain of the output object; never assigned (URL state is user input). */
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 /**
  * Bridges the kit's `ListQuery` (`filters` is a nested map keyed by facet id) to the flat input a module's
  * filter schema expects (`invoiceFiltersSchema`, `shareFilterSchema`…):
@@ -58,13 +61,13 @@ export function toModuleQuery(
       continue;
     }
     // A one-element list is sent as a scalar: list-or-scalar fields (`facetSchema`) accept both, and
-    // single-value fields (`clientId: idSchema`) accept only the scalar.
+    // single-value fields (a module's own scalar filter) accept only the scalar.
     assign(out, id, values.length === 1 ? values[0] : raw);
   }
   return out;
 }
 
 function assign(out: Record<string, unknown>, key: string, value: unknown): void {
-  if (BASE_KEYS.has(key)) return;
+  if (BASE_KEYS.has(key) || UNSAFE_KEYS.has(key)) return;
   out[key] = value;
 }

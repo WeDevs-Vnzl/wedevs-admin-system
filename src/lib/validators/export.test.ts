@@ -3,8 +3,10 @@ import {
   EXPORT_ENTITY_VALUES,
   MAX_EXPORT_COLUMNS,
   exportCsvInputSchema,
+  exportColumnSchema,
   exportEntitySchema,
 } from "./export";
+import { columnIdSchema } from "./preferences";
 
 const valid = { entity: "CLIENT", query: {}, columns: ["code", "name", "client.label"] };
 
@@ -37,6 +39,13 @@ describe("exportCsvInputSchema", () => {
     });
   });
 
+  it("uses the same column id schema as the column preferences (dashes included)", () => {
+    expect(exportColumnSchema).toBe(columnIdSchema);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["tax-id", "totals.usd"] }).success).toBe(true);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["1bad"] }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a".repeat(65)] }).success).toBe(false);
+  });
+
   it("requires at least one column and no repeats", () => {
     expect(exportCsvInputSchema.safeParse({ ...valid, columns: [] }).success).toBe(false);
     expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a", "b", "a"] }).success).toBe(
@@ -53,7 +62,7 @@ describe("exportCsvInputSchema", () => {
   });
 
   it("accepts only column ids that look like property paths", () => {
-    for (const column of ["", "1abc", "a b", "a-b", "=cmd", "a".repeat(65), 7]) {
+    for (const column of ["", "1abc", "a b", "-a", "=cmd", "a".repeat(65), 7]) {
       expect(
         exportCsvInputSchema.safeParse({ ...valid, columns: [column] }).success,
         String(column),
