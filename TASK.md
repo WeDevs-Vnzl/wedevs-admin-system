@@ -547,30 +547,30 @@ Package 3.1 → Agent: wedevs-developer · sonnet — Reason: shared Zod contrac
 
 Files: `src/lib/validators/{users,preferences,clients,contacts,projects,technologies,tags,notes,document-types,documents,shares,activity,search,graph,alerts,trash}.ts` and their `*.test.ts`.
 
-- [ ] For each module: create/update input schemas, list-row DTO (the table columns of PRD §8.x),
+- [x] For each module: create/update input schemas, list-row DTO (the table columns of PRD §8.x),
       detail DTO, filter schema extending `listQuerySchema`, and the input/output types of every PRD §12
       service of the module (exact names, `fn(ctx, input)` shape documented in a type alias).
-- [ ] Clients (§8.2): `legalName` required for `EMPRESA`; tax-id format validated when country is `VE`
+- [x] Clients (§8.2): `legalName` required for `EMPRESA`; tax-id format validated when country is `VE`
       (RIF V/E/J/G/P); ISO 3166-1 alpha-2; E.164 phone; status default `PROSPECTO`; financial metrics as
       money strings. Contacts: name + at least one of email/phone; `isPrimary`.
-- [ ] Projects (§8.3): ≥ 1 client with optional role; `summary` ≤ 280; transition input with
+- [x] Projects (§8.3): ≥ 1 client with optional role; `summary` ≤ 280; transition input with
       `startDate` required for `EN_CURSO`, `endDate` for `ENTREGADO`; links (group enum, label, valid
       URL, order); stack as technology ids only. Technologies and document types/categories with
       `name`/`nameEn`.
-- [ ] Notes (§8.10) and tags (§7.5) as specified in the PRD.
-- [ ] Documents (§8.9): fields, formats, statuses and transitions (`signedAt` required for `FIRMADO`
+- [x] Notes (§8.10) and tags (§7.5) as specified in the PRD.
+- [x] Documents (§8.9): fields, formats, statuses and transitions (`signedAt` required for `FIRMADO`
       only on types with signature; `expiresAt` only on types with expiration), versions, draft save,
       publish, restore, links.
-- [ ] Shares (§8.11 + DT-45): title, message, client, documents with pinned `versionId` or latest,
+- [x] Shares (§8.11 + DT-45): title, message, client, documents with pinned `versionId` or latest,
       **per-document `requiresAccessKey`**, `allowDownload`, locale, expiry; inputs
       `setShareDocumentAccessKey` (generate | regenerate | remove; the clear key is returned **once** in
       the result DTO and never in any read DTO) and `unlockSharedDocument` (token, documentId, key,
       min length 8); share DTOs with counters (views, downloads, failed unlocks) and access-log rows; a
       portal DTO exposing only what the visitor may see, with `locked: boolean` per document (C22).
-- [ ] Activity (§8.14), search (§7.6), graph (exactly §8.12.5), alerts (the nine types, `alertKey`,
+- [x] Activity (§8.14), search (§7.6), graph (exactly §8.12.5), alerts (the nine types, `alertKey`,
       dismiss/snooze), trash, users and preferences (role change, invitation input, keys
       `table:<id>:columns`, `locale`, `theme`, `timezone` — DT-43).
-- [ ] Tests: each schema accepts a valid example and rejects each rule violation listed above; no read
+- [x] Tests: each schema accepts a valid example and rejects each rule violation listed above; no read
       DTO of shares contains a key or hash.
 
 #### Package 3.2 — Contracts: finance, catalogs, dashboard and reports
