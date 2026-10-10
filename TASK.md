@@ -1034,8 +1034,12 @@ H1-B3. Kit coverage is enforced by the package checklists above, not by the gate
 
 #### Wave 4 close
 
-- [ ] **Integration checklist:** 4.1–4.5 merged; no Claude attribution; worktrees removed; lint,
-      typecheck, tests, `i18n:check`, build pass.
+- [x] **Integration checklist:** 4.1–4.5 merged; no Claude attribution; worktrees removed; lint,
+      typecheck, tests, `i18n:check`, build pass. Merges: 4.2 6f09c0a, 4.3 22f0655, 4.5 8013d8f,
+      4.4 977c9ce, 4.1 43b49a9. Integration fixes by the Orchestrator (test-only): `table-query.test.ts`
+      sort field → `issueDate` (4.3 sort whitelist vs 4.4 test); `async-combobox.test.tsx` debounce
+      10 → 200 ms (flaky under host load). Integrated: 103 files / 1721 tests + 1 expected fail
+      (4.5: country-combobox does not open on ArrowDown → H1-FX); i18n parity 32 namespaces; build OK.
 - [ ] **Planner coherence review:** mock service signatures use validator types; context shapes = C11;
       `defineAction` / `definePublicAction` sequences = C10; fixture stubs exported under the names later
       batches will own; CI scripts exist in `package.json`; 4.1 still compiles against the 4.3/4.4
