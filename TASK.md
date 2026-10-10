@@ -399,6 +399,52 @@ Files: `src/lib/money.ts`, `src/lib/money.test.ts`.
 - [x] Tests: `formatMoney("1234.5", "USDT", "en-US")` and `"es-VE"`; ISO cases unchanged; `money.ts`
       coverage stays ≥ 90 %.
 
+#### Package 2.6 — UTC-safe date arithmetic, i18n format cleanup, placeholder parity (wave 2 follow-up, Code Review B1, M1, m1, m5)
+
+Package 2.6 → Agent: wedevs-developer · sonnet — Reason: date arithmetic feeding due dates/overdue status (§9.4) and a `lib/money` cast; money-adjacent and shared `lib/`.
+
+Files: `src/lib/dates.ts`, `src/lib/dates.test.ts`, `src/lib/money.ts`, `src/i18n/request.ts`,
+`scripts/check-i18n.ts`, `scripts/check-i18n.test.ts`, `vitest.config.ts`.
+
+- [ ] `addDays` (and `daysBetween`) on date-only values do pure UTC arithmetic (`setUTCDate`, exact
+      `/ 86_400_000`), independent of the process time zone.
+- [ ] Tests prove it under non-UTC zones across DST changes (`Europe/Madrid`, `America/New_York`, e.g.
+      `addDays("2026-03-07", 2)` → `"2026-03-09"`, `addDays("2026-03-10", 30)` → `"2026-04-09"`); run the
+      node test project with a non-UTC `TZ` (e.g. `env.TZ` in `vitest.config.ts`) or set it per test.
+- [ ] `src/i18n/request.ts`: remove the fixed-USD `number.currency` format and point the comment at
+      `formatMoney` from `@/lib/money` (C15).
+- [ ] `src/lib/money.ts`: replace the `as unknown as …` double cast in `formatMoney` with a single
+      `` `${number}` `` cast (or no cast); coverage stays 100 %.
+- [ ] `scripts/check-i18n.ts`: fail when a key's `{placeholder}` name set differs between ES and EN;
+      tests for pass and fail cases.
+- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+
+#### Package 2.7 — Global Zod error map to i18n keys, upload extension fallback (wave 2 follow-up, Code Review B2, M2, m2, m6, m7)
+
+Package 2.7 → Agent: wedevs-developer · sonnet — Reason: change to shared validators (contract for every form and Server Action) and upload checks (file security, C23).
+
+Files: `src/lib/validators/common.ts`, `src/lib/validators/files.ts`, `src/lib/validators/zod-config.ts`
+(new), their tests (`src/lib/validators/*.test.ts`), `src/i18n/messages/{es,en}/validation.json`,
+`src/i18n/contract-keys.test.ts`, `src/mocks/session.ts`.
+
+- [ ] One global `z.config({ customError })` in `zod-config.ts`, imported for its side effect by
+      `common.ts`; maps Zod issue codes to `validation.*` keys (`invalid_type` → `required` when input is
+      `undefined`, else `invalidFormat`; `invalid_value` → `invalidOption`; `too_small`/`too_big` →
+      `tooShort`/`tooLong` or numeric `tooSmall`/`tooLarge`; `invalid_format` → `invalidFormat`; fallback
+      `invalidFormat`). Custom messages keep precedence.
+- [ ] Every generic key is registered in `VALIDATION_MESSAGES`; flat keys in `validation.json` are either
+      registered or removed (no orphans), ES and EN in parity; `contract-keys.test.ts` covers them.
+- [ ] Test: bad inputs to every exported primitive schema (`idSchema`, `dateOnlySchema`,
+      `listQuerySchema`, money/rate/percent/currency, files schemas, a `z.enum` from `enums.ts`) yield
+      only messages starting with `validation.`.
+- [ ] `checkUpload`: strip MIME parameters; when MIME is empty or `application/octet-stream`, fall back
+      to the extension against `allowedExtensions`; tests for `notes.md` with `""` and with
+      `application/octet-stream`, and a disallowed extension still rejected.
+- [ ] `validation.file.tooLarge` interpolates `{max}` (ES and EN) and `checkUpload` provides it.
+- [ ] `common.ts`: one shared sort-token regex constant.
+- [ ] `src/mocks/session.ts`: default user declared as its own typed constant (no `as SessionUser`).
+- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+
 #### Wave 2 close
 
 - [x] **Integration checklist:** 2.1, 2.2, 2.3 merged; no Claude attribution; worktrees removed;
@@ -410,6 +456,10 @@ Files: `src/lib/money.ts`, `src/lib/money.test.ts`.
       First pass NOT READY (B1 missing validation/common.errors keys, B2 scripts tests not in vitest,
       B3 formatMoney throws on USDT) → packages 2.4/2.5; re-check: B1–B3 CLOSED, READY FOR CODE REVIEW.
 - [ ] **Code review:** C1, C2, C5, C6, C8, C9, C11 shape, C15, C25.
+      First pass CHANGES REQUIRED (B1 `addDays` DST bug, B2 C1 Zod default messages in English;
+      M1 fixed-USD i18n format, M2 upload MIME fallback) → packages 2.6/2.7. Deferred: m3 (`can()`
+      grants update/delete on `activity`, contradicts C20) → pending `can()` vocabulary decision;
+      m4 (date-only check duplicated in `common.ts` and `dates.ts`) → H1-FX.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (report coverage of `money.ts` and `rates.ts`, ≥ 90 %),
       permission matrix test, `pnpm i18n:check`, `pnpm build`. No E2E.
