@@ -1933,13 +1933,13 @@ Depends on: 1.1, 1.2 (merged).
 Files: `src/features/export/use-csv-export.ts` (+ `use-csv-export.test.tsx`); `src/mocks/fixtures/documents.ts`
 (type declaration of `DocumentLinkRow` only). No other file.
 
-- [ ] **r2.** `downloadCsv` revokes the object URL on a later tick (`setTimeout(() =>
+- [x] **r2.** `downloadCsv` revokes the object URL on a later tick (`setTimeout(() =>
       URL.revokeObjectURL(url), 0)`), not right after `link.click()` (Firefox can cancel the download).
       Test with fake timers: not revoked synchronously, revoked after the tick.
-- [ ] **r3 (C8).** `DocumentLinkRow` derives from the contract: `Pick<DocumentLinkDTO, "id" | "createdAt">`
+- [x] **r3 (C8).** `DocumentLinkRow` derives from the contract: `Pick<DocumentLinkDTO, "id" | "createdAt">`
       plus the foreign keys `documentId`, `entityType`, `entityId` (keep the export name and the field set;
       no fixture data change). If the contract field names differ, keep the derivation and report.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 1 close
 
