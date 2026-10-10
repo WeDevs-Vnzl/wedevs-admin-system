@@ -427,23 +427,23 @@ Files: `src/lib/validators/common.ts`, `src/lib/validators/files.ts`, `src/lib/v
 (new), their tests (`src/lib/validators/*.test.ts`), `src/i18n/messages/{es,en}/validation.json`,
 `src/i18n/contract-keys.test.ts`, `src/mocks/session.ts`.
 
-- [ ] One global `z.config({ customError })` in `zod-config.ts`, imported for its side effect by
+- [x] One global `z.config({ customError })` in `zod-config.ts`, imported for its side effect by
       `common.ts`; maps Zod issue codes to `validation.*` keys (`invalid_type` → `required` when input is
       `undefined`, else `invalidFormat`; `invalid_value` → `invalidOption`; `too_small`/`too_big` →
       `tooShort`/`tooLong` or numeric `tooSmall`/`tooLarge`; `invalid_format` → `invalidFormat`; fallback
       `invalidFormat`). Custom messages keep precedence.
-- [ ] Every generic key is registered in `VALIDATION_MESSAGES`; flat keys in `validation.json` are either
+- [x] Every generic key is registered in `VALIDATION_MESSAGES`; flat keys in `validation.json` are either
       registered or removed (no orphans), ES and EN in parity; `contract-keys.test.ts` covers them.
-- [ ] Test: bad inputs to every exported primitive schema (`idSchema`, `dateOnlySchema`,
+- [x] Test: bad inputs to every exported primitive schema (`idSchema`, `dateOnlySchema`,
       `listQuerySchema`, money/rate/percent/currency, files schemas, a `z.enum` from `enums.ts`) yield
       only messages starting with `validation.`.
-- [ ] `checkUpload`: strip MIME parameters; when MIME is empty or `application/octet-stream`, fall back
+- [x] `checkUpload`: strip MIME parameters; when MIME is empty or `application/octet-stream`, fall back
       to the extension against `allowedExtensions`; tests for `notes.md` with `""` and with
       `application/octet-stream`, and a disallowed extension still rejected.
-- [ ] `validation.file.tooLarge` interpolates `{max}` (ES and EN) and `checkUpload` provides it.
-- [ ] `common.ts`: one shared sort-token regex constant.
-- [ ] `src/mocks/session.ts`: default user declared as its own typed constant (no `as SessionUser`).
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+- [x] `validation.file.tooLarge` interpolates `{max}` (ES and EN) and `checkUpload` provides it.
+- [x] `common.ts`: one shared sort-token regex constant.
+- [x] `src/mocks/session.ts`: default user declared as its own typed constant (no `as SessionUser`).
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
 
 #### Wave 2 close
 

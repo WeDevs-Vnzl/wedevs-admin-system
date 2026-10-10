@@ -8,16 +8,18 @@ import type { SessionUser } from "@/server/auth/types";
 export const MOCK_ROLE_COOKIE = "wd_mock_role";
 
 /** Two fictional partners (Owners), as in the wireframes. No real people or real addresses (C5). */
+const ANDRES_MOLINA: SessionUser = {
+  id: "usr_andres_molina",
+  name: "Andrés Molina",
+  email: "andres.molina@example.com",
+  imageUrl: null,
+  role: "OWNER",
+  locale: "es",
+  theme: "system",
+};
+
 export const MOCK_USERS: readonly SessionUser[] = [
-  {
-    id: "usr_andres_molina",
-    name: "Andrés Molina",
-    email: "andres.molina@example.com",
-    imageUrl: null,
-    role: "OWNER",
-    locale: "es",
-    theme: "system",
-  },
+  ANDRES_MOLINA,
   {
     id: "usr_valeria_rojas",
     name: "Valeria Rojas",
@@ -30,7 +32,7 @@ export const MOCK_USERS: readonly SessionUser[] = [
 ];
 
 /** The user that is "signed in" by default in Hito 1. */
-export const MOCK_DEFAULT_USER: SessionUser = MOCK_USERS[0] as SessionUser;
+export const MOCK_DEFAULT_USER: SessionUser = ANDRES_MOLINA;
 
 /** Validates the raw cookie value; `null` when absent or not a real role. */
 export function parseMockRole(value: string | null | undefined): UserRole | null {

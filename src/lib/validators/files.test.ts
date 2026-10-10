@@ -66,44 +66,85 @@ describe("upload rules per context (DT-41, C23)", () => {
 });
 
 describe("checkUpload", () => {
+  const pdf = { name: "a.pdf", mime: "application/pdf" };
+  const typeNotAllowed = { key: VALIDATION_MESSAGES.fileTypeNotAllowed };
+
   it("accepts a file at the limit of each context", () => {
+    expect(checkUpload({ ...pdf, size: 25 * MB }, "general")).toBeNull();
     expect(
-      checkUpload({ name: "a.pdf", mime: "application/pdf", size: 25 * MB }, "general"),
-    ).toBeNull();
-    expect(
-      checkUpload({ name: "r.pdf", mime: "application/pdf", size: 10 * MB }, "payment_receipt"),
+      checkUpload({ name: "r.pdf", mime: pdf.mime, size: 10 * MB }, "payment_receipt"),
     ).toBeNull();
   });
 
-  it("rejects one byte over the limit", () => {
+  it("rejects files over the limit and provides the interpolated {max}", () => {
+    expect(checkUpload({ ...pdf, size: 25 * MB + 1 }, "general")).toEqual({
+      key: VALIDATION_MESSAGES.fileTooLarge,
+      values: { max: "25 MB" },
+    });
     expect(
-      checkUpload({ name: "a.pdf", mime: "application/pdf", size: 25 * MB + 1 }, "general"),
-    ).toBe(VALIDATION_MESSAGES.fileTooLarge);
-    expect(
-      checkUpload({ name: "r.pdf", mime: "application/pdf", size: 10 * MB + 1 }, "payment_receipt"),
-    ).toBe(VALIDATION_MESSAGES.fileTooLarge);
+      checkUpload({ name: "r.pdf", mime: pdf.mime, size: 10 * MB + 1 }, "payment_receipt"),
+    ).toEqual({ key: VALIDATION_MESSAGES.fileTooLarge, values: { max: "10 MB" } });
   });
 
-  it("a file valid for general can be too large or the wrong type for a receipt", () => {
-    expect(
-      checkUpload({ name: "a.pdf", mime: "application/pdf", size: 20 * MB }, "general"),
-    ).toBeNull();
-    expect(
-      checkUpload({ name: "a.pdf", mime: "application/pdf", size: 20 * MB }, "payment_receipt"),
-    ).toBe(VALIDATION_MESSAGES.fileTooLarge);
+  it("applies the limit of the context, not a global one", () => {
+    expect(checkUpload({ ...pdf, size: 20 * MB }, "general")).toBeNull();
+    expect(checkUpload({ ...pdf, size: 20 * MB }, "payment_receipt")).toMatchObject({
+      key: VALIDATION_MESSAGES.fileTooLarge,
+    });
     expect(
       checkUpload({ name: "a.zip", mime: "application/zip", size: 1 * MB }, "payment_receipt"),
-    ).toBe(VALIDATION_MESSAGES.fileTypeNotAllowed);
+    ).toEqual(typeNotAllowed);
   });
 
   it("rejects empty files and unknown types, and ignores MIME case", () => {
-    expect(checkUpload({ name: "a.pdf", mime: "application/pdf", size: 0 }, "general")).toBe(
-      VALIDATION_MESSAGES.fileEmpty,
-    );
+    expect(checkUpload({ ...pdf, size: 0 }, "general")).toEqual({
+      key: VALIDATION_MESSAGES.fileEmpty,
+    });
     expect(
       checkUpload({ name: "a.exe", mime: "application/x-msdownload", size: 10 }, "general"),
-    ).toBe(VALIDATION_MESSAGES.fileTypeNotAllowed);
+    ).toEqual(typeNotAllowed);
     expect(checkUpload({ name: "a.PNG", mime: "IMAGE/PNG", size: 10 }, "general")).toBeNull();
+  });
+
+  it("strips MIME parameters", () => {
+    expect(
+      checkUpload({ name: "n.txt", mime: "text/plain; charset=utf-8", size: 10 }, "general"),
+    ).toBeNull();
+    expect(
+      checkUpload({ name: "n.md", mime: " Text/Markdown ;charset=UTF-8", size: 10 }, "general"),
+    ).toBeNull();
+    expect(
+      checkUpload(
+        { name: "a.exe", mime: "application/x-msdownload; foo=bar", size: 10 },
+        "general",
+      ),
+    ).toEqual(typeNotAllowed);
+  });
+
+  it("falls back to the extension when the MIME is empty or octet-stream", () => {
+    for (const mime of ["", "application/octet-stream", "Application/Octet-Stream; x=1"]) {
+      expect(checkUpload({ name: "notes.md", mime, size: 10 }, "general"), mime).toBeNull();
+    }
+    expect(checkUpload({ name: "NOTES.MD", mime: "", size: 10 }, "general")).toBeNull();
+  });
+
+  it("still rejects a disallowed or missing extension when the MIME is empty or generic", () => {
+    for (const mime of ["", "application/octet-stream"]) {
+      for (const name of ["setup.exe", "page.html", "image.svg", "README", ".md", "notes.md.exe"]) {
+        expect(checkUpload({ name, mime, size: 10 }, "general"), `${name} ${mime}`).toEqual(
+          typeNotAllowed,
+        );
+      }
+    }
+    expect(checkUpload({ name: "notes.md", mime: "", size: 10 }, "payment_receipt")).toEqual(
+      typeNotAllowed,
+    );
+  });
+
+  it("does not let the extension override a concrete, disallowed MIME", () => {
+    expect(checkUpload({ name: "notes.md", mime: "text/html", size: 10 }, "general")).toEqual(
+      typeNotAllowed,
+    );
   });
 });
 
@@ -126,6 +167,20 @@ describe("requestUploadInputSchema", () => {
       expect(tooBig.error.issues[0]).toMatchObject({
         path: ["size"],
         message: VALIDATION_MESSAGES.fileTooLarge,
+      });
+    }
+  });
+
+  it("accepts an empty MIME for an allowed extension and rejects it otherwise", () => {
+    expect(
+      requestUploadInputSchema.safeParse({ ...valid, name: "notes.md", mime: "" }).success,
+    ).toBe(true);
+    const result = requestUploadInputSchema.safeParse({ ...valid, name: "run.exe", mime: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]).toMatchObject({
+        path: ["mime"],
+        message: VALIDATION_MESSAGES.fileTypeNotAllowed,
       });
     }
   });

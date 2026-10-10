@@ -3,8 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { locales } from "./config";
-import { ERROR_CODE_VALUES } from "@/lib/validators/common";
-import { VALIDATION_MESSAGES } from "@/lib/validators/common";
+import { ERROR_CODE_VALUES, VALIDATION_MESSAGES } from "@/lib/validators/common";
+import { GENERIC_VALIDATION_MESSAGES } from "@/lib/validators/zod-config";
 import { ENUM_REGISTRY } from "@/lib/validators/enums";
 
 // Contract keys (C2): every i18n key referenced by a validator or an action result resolves to a
@@ -36,6 +36,27 @@ describe.each(locales)("contract keys (%s)", (locale) => {
       expect(value?.trim(), key).not.toBe("");
     },
   );
+
+  it("registers every generic key and leaves no orphan in validation.json", () => {
+    const registered = new Set(Object.values(VALIDATION_MESSAGES).map(String));
+    for (const key of Object.values(GENERIC_VALIDATION_MESSAGES))
+      expect(registered.has(key)).toBe(true);
+
+    const leaves: string[] = [];
+    const walk = (node: unknown, path: string[]) => {
+      if (typeof node === "object" && node !== null) {
+        for (const [k, v] of Object.entries(node)) walk(v, [...path, k]);
+      } else {
+        leaves.push(["validation", ...path].join("."));
+      }
+    };
+    walk(loadNamespace(locale, "validation"), []);
+    expect(leaves.sort()).toEqual([...registered].sort());
+  });
+
+  it("validation.file.tooLarge interpolates {max}", () => {
+    expect(resolveKey(locale, VALIDATION_MESSAGES.fileTooLarge)).toContain("{max}");
+  });
 
   it.each(ERROR_CODE_VALUES)("common.errors.%s resolves to a non-empty string", (code) => {
     const key = `common.errors.${code}`;
