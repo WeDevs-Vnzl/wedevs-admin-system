@@ -3,8 +3,10 @@
   "invalidEmail": "Invalid email address",
   "invalidFormat": "Invalid format",
   "invalidOption": "Select a valid option",
-  "tooShort": "Must be at least {min} characters",
-  "tooLong": "Must be at most {max} characters",
+  "tooShort": "Too short",
+  "tooLong": "Too long",
+  "tooSmall": "Value is too small",
+  "tooLarge": "Value is too large",
   "positive": "Must be greater than zero",
   "nonNegative": "Cannot be negative",
   "id": {
@@ -41,6 +43,6 @@
     "nameInvalid": "Invalid file name",
     "typeNotAllowed": "File type not allowed",
     "empty": "The file is empty",
-    "tooLarge": "The file is too large"
+    "tooLarge": "The file exceeds the maximum size of {max}"
   }
 }

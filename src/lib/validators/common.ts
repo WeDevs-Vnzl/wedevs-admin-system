@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { entityTypeSchema } from "./enums";
+import { GENERIC_VALIDATION_MESSAGES } from "./zod-config"; // also installs the global Zod error map
 
 /**
  * Shared contract primitives (C8, C10): action results, error codes, ids, date-only strings, list
@@ -13,7 +14,7 @@ import { entityTypeSchema } from "./enums";
  * translates the key at render time. Shared by `common`, `money` and `files` validators.
  */
 export const VALIDATION_MESSAGES = {
-  required: "validation.required",
+  ...GENERIC_VALIDATION_MESSAGES,
   invalidId: "validation.id.invalid",
   invalidDate: "validation.date.invalid",
   invalidSort: "validation.sort.invalid",
@@ -155,10 +156,13 @@ export interface ParsedSort {
   direction: SortDirection;
 }
 
+/** One sort token: `field:asc|desc`, with dotted field paths for nested sorts. */
+const SORT_TOKEN = /^([A-Za-z][A-Za-z0-9_.]*):(asc|desc)$/;
+
 /** Splits a `field:asc|desc` sort string; `null` when the value is missing or malformed. */
 export function parseSort(sort: string | undefined): ParsedSort | null {
   if (!sort) return null;
-  const match = /^([A-Za-z][A-Za-z0-9_.]*):(asc|desc)$/.exec(sort);
+  const match = SORT_TOKEN.exec(sort);
   if (!match) return null;
   return { field: match[1] as string, direction: match[2] as SortDirection };
 }
@@ -177,10 +181,7 @@ export const listQuerySchema = z.object({
     .number()
     .pipe(z.union([z.literal(25), z.literal(50), z.literal(100)]))
     .default(DEFAULT_PAGE_SIZE),
-  sort: z
-    .string()
-    .regex(/^[A-Za-z][A-Za-z0-9_.]*:(asc|desc)$/, VALIDATION_MESSAGES.invalidSort)
-    .optional(),
+  sort: z.string().regex(SORT_TOKEN, VALIDATION_MESSAGES.invalidSort).optional(),
   q: z
     .string()
     .trim()

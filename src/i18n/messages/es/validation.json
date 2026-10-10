@@ -3,8 +3,10 @@
   "invalidEmail": "Correo electrónico no válido",
   "invalidFormat": "Formato no válido",
   "invalidOption": "Selecciona una opción válida",
-  "tooShort": "Debe tener al menos {min} caracteres",
-  "tooLong": "Debe tener como máximo {max} caracteres",
+  "tooShort": "Es demasiado corto",
+  "tooLong": "Es demasiado largo",
+  "tooSmall": "El valor es demasiado pequeño",
+  "tooLarge": "El valor es demasiado grande",
   "positive": "Debe ser mayor que cero",
   "nonNegative": "No puede ser negativo",
   "id": {
@@ -41,6 +43,6 @@
     "nameInvalid": "Nombre de archivo no válido",
     "typeNotAllowed": "Tipo de archivo no permitido",
     "empty": "El archivo está vacío",
-    "tooLarge": "El archivo es demasiado grande"
+    "tooLarge": "El archivo supera el tamaño máximo de {max}"
   }
 }

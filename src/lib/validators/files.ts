@@ -70,27 +70,53 @@ export interface UploadCandidate {
   size: number;
 }
 
+/** First violation of `checkUpload`: an i18n key plus the values its message interpolates, if any. */
+export type UploadViolation =
+  | { key: typeof VALIDATION_MESSAGES.fileTypeNotAllowed }
+  | { key: typeof VALIDATION_MESSAGES.fileEmpty }
+  | { key: typeof VALIDATION_MESSAGES.fileTooLarge; values: { max: string } };
+
+/** `application/pdf; charset=binary` → `application/pdf`. */
+function normalizeMime(mime: string): string {
+  return (mime.split(";")[0] ?? "").trim().toLowerCase();
+}
+
+/** Lower-case extension with its dot (`Notes.MD` → `.md`), or `""` when the name has none. */
+function fileExtension(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot).toLowerCase() : "";
+}
+
+/** Browsers report an empty or generic MIME for some files (e.g. `.md`); the extension decides then. */
+function isMimeAllowed(candidate: UploadCandidate, rules: UploadRules): boolean {
+  const mime = normalizeMime(candidate.mime);
+  if (mime !== "" && mime !== "application/octet-stream") {
+    return rules.allowedMimeTypes.includes(mime);
+  }
+  return rules.allowedExtensions.includes(fileExtension(candidate.name));
+}
+
 /**
- * Checks a file against the rules of its context. Returns the i18n key of the first violation, or `null`
- * when the file is acceptable. Shared by the uploader (client) and `requestUploadInputSchema`.
+ * Checks a file against the rules of its context. Returns the first violation (an i18n key and the values
+ * it interpolates), or `null` when the file is acceptable. Shared by the uploader (client) and
+ * `requestUploadInputSchema`. MIME parameters are ignored; an empty or `application/octet-stream` MIME
+ * falls back to the extension. Hito 2 still validates the real type by magic bytes at confirm time.
  */
 export function checkUpload(
   candidate: UploadCandidate,
   context: UploadContext,
-): ValidationUploadKey | null {
+): UploadViolation | null {
   const rules = UPLOAD_RULES[context];
-  if (!rules.allowedMimeTypes.includes(candidate.mime.toLowerCase())) {
-    return VALIDATION_MESSAGES.fileTypeNotAllowed;
+  if (!isMimeAllowed(candidate, rules)) return { key: VALIDATION_MESSAGES.fileTypeNotAllowed };
+  if (candidate.size <= 0) return { key: VALIDATION_MESSAGES.fileEmpty };
+  if (candidate.size > rules.maxBytes) {
+    return {
+      key: VALIDATION_MESSAGES.fileTooLarge,
+      values: { max: `${rules.maxBytes / MB} MB` },
+    };
   }
-  if (candidate.size <= 0) return VALIDATION_MESSAGES.fileEmpty;
-  if (candidate.size > rules.maxBytes) return VALIDATION_MESSAGES.fileTooLarge;
   return null;
 }
-
-type ValidationUploadKey =
-  | typeof VALIDATION_MESSAGES.fileTypeNotAllowed
-  | typeof VALIDATION_MESSAGES.fileEmpty
-  | typeof VALIDATION_MESSAGES.fileTooLarge;
 
 function isSafeFileName(name: string): boolean {
   if (name.trim() !== name || name === "." || name === "..") return false;
@@ -111,7 +137,8 @@ const fileNameSchema = z
 export const requestUploadInputSchema = z
   .object({
     name: fileNameSchema,
-    mime: z.string().min(1, VALIDATION_MESSAGES.fileTypeNotAllowed),
+    /** May be empty: `checkUpload` then falls back to the extension. */
+    mime: z.string(),
     /** Size in bytes (not money, so a plain integer). */
     size: z.number().int(),
     context: uploadContextSchema,
@@ -121,8 +148,8 @@ export const requestUploadInputSchema = z
     if (!violation) return;
     ctx.addIssue({
       code: "custom",
-      message: violation,
-      path: [violation === VALIDATION_MESSAGES.fileTypeNotAllowed ? "mime" : "size"],
+      message: violation.key,
+      path: [violation.key === VALIDATION_MESSAGES.fileTypeNotAllowed ? "mime" : "size"],
     });
   });
 export type RequestUploadInput = z.infer<typeof requestUploadInputSchema>;
