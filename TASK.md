@@ -708,7 +708,7 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
 `src/server/auth/permissions.test.ts`, `src/lib/validators/zod-config.ts` and its test,
 `eslint.config.mjs`. No i18n files.
 
-- [ ] **DT-67** `lib/rates.ts`: `RateRow` gains `source: RateSource` (from `@/lib/validators/enums`)
+- [x] **DT-67** `lib/rates.ts`: `RateRow` gains `source: RateSource` (from `@/lib/validators/enums`)
       and `createdAt: string` (ISO). `SelectedRate` gains `source: RateSource | null` and
       `options: RateOption[]`, where `RateOption = { source; usdRate; createdAt }`. `selectRate` picks the
       effective date per §9.2 (exact, else the latest earlier date as a fallback, else `null`). It then
@@ -716,15 +716,15 @@ Files: `src/lib/rates.ts`, `src/lib/rates.test.ts`, `src/server/auth/permissions
       `createdAt` descending. The selected `usdRate`/`source` is `options[0]`. USD returns
       `{ usdRate: "1", source: null, options: [] }`. Update the JSDoc, which today says "the first row
       wins".
-- [ ] Tests (≥ 90 % coverage kept): several sources on the exact date (BCV wins; without BCV the most
+- [x] Tests (≥ 90 % coverage kept): several sources on the exact date (BCV wins; without BCV the most
       recent `createdAt` wins); several sources on the fallback date; non-positive rows excluded from
       `options`; USD.
-- [ ] **DT-66 / m3** `permissions.ts`: `activity` grants only `read` to Owner and Admin, and nothing to
+- [x] **DT-66 / m3** `permissions.ts`: `activity` grants only `read` to Owner and Admin, and nothing to
       Member or Viewer. Update the JSDoc with the action vocabulary (DT-66). The matrix test asserts that
       `create`/`update`/`delete`/`restore` on `activity` are denied for every role.
-- [ ] **n2** `zod-config.ts`: `invalid_type` with `input === null` or `undefined` maps to
+- [x] **n2** `zod-config.ts`: `invalid_type` with `input === null` or `undefined` maps to
       `validation.required`. Test with a nullable-cleared enum/select field.
-- [ ] **n1** `eslint.config.mjs`: `no-restricted-imports` also blocks `zod/*` subpaths (pattern),
+- [x] **n1** `eslint.config.mjs`: `no-restricted-imports` also blocks `zod/*` subpaths (pattern),
       with the same exceptions (`src/lib/validators/zod.ts`, `zod-config.ts`). Verify by linting a scratch
       import (and remove it).
 

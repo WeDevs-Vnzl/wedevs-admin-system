@@ -19,11 +19,26 @@ function messages(schema: z.ZodType, input: unknown): string[] {
 }
 
 describe("global Zod error map → validation.* keys (C1)", () => {
-  it("invalid_type: required when the input is undefined, invalidFormat otherwise", () => {
+  it("invalid_type: required when the input is undefined or null, invalidFormat otherwise", () => {
     expect(messages(z.string(), undefined)).toEqual([VALIDATION_MESSAGES.required]);
+    expect(messages(z.string(), null)).toEqual([VALIDATION_MESSAGES.required]);
     expect(messages(z.string(), 5)).toEqual([VALIDATION_MESSAGES.invalidFormat]);
-    expect(messages(z.string(), null)).toEqual([VALIDATION_MESSAGES.invalidFormat]);
     expect(messages(z.object({ a: z.string() }), {})).toEqual([VALIDATION_MESSAGES.required]);
+    expect(messages(z.object({ a: z.string() }), { a: null })).toEqual([
+      VALIDATION_MESSAGES.required,
+    ]);
+  });
+
+  it("a cleared (null) required enum/select field reports required, a bad value invalidOption", () => {
+    const form = z.object({ role: userRoleSchema, kind: clientKindSchema });
+    expect(messages(form, { role: null, kind: "EMPRESA" })).toEqual([VALIDATION_MESSAGES.required]);
+    expect(messages(form, { role: undefined, kind: null })).toEqual([
+      VALIDATION_MESSAGES.required,
+      VALIDATION_MESSAGES.required,
+    ]);
+    expect(messages(form, { role: "nope", kind: "EMPRESA" })).toEqual([
+      VALIDATION_MESSAGES.invalidOption,
+    ]);
   });
 
   it("invalid_value → invalidOption", () => {

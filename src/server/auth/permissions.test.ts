@@ -48,7 +48,8 @@ const PRD_ROWS: {
   // Member: CRUD but D only on their own notes — checked in the dedicated tests below.
   { prdRow: "Notas", resources: ["note"], cells: ["CRUD", "CRUD", "CRU", "R"] },
   { prdRow: "Reportes y KPI", resources: ["report"], cells: ["CRUD", "CRUD", "-", "-"] },
-  { prdRow: "Registro de actividad", resources: ["activity"], cells: ["CRUD", "CRUD", "-", "-"] },
+  // DT-66: the log is append-only (C20), so Owner and Admin only read it.
+  { prdRow: "Registro de actividad", resources: ["activity"], cells: ["R", "R", "-", "-"] },
   {
     prdRow: "Configuración y catálogos",
     resources: ["settings"],
@@ -97,6 +98,24 @@ describe("can() — PRD §4.3 matrix, table-driven", () => {
   );
 });
 
+describe("can() — activity is read-only for everyone (DT-66, C20)", () => {
+  it.each(USER_ROLE_VALUES)("%s cannot create, update, delete or restore activity", (role) => {
+    for (const action of ["create", "update", "delete", "restore"] as const) {
+      expect(can(user(role), action, "activity")).toBe(false);
+      expect(can(user(role), action, "activity", { ownerId: user(role).id })).toBe(false);
+    }
+  });
+
+  it.each([
+    ["OWNER", true],
+    ["ADMIN", true],
+    ["MEMBER", false],
+    ["VIEWER", false],
+  ] as const)("%s read → %s", (role, expected) => {
+    expect(can(user(role), "read", "activity")).toBe(expected);
+  });
+});
+
 describe("can() — Member deletes only their own notes", () => {
   const member = user("MEMBER", "usr_member_1");
 
@@ -143,8 +162,10 @@ describe("can() — trash (Papelera, restaurar)", () => {
     expect(can(user(role), "read", "trash")).toBe(expected);
   });
 
-  it("restoring a resource follows the trash row and needs read on the resource", () => {
-    for (const resource of PERMISSION_RESOURCE_VALUES.filter((r) => r !== "trash")) {
+  it("restoring a resource follows the trash row and needs read and delete on the resource", () => {
+    for (const resource of PERMISSION_RESOURCE_VALUES.filter(
+      (r) => r !== "trash" && r !== "activity", // activity is append-only: never restorable
+    )) {
       expect(can(user("OWNER"), "restore", resource)).toBe(true);
       expect(can(user("MEMBER"), "restore", resource)).toBe(false);
       expect(can(user("VIEWER"), "restore", resource)).toBe(false);

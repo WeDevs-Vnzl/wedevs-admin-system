@@ -15,12 +15,15 @@ const prismaImports = {
   message: "Prisma is only reachable inside src/server/ (C7).",
 };
 
+const zodMessage =
+  'Import { z } from "@/lib/validators/zod": it guarantees the global Zod error map (i18n keys) is installed (C1, C2).';
+
 // Exact-name `paths` entry: a `patterns` group named "zod" would also match the relative "./zod".
-const zodImports = {
-  name: "zod",
-  message:
-    'Import { z } from "@/lib/validators/zod": it guarantees the global Zod error map (i18n keys) is installed (C1, C2).',
-};
+const zodImports = { name: "zod", message: zodMessage };
+
+// `zod/*` subpaths (`zod/v4`, `zod/mini`, ...) bypass the wrapper just the same. The pattern `zod/*`
+// cannot match the relative "./zod" or "@/lib/validators/zod".
+const zodSubpathImports = { group: ["zod/*"], message: zodMessage };
 
 const frameworkImports = {
   group: [
@@ -66,12 +69,12 @@ export default defineConfig([
   // C7 + C9: default for every source file.
   {
     files: ["**/*.{ts,tsx,mts,mjs}"],
-    rules: restrict(mocksImports, prismaImports, zodImports),
+    rules: restrict(mocksImports, prismaImports, zodImports, zodSubpathImports),
   },
   // C7: Prisma is allowed inside src/server/ (mocks stay restricted there).
   {
     files: ["src/server/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, zodImports),
+    rules: restrict(mocksImports, zodImports, zodSubpathImports),
   },
   // C9: the only files outside src/mocks/ allowed to import @/mocks/**.
   {
@@ -82,20 +85,20 @@ export default defineConfig([
       "tests/**/*.{ts,tsx}",
       "**/*.test.{ts,tsx}",
     ],
-    rules: restrict(prismaImports, zodImports),
+    rules: restrict(prismaImports, zodImports, zodSubpathImports),
   },
   {
     files: ["src/server/context.ts", "src/server/auth/session.ts"],
-    rules: restrict(zodImports),
+    rules: restrict(zodImports, zodSubpathImports),
   },
   // C11: services are framework-free (Hito 2 services and Hito 1 mock services).
   {
     files: ["src/server/services/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, frameworkImports, zodImports),
+    rules: restrict(mocksImports, frameworkImports, zodImports, zodSubpathImports),
   },
   {
     files: ["src/mocks/services/**/*.{ts,tsx}"],
-    rules: restrict(prismaImports, frameworkImports, zodImports),
+    rules: restrict(prismaImports, frameworkImports, zodImports, zodSubpathImports),
   },
 
   // C1, C2: the only modules that import the raw "zod" package; every other file imports `z` from
