@@ -1127,11 +1127,33 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
       record the `src/server/errors.ts` framework-free exception to "everything under `src/server/`
       imports `server-only`".
 - [x] **User confirms the Tester may run.** Confirmed 2026-10-10 ("procede").
-- [ ] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
+- [x] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
       `package.json` scripts; kit coverage per area (data-table, uploader, phone-input, patterns ≥ 90 %
       statements). No E2E yet.
-- [ ] **Problem report** (explicit, per agent).
-- [ ] **Summary.**
+      Tester (haiku, 2026-10-10, no commits): install, coverage, i18n:check, build, lint, typecheck all
+      PASS. 106 files / 1741 tests + 1 expected fail (country-combobox ArrowDown `it.fails`). Gate:
+      money.ts 100/100, rates.ts 97.43/96.42 (stmts/branches). Kit stmts: data-table 95.7, uploader 96.9,
+      phone-input 100, patterns 93.6, all ≥ 90 %. Informational: validators 99.9, table-query 100, csv 100,
+      server/actions 98.8, features 100, mocks 93.6. `ci.yml` dry review: no mismatch (all scripts exist,
+      Node via `.nvmrc`, pnpm via `packageManager`, `--frozen-lockfile`, no secrets, no deploy).
+      async-combobox test file 3 runs in a row: stable.
+- [x] **Problem report** (explicit, per agent).
+      - Developers 4.1–4.5: review findings fixed in 4.6; the rest routed to H1-B2, H1-B3, H1-B4, H1-FX
+        and the Planner as recorded under Planner coherence and Code review.
+      - Orchestrator: two test-only integration fixes (table-query sort field, async-combobox debounce).
+      - Tester, nothing blocking. Routed to H1-FX: per-file below 90 % stmts — `data-table.tsx` 88.9,
+        `patterns/related-mini-table.tsx` 50, `patterns/use-unsaved-changes.ts` 84.6; data-table branches
+        87.7 %. Note only: `mocks/store.ts`, `mocks/test-helpers.ts`, `mocks/services/catalogs.ts` below
+        90 % (not gated, mocks are replaced in Hito 2). The CI `e2e` job runs on every PR with
+        `--pass-with-no-tests`; intended (batch-close flow step 3, DT-46).
+- [x] **Summary.** Wave 4 delivered the mock data layer (store, fixtures, services), the server context
+      and `defineAction` / `definePublicAction` wrappers (fail-closed permissions, framework-free
+      `ServiceError`), feature adapters (shell, preferences, catalogs, files, session, rate lookup,
+      upload), the CI workflow, contract follow-ups (sort whitelists, multi-value facets, `csv`/`export`)
+      and kit follow-ups (`toModuleQuery`, a11y fixes, tests for every kit area). It went through a fix
+      package (4.6) after review; the Tester found no failures.
+      Open for the user: DT-70 (IGTF single source), Technology `nameEn` (Δ4 or drop, before H2-B1),
+      DT-71 (scope of the `'authenticated'` permission).
 
 🛑 **MANDATORY STOP** — wave 5 does not start without the user's explicit approval.
 
