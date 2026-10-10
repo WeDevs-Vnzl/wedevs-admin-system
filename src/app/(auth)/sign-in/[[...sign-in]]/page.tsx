@@ -19,7 +19,7 @@ export default async function SignInPage() {
   const tFooter = await getTranslations("shell.footer");
 
   return (
-    <div className="grid min-h-dvh bg-neutral-100 lg:grid-cols-2 dark:bg-neutral-900">
+    <div className="grid min-h-dvh bg-muted lg:grid-cols-2">
       <section className="relative hidden flex-col justify-between overflow-hidden bg-neutral-950 p-12 text-white lg:flex">
         <div className="flex items-center gap-3">
           <BrandMark inverse />
@@ -56,12 +56,12 @@ export default async function SignInPage() {
         </p>
       </section>
 
-      <section className="flex min-h-dvh flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm dark:bg-neutral-950">
+      <main className="flex min-h-dvh flex-col items-center justify-center p-6">
+        <div className="w-full max-w-sm rounded-2xl bg-card p-8 text-card-foreground shadow-sm">
           <div className="flex flex-col items-center gap-3 text-center">
             <BrandMark className="size-10 text-base" />
             <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-            <p className="text-sm text-neutral-500">{t("subtitle")}</p>
+            <p className="text-sm text-foreground/70">{t("subtitle")}</p>
           </div>
 
           <div className="mt-8 flex flex-col gap-4">
@@ -69,10 +69,10 @@ export default async function SignInPage() {
               <Link href="/dashboard">{t("google")}</Link>
             </Button>
 
-            <div className="flex items-center gap-3 text-xs text-neutral-400">
-              <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+            <div className="flex items-center gap-3 text-xs text-foreground/70">
+              <span className="h-px flex-1 bg-border" />
               {t("or")}
-              <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+              <span className="h-px flex-1 bg-border" />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -92,13 +92,13 @@ export default async function SignInPage() {
               </Link>
             </Button>
 
-            <p className="flex items-center justify-center gap-2 text-center text-xs text-neutral-500">
+            <p className="flex items-center justify-center gap-2 text-center text-xs text-foreground/70">
               <ShieldCheck aria-hidden className="size-4" />
               {t("verification")}
             </p>
           </div>
         </div>
-      </section>
+      </main>
     </div>
   );
 }

@@ -11,7 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { findNavItem } from "@/config/nav";
+import { findNavItem, SETTINGS_NAV_ITEM } from "@/config/nav";
+import { findSettingsSection } from "@/config/settings-nav";
 
 interface Crumb {
   label: string;
@@ -23,6 +24,7 @@ interface Crumb {
 export function AppBreadcrumbs() {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const tSettings = useTranslations("settings");
   const tShell = useTranslations("shell.breadcrumbs");
   const pathname = usePathname();
 
@@ -32,9 +34,15 @@ export function AppBreadcrumbs() {
 
   const rest = item ? pathname.slice(item.href.length) : pathname;
   const segments = rest.split("/").filter(Boolean);
+  // Under /settings the first segment is a section slug, labelled from `settings.nav` (m1).
+  const section = item?.key === SETTINGS_NAV_ITEM.key ? findSettingsSection(segments[0] ?? "") : undefined;
   let href = item?.href ?? "";
-  for (const segment of segments) {
+  for (const [index, segment] of segments.entries()) {
     href = `${href}/${segment}`;
+    if (index === 0 && section) {
+      crumbs.push({ label: tSettings(`nav.${section.labelKey}`), href });
+      continue;
+    }
     const label = t.has(`segments.${segment}`) ? t(`segments.${segment}`) : segment;
     crumbs.push({ label, href });
   }

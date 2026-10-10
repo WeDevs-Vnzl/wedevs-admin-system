@@ -79,12 +79,16 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   },
 ];
 
-/** The configuration entry pinned to the sidebar footer; its sections live in `settings-nav.ts` (5.2). */
+/**
+ * The configuration entry pinned to the sidebar footer; its sections live in `settings-nav.ts`. `resource` is
+ * null so every signed-in role sees the entry: the settings frame filters its sections with `can()` and each
+ * role lands on Preferencias, its own preferences (PRD §8.15 "por usuario", M1).
+ */
 export const SETTINGS_NAV_ITEM: NavItem = {
   key: "settings",
   href: "/settings",
   icon: Settings,
-  resource: "settings",
+  resource: null,
 };
 
 /** Whether `user` may see a nav entry (its `resource` is null or readable). */

@@ -17,7 +17,8 @@
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "mobileTitle": "Navigation",
-    "mobileDescription": "Main navigation menu"
+    "mobileDescription": "Main navigation menu",
+    "toggle": "Toggle sidebar"
   },
   "breadcrumbs": {
     "label": "Breadcrumb"
@@ -37,7 +38,7 @@
     "description": "Items that need your attention",
     "empty": "You have no pending alerts",
     "markAllRead": "Mark all as read",
-    "counter": "{count} alerts"
+    "counter": "{count, plural, one {# alert} other {# alerts}}"
   },
   "userMenu": {
     "label": "User menu",

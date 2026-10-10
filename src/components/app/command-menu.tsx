@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -14,6 +13,13 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { visibleNavItems, visibleQuickActions } from "@/config/nav";
@@ -22,6 +28,8 @@ import type { SessionUser } from "@/server/auth/types";
 // Cmd+K / Ctrl+K global menu (PRD §7.6, frontend-patterns §7). Navigation comes from `nav.ts` and quick
 // actions are filtered by `can()`. Record search arrives with the search query in H1-B5; until then the
 // results area shows a pending note instead of results.
+// Items filter on their translated label (what the user reads, M2); the i18n key stays a keyword so the
+// English key still matches.
 export function CommandMenu({ user }: { user: SessionUser }) {
   const t = useTranslations("search");
   const tNav = useTranslations("nav.items");
@@ -61,55 +69,68 @@ export function CommandMenu({ user }: { user: SessionUser }) {
         <Kbd className="hidden md:inline-flex">{t("shortcut")}</Kbd>
       </Button>
 
-      <CommandDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={t("dialogTitle")}
-        description={t("dialogDescription")}
-      >
-        {/* The registry's CommandDialog does not wrap its children in <Command>; cmdk needs that root. */}
-        <Command>
-          <CommandInput placeholder={t("placeholder")} />
-          <CommandList>
-            <CommandEmpty>{t("empty")}</CommandEmpty>
-            <CommandGroup heading={t("navigation")}>
-              {navItems.map((item) => (
-                <CommandItem
-                  key={item.key}
-                  value={`nav ${item.key}`}
-                  onSelect={() => go(item.href)}
-                >
-                  <item.icon aria-hidden />
-                  <span>{tNav(item.key)}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            {quickActions.length > 0 ? (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading={t("quickActions")}>
-                  {quickActions.map((action) => (
+      {/* Composed from the registry Dialog parts (no CommandDialog): the title and description sit inside the
+          content, visually hidden, so the dialog's accessible name and description are its own. */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0"
+          showCloseButton={false}
+        >
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t("dialogTitle")}</DialogTitle>
+            <DialogDescription>{t("dialogDescription")}</DialogDescription>
+          </DialogHeader>
+          <Command label={t("dialogTitle")}>
+            <CommandInput placeholder={t("placeholder")} />
+            <CommandList label={t("listLabel")}>
+              <CommandEmpty>{t("empty")}</CommandEmpty>
+              <CommandGroup heading={t("navigation")}>
+                {navItems.map((item) => {
+                  const label = tNav(item.key);
+                  return (
                     <CommandItem
-                      key={action.key}
-                      value={`action ${action.key}`}
-                      onSelect={() => go(action.href)}
+                      key={item.key}
+                      value={label}
+                      keywords={[item.key]}
+                      onSelect={() => go(item.href)}
                     >
-                      <action.icon aria-hidden />
-                      <span>{t(`actions.${action.key}`)}</span>
+                      <item.icon aria-hidden />
+                      <span>{label}</span>
                     </CommandItem>
-                  ))}
-                </CommandGroup>
-              </>
-            ) : null}
+                  );
+                })}
+              </CommandGroup>
+              {quickActions.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading={t("quickActions")}>
+                    {quickActions.map((action) => {
+                      const label = t(`actions.${action.key}`);
+                      return (
+                        <CommandItem
+                          key={action.key}
+                          value={label}
+                          keywords={[action.key]}
+                          onSelect={() => go(action.href)}
+                        >
+                          <action.icon aria-hidden />
+                          <span>{label}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </>
+              ) : null}
+            </CommandList>
+            {/* Outside the listbox so it holds only options and groups (R9). */}
             <CommandSeparator />
-            <CommandGroup heading={t("results")}>
-              <p className="px-2 py-4 text-center text-sm text-muted-foreground">
-                {t("resultsPending")}
-              </p>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </CommandDialog>
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{t("results")}</p>
+              <p>{t("resultsPending")}</p>
+            </div>
+          </Command>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
