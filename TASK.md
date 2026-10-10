@@ -638,10 +638,10 @@ Files: `src/components/ui/money-input/**`, `src/components/ui/rate-input/**`,
 `src/components/ui/phone-input/**`, `src/components/ui/country-combobox/**`,
 `src/components/ui/uploader/**`, `src/i18n/messages/{es,en}/forms.json`, tests next to each component.
 
-- [ ] `MoneyInput`: currency select + amount text input holding a decimal string; locale-aware typing
+- [x] `MoneyInput`: currency select + amount text input holding a decimal string; locale-aware typing
       normalized to the canonical string; live USD equivalent through `lib/money` given a `usdRate` prop;
       works with react-hook-form `Controller`. Never stores a `number` (C15).
-- [ ] `RateInput`: `lookupRate(date, currency)` prop; prefill, "Usando tasa del dd/mm" on fallback,
+- [x] `RateInput`: `lookupRate(date, currency)` prop; prefill, "Usando tasa del dd/mm" on fallback,
       manual when `null`, USD locked at 1, > 10 % deviation warning.
       **DT-67:** `lookupRate` resolves to `RateLookupResult | null`, a type declared in `rate-input`
       (do not import it from `lib/rates`; 3.7 changes that file in parallel and the shapes must match
@@ -651,15 +651,17 @@ Files: `src/components/ui/money-input/**`, `src/components/ui/rate-input/**`,
       `enums.RateSource`) that preselects `source`; picking a source sets that rate. Typing a value by hand
       still works. Test: two options → selector shown with BCV preselected; switching source updates the
       value.
-- [ ] `AsyncCombobox` (single and multi): debounced `loadOptions(q)`, keyboard navigation, optional
+- [x] `AsyncCombobox` (single and multi): debounced `loadOptions(q)`, keyboard navigation, optional
       "Crear nuevo" (`onCreate(q)`), grouped options, optional per-item secondary input.
-- [ ] `DateField` (`YYYY-MM-DD`, display time zone prop, default Caracas), `PhoneInput` (E.164),
+- [x] `DateField` (`YYYY-MM-DD`, display time zone prop, default Caracas), `PhoneInput` (E.164),
       `CountryCombobox` (ISO alpha-2 with flags, localized names via `Intl`).
-- [ ] `Uploader`: drop zone + file list driven by an `UploadAdapter` prop; enforces the context's
+- [x] `Uploader`: drop zone + file list driven by an `UploadAdapter` prop; enforces the context's
       allowlist and size limit (25 MB general, 10 MB payment receipts); no network code of its own.
-- [ ] Strings from `forms` (C1). Tests: `MoneyInput` ("1.234,56" in ES → "1234.56"; USD at "755.16");
+- [x] Strings from `forms` (C1). Tests: `MoneyInput` ("1.234,56" in ES → "1234.56"; USD at "755.16");
       `RateInput` fallback and USD lock; uploader rejects a disallowed MIME and an oversize file per
       context.
+
+- Base for `AsyncCombobox` (DT-56): **Base UI** via the registry `combobox` (`@base-ui/react`, `filter={null}` for server-side search). `CountryCombobox` / `PhoneInput` prefix: registry `popover` + `command`. No registry item exists for phone input or a dropzone, so `PhoneInput` (libphonenumber-js) and `Uploader` are compositions of installed registry components.
 
 #### Package 3.5 — Page, overview, detail and form patterns
 

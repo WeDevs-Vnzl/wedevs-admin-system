@@ -1,1 +1,50 @@
-{}
+{
+  "moneyInput": {
+    "amountLabel": "Importe",
+    "currencyLabel": "Moneda",
+    "placeholder": "0,00",
+    "usdEquivalent": "≈ {amount}"
+  },
+  "rateInput": {
+    "label": "Tasa de cambio",
+    "sourceLabel": "Fuente de la tasa",
+    "usdLocked": "El dólar siempre vale 1",
+    "loading": "Buscando tasa…",
+    "usingRateFrom": "Usando tasa del {date}",
+    "manual": "No hay una tasa registrada. Ingrésala manualmente.",
+    "deviationWarning": "Esta tasa difiere más de {percent} % de la tasa de referencia ({rate}). Verifica el valor."
+  },
+  "asyncCombobox": {
+    "placeholder": "Buscar…",
+    "loading": "Buscando…",
+    "empty": "Sin resultados",
+    "create": "Crear «{query}»",
+    "clear": "Quitar la selección",
+    "remove": "Quitar {label}"
+  },
+  "countryCombobox": {
+    "placeholder": "Seleccionar país",
+    "search": "Buscar país…",
+    "empty": "Ningún país coincide",
+    "dialLabel": "País del prefijo telefónico"
+  },
+  "phoneInput": {
+    "numberLabel": "Número de teléfono",
+    "placeholder": "412 123 4567"
+  },
+  "dateField": {
+    "placeholder": "Seleccionar fecha"
+  },
+  "uploader": {
+    "dropTitle": "Arrastra archivos aquí",
+    "dropActive": "Suelta los archivos para subirlos",
+    "hint": "Hasta {max} MB por archivo. Formatos: {types}.",
+    "browse": "Elegir archivos",
+    "inputLabel": "Seleccionar archivos",
+    "listLabel": "Archivos",
+    "remove": "Quitar {name}",
+    "uploading": "Subiendo {name}",
+    "done": "Listo",
+    "failed": "No se pudo subir el archivo"
+  }
+}

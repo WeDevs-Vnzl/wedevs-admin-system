@@ -1,1 +1,50 @@
-{}
+{
+  "moneyInput": {
+    "amountLabel": "Amount",
+    "currencyLabel": "Currency",
+    "placeholder": "0.00",
+    "usdEquivalent": "≈ {amount}"
+  },
+  "rateInput": {
+    "label": "Exchange rate",
+    "sourceLabel": "Rate source",
+    "usdLocked": "The US dollar is always 1",
+    "loading": "Looking up rate…",
+    "usingRateFrom": "Using rate from {date}",
+    "manual": "No rate on record. Enter it manually.",
+    "deviationWarning": "This rate differs by more than {percent}% from the reference rate ({rate}). Check the value."
+  },
+  "asyncCombobox": {
+    "placeholder": "Search…",
+    "loading": "Searching…",
+    "empty": "No results",
+    "create": "Create \"{query}\"",
+    "clear": "Clear selection",
+    "remove": "Remove {label}"
+  },
+  "countryCombobox": {
+    "placeholder": "Select country",
+    "search": "Search country…",
+    "empty": "No country matches",
+    "dialLabel": "Phone prefix country"
+  },
+  "phoneInput": {
+    "numberLabel": "Phone number",
+    "placeholder": "412 123 4567"
+  },
+  "dateField": {
+    "placeholder": "Select date"
+  },
+  "uploader": {
+    "dropTitle": "Drag files here",
+    "dropActive": "Drop the files to upload them",
+    "hint": "Up to {max} MB per file. Formats: {types}.",
+    "browse": "Choose files",
+    "inputLabel": "Select files",
+    "listLabel": "Files",
+    "remove": "Remove {name}",
+    "uploading": "Uploading {name}",
+    "done": "Done",
+    "failed": "The file could not be uploaded"
+  }
+}
