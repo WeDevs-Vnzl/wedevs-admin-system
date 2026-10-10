@@ -27,5 +27,22 @@
     "ACCESS_KEY_INVALID": "La clave de acceso no es válida",
     "ACCESS_KEY_LOCKED": "Esta clave de acceso está bloqueada tras demasiados intentos fallidos",
     "INTERNAL": "Algo salió mal de nuestro lado. Inténtalo de nuevo"
+  },
+  "pdfViewer": {
+    "label": "Visor de PDF",
+    "toolbar": "Controles del visor",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "pageIndicator": "{page} / {total}",
+    "pageLabel": "Página {page} de {total}",
+    "zoomOut": "Reducir zoom",
+    "zoomIn": "Ampliar zoom",
+    "zoomReset": "Restablecer zoom al 100 %",
+    "zoomValue": "{percent} %",
+    "download": "Descargar",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
+    "loading": "Cargando documento…",
+    "error": "No se pudo mostrar el documento"
   }
 }

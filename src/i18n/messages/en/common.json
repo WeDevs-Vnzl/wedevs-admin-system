@@ -27,5 +27,22 @@
     "ACCESS_KEY_INVALID": "The access key is not valid",
     "ACCESS_KEY_LOCKED": "This access key is locked after too many failed attempts",
     "INTERNAL": "Something went wrong on our side. Please try again"
+  },
+  "pdfViewer": {
+    "label": "PDF viewer",
+    "toolbar": "Viewer controls",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pageIndicator": "{page} / {total}",
+    "pageLabel": "Page {page} of {total}",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "zoomReset": "Reset zoom to 100 %",
+    "zoomValue": "{percent} %",
+    "download": "Download",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "loading": "Loading document…",
+    "error": "The document could not be displayed"
   }
 }
