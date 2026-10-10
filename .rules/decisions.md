@@ -168,3 +168,24 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51.
 | D10 | §8.11 rate limiting (no store named) | Netlify rate limiting | DT-47 |
 | D11 | §8.11 "PDF incrustado" | pdf.js viewer with custom toolbar | DT-50 |
 | D12 | §7.1 "tres secciones" but four listed | cosmetic; the sidebar follows the four listed groups + Configuración | — |
+
+## 9. H1-B1 wave 1 findings (rules revision requested by the user)
+
+Context: `TASK.md` "Wave 1 problem report". Statuses as noted; OPEN items here do not block any batch
+unless their row says so.
+
+| Id | Status | Decision / finding |
+|---|---|---|
+| DT-53 | DECIDED (user) | **`@tanstack/react-table` stays at 9.2.8** (v9 API: `useTable`, `tableFeatures`, `createColumnHelper`, `FlexRender`). The shadcn registry data-table example uses v9; package 3.3's data-table follows that registry v9 example. Correction: an earlier Planner claim that the registry used v8 was wrong. |
+| DT-54 | DECIDED | **Forms use `field`, not `form`.** shadcn 4.21.4's registry provides `field`; forms compose `field` with react-hook-form `Controller` (C8 unchanged). |
+| DT-55 | DECIDED | **`cn` import source.** Registry-generated components import `cn` from the npm package `cn` (0.4.0); hand-written code imports `cn` from `@/lib/utils`. |
+| DT-56 | DECIDED | **Preset `radix-vega`; `combobox` brings `@base-ui/react`.** Spec 3.4 must state which base (Radix or Base UI) `AsyncCombobox` uses. |
+| DT-57 | DECIDED | **ESLint pinned at 9.39.5** for `eslint-config-next` compatibility. |
+| DT-58 | **OPEN** (owner to assign) | **C1 enforcement gap.** `i18next/no-literal-string` in jsx-text-only mode does not lint attributes (`aria-label`, `placeholder`, `title`, `alt`) and skips ALL_CAPS identifiers; flat `src/components/ui/*.tsx` registry files are excluded. The Code Reviewer checks these manually. Registry English sr-only/aria strings ("Close", "Loading", etc.) need an owning package to localize them **before Hito 1 closes**; owner assigned when planning wave 5 or H1-FX. |
+| DT-59 | **OPEN** | **Vitest coverage thresholds** are aggregate today; switch to `perFile` from H1-B3. |
+| DT-60 | DECIDED | **Tabular numerals are global** on `body` in `globals.css`; no per-component work needed. |
+| DT-61 | **OPEN** | **Next.js 16.4.0 on Netlify's runtime** is unconfirmed until the first deploy preview (Hito 2); `netlify.toml` `NODE_VERSION` is major-only `"24"`. Confirm at the first H2 deploy gate. |
+| DT-62 | DECIDED | **pdf.js worker** is loaded via `new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url)`, no copy in `public/` (DT-50). Spec 3.6 must verify it under Turbopack. |
+| DT-63 | DECIDED | **`chart.tsx` colors** come from theme tokens only, never from user data. |
+| DT-64 | **OPEN** (non-blocking) | **pnpm ignored build scripts** for `@parcel/watcher`, `@swc/core`, `esbuild`, `unrs-resolver`. No impact so far; revisit if a tool misbehaves. |
+| DT-65 | DECIDED (process) | **shadcn MCP in subagent sessions.** The MCP is available to Orca worker sessions but was not loaded in Agent-tool subagent sessions (Planner, Code Reviewer) because the root session started before `.mcp.json` existed; the user restarts the root session to fix it. Until then the Code Reviewer verifies registry usage via `pnpm exec shadcn` (DU-02 still applies). |
