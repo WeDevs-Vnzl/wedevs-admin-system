@@ -125,8 +125,6 @@ export function formatMoney(amount: MoneyString, currency: string, locale: strin
     minimumFractionDigits: MONEY_DECIMALS,
     maximumFractionDigits: MONEY_DECIMALS,
   });
-  const formatted = formatter.format(
-    rounded as unknown as Parameters<Intl.NumberFormat["format"]>[0],
-  );
+  const formatted = formatter.format(rounded as `${number}`);
   return isIso ? formatted : `${formatted} ${currency}`;
 }

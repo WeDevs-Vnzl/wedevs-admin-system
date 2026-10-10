@@ -3,7 +3,8 @@ import { getRequestConfig } from "next-intl/server";
 import { defaultLocale, isLocale, localeCookieName, timeZone, type Locale } from "./config";
 import { namespaces, type Namespace } from "./namespaces";
 
-// Default formats for every request (DT-31). Components format with the names below, e.g. t.number(value, "currency").
+// Default formats for every request (DT-31). Components format with the names below, e.g. t.number(value, "decimal").
+// Money is never formatted here: use formatMoney from @/lib/money, which takes the row's currency (C15).
 const formats = {
   dateTime: {
     short: { day: "2-digit", month: "2-digit", year: "numeric" },
@@ -11,7 +12,6 @@ const formats = {
     long: { day: "numeric", month: "long", year: "numeric" },
   },
   number: {
-    currency: { style: "currency", currency: "USD" },
     decimal: { minimumFractionDigits: 2, maximumFractionDigits: 2 },
   },
 } as const;

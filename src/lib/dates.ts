@@ -1,4 +1,4 @@
-import { addDays as addDaysFns, differenceInCalendarDays, format as formatFns } from "date-fns";
+import { format as formatFns } from "date-fns";
 import { enUS, es } from "date-fns/locale";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
@@ -38,14 +38,18 @@ export function todayInCaracas(now: Date): DateOnly {
   return toDateOnly(now, BUSINESS_TIME_ZONE);
 }
 
-/** Adds (or subtracts, when negative) calendar days to a date-only value. */
+const MS_PER_DAY = 86_400_000;
+
+/** Adds (or subtracts, when negative) calendar days to a date-only value. Pure UTC arithmetic. */
 export function addDays(value: DateOnly, days: number): DateOnly {
-  return addDaysFns(parseDateOnly(value), days).toISOString().slice(0, 10);
+  const date = parseDateOnly(value);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
-/** Whole calendar days from `from` to `to` (positive when `to` is later). */
+/** Whole calendar days from `from` to `to` (positive when `to` is later). Pure UTC arithmetic. */
 export function daysBetween(from: DateOnly, to: DateOnly): number {
-  return differenceInCalendarDays(parseDateOnly(to), parseDateOnly(from));
+  return (parseDateOnly(to).getTime() - parseDateOnly(from).getTime()) / MS_PER_DAY;
 }
 
 /** Monday to Friday. Holidays are not modelled. */

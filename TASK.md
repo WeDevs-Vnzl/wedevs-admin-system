@@ -406,18 +406,18 @@ Package 2.6 → Agent: wedevs-developer · sonnet — Reason: date arithmetic fe
 Files: `src/lib/dates.ts`, `src/lib/dates.test.ts`, `src/lib/money.ts`, `src/i18n/request.ts`,
 `scripts/check-i18n.ts`, `scripts/check-i18n.test.ts`, `vitest.config.ts`.
 
-- [ ] `addDays` (and `daysBetween`) on date-only values do pure UTC arithmetic (`setUTCDate`, exact
+- [x] `addDays` (and `daysBetween`) on date-only values do pure UTC arithmetic (`setUTCDate`, exact
       `/ 86_400_000`), independent of the process time zone.
-- [ ] Tests prove it under non-UTC zones across DST changes (`Europe/Madrid`, `America/New_York`, e.g.
+- [x] Tests prove it under non-UTC zones across DST changes (`Europe/Madrid`, `America/New_York`, e.g.
       `addDays("2026-03-07", 2)` → `"2026-03-09"`, `addDays("2026-03-10", 30)` → `"2026-04-09"`); run the
       node test project with a non-UTC `TZ` (e.g. `env.TZ` in `vitest.config.ts`) or set it per test.
-- [ ] `src/i18n/request.ts`: remove the fixed-USD `number.currency` format and point the comment at
+- [x] `src/i18n/request.ts`: remove the fixed-USD `number.currency` format and point the comment at
       `formatMoney` from `@/lib/money` (C15).
-- [ ] `src/lib/money.ts`: replace the `as unknown as …` double cast in `formatMoney` with a single
+- [x] `src/lib/money.ts`: replace the `as unknown as …` double cast in `formatMoney` with a single
       `` `${number}` `` cast (or no cast); coverage stays 100 %.
-- [ ] `scripts/check-i18n.ts`: fail when a key's `{placeholder}` name set differs between ES and EN;
+- [x] `scripts/check-i18n.ts`: fail when a key's `{placeholder}` name set differs between ES and EN;
       tests for pass and fail cases.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build` pass.
 
 #### Package 2.7 — Global Zod error map to i18n keys, upload extension fallback (wave 2 follow-up, Code Review B2, M2, m2, m6, m7)
 
