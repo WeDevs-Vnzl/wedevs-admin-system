@@ -222,19 +222,49 @@ pdf.js (worker) if the chosen setup requires a static copy.
 
 #### Wave 1 close
 
-- [ ] **Integration checklist:** package 1.1 merged into `batch/h1-b1-ui-foundations`; no Claude
+- [x] **Integration checklist:** package 1.1 merged into `batch/h1-b1-ui-foundations`; no Claude
       attribution in its commits; worktree removed; `pnpm install --frozen-lockfile && pnpm build`
       passes on the base branch.
-- [ ] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): dependency set matches
+- [x] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): dependency set matches
       `stack.md`; ESLint restrictions match C1/C7/C9/C11; no process file touched.
-- [ ] **Code review** (`wedevs-code-reviewer`, integrated branch): C3, C5, C6, C25; scope respected.
-- [ ] **User confirms the Tester may run.**
-- [ ] **Tester scope:** `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test`,
+- [x] **Code review** (`wedevs-code-reviewer`, integrated branch): C3, C5, C6, C25; scope respected.
+- [x] **User confirms the Tester may run.**
+- [x] **Tester scope:** `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test`,
       `pnpm build`. No E2E yet (no screens). No server, no container.
-- [ ] **`.mcp.json` pin (DT-49):** the Orchestrator presents the pinned `shadcn` version to the user so
+- [x] **`.mcp.json` pin (DT-49):** the Orchestrator presents the pinned `shadcn` version to the user so
       the user pins `.mcp.json` (user-owned file; no agent edits it).
-- [ ] **Problem report** (Developer, Code Reviewer, Tester — "none" must be stated explicitly).
-- [ ] **Summary** written by the Orchestrator.
+- [x] **Problem report** (Developer, Code Reviewer, Tester — "none" must be stated explicitly).
+- [x] **Summary** written by the Orchestrator.
+
+**Wave 1 problem report**
+
+- Developer (1.1): first pass ran Prettier over the whole repo and reformatted process files; restored
+  before committing, and process files plus `src/components/ui` added to `.prettierignore`. Rework
+  (`1ea2883`) narrowed the C1 exclusion to flat `src/components/ui/*.tsx` (subfolders now linted;
+  verified by probe). TanStack Table kept at 9.2.8 (user decision; the registry data-table example uses
+  the v9 API).
+- Planner: first coherence review wrongly stated the registry example used TanStack v8; corrected by the
+  worker, verified by the Orchestrator, re-decided by the user (keep v9).
+- Code Reviewer: READY FOR TESTING, no blocking findings. Non-blocking: English sr-only/aria strings in
+  registry files need an owner before Hito 1 closes; i18next jsx-text-only mode skips attributes and
+  ALL_CAPS identifiers; `chart.tsx` colors must come from tokens only; tabular numerals already global on
+  `body`; `/` → `/dashboard` 404 is expected until wave 5. The shadcn MCP was not loaded in the
+  Reviewer's session (it checked the registry via the shadcn CLI instead) — to fix before wave 2.
+- Tester: PASS. Non-blocking: pnpm ignored build scripts (`@parcel/watcher`, `@swc/core`, `esbuild`,
+  `unrs-resolver`); the jsdom Vitest project has no tests yet. Process slips: extra build runs, a scratch
+  file in `/tmp` (deleted), an existence-only `ls` of `.env.local` (contents not read).
+- Pending drift notes for `.rules/decisions.md` (needs a rules revision by the user): TanStack v9; `field`
+  + RHF `Controller` instead of `form`; npm `cn` in registry files vs `@/lib/utils` in hand-written code;
+  radix-vega + `@base-ui/react` (spec 3.4 must name the `AsyncCombobox` base); ESLint 9.39.5; C1 gap;
+  per-file Vitest thresholds from H1-B3; Next 16.4.0 on Netlify unconfirmed until the first preview;
+  spec 3.6 must verify the pdf.js worker under Turbopack.
+
+**Wave 1 summary**
+
+Scaffold delivered on `batch/h1-b1-ui-foundations` (`42bbf06`, `1ea2883`): Next.js 16.4.0, React 19.3,
+Tailwind 4.3, shadcn 4.21.4 (radix-vega) with 45 registry items, next-intl stub, Vitest/Playwright
+config, ESLint invariants C1/C7/C9/C11. Install, lint, typecheck, test and build pass. `.mcp.json` pin to
+`shadcn@4.21.4` presented to the user (user-owned file).
 
 🛑 **MANDATORY STOP** — wave 2 does not start without the user's explicit approval.
 
