@@ -1229,8 +1229,11 @@ Package 5.3 → Agent: wedevs-developer · haiku — Reason: shell and settings 
 Use the shadcn MCP.
 
 Runs alone, after 5.1 and 5.2 are merged (no other package in flight). For its duration it is the single
-owner of the files below and of the i18n namespace `shell`; it reads `nav`, `search`, `settings`,
-`auth`, `common`, `enums`, `mock` without changing them.
+owner of the files below and of the i18n namespace `shell`; it may **add** keys to `search` (R1), and it
+reads `nav`, `settings`, `auth`, `common`, `enums`, `mock` without changing them. Ownership confirmed by
+the Orchestrator after the code review: the Files list is extended with
+`src/app/(auth)/sign-in/[[...sign-in]]/page.tsx` (R4/R12a), the new `src/app/(app)/[...missing]/page.tsx`
+(R7) and `src/i18n/messages/{es,en}/search.json` (add-only, R1).
 
 Files: `src/config/nav.ts` (+ `nav.test.ts`);
 `src/components/app/{app-sidebar,command-menu,app-breadcrumbs,rate-chip,locale-switcher,theme-toggle,user-menu}.tsx`
@@ -1268,6 +1271,36 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
       `shell.sidebar.toggle`, ES "Mostrar u ocultar la barra lateral", EN "Toggle sidebar"); the rail
       spreads `...props` last, so no registry edit.
 - [ ] **m5** `PreferencesForm` back link → `/dashboard` (`/settings` redirects to the same page).
+- [ ] **R1 (review)** `command-menu.tsx`: `<Command label={t("dialogTitle")}>` and
+      `<CommandList label={…}>` with a new `search.listLabel` (ES "Resultados de búsqueda", EN "Search
+      results") — **extends** this package to `search.json` (es/en, add-only). Test: the combobox and
+      listbox have the translated names.
+- [ ] **R2 (review)** Planner m4 is a C1 blocker; same fix (translated `aria-label`/`title` on
+      `SidebarRail`).
+- [ ] **R3 (review)** Sidebar brand link gets `aria-label={tCommon("app.name")}` (named in icon mode).
+      Test: collapsed sidebar, the link is reachable by name.
+- [ ] **R4 + R12a (review)** Sign-in page (**extends** Files: `src/app/(auth)/sign-in/[[...sign-in]]/page.tsx`):
+      theme tokens (`bg-card`, `text-muted-foreground`, `bg-border`, …) instead of fixed `neutral-*`/
+      `bg-white`, AA in both themes; right column wrapped in `<main>`.
+- [ ] **R5 (review)** Compose the Cmd+K dialog from registry `Dialog`/`DialogContent`/`DialogHeader`
+      (sr-only)/`DialogTitle`/`DialogDescription` + `Command` with the title **inside** the content
+      (no registry edit). Test: closed menu renders no heading; open dialog's name and description
+      are its translated title/description and both nodes are inside the dialog.
+- [ ] **R6 (review)** `RateChip`: accessible name includes the visible text (drop the overriding
+      `aria-label`; the link purpose goes in the tooltip/`aria-describedby`); with m2's non-link variant
+      the chip stays keyboard-focusable so the date/fallback tooltip opens on focus. Test both variants.
+- [ ] **R7 (review)** In-shell not-found for unmatched URLs: new `src/app/(app)/[...missing]/page.tsx`
+      that only calls `notFound()` (**extends** Files). Test or E2E note for the Tester: `/clients`
+      renders the not-found inside the sidebar shell; `/`, `/sign-in`, `/settings/*` unaffected.
+- [ ] **R8 (review)** Settings footer link sets `aria-current="page"` when active.
+- [ ] **R9 (review)** The "results pending" note moves out of the listbox group (e.g. below the list or
+      as a disabled `CommandItem`) so `listbox` holds only options/groups.
+- [ ] **R10 (review)** `PreferencesForm`: language and theme as registry `FieldSet` + `FieldLegend`,
+      descriptions as `FieldDescription` linked to the control (`aria-describedby` for the time-zone
+      select). Existing tests stay green.
+- [ ] **R11 (review)** `shell.alerts.counter` as ICU plural in ES and EN
+      (`{count, plural, one {# alerta} other {# alertas}}`).
+- [ ] **R12b (review)** `UserMenu` reset confirm disabled while the transition is pending.
 - [ ] Gate: lint, typecheck, test, `i18n:check`, build.
 
 #### Wave 5 close
@@ -1333,6 +1366,69 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
       5.3 merges; the Orchestrator declares which.
 - [ ] **Code review:** C1, C2, C3, C5, C6, C7, C9, C10, C25; accessibility of sidebar, topbar and
       command menu.
+      Code Reviewer (2026-10-10, read-only on 688a325; tsc, lint, `i18n:check` re-run: PASS):
+      **BLOCKED until 5.3 merges** — two C1 blockers and two WCAG AA failures, all point fixes folded
+      into 5.3 as "(review)" items; no item 4–10 invariant broken.
+      PASS: C2 parity (32 namespaces); C5 no secrets or real data in the wave diff; C6 no attribution in
+      `git log main..HEAD` or files; C7/C9 no `@/mocks`, Prisma or data source under `src/app/**`,
+      `src/components/**`, `src/features/*/components/**`, `src/config/**`; C10 the shell mutates only
+      through `defineAction` actions (`setPreferenceAction`, `setMockRoleAction`, `resetMockDataAction`),
+      no new action; `can()` gates every nav item, quick action, settings section and `[section]` page
+      (server-side for settings); no `next/*` in services; rate chip formats the decimal string with
+      `roundMoney` + `Intl` (no `Number`/`parseFloat`); C25 each package stayed in its owners row
+      (`ui/sidebar.tsx` i18n edit accepted by the Planner, (c)). Agrees with Planner M1–M3, m1–m3, m5.
+      Findings:
+      - **R1 (BLOCKER, C1 → 5.3)** cmdk's own English/empty a11y strings reach the UI:
+        `command-menu.tsx:71` `<Command>` has no `label`, so the combobox input is labelled by an empty
+        cmdk `<label>`; `:73` `<CommandList>` keeps cmdk's default `aria-label="Suggestions"` in the ES UI
+        (verified in jsdom).
+      - **R2 (BLOCKER, C1 — upgrades Planner m4)** `SidebarRail` English `aria-label`/`title` "Toggle
+        Sidebar" (`app-sidebar.tsx:96`, `ui/sidebar.tsx:289,292`) is a hardcoded user-facing string; same
+        fix as m4, but it gates Testing.
+      - **R3 (BLOCKER, WCAG 4.1.2/2.4.4 → 5.3)** In icon mode the sidebar brand link has no accessible
+        name: `BrandMark` is `aria-hidden` and the name `<span>` is `display:none`
+        (`app-sidebar.tsx:59-64`).
+      - **R4 (BLOCKER, WCAG 1.4.3, PRD §14 "AA in both themes" → 5.3)** Sign-in uses fixed neutral
+        colours instead of theme tokens: `text-neutral-400` "o" on white ≈ 2.6:1
+        (`sign-in/[[...sign-in]]/page.tsx:72`); dark theme `text-neutral-500` subtitle and verification
+        note on `neutral-950` ≈ 4.2:1 (`:64`, `:95`).
+      - **R5 (major → 5.3)** Planner (c) check: the registry `CommandDialog` renders `DialogHeader` with
+        `DialogTitle`/`DialogDescription` **outside** `DialogContent` (`ui/command.tsx:50-54`). The
+        dialog's `aria-labelledby` points out of the dialog, and while closed every page carries a hidden
+        `<h2>` "Menú de comandos" + description in the topbar before the page `h1` (verified in jsdom).
+      - **R6 (major → 5.3)** `RateChip` link `aria-label` "Gestionar tasas de cambio" replaces the visible
+        "Tasa BCV 1 USD = Bs. …", so assistive tech never hears the rate (WCAG 2.5.3 label-in-name,
+        1.3.1) (`rate-chip.tsx:37`). With m2 the non-linked chip must stay focusable or the tooltip
+        (date / fallback) is unreachable by keyboard.
+      - **R7 (major → 5.3)** Unmatched URLs inside the shell render the root not-found **without** the
+        shell (App Router sends unmatched URLs to `src/app/not-found.tsx`; `(app)/not-found.tsx` only
+        catches `notFound()` calls). Every sidebar module and Cmd+K quick action not built yet
+        (`/clients`, `/invoices/new`, …) leaves the shell, against frontend-patterns §2 "Unknown routes
+        inside `(app)` render an in-shell not-found page".
+      - **R8 (minor → 5.3)** Settings footer link lacks `aria-current="page"` (module items have it)
+        (`app-sidebar.tsx:87`).
+      - **R9 (minor → 5.3)** `<p>` pending note directly inside the `listbox` group (non-option child)
+        (`command-menu.tsx:105-109`).
+      - **R10 (minor → 5.3)** `preferences-form.tsx:107-108,133-134,159-160`: hand-written `<p>`
+        descriptions not associated with their control; the registry `field` provides `FieldSet` /
+        `FieldLegend` (radio groups) and `FieldDescription` (C3).
+      - **R11 (minor → 5.3)** `shell.alerts.counter` has no ICU plural ("1 alertas" / "1 alerts").
+      - **R12 (minor → 5.3)** Sign-in page has no `<main>` landmark (`page.tsx:22`); the reset-mock
+        confirm is not disabled while pending (double submit, `user-menu.tsx:156`).
+      - **R13 (→ Planner, `.rules` update, no code now)** `src/config/nav.ts:18-23` and
+        `settings-nav.ts:16` bundle `src/server/auth/permissions.ts` into client components; it has no
+        `server-only` (conventions Part B "everything under `src/server/` imports `server-only`").
+        Record it as a framework-free exception next to `src/server/errors.ts`, or move the pure matrix
+        to `src/lib/`. It is cosmetic filtering only (C13); the matrix is already public in the PRD.
+      - **R14 (→ Planner / H1-FX)** Registry `SidebarInset` is a `<main>` that wraps the topbar `<header>`
+        and the `<footer>`: no banner/contentinfo landmarks and "main" starts at the topbar
+        (`(app)/layout.tsx:21-35`). Fixing it needs a registry edit beyond C3's theming/i18n allowance.
+      - **R15 (→ H1-FX)** No title template: every in-shell page is titled "WeDevs Core" (WCAG 2.4.2;
+        `src/app/layout.tsx:14-17`); module batches add per-page `generateMetadata`.
+      - **R16 (→ H1-B2)** Alerts counter badge `text-white` on dark-theme `bg-destructive` at 10 px is
+        likely below 4.5:1; check when the counter is non-zero.
+      - Notes (no action): `⌘K` hint shown on Windows/Linux too (`search.shortcut`); footer and sign-in
+        year from `new Date()` instead of the Caracas date (only wrong for a few hours on 31 Dec UTC).
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage`, `i18n:check`, build.
