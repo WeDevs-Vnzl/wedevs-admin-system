@@ -1119,6 +1119,13 @@ Files: `src/server/actions/define-action.ts` (+ test), new `src/server/errors.ts
       clamp stable callback; async-combobox debounce test with fake timers. Notes: MOCK role cookie
       without `secure`, reset open to every role (DT-40 intent), no VIEWER mock user, upload FORBIDDEN
       check inside the handler (acceptable).
+      Second pass after 4.6 (merge b08a2ff): READY FOR TESTING; B1, Planner M1, M2, m1–m3, m8 tests,
+      m-b, m-c (SHA pinning deferred to the batch close, DT-69), m-f, m-h and the unsafe-keys nit fixed;
+      m-a accepted as documented (pick/partial from the base object, tested). Integrated: 106 files /
+      1741 tests + 1 expected fail. New nits → H1-FX: cast in `features/catalogs/rate-lookup.ts`;
+      `withSortFields` comment wrongly lists `.extend()`. → Planner (next `.rules` update):
+      record the `src/server/errors.ts` framework-free exception to "everything under `src/server/`
+      imports `server-only`".
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage`, `i18n:check`, build; dry review of `ci.yml` against
       `package.json` scripts; kit coverage per area (data-table, uploader, phone-input, patterns ≥ 90 %
