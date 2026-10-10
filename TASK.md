@@ -326,19 +326,19 @@ Package 2.2 → Agent: wedevs-developer · sonnet — Reason: `lib/money` and `l
 Files: `src/lib/money.ts`, `src/lib/rates.ts`, `src/lib/dates.ts`, `src/lib/money.test.ts`,
 `src/lib/rates.test.ts`, `src/lib/dates.test.ts`.
 
-- [ ] `money.ts`: a configured `Decimal` (`decimal.js`, `ROUND_HALF_UP`); `toDecimal(string)`,
+- [x] `money.ts`: a configured `Decimal` (`decimal.js`, `ROUND_HALF_UP`); `toDecimal(string)`,
       `roundMoney` (2 dp), `sumMoney`, `percentOf(base, rate)` (for VAT), `toUsd(amount, usdRate)` =
       `round(amount / usdRate, 2)`, `fromUsd`, `isSettled(balance)` (≤ 0.01), `compareMoney`,
       `formatMoney(amount: string, currency, locale)` via `Intl.NumberFormat` (display only). No
       `parseFloat`/`Number`/`toFixed` for math (C15).
-- [ ] `rates.ts`: `selectRate(rates, date, currency)` implementing §9.2 prefill order (exact date →
+- [x] `rates.ts`: `selectRate(rates, date, currency)` implementing §9.2 prefill order (exact date →
       latest previous with `isFallback` + `effectiveDate` → `null` for manual), USD always `"1"`;
       `rateDeviationExceeds(newRate, lastRate, 10)` (§15).
-- [ ] `dates.ts`: `todayInCaracas(now)`, `toDateOnly`, `parseDateOnly`, `addDays`, `daysBetween`,
+- [x] `dates.ts`: `todayInCaracas(now)`, `toDateOnly`, `parseDateOnly`, `addDays`, `daysBetween`,
       `isBusinessDay`, `formatDate(date, locale, style, timeZone = 'America/Caracas')`,
       `formatDateTime` — `date-fns-tz`; business "today" always Caracas, display zone a parameter
       (DT-43).
-- [ ] Tests with ≥ 90 % coverage on `money.ts` and `rates.ts`, including HU-13 CA2 arithmetic
+- [x] Tests with ≥ 90 % coverage on `money.ts` and `rates.ts`, including HU-13 CA2 arithmetic
       (100 − 3 = 97), VES 755.16 conversions, half-up rounding edge cases, rate fallback, date
       boundaries around midnight UTC vs Caracas.
 
