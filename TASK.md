@@ -1578,8 +1578,37 @@ Constraints: no persistent server and no browser in this worker (safeguards rule
       - **D5 (minor)** sign-in decorative network lines run behind the subtitle text.
     - Manual pass 1440×900 and 820×1180, light/dark × ES/EN: text translated, dark menus legible,
       focus rings visible; findings above. No skip-to-content link (WCAG 2.4.1) — not asserted.
-- [ ] **Problem report** (explicit, per agent).
-- [ ] **Summary.**
+    - **Fix package 5.4** (user chose "Fix package 5.4 now", 2026-10-10): integrated, gate green (116
+      files, 1792 tests + 1 expected fail, i18n parity, build). Root causes: D2 nested `<li>` (breadcrumb
+      separator inside the item); D3 `(app)/loading.tsx` Suspense above the catch-all (skeleton now only
+      on dashboard and preferences; `/settings` became a real 307).
+    - **Re-run (Tester, haiku, phases B and C, 2026-10-10):** `next start` on :3105; 16/16 PASS in two
+      runs, no spec change, no `test.fail()`. D1 (no overflow at 768/820/1024, ES and EN), D2 (no
+      hydration error on `/dashboard`, `/settings/preferences`, `/sign-in`, all locale/theme combos), D3
+      (`/clients`, `/settings/preferences/x` → 404 in-shell), D4, D5 and the skip link verified. Server
+      stopped, port freed. Minor visual notes → H1-FX: breadcrumb truncation at 820 px dark/ES; subtle
+      topbar focus ring in dark mode.
+- [x] **Problem report** (explicit, per agent).
+      - Developers 5.1–5.2: Planner M1–M3, m1–m5 and review R1–R12 fixed in 5.3.
+      - Developer 5.3: deviations recorded in its gate line (`initialsOf` export, `text-foreground/70` on
+        sign-in).
+      - Developer 5.4: Tester D1–D5 and the skip link fixed; no deviation outside its Files list.
+      - Orchestrator: one test-only integration fix (justified eslint-disable in
+        `use-unsaved-changes.test.tsx`, d33f71f).
+      - Tester: defects D1–D5 (fixed by 5.4, verified by the re-run). Flaky, not gated: 4–6 jsdom 5 s
+        timeouts in country-combobox and phone-input under full parallel coverage runs → H1-FX. Shell
+        unit coverage 76 % stmts, 0 % on user-menu, alerts-bell, app-footer, not-found-content,
+        theme-provider, section-placeholder, settings-nav component, settings queries → H1-FX.
+        Environment: Playwright 1.64 expects chromium-1248; the cached chromium-1243 was symlinked in
+        `~/.cache/ms-playwright` (outside the repo) — the user should run `pnpm exec playwright install`
+        with network.
+      - Routed: N1 (`--muted-foreground` → `#686874`), N2 (favicon), N4, R14, R15 → H1-FX; R16 → H1-B2;
+        N3 → Hito 2 auth; R13 → Planner rules update.
+- [x] **Summary.** Wave 5 delivered the authenticated shell (sidebar, topbar with Cmd+K, rate chip,
+      alerts, locale and theme, user menu, footer, breadcrumbs, skip link), the sign-in mock, the in-shell
+      not-found with real 404s, and the settings frame with working preferences. It went through a
+      coherence fix package (5.3) and a Tester-defect package (5.4); the E2E re-run passed 16/16 twice.
+      Open for the user: DT-70, Technology `nameEn`, DT-71; P3, P6, P7, domain and secrets before Hito 2.
 
 🛑 **MANDATORY STOP** — H1-B1 closes only with the user's explicit approval; then the batch-close steps
 below.
