@@ -807,10 +807,33 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       C22 shape, C25 PASS. New M3 → 4.3: remove the legacy `shares` `*InputSchema`/`*Input` aliases
       that point at service schemas (risk of a portal action parsing client input with them).
 - [x] **User confirms the Tester may run.** Confirmed 2026-10-10 ("procede").
-- [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
+- [x] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
       a11y spot-check of kit components (labels, keyboard on combobox, date field, PDF toolbar). No E2E.
-- [ ] **Problem report** (explicit, per agent).
-- [ ] **Summary.**
+      Tester (haiku, 2026-10-10, no commits): install, coverage, i18n:check, build, lint, typecheck all
+      PASS. 59 files / 1321 tests, 0 failed. Gate: money.ts 100/100, rates.ts 97.44/96.43 (stmts/branches).
+      Not gated: validators 99.9, money-input 95.0, rate-input 92, async-combobox 91.2, country-combobox
+      100, date-field 92, phone-input 89.2, uploader 78.9, data-table 73.8, pdf-viewer 78.6, patterns 51.
+      A11y: no blocker or major, 8 minors. No pdf.js worker asset in the build (expected, H1-B4).
+- [x] **Problem report** (explicit, per agent).
+      - Developers 3.1–3.7: review findings fixed in 3.8 (B1–B3, M1); the rest routed to 4.3, H1-FX,
+        H1-B3 and H1-B4 as recorded under Planner coherence and Code review.
+      - Tester, nothing blocking. Routed to 4.3: coverage `include` lists the non-existent
+        `src/lib/finance/**` and gates only money/rates; tests for the 15 untested patterns
+        (archived-banner, confirm-dialog, date-text, detail-header, empty-state, entity-code-chip,
+        financial-summary-card, form-page, money-text, overview-layout, overview-table-toggle, page-header,
+        section-card, side-panel-card, stat-card), data-table faceted-filter (19.6 %) and export-button
+        (33.3 %), uploader and phone-input below 90 %; keyboard tests for country-combobox and date-field;
+        a11y minors: faceted-filter `CommandInput` without `aria-label`, async-combobox and date-field
+        without an i18n default name, hard-coded `id="table-show-archived"` (duplicate ids with two
+        tables), uploader hidden file input left in the accessibility tree. Routed to H1-B4: pdf-viewer
+        zoom-reset name vs visible value (WCAG 2.5.3), fullscreen `aria-pressed` with a changing label,
+        `pdf-viewer.tsx` dynamic wrapper untested. Note only: country-combobox `name` variant relies on
+        visible text.
+- [x] **Summary.** Wave 3 delivered the contract layer (25 validator modules with service type aliases,
+      schema factories for finance), the shared UI kit (data-table, forms kit with the DT-67 rate source
+      selector, patterns, pdf-viewer) and the rates/permissions/zod-config updates (DT-66, DT-67). It
+      went through a fix package (3.8) after review; the Tester found no failures.
+      Open for the user: DT-70 (IGTF single source) and Technology `nameEn` (Δ4 or drop, before H2-B1).
 
 🛑 **MANDATORY STOP** — wave 4 does not start without the user's explicit approval.
 
