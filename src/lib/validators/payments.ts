@@ -1,5 +1,11 @@
 import { z } from "./zod";
-import { dateOnlySchema, entityRefSchema, idSchema, listQuerySchema } from "./common";
+import {
+  dateOnlySchema,
+  entityRefSchema,
+  idSchema,
+  listQuerySchema,
+  withSortFields,
+} from "./common";
 import { paymentStatusSchema } from "./enums";
 import { fileDtoSchema } from "./files";
 import { currencyCodeSchema, moneyAmountSchema, rateSchema } from "./money";
@@ -268,17 +274,31 @@ export const paymentDetailDtoSchema = paymentListRowSchema.extend({
 });
 export type PaymentDetailDTO = z.infer<typeof paymentDetailDtoSchema>;
 
-export const paymentFiltersSchema = listQuerySchema.extend({
-  status: facetSchema(paymentStatusSchema),
-  clientId: idSchema.optional(),
-  accountId: idSchema.optional(),
-  methodId: idSchema.optional(),
-  currency: facetSchema(currencyCodeSchema),
-  dateFrom: dateOnlySchema.optional(),
-  dateTo: dateOnlySchema.optional(),
-  /** Only payments with a credit balance left to apply. */
-  hasUnallocated: z.union([z.boolean(), z.stringbool()]).optional(),
-});
+export const PAYMENT_SORT_FIELDS = [
+  "code",
+  "date",
+  "amount",
+  "amountUsd",
+  "allocated",
+  "unallocated",
+  "reference",
+  "status",
+] as const;
+
+export const paymentFiltersSchema = withSortFields(
+  listQuerySchema.extend({
+    status: facetSchema(paymentStatusSchema),
+    clientId: idSchema.optional(),
+    accountId: idSchema.optional(),
+    methodId: idSchema.optional(),
+    currency: facetSchema(currencyCodeSchema),
+    dateFrom: dateOnlySchema.optional(),
+    dateTo: dateOnlySchema.optional(),
+    /** Only payments with a credit balance left to apply. */
+    hasUnallocated: z.union([z.boolean(), z.stringbool()]).optional(),
+  }),
+  PAYMENT_SORT_FIELDS,
+);
 export type PaymentFilters = z.infer<typeof paymentFiltersSchema>;
 
 export const paymentsOverviewDtoSchema = z.object({

@@ -148,12 +148,19 @@ export type ShareIdInput = z.infer<typeof shareIdInputSchema>;
  *    metadata the adapter adds *after* parsing (`unlockedDocumentIds` from the signed cookie, `ipHash` from
  *    the request IP and the salt, `userAgent` from the headers).
  *
- * **Only the service schemas reach services**; the action schemas never do. The legacy `*InputSchema` /
- * `*Input` names are kept as aliases of the service schemas/types (they are what `PortalSharesService`
- * takes), so a service signature is never typed with a client-only shape.
+ * **Only the service schemas reach services**; the action schemas never do. There are deliberately no
+ * un-suffixed `*InputSchema` / `*Input` aliases for these operations: a name without `Action` or
+ * `Service` would not say which of the two shapes it is, and a portal action could parse client input
+ * with the service schema (which carries server-only fields).
  */
 
-/** Salted SHA-256 of the visitor IP, lowercase hex. The raw IP never crosses into a service (C20). */
+/**
+ * Salted SHA-256 of the visitor IP, lowercase hex. The raw IP never crosses into a service (C20).
+ *
+ * The salt (an environment secret) is **server-only**: only the public-action adapter reads it, to
+ * derive this hash after parsing the request. It is never sent to the client, never part of a DTO or a
+ * client-parsed schema, and never logged; this schema validates the resulting hash only.
+ */
 export const ipHashSchema = z.string().regex(/^[a-f0-9]{64}$/, VALIDATION_MESSAGES.invalidFormat);
 
 /** Ids the visitor already unlocked (read by the adapter from the signed cookie). */
@@ -191,8 +198,6 @@ export const unlockSharedDocumentServiceInputSchema = unlockSharedDocumentAction
 export type UnlockSharedDocumentServiceInput = z.infer<
   typeof unlockSharedDocumentServiceInputSchema
 >;
-export const unlockSharedDocumentInputSchema = unlockSharedDocumentServiceInputSchema;
-export type UnlockSharedDocumentInput = UnlockSharedDocumentServiceInput;
 
 /** `resolveShareToken` (public). An unknown, revoked or expired token is a generic 404. */
 export const resolveShareTokenActionSchema = z.object({ token: shareTokenSchema });
@@ -203,8 +208,6 @@ export const resolveShareTokenServiceInputSchema = resolveShareTokenActionSchema
   ...requestMetaShape,
 });
 export type ResolveShareTokenServiceInput = z.infer<typeof resolveShareTokenServiceInputSchema>;
-export const resolveShareTokenInputSchema = resolveShareTokenServiceInputSchema;
-export type ResolveShareTokenInput = ResolveShareTokenServiceInput;
 
 /** `recordShareAccess` (public): a `VIEW` or `DOWNLOAD`. */
 export const recordShareAccessActionSchema = z.object({
@@ -219,8 +222,6 @@ export const recordShareAccessServiceInputSchema = recordShareAccessActionSchema
   ...requestMetaShape,
 });
 export type RecordShareAccessServiceInput = z.infer<typeof recordShareAccessServiceInputSchema>;
-export const recordShareAccessInputSchema = recordShareAccessServiceInputSchema;
-export type RecordShareAccessInput = RecordShareAccessServiceInput;
 
 /** `getSharedDocument` (public): content of one document the visitor may open. */
 export const getSharedDocumentActionSchema = z.object({
@@ -234,16 +235,12 @@ export const getSharedDocumentServiceInputSchema = getSharedDocumentActionSchema
   ...requestMetaShape,
 });
 export type GetSharedDocumentServiceInput = z.infer<typeof getSharedDocumentServiceInputSchema>;
-export const getSharedDocumentInputSchema = getSharedDocumentServiceInputSchema;
-export type GetSharedDocumentInput = GetSharedDocumentServiceInput;
 
 /** `getSharedDocumentDownload` (public): a 5-minute download for one document. */
 export const getSharedDocumentDownloadActionSchema = getSharedDocumentActionSchema;
 export type GetSharedDocumentDownloadActionInput = GetSharedDocumentActionInput;
 export const getSharedDocumentDownloadServiceInputSchema = getSharedDocumentServiceInputSchema;
 export type GetSharedDocumentDownloadServiceInput = GetSharedDocumentServiceInput;
-export const getSharedDocumentDownloadInputSchema = getSharedDocumentDownloadServiceInputSchema;
-export type GetSharedDocumentDownloadInput = GetSharedDocumentDownloadServiceInput;
 
 // ───────────────────────────── Filters ─────────────────────────────
 
@@ -531,18 +528,21 @@ export type SharesService<Ctx = unknown> = {
  * the generic 404 (`NOT_FOUND`, no reason).
  */
 export type PortalSharesService<Ctx = unknown> = {
-  resolveShareToken: (ctx: Ctx, input: ResolveShareTokenInput) => Promise<PortalShareDTO>;
+  resolveShareToken: (ctx: Ctx, input: ResolveShareTokenServiceInput) => Promise<PortalShareDTO>;
   recordShareAccess: (
     ctx: Ctx,
-    input: RecordShareAccessInput,
+    input: RecordShareAccessServiceInput,
   ) => Promise<RecordShareAccessResultDTO>;
   unlockSharedDocument: (
     ctx: Ctx,
-    input: UnlockSharedDocumentInput,
+    input: UnlockSharedDocumentServiceInput,
   ) => Promise<UnlockSharedDocumentResultDTO>;
-  getSharedDocument: (ctx: Ctx, input: GetSharedDocumentInput) => Promise<PortalDocumentViewDTO>;
+  getSharedDocument: (
+    ctx: Ctx,
+    input: GetSharedDocumentServiceInput,
+  ) => Promise<PortalDocumentViewDTO>;
   getSharedDocumentDownload: (
     ctx: Ctx,
-    input: GetSharedDocumentDownloadInput,
+    input: GetSharedDocumentDownloadServiceInput,
   ) => Promise<PortalDownloadDTO>;
 };

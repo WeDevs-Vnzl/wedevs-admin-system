@@ -5,6 +5,7 @@ import {
   idSchema,
   listQuerySchema,
   VALIDATION_MESSAGES,
+  withSortFields,
 } from "./common";
 import { invoiceStatusSchema, installmentKindSchema } from "./enums";
 import { fileDtoSchema } from "./files";
@@ -98,15 +99,25 @@ export type InvoiceLineInput = z.infer<typeof invoiceLineInputSchema>;
 
 // ───────────────────────────── Invoice input ─────────────────────────────
 
-/** ±0.01 adjustment of one rate's IVA, relative to `round(taxBase × rate / 100, 2)`. */
-export const ivaAdjustmentSchema = z.object({
-  ivaRate: percentSchema,
-  adjustment: amountAny.refine(
-    (value) =>
-      !isDecimalString(value) || toDecimal(value).abs().lessThanOrEqualTo(IVA_ADJUSTMENT_LIMIT),
-    { message: INVOICE_MESSAGES.adjustmentOutOfRange },
-  ),
-});
+/**
+ * ±0.01 adjustment of one rate's IVA, relative to `round(taxBase × rate / 100, 2)`. A 0 % rate has no
+ * IVA to adjust (it behaves like an exempt line): an adjustment there would turn the tax line's
+ * `ivaAmount` negative or non-zero, so it is rejected.
+ */
+export const ivaAdjustmentSchema = z
+  .object({
+    ivaRate: percentSchema,
+    adjustment: amountAny.refine(
+      (value) =>
+        !isDecimalString(value) || toDecimal(value).abs().lessThanOrEqualTo(IVA_ADJUSTMENT_LIMIT),
+      { message: INVOICE_MESSAGES.adjustmentOutOfRange },
+    ),
+  })
+  .refine((input) => !isDecimalString(input.ivaRate) || !toDecimal(input.ivaRate).isZero(), {
+    // Same key as "no taxable line uses this rate": a 0 % rate is not adjustable.
+    message: INVOICE_MESSAGES.adjustmentRateNotInLines,
+    path: ["ivaRate"],
+  });
 export type IvaAdjustmentInput = z.infer<typeof ivaAdjustmentSchema>;
 
 const invoiceFields = {
@@ -434,16 +445,32 @@ export type OpenInvoiceRow = z.infer<typeof openInvoiceRowSchema>;
 
 // ───────────────────────────── List filters and overview ─────────────────────────────
 
-export const invoiceFiltersSchema = listQuerySchema.extend({
-  status: facetSchema(invoiceStatusSchema),
-  clientId: idSchema.optional(),
-  projectId: idSchema.optional(),
-  currency: facetSchema(currencyCodeSchema),
-  tagId: idSchema.optional(),
-  /** Issue date range. */
-  dateFrom: dateOnlySchema.optional(),
-  dateTo: dateOnlySchema.optional(),
-});
+export const INVOICE_SORT_FIELDS = [
+  "code",
+  "invoiceNumber",
+  "issueDate",
+  "dueDate",
+  "total",
+  "totalUsd",
+  "balance",
+  "balanceUsd",
+  "status",
+  "daysOverdue",
+] as const;
+
+export const invoiceFiltersSchema = withSortFields(
+  listQuerySchema.extend({
+    status: facetSchema(invoiceStatusSchema),
+    clientId: idSchema.optional(),
+    projectId: idSchema.optional(),
+    currency: facetSchema(currencyCodeSchema),
+    tagId: idSchema.optional(),
+    /** Issue date range. */
+    dateFrom: dateOnlySchema.optional(),
+    dateTo: dateOnlySchema.optional(),
+  }),
+  INVOICE_SORT_FIELDS,
+);
 export type InvoiceFilters = z.infer<typeof invoiceFiltersSchema>;
 
 export const invoicesOverviewDtoSchema = z.object({

@@ -1,5 +1,6 @@
 import type { PortalSharesService, SharesService } from "./shares";
 import { describe, expect, it } from "vitest";
+import * as sharesModule from "./shares";
 import { z } from "./zod";
 import {
   ACCESS_KEY_LOCKOUT_MINUTES,
@@ -9,7 +10,6 @@ import {
   createShareLinkInputSchema,
   generatedAccessKeySchema,
   getSharedDocumentActionSchema,
-  getSharedDocumentInputSchema,
   getSharedDocumentDownloadActionSchema,
   getSharedDocumentDownloadServiceInputSchema,
   getSharedDocumentServiceInputSchema,
@@ -19,11 +19,9 @@ import {
   portalDownloadSchema,
   portalShareSchema,
   recordShareAccessActionSchema,
-  recordShareAccessInputSchema,
   recordShareAccessResultSchema,
   recordShareAccessServiceInputSchema,
   resolveShareTokenActionSchema,
-  resolveShareTokenInputSchema,
   resolveShareTokenServiceInputSchema,
   setShareDocumentAccessKeyInputSchema,
   setShareDocumentAccessKeyResultSchema,
@@ -37,7 +35,6 @@ import {
   shareLinkMutationResultSchema,
   shareTokenSchema,
   unlockSharedDocumentActionSchema,
-  unlockSharedDocumentInputSchema,
   unlockSharedDocumentResultSchema,
   unlockSharedDocumentServiceInputSchema,
   updateShareLinkInputSchema,
@@ -296,7 +293,6 @@ describe("unlockSharedDocument (public)", () => {
     expect(
       unlockSharedDocumentServiceInputSchema.safeParse({ ...valid, ipHash: "203.0.113.7" }).success,
     ).toBe(false);
-    expect(unlockSharedDocumentInputSchema).toBe(unlockSharedDocumentServiceInputSchema);
   });
 
   it("result only says the document is unlocked", () => {
@@ -354,8 +350,6 @@ describe("other portal inputs", () => {
     ).toEqual(["doc_1"]);
     expect(resolveShareTokenActionSchema.safeParse({ token: "x" }).success).toBe(false);
     expect(resolveShareTokenServiceInputSchema.safeParse({ token: TOKEN }).success).toBe(false);
-    expect(resolveShareTokenInputSchema).toBe(resolveShareTokenServiceInputSchema);
-    expect(getSharedDocumentInputSchema).toBe(getSharedDocumentServiceInputSchema);
   });
 
   it("recordShareAccess accepts only VIEW and DOWNLOAD", () => {
@@ -386,7 +380,6 @@ describe("other portal inputs", () => {
       recordShareAccessServiceInputSchema.safeParse({ ...input, ipHash: "203.0.113.7" }).success,
     ).toBe(false);
     expect(propertyNames(recordShareAccessServiceInputSchema)).not.toContain("ip");
-    expect(recordShareAccessInputSchema).toBe(recordShareAccessServiceInputSchema);
   });
 
   it("only the service inputs carry server-only metadata", () => {
@@ -705,5 +698,33 @@ describe("PortalSharesService (PRD §12 public + DT-45 portal additions)", () =>
       "unlockSharedDocument",
     ] as const satisfies readonly (keyof PortalSharesService)[];
     expect(names).toHaveLength(3);
+  });
+});
+
+describe("portal input names (Reviewer M3)", () => {
+  it("has no un-suffixed aliases of the service schemas", () => {
+    const removed = [
+      "unlockSharedDocumentInputSchema",
+      "resolveShareTokenInputSchema",
+      "recordShareAccessInputSchema",
+      "getSharedDocumentInputSchema",
+      "getSharedDocumentDownloadInputSchema",
+    ];
+    for (const name of removed) expect(sharesModule, name).not.toHaveProperty(name);
+  });
+
+  it("keeps the Action and ServiceInput schemas for every portal operation", () => {
+    for (const operation of [
+      "unlockSharedDocument",
+      "resolveShareToken",
+      "recordShareAccess",
+      "getSharedDocument",
+      "getSharedDocumentDownload",
+    ]) {
+      expect(sharesModule, `${operation}ActionSchema`).toHaveProperty(`${operation}ActionSchema`);
+      expect(sharesModule, `${operation}ServiceInputSchema`).toHaveProperty(
+        `${operation}ServiceInputSchema`,
+      );
+    }
   });
 });

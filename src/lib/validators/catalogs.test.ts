@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import en from "@/i18n/messages/en/catalogs.json";
 import es from "@/i18n/messages/es/catalogs.json";
 import { z } from "./zod";
+import type { SelectedRate } from "../rates";
+import * as common from "./common";
 import { VALIDATION_MESSAGES } from "./common";
 import {
   CATALOG_MESSAGES,
+  EXCHANGE_RATE_SORT_FIELDS,
   MAX_RATE_CSV_ROWS,
   addUsdRateIssue,
   createCurrencyInputSchema,
@@ -20,6 +23,8 @@ import {
   quickRateLoadInputSchema,
   rateCsvRowSchema,
   rateLookupDtoSchema,
+  requiredText,
+  timestampSchema,
   updateExpenseCategoryInputSchema,
   upsertExchangeRateInputSchema,
 } from "./catalogs";
@@ -112,19 +117,54 @@ describe("exchange rates (DT-67)", () => {
     expect(exchangeRateDtoSchema.safeParse({ ...dto, source: undefined }).success).toBe(false);
   });
 
-  it("lookup DTO lists one option per source with a default", () => {
+  it("lookup DTO has the SelectedRate shape: one option per source, default first", () => {
     const lookup = {
-      currency: "VES",
-      requestedDate: "2026-10-09",
-      effectiveDate: "2026-10-08",
+      usdRate: "36.5",
+      source: "BCV",
       isFallback: true,
+      effectiveDate: "2026-10-08",
       options: [
-        { id: "r1", source: "BCV", usdRate: "36.5", createdAt: "2026-10-08T10:00:00Z" },
-        { id: "r2", source: "MANUAL", usdRate: "37", createdAt: "2026-10-08T11:00:00Z" },
+        { source: "BCV", usdRate: "36.5", createdAt: "2026-10-08T10:00:00Z" },
+        { source: "MANUAL", usdRate: "37", createdAt: "2026-10-08T11:00:00Z" },
       ],
-      defaultSource: "BCV",
     };
-    expect(rateLookupDtoSchema.safeParse(lookup).success).toBe(true);
+    const parsed = rateLookupDtoSchema.parse(lookup);
+    // Mutual assignability with `lib/rates` is also checked at compile time in `catalogs.ts`.
+    const asSelected: SelectedRate = parsed;
+    expect(asSelected.options).toHaveLength(2);
+  });
+
+  it("lookup DTO describes USD with no source and no options", () => {
+    expect(
+      rateLookupDtoSchema.safeParse({
+        usdRate: "1",
+        source: null,
+        isFallback: false,
+        effectiveDate: "2026-10-09",
+        options: [],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("lookup DTO has no nullable date and no extra required fields", () => {
+    const base = {
+      usdRate: "36.5",
+      source: "BCV",
+      isFallback: false,
+      effectiveDate: "2026-10-09",
+      options: [],
+    };
+    expect(rateLookupDtoSchema.safeParse({ ...base, effectiveDate: null }).success).toBe(false);
+    expect(rateLookupDtoSchema.safeParse({ ...base, usdRate: "0" }).success).toBe(false);
+    expect(rateLookupDtoSchema.safeParse({ ...base, source: "OTHER" }).success).toBe(false);
+    expect(
+      rateLookupDtoSchema.safeParse({
+        ...base,
+        options: [{ source: "BCV", usdRate: "36.5", createdAt: "yesterday" }],
+      }).success,
+    ).toBe(false);
+    // A missing rate is `null` for the whole result (the lookup returns `RateLookupDTO | null`).
+    expect(rateLookupDtoSchema.safeParse(null).success).toBe(false);
   });
 });
 
@@ -193,6 +233,37 @@ describe("rate filters", () => {
     expect(parsed.currency).toEqual(["VES"]);
     expect(parsed.source).toEqual(["BCV", "MANUAL"]);
     expect(parsed.page).toBe(1);
+  });
+
+  it("whitelists the sort fields", () => {
+    for (const field of EXCHANGE_RATE_SORT_FIELDS) {
+      expect(exchangeRateFiltersSchema.safeParse({ sort: `${field}:desc` }).success, field).toBe(
+        true,
+      );
+    }
+    const bad = exchangeRateFiltersSchema.safeParse({ sort: "createdById:asc" });
+    expect(bad.success).toBe(false);
+    expect(messages(bad)).toEqual([VALIDATION_MESSAGES.invalidSort]);
+  });
+});
+
+describe("shared helpers re-exported from common (M4)", () => {
+  it("are the very same helpers, with one behaviour each", () => {
+    expect(optionalText).toBe(common.optionalText);
+    expect(requiredText).toBe(common.requiredText);
+    expect(hexColorSchema).toBe(common.hexColorSchema);
+    expect(timestampSchema).toBe(common.timestampSchema);
+    expect(facetSchema).toBe(common.facetOf);
+  });
+
+  it("optionalText accepts null, hexColor needs 6 digits and timestamps are strict ISO", () => {
+    expect(z.object({ n: optionalText(5) }).parse({ n: null }).n).toBeUndefined();
+    expect(hexColorSchema.safeParse("#abc").success).toBe(false);
+    expect(timestampSchema.safeParse("not a timestamp").success).toBe(false);
+  });
+
+  it("facetSchema leaves an unset facet undefined", () => {
+    expect(z.object({ f: facetSchema(z.string()) }).parse({}).f).toBeUndefined();
   });
 });
 
