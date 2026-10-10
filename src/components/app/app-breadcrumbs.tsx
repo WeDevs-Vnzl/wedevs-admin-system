@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -35,7 +36,8 @@ export function AppBreadcrumbs() {
   const rest = item ? pathname.slice(item.href.length) : pathname;
   const segments = rest.split("/").filter(Boolean);
   // Under /settings the first segment is a section slug, labelled from `settings.nav` (m1).
-  const section = item?.key === SETTINGS_NAV_ITEM.key ? findSettingsSection(segments[0] ?? "") : undefined;
+  const section =
+    item?.key === SETTINGS_NAV_ITEM.key ? findSettingsSection(segments[0] ?? "") : undefined;
   let href = item?.href ?? "";
   for (const [index, segment] of segments.entries()) {
     href = `${href}/${segment}`;
@@ -52,18 +54,20 @@ export function AppBreadcrumbs() {
     <Breadcrumb aria-label={tShell("label")} className="min-w-0 truncate">
       <BreadcrumbList className="flex-nowrap">
         {crumbs.map((crumb, index) => (
-          <BreadcrumbItem key={`${crumb.href}-${index}`} className="min-w-0">
-            {index === last ? (
-              <BreadcrumbPage className="truncate">{crumb.label}</BreadcrumbPage>
-            ) : (
-              <>
+          <Fragment key={`${crumb.href}-${index}`}>
+            <BreadcrumbItem className="min-w-0">
+              {index === last ? (
+                <BreadcrumbPage className="truncate">{crumb.label}</BreadcrumbPage>
+              ) : (
                 <BreadcrumbLink asChild className="truncate">
                   <Link href={crumb.href}>{crumb.label}</Link>
                 </BreadcrumbLink>
-                <BreadcrumbSeparator />
-              </>
-            )}
-          </BreadcrumbItem>
+              )}
+            </BreadcrumbItem>
+            {/* A sibling of the item, not a child: an <li> inside an <li> is invalid HTML, the parser closes the
+                outer one and React reports a hydration mismatch (#418). */}
+            {index === last ? null : <BreadcrumbSeparator />}
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

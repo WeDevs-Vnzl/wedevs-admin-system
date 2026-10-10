@@ -19,6 +19,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -55,82 +56,81 @@ export function CommandMenu({ user }: { user: SessionUser }) {
     router.push(href);
   }
 
+  // Composed from the registry Dialog parts (no CommandDialog). The button is the DialogTrigger so Radix knows where
+  // to return focus when the menu closes (Escape, selection), also when Ctrl+K opened it (D4). The title and
+  // description sit inside the content, visually hidden, so the dialog's accessible name and description are its own.
   return (
-    <>
-      <Button
-        variant="outline"
-        aria-label={t("trigger")}
-        aria-keyshortcuts="Meta+K Control+K"
-        onClick={() => setOpen(true)}
-        className="h-9 justify-start gap-2 text-muted-foreground md:w-64"
-      >
-        <Search aria-hidden />
-        <span className="hidden flex-1 text-start md:inline">{t("trigger")}</span>
-        <Kbd className="hidden md:inline-flex">{t("shortcut")}</Kbd>
-      </Button>
-
-      {/* Composed from the registry Dialog parts (no CommandDialog): the title and description sit inside the
-          content, visually hidden, so the dialog's accessible name and description are its own. */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0"
-          showCloseButton={false}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          aria-label={t("trigger")}
+          aria-keyshortcuts="Meta+K Control+K"
+          className="w-9 gap-2 px-0 text-muted-foreground lg:w-44 lg:justify-start lg:px-2.5 xl:w-64"
         >
-          <DialogHeader className="sr-only">
-            <DialogTitle>{t("dialogTitle")}</DialogTitle>
-            <DialogDescription>{t("dialogDescription")}</DialogDescription>
-          </DialogHeader>
-          <Command label={t("dialogTitle")}>
-            <CommandInput placeholder={t("placeholder")} />
-            <CommandList label={t("listLabel")}>
-              <CommandEmpty>{t("empty")}</CommandEmpty>
-              <CommandGroup heading={t("navigation")}>
-                {navItems.map((item) => {
-                  const label = tNav(item.key);
-                  return (
-                    <CommandItem
-                      key={item.key}
-                      value={label}
-                      keywords={[item.key]}
-                      onSelect={() => go(item.href)}
-                    >
-                      <item.icon aria-hidden />
-                      <span>{label}</span>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-              {quickActions.length > 0 ? (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading={t("quickActions")}>
-                    {quickActions.map((action) => {
-                      const label = t(`actions.${action.key}`);
-                      return (
-                        <CommandItem
-                          key={action.key}
-                          value={label}
-                          keywords={[action.key]}
-                          onSelect={() => go(action.href)}
-                        >
-                          <action.icon aria-hidden />
-                          <span>{label}</span>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </>
-              ) : null}
-            </CommandList>
-            {/* Outside the listbox so it holds only options and groups (R9). */}
-            <CommandSeparator />
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">{t("results")}</p>
-              <p>{t("resultsPending")}</p>
-            </div>
-          </Command>
-        </DialogContent>
-      </Dialog>
-    </>
+          <Search aria-hidden />
+          <span className="hidden flex-1 text-start lg:inline">{t("trigger")}</span>
+          <Kbd className="hidden xl:inline-flex">{t("shortcut")}</Kbd>
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0"
+        showCloseButton={false}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>{t("dialogTitle")}</DialogTitle>
+          <DialogDescription>{t("dialogDescription")}</DialogDescription>
+        </DialogHeader>
+        <Command label={t("dialogTitle")}>
+          <CommandInput placeholder={t("placeholder")} />
+          <CommandList label={t("listLabel")}>
+            <CommandEmpty>{t("empty")}</CommandEmpty>
+            <CommandGroup heading={t("navigation")}>
+              {navItems.map((item) => {
+                const label = tNav(item.key);
+                return (
+                  <CommandItem
+                    key={item.key}
+                    value={label}
+                    keywords={[item.key]}
+                    onSelect={() => go(item.href)}
+                  >
+                    <item.icon aria-hidden />
+                    <span>{label}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            {quickActions.length > 0 ? (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading={t("quickActions")}>
+                  {quickActions.map((action) => {
+                    const label = t(`actions.${action.key}`);
+                    return (
+                      <CommandItem
+                        key={action.key}
+                        value={label}
+                        keywords={[action.key]}
+                        onSelect={() => go(action.href)}
+                      >
+                        <action.icon aria-hidden />
+                        <span>{label}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </>
+            ) : null}
+          </CommandList>
+          {/* Outside the listbox so it holds only options and groups (R9). */}
+          <CommandSeparator />
+          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">{t("results")}</p>
+            <p>{t("resultsPending")}</p>
+          </div>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
 }

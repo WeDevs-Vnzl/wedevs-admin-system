@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -78,6 +78,30 @@ describe("CommandMenu", () => {
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
+  it("returns focus to the trigger when Escape closes the menu (D4)", async () => {
+    const user = userEvent.setup();
+    renderMenu("OWNER");
+    const trigger = screen.getByRole("button", { name: enSearch.trigger });
+    trigger.focus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+  });
+
+  it("returns focus to the trigger also when Ctrl+K opened the menu (D4)", async () => {
+    const user = userEvent.setup();
+    renderMenu("OWNER");
+    openWithShortcut();
+    await screen.findByRole("dialog");
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: enSearch.trigger })).toHaveFocus();
+  });
+
   it("navigates to a module from nav.ts", async () => {
     renderMenu("OWNER");
     openWithShortcut();
@@ -129,7 +153,9 @@ describe("CommandMenu", () => {
     renderMenu("OWNER", "es");
     openWithShortcut();
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByRole("combobox", { name: esSearch.dialogTitle })).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("combobox", { name: esSearch.dialogTitle }),
+    ).toBeInTheDocument();
     expect(within(dialog).getByRole("listbox", { name: esSearch.listLabel })).toBeInTheDocument();
   });
 

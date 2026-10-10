@@ -20,30 +20,37 @@ export default async function SignInPage() {
 
   return (
     <div className="grid min-h-dvh bg-muted lg:grid-cols-2">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-neutral-950 p-12 text-white lg:flex">
+      <section className="relative hidden flex-col overflow-hidden bg-neutral-950 p-12 text-white lg:flex">
         <div className="flex items-center gap-3">
           <BrandMark inverse />
           <span className="text-base font-semibold tracking-tight">{tCommon("name")}</span>
         </div>
 
-        <svg
+        {/* Decorative network: it owns the free space between the brand and the headline, so its lines never run
+            behind any text (D5). The stroke is light on the dark panel in both themes. */}
+        <div
           aria-hidden
-          viewBox="0 0 400 400"
-          className="pointer-events-none absolute right-0 bottom-0 h-3/5 w-3/5 text-white/25"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
+          className="pointer-events-none flex min-h-0 flex-1 items-center justify-end py-8"
         >
-          <path d="M40 300 L120 220 L200 260 L280 160 L360 200 M120 220 L90 120 M200 260 L220 340 M280 160 L330 90 M360 200 L380 330 M90 120 L150 60 L220 110 L280 160" />
-          <circle cx="120" cy="220" r="5" fill="currentColor" />
-          <circle cx="200" cy="260" r="5" fill="currentColor" />
-          <circle cx="280" cy="160" r="5" fill="currentColor" />
-          <circle cx="90" cy="120" r="4" fill="currentColor" />
-          <circle cx="150" cy="60" r="4" fill="currentColor" />
-          <circle cx="330" cy="90" r="4" fill="currentColor" />
-        </svg>
+          <svg
+            aria-hidden
+            viewBox="0 0 400 400"
+            className="h-full max-h-80 w-auto max-w-full text-white/30"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+          >
+            <path d="M40 300 L120 220 L200 260 L280 160 L360 200 M120 220 L90 120 M200 260 L220 340 M280 160 L330 90 M360 200 L380 330 M90 120 L150 60 L220 110 L280 160" />
+            <circle cx="120" cy="220" r="5" fill="currentColor" />
+            <circle cx="200" cy="260" r="5" fill="currentColor" />
+            <circle cx="280" cy="160" r="5" fill="currentColor" />
+            <circle cx="90" cy="120" r="4" fill="currentColor" />
+            <circle cx="150" cy="60" r="4" fill="currentColor" />
+            <circle cx="330" cy="90" r="4" fill="currentColor" />
+          </svg>
+        </div>
 
-        <div className="relative max-w-md space-y-6">
+        <div className="max-w-md space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 px-3 py-1 text-xs text-white/70">
             {t("restricted")}
           </span>
@@ -51,7 +58,7 @@ export default async function SignInPage() {
           <p className="text-lg text-white/60">{t("tagline")}</p>
         </div>
 
-        <p className="relative text-xs text-white/50">
+        <p className="mt-12 text-xs text-white/50">
           {tFooter("copyright", { year: new Date().getFullYear() })}
         </p>
       </section>

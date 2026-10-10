@@ -1,8 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Skeleton shown while an (app) page streams; the shell stays rendered around it.
-export default async function AppLoading() {
+// Skeleton shown while a shell page streams; the shell stays rendered around it. Used by the `loading.tsx` of the
+// routes that fetch data, never by `app/(app)/loading.tsx`: a loading boundary above the catch-all
+// `[...missing]/page.tsx` commits the response (HTTP 200) before `notFound()` runs, so unknown URLs would never
+// answer 404 (D3).
+export async function PageSkeleton() {
   const t = await getTranslations("common.states");
 
   return (

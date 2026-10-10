@@ -46,8 +46,8 @@ export function RateChip({ rate, missing, canManage }: RateChipProps) {
           : "h-8 gap-1.5 rounded-full px-3 font-mono text-xs"
       }
     >
-      <Clock aria-hidden className="size-4 text-muted-foreground" />
-      <span className="text-muted-foreground">{label}</span>
+      <Clock aria-hidden className="size-4 text-muted-foreground max-lg:hidden" />
+      <span className="text-muted-foreground max-lg:sr-only">{label}</span>
       {amount ? <span>{t("value", { rate: amount })}</span> : <span>{t("missing")}</span>}
     </Badge>
   );
@@ -61,7 +61,10 @@ export function RateChip({ rate, missing, canManage }: RateChipProps) {
               {badge}
             </Link>
           ) : (
-            <span tabIndex={0} className="inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span
+              tabIndex={0}
+              className="inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               {badge}
             </span>
           )}
