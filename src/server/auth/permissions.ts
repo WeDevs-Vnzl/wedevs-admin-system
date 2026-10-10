@@ -10,12 +10,16 @@ import type { SessionUser } from "./types";
  */
 
 export const PERMISSION_ACTION_VALUES = ["create", "read", "update", "delete", "restore"] as const;
-/** C = create · R = read · U = update · D = soft delete (archive) · `restore` = take out of the trash. */
+/**
+ * Action vocabulary (DT-66). The PRD names no actions; these map its C/R/U/D letters:
+ * `create` = C · `read` = R · `update` = U · `delete` = D, always a soft delete / archive (C20) ·
+ * `restore` = take a record out of the trash (governed by the trash row, see `can`).
+ */
 export type PermissionAction = (typeof PERMISSION_ACTION_VALUES)[number];
 
 /**
- * One resource per area of the matrix (finer than the PRD rows so adapters can name what they touch).
- * Rows that group several resources in the PRD share the same grants below.
+ * One resource per area of the matrix (finer than the PRD rows so adapters can name what they touch,
+ * DT-66). Resources that share a PRD row share its grants below.
  */
 export const PERMISSION_RESOURCE_VALUES = [
   "client", // PRD row "Clientes y contactos"
@@ -85,7 +89,9 @@ export const PERMISSION_MATRIX: Readonly<Record<PermissionResource, Readonly<Rol
   share: OWNER_ADMIN_ONLY,
   note: row(CRUD, CRUD, NOTES_MEMBER, READ),
   report: OWNER_ADMIN_ONLY,
-  activity: OWNER_ADMIN_ONLY,
+  // Read-only for Owner and Admin (DT-66): the log is append-only (C20) and written only by services
+  // through `logActivity`, never through a `can()` grant.
+  activity: row(READ, READ, NONE, NONE),
   settings: OWNER_ADMIN_ONLY,
   user: row(CRUD, NONE, NONE, NONE),
   trash: row(TRASH, TRASH, NONE, NONE),
@@ -112,7 +118,8 @@ function isAllowed(
  *
  * - No user (unauthenticated), an unknown role, action or resource → `false`.
  * - `restore` on any resource is governed by the trash row (Owner and Admin only) and additionally needs
- *   `read` on that resource, so nobody restores what they cannot see.
+ *   `read` and `delete` on that resource: nobody restores what they cannot see, and only soft-deletable
+ *   records are restorable (so never `activity`, which is append-only, DT-66).
  * - Grants that are "own records only" (Member `D` on notes) need `opts.ownerId === user.id`; without an
  *   `ownerId` they are denied.
  */
@@ -126,7 +133,8 @@ export function can(
   if (action === "restore" && resource !== "trash") {
     return (
       isAllowed(user.role, user.id, "restore", "trash", opts) &&
-      isAllowed(user.role, user.id, "read", resource, opts)
+      isAllowed(user.role, user.id, "read", resource, opts) &&
+      isAllowed(user.role, user.id, "delete", resource, opts)
     );
   }
   return isAllowed(user.role, user.id, action, resource, opts);
