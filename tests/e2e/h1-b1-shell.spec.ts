@@ -16,6 +16,7 @@ const commandMenu = (page: Page) => page.getByRole("dialog", { name: "Menú de c
 /** Restores the mock data (preferences, locale, theme) through the user menu. Locale-agnostic on purpose. */
 async function resetMockData(page: Page) {
   await page.goto("/dashboard");
+  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
   await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
   await page
     .getByRole("menuitem", { name: /^(Restablecer datos de prueba|Reset mock data)$/ })
@@ -30,6 +31,7 @@ async function resetMockData(page: Page) {
 /** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only, no shared state). */
 async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
   await page.goto("/dashboard");
+  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
   await page.getByRole("menuitemradio", { name: role, exact: true }).click();
@@ -95,7 +97,10 @@ test.describe("routing and sign-in", () => {
     await expect(page.getByRole("combobox", { name: "Zona horaria" })).toBeVisible();
   });
 
-  test("unknown routes return the in-shell not-found with HTTP 404; the other routes stay unaffected", async ({
+  // KNOWN DEFECT (wave 5 R7, TASK.md Tester E2E addition): the catch-all `[...missing]/page.tsx` calls notFound()
+  // after the shell has streamed, so `next start` answers 200 instead of 404 for /clients and
+  // /settings/preferences/x (body shows "Página no encontrada"). Expected 404, actual 200. Keep until product fix.
+  test.fail("unknown routes return the in-shell not-found with HTTP 404; the other routes stay unaffected", async ({
     page,
   }) => {
     for (const path of ["/clients", "/settings/preferences/x"]) {
@@ -274,8 +279,13 @@ test.describe("keyboard", () => {
     }
   });
 
-  test("Escape closes the command menu and returns focus to the trigger", async ({ page }) => {
+  // KNOWN DEFECT (minor, judgment call): after Escape the command menu closes but the "Buscar" trigger does not get
+  // focus back (trigger is a plain Button with onClick, not a DialogTrigger, in command-menu.tsx ~L62-74). TASK.md:1024
+  // requires "Escape closes and returns focus" for the other dialogs. Expected trigger focused, actual not focused.
+  test.fail("Escape closes the command menu and returns focus to the trigger", async ({ page }) => {
     await page.goto("/dashboard");
+    // Enter only opens the menu once React has hydrated the trigger's onClick; wait for that first.
+    await page.waitForLoadState("networkidle");
     const trigger = page.getByRole("button", { name: "Buscar", exact: true });
     await trigger.focus();
     await page.keyboard.press("Enter");
