@@ -3,6 +3,7 @@ import { VALIDATION_MESSAGES, zodFieldErrors } from "./common";
 import {
   UPLOAD_RULES,
   checkUpload,
+  confirmUploadInputSchema,
   fileDtoSchema,
   getUploadRules,
   requestUploadInputSchema,
@@ -231,5 +232,15 @@ describe("fileDtoSchema", () => {
     };
     expect(fileDtoSchema.parse(dto)).toEqual(dto);
     expect(fileDtoSchema.safeParse({ ...dto, status: "DONE" }).success).toBe(false);
+  });
+});
+
+describe("confirmUploadInputSchema", () => {
+  it("takes a valid file id and nothing else", () => {
+    expect(confirmUploadInputSchema.parse({ fileId: "fil_0001", extra: 1 })).toEqual({
+      fileId: "fil_0001",
+    });
+    expect(confirmUploadInputSchema.safeParse({}).success).toBe(false);
+    expect(confirmUploadInputSchema.safeParse({ fileId: "../etc" }).success).toBe(false);
   });
 });

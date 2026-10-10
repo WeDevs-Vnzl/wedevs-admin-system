@@ -10,7 +10,8 @@ import {
 } from "@/lib/validators/common";
 import { z } from "@/lib/validators/zod";
 import { can, type PermissionAction, type PermissionResource } from "@/server/auth/permissions";
-import { ServiceError, getServiceContext, type ServiceContext } from "@/server/context";
+import { getServiceContext, type ServiceContext } from "@/server/context";
+import { ServiceError } from "@/server/errors";
 
 /**
  * The action adapter (C10, DT-37): every Server Action is built with `defineAction`, which enforces the
@@ -33,7 +34,10 @@ export interface ActionPermission {
  * create something it attaches to), or `"authenticated"` for actions every signed-in user may call
  * (preferences of one's own, reference data, the MOCK "View as role").
  */
-export type PermissionRule = ActionPermission | readonly ActionPermission[] | "authenticated";
+export type PermissionRule =
+  | ActionPermission
+  | readonly [ActionPermission, ...ActionPermission[]]
+  | "authenticated";
 
 /** What to refresh after a mutation: a path (`"/clients"`), a path with a type, or a cache tag. */
 export type RevalidateTarget =
@@ -56,9 +60,19 @@ export interface ActionConfig<TSchema extends z.ZodType, TResult> {
   handler: (ctx: ServiceContext, data: z.output<TSchema>) => Promise<TResult>;
 }
 
+/**
+ * The `can()` checks of a rule. Only `"authenticated"` has none; an empty any-of list (possible only by
+ * bypassing the tuple type) must never skip `can()`, so it is rejected when the action is defined (C10/C13).
+ */
 function asChecks(rule: PermissionRule): readonly ActionPermission[] {
   if (rule === "authenticated") return [];
-  return Array.isArray(rule) ? rule : [rule as ActionPermission];
+  if (Array.isArray(rule)) {
+    if (rule.length === 0) {
+      throw new Error("defineAction: an empty permission list would skip can(); use 'authenticated'.");
+    }
+    return rule;
+  }
+  return [rule as ActionPermission];
 }
 
 /** Next.js signals redirects, `notFound()` and dynamic rendering by throwing; those must reach the framework. */
@@ -110,7 +124,8 @@ function applyRevalidation(targets: readonly RevalidateTarget[]): void {
 export function defineAction<TSchema extends z.ZodType, TResult>(
   config: ActionConfig<TSchema, TResult>,
 ): (input: z.input<TSchema>) => Promise<ActionResult<TResult>> {
-  const checks = asChecks(config.permission);
+  const { permission } = config;
+  const checks = asChecks(permission);
 
   return async function action(rawInput) {
     try {
@@ -119,7 +134,7 @@ export function defineAction<TSchema extends z.ZodType, TResult>(
       const { user } = ctx;
 
       // 2. Permission, before the input is even looked at.
-      const allowed = checks.length === 0 || checks.some((c) => can(user, c.action, c.resource));
+      const allowed = permission === "authenticated" || checks.some((c) => can(user, c.action, c.resource));
       const ownOnly =
         !allowed &&
         config.ownerOf !== undefined &&

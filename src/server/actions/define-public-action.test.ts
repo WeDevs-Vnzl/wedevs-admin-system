@@ -17,7 +17,7 @@ import {
   unlockSharedDocumentActionSchema,
   type UnlockSharedDocumentActionInput,
 } from "@/lib/validators/shares";
-import { ServiceError } from "@/server/context";
+import { ServiceError } from "@/server/errors";
 import { definePublicAction } from "./define-public-action";
 
 const TOKEN = "A".repeat(43);

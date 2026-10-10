@@ -9,7 +9,7 @@ vi.mock("next/cache", () => cache);
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { z } from "@/lib/validators/zod";
 import type { UserRole } from "@/lib/validators/enums";
-import { ServiceError } from "@/server/context";
+import { ServiceError } from "@/server/errors";
 import { defineAction, toActionError } from "./define-action";
 
 const schema = z.object({ name: z.string().trim().min(1, "validation.required") });
@@ -147,6 +147,19 @@ describe("defineAction: permission rules", () => {
     expect(await action({ name: "x" })).toMatchObject({ ok: true });
     signIn("VIEWER");
     expect(await action({ name: "x" })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+  });
+
+  it("an empty any-of list never skips can(): defining it throws (C10/C13)", () => {
+    expect(() => makeAction({ permission: [] } as never)).toThrow(/empty permission list/);
+  });
+
+  it("only \"authenticated\" has no can() check: a one-entry list still denies a Viewer", async () => {
+    const { action, handler } = makeAction({
+      permission: [{ action: "create", resource: "invoice" }],
+    } as never);
+    signIn("VIEWER");
+    expect(await action({ name: "x" })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    expect(handler).not.toHaveBeenCalled();
   });
 
   describe("own-records-only grants (Member deleting a note)", () => {

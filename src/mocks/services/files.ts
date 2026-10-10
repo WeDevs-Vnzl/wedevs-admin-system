@@ -1,15 +1,15 @@
 // MOCK — file services of Hito 1 (PRD §12 `files`, C23). `fn(ctx, input)`, framework-free (C11). Nothing is
 // uploaded: `requestUpload` registers a `PENDING` file and returns no upload URL, `confirmUpload` flips it
 // to `READY`. Hito 2 adds presigned URLs, the magic-bytes check and the allowlist on the server.
-import type { FileDTO, RequestUploadInput, UploadTarget } from "@/lib/validators/files";
+import type {
+  ConfirmUploadInput,
+  FileDTO,
+  RequestUploadInput,
+  UploadTarget,
+} from "@/lib/validators/files";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
 import { nextMockId } from "../ids";
-
-/** The file the browser finished uploading. Parsed by the action; the contract has no schema for it yet. */
-export interface ConfirmUploadInput {
-  fileId: string;
-}
 
 const FALLBACK_MIME = "application/octet-stream";
 
