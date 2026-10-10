@@ -11,13 +11,18 @@ import esCommon from "@/i18n/messages/es/common.json";
 import esNav from "@/i18n/messages/es/nav.json";
 import esSettings from "@/i18n/messages/es/settings.json";
 import esShell from "@/i18n/messages/es/shell.json";
+import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
 import { AppBreadcrumbs } from "./app-breadcrumbs";
 
 const mocks = vi.hoisted(() => ({ pathname: "/dashboard" }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
 
-function renderAt(pathname: string, locale: "es" | "en" = "es") {
+function renderAt(
+  pathname: string,
+  locale: "es" | "en" = "es",
+  registration?: React.ReactNode,
+) {
   mocks.pathname = pathname;
   const messages =
     locale === "es"
@@ -25,7 +30,10 @@ function renderAt(pathname: string, locale: "es" | "en" = "es") {
       : { common: enCommon, nav: enNav, settings: enSettings, shell: enShell };
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <AppBreadcrumbs />
+      <BreadcrumbLabelProvider>
+        <AppBreadcrumbs />
+        {registration}
+      </BreadcrumbLabelProvider>
     </NextIntlClientProvider>,
   );
 }
@@ -46,9 +54,32 @@ describe("AppBreadcrumbs", () => {
     expect(within(trail).getByRole("link", { name: esCommon.app.name })).toBeInTheDocument();
   });
 
-  it("keeps unknown segments as they appear in the URL", () => {
+  it("labels an unregistered id segment with nav.segments.detail", () => {
     renderAt("/clients/cli_123", "en");
-    expect(screen.getByText("cli_123", { selector: "[aria-current='page']" })).toBeInTheDocument();
+    expect(screen.getByText("Detail", { selector: "[aria-current='page']" })).toBeInTheDocument();
+    expect(screen.queryByText("cli_123")).not.toBeInTheDocument();
+  });
+
+  it("shows the label a detail page registered for its id segment", () => {
+    renderAt(
+      "/clients/cli_123",
+      "es",
+      <BreadcrumbLabel segment="cli_123" label="CLI-0007 · Kairos Studio" />,
+    );
+    expect(
+      screen.getByText("CLI-0007 · Kairos Studio", { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(esNav.segments.detail)).not.toBeInTheDocument();
+  });
+
+  it("does not use a label registered for another segment", () => {
+    renderAt(
+      "/clients/cli_123",
+      "es",
+      <BreadcrumbLabel segment="cli_999" label="Otro" />,
+    );
+    expect(screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" })).toBeInTheDocument();
+    expect(screen.queryByText("Otro")).not.toBeInTheDocument();
   });
 
   // D2 (wave 5 Tester): the separator <li> sat inside the item <li>; the HTML parser closes the outer item, so the
