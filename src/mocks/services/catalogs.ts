@@ -4,9 +4,12 @@ import { selectRate, type SelectedRate } from "@/lib/rates";
 import type { Paginated } from "@/lib/validators/common";
 import type {
   CurrencyDTO,
+  CurrencyListInput,
+  ExpenseCategoryListInput,
   ExpenseCategoryTreeNode,
   GetRateForInput,
   PaymentMethodDTO,
+  PaymentMethodListInput,
 } from "@/lib/validators/catalogs";
 import type {
   DocumentCategoryDetailDTO,
@@ -15,8 +18,6 @@ import type {
   DocumentTypeListRowDTO,
 } from "@/lib/validators/document-types";
 import type { FiscalSettings } from "@/lib/validators/settings";
-import type { TagChipDTO, TagFilter, TagListRowDTO } from "@/lib/validators/tags";
-import type { TechnologyFilter, TechnologyListRowDTO } from "@/lib/validators/technologies";
 import type { MockServiceContext } from "../ctx";
 import type { DocumentTypeRow } from "../fixtures/catalogs";
 import type { MockStore } from "../store";
@@ -33,50 +34,35 @@ export async function getRateFor(
   return selectRate(ctx.db.exchangeRates, input.date, input.currency);
 }
 
-export async function listCurrencies(ctx: MockServiceContext): Promise<CurrencyDTO[]> {
-  return structuredClone(ctx.db.currencies);
+/** Active currencies; every currency with `includeInactive` (Settings). */
+export async function listCurrencies(
+  ctx: MockServiceContext,
+  input: CurrencyListInput,
+): Promise<CurrencyDTO[]> {
+  return structuredClone(
+    ctx.db.currencies.filter((currency) => input.includeInactive || currency.active),
+  );
 }
 
-export async function listPaymentMethods(ctx: MockServiceContext): Promise<PaymentMethodDTO[]> {
-  return structuredClone(ctx.db.paymentMethods);
+/** Active payment methods; every method with `includeInactive` (Settings). */
+export async function listPaymentMethods(
+  ctx: MockServiceContext,
+  input: PaymentMethodListInput,
+): Promise<PaymentMethodDTO[]> {
+  return structuredClone(
+    ctx.db.paymentMethods.filter((method) => input.includeInactive || method.active),
+  );
 }
 
 export async function getFiscalSettings(ctx: MockServiceContext): Promise<FiscalSettings> {
   return structuredClone(ctx.db.fiscal);
 }
 
-// ───────────────────────────── Technologies ─────────────────────────────
+// ───────────────────────────── Technologies and tags ─────────────────────────────
 
-function technologyUsage(db: MockStore, technologyId: string): number {
-  return db.projects.filter(
-    (project) => !project.archivedAt && project.stack.some((tech) => tech.id === technologyId),
-  ).length;
-}
-
-const technologySpec: ListSpec<TechnologyListRowDTO> = {
-  searchText: (row) => [row.name, row.nameEn, row.slug],
-  sorters: {
-    name: (row) => row.name,
-    category: (row) => row.category,
-    usageCount: (row) => row.usageCount,
-    active: (row) => row.active,
-  },
-  defaultSort: "name:asc",
-};
-
-export async function listTechnologies(
-  ctx: MockServiceContext,
-  input: TechnologyFilter,
-): Promise<Paginated<TechnologyListRowDTO>> {
-  const rows = ctx.db.technologies
-    .filter((tech) => !input.category || input.category.includes(tech.category))
-    .filter((tech) => input.active === undefined || tech.active === input.active)
-    .map((tech): TechnologyListRowDTO => ({
-      ...tech,
-      usageCount: technologyUsage(ctx.db, tech.id),
-    }));
-  return listRows(rows, input, technologySpec);
-}
+// Moved to their own services (H1-B2 catalog split); re-exported under the same names.
+export { getTechnology, listTechnologies } from "./technologies";
+export { getTag, listTags } from "./tags";
 
 // ───────────────────────────── Document categories and types ─────────────────────────────
 
@@ -91,7 +77,7 @@ function documentTypeBase(db: MockStore, row: DocumentTypeRow): DocumentTypeBase
     requiresSignature: row.requiresSignature,
     hasExpiration: row.hasExpiration,
     active: row.active,
-    documentCount: db.documents.filter((doc) => !doc.archivedAt && doc.type.id === row.id).length,
+    documentCount: db.documents.filter((doc) => !doc.archivedAt && doc.typeId === row.id).length,
   };
 }
 
@@ -152,65 +138,23 @@ export async function listDocumentCategories(
 
 // ───────────────────────────── Expense categories ─────────────────────────────
 
-/** Two-level tree: every root with its children, in catalog order (PRD §8.8). */
+/**
+ * Two-level tree: every root with its children, in catalog order (PRD §8.8). Inactive categories are left
+ * out unless `includeInactive`; an inactive root takes its children with it.
+ */
 export async function listExpenseCategories(
   ctx: MockServiceContext,
+  input: ExpenseCategoryListInput,
 ): Promise<ExpenseCategoryTreeNode[]> {
+  const visible = (category: { active: boolean }): boolean =>
+    input.includeInactive || category.active;
   return ctx.db.expenseCategories
-    .filter((category) => category.parentId === null)
+    .filter((category) => category.parentId === null && visible(category))
     .map((root) => ({
       ...root,
-      children: ctx.db.expenseCategories.filter((child) => child.parentId === root.id),
+      children: ctx.db.expenseCategories.filter(
+        (child) => child.parentId === root.id && visible(child),
+      ),
     }))
     .map((node) => structuredClone(node));
-}
-
-// ───────────────────────────── Tags ─────────────────────────────
-
-const TAGGED_ENTITY_COLLECTIONS = [
-  ["CLIENT", (db: MockStore) => db.clients],
-  ["CONTACT", (db: MockStore) => db.contacts],
-  ["PROJECT", (db: MockStore) => db.projects],
-  ["DOCUMENT", (db: MockStore) => db.documents],
-  ["NOTE", (db: MockStore) => db.notes],
-] as const;
-
-/** Non-archived records carrying the tag, optionally limited to some entity types. */
-function tagUsage(
-  db: MockStore,
-  tagId: string,
-  entityTypes: readonly string[] | undefined,
-): number {
-  let count = 0;
-  for (const [entityType, rows] of TAGGED_ENTITY_COLLECTIONS) {
-    if (entityTypes && !entityTypes.includes(entityType)) continue;
-    const records: readonly { tags: TagChipDTO[]; archivedAt?: string | null }[] = rows(db);
-    count += records.filter(
-      (record) => !record.archivedAt && record.tags.some((tag) => tag.id === tagId),
-    ).length;
-  }
-  return count;
-}
-
-const tagSpec: ListSpec<TagListRowDTO> = {
-  searchText: (row) => [row.name],
-  sorters: {
-    name: (row) => row.name,
-    usageCount: (row) => row.usageCount,
-    createdAt: (row) => row.createdAt,
-  },
-  defaultSort: "name:asc",
-};
-
-export async function listTags(
-  ctx: MockServiceContext,
-  input: TagFilter,
-): Promise<Paginated<TagListRowDTO>> {
-  const rows = ctx.db.tags
-    .map((tag): TagListRowDTO => ({
-      ...tag,
-      usageCount: tagUsage(ctx.db, tag.id, input.entityType),
-    }))
-    .filter((row) => !input.entityType || row.usageCount > 0);
-  return listRows(rows, input, tagSpec);
 }

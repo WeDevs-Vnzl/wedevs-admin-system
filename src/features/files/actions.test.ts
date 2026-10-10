@@ -5,6 +5,9 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
 import { getMockStore } from "@/mocks/store";
+
+/** Files uploaded at runtime: the store starts with the file fixtures of the dataset (m8). */
+const uploaded = () => getMockStore().files.filter((file) => /^fil_\d+$/.test(file.id));
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { confirmUploadAction, requestUploadAction } from "./actions";
 
@@ -36,7 +39,7 @@ describe("requestUploadAction", () => {
       ok: true,
       data: { fileId: "fil_0001", url: null },
     });
-    expect(getMockStore().files).toMatchObject([
+    expect(uploaded()).toMatchObject([
       { id: "fil_0001", status: "PENDING", uploadedById: "usr_o" },
     ]);
   });
@@ -49,7 +52,7 @@ describe("requestUploadAction", () => {
       ok: false,
       error: { code: "FORBIDDEN" },
     });
-    expect(getMockStore().files).toHaveLength(1);
+    expect(uploaded()).toHaveLength(1);
   });
 
   it("payment receipts need the payment grant on top: a Member is refused", async () => {
@@ -58,7 +61,7 @@ describe("requestUploadAction", () => {
       ok: false,
       error: { code: "FORBIDDEN" },
     });
-    expect(getMockStore().files).toHaveLength(0);
+    expect(uploaded()).toHaveLength(0);
     session.getMockSessionUser.mockResolvedValue(makeSessionUser("ADMIN"));
     expect(await requestUploadAction(receipt)).toMatchObject({ ok: true });
   });
@@ -75,7 +78,7 @@ describe("requestUploadAction", () => {
       ok: false,
       error: { code: "VALIDATION", fieldErrors: { size: ["validation.file.tooLarge"] } },
     });
-    expect(getMockStore().files).toHaveLength(0);
+    expect(uploaded()).toHaveLength(0);
   });
 
   it("requires a session", async () => {

@@ -6,6 +6,9 @@ import type { SelectedRate } from "../rates";
 import * as common from "./common";
 import { VALIDATION_MESSAGES } from "./common";
 import {
+  currencyListInputSchema,
+  expenseCategoryListInputSchema,
+  paymentMethodListInputSchema,
   CATALOG_MESSAGES,
   EXCHANGE_RATE_SORT_FIELDS,
   MAX_RATE_CSV_ROWS,
@@ -371,5 +374,26 @@ describe("shared helpers", () => {
   it("uses validation keys, not prose, for required text", () => {
     const result = createCurrencyInputSchema.safeParse({ code: "USD", name: "", symbol: "$" });
     expect(messages(result)).toContain(VALIDATION_MESSAGES.required);
+  });
+});
+
+describe("catalog list inputs (m-g)", () => {
+  it.each([
+    ["currencies", currencyListInputSchema],
+    ["payment methods", paymentMethodListInputSchema],
+    ["expense categories", expenseCategoryListInputSchema],
+  ])("%s: includeInactive defaults to false", (_name, schema) => {
+    expect(schema.parse({})).toEqual({ includeInactive: false });
+  });
+
+  it.each([
+    ["currencies", currencyListInputSchema],
+    ["payment methods", paymentMethodListInputSchema],
+    ["expense categories", expenseCategoryListInputSchema],
+  ])("%s: accepts a boolean or the URL strings", (_name, schema) => {
+    expect(schema.parse({ includeInactive: true })).toEqual({ includeInactive: true });
+    expect(schema.parse({ includeInactive: "true" })).toEqual({ includeInactive: true });
+    expect(schema.parse({ includeInactive: "false" })).toEqual({ includeInactive: false });
+    expect(schema.safeParse({ includeInactive: "maybe" }).success).toBe(false);
   });
 });

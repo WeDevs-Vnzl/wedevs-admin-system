@@ -311,3 +311,26 @@ export const updateExpenseCategoryInputSchema = z
     }
   });
 export type UpdateExpenseCategoryInput = z.infer<typeof updateExpenseCategoryInputSchema>;
+
+// ───────────────────────────── List inputs (m-g) ─────────────────────────────
+
+/**
+ * Input of the simple catalog lists (currencies, payment methods, expense categories). Pickers get the
+ * active rows only (the default); the Settings screens ask for every row with `includeInactive: true`.
+ * Technologies and document types keep their own filter schemas (`active` facet).
+ */
+const catalogListShape = {
+  includeInactive: z.union([z.boolean(), z.stringbool()]).default(false),
+};
+
+export const currencyListInputSchema = z.object(catalogListShape);
+export type CurrencyListInput = z.infer<typeof currencyListInputSchema>;
+export type CurrencyListInputRaw = z.input<typeof currencyListInputSchema>;
+
+export const paymentMethodListInputSchema = z.object(catalogListShape);
+export type PaymentMethodListInput = z.infer<typeof paymentMethodListInputSchema>;
+export type PaymentMethodListInputRaw = z.input<typeof paymentMethodListInputSchema>;
+
+export const expenseCategoryListInputSchema = z.object(catalogListShape);
+export type ExpenseCategoryListInput = z.infer<typeof expenseCategoryListInputSchema>;
+export type ExpenseCategoryListInputRaw = z.input<typeof expenseCategoryListInputSchema>;

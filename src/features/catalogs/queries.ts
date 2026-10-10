@@ -1,5 +1,14 @@
 import "server-only";
-import { getRateForInputSchema, type GetRateForInput } from "@/lib/validators/catalogs";
+import {
+  currencyListInputSchema,
+  expenseCategoryListInputSchema,
+  getRateForInputSchema,
+  paymentMethodListInputSchema,
+  type CurrencyListInputRaw,
+  type ExpenseCategoryListInputRaw,
+  type GetRateForInput,
+  type PaymentMethodListInputRaw,
+} from "@/lib/validators/catalogs";
 import {
   documentTypeFilterSchema,
   type DocumentTypeFilterInput,
@@ -16,12 +25,17 @@ export async function getRateFor(input: GetRateForInput) {
   return catalogs.getRateFor(await getServiceContext(), getRateForInputSchema.parse(input));
 }
 
-export async function listCurrencies() {
-  return catalogs.listCurrencies(await getServiceContext());
+// Pickers get the active rows only; the Settings screens pass `{ includeInactive: true }` (m-g).
+
+export async function listCurrencies(input: CurrencyListInputRaw = {}) {
+  return catalogs.listCurrencies(await getServiceContext(), currencyListInputSchema.parse(input));
 }
 
-export async function listPaymentMethods() {
-  return catalogs.listPaymentMethods(await getServiceContext());
+export async function listPaymentMethods(input: PaymentMethodListInputRaw = {}) {
+  return catalogs.listPaymentMethods(
+    await getServiceContext(),
+    paymentMethodListInputSchema.parse(input),
+  );
 }
 
 export async function listTechnologies(filter: TechnologyFilterInput = {}) {
@@ -39,8 +53,11 @@ export async function listDocumentTypes(filter: DocumentTypeFilterInput = {}) {
   );
 }
 
-export async function listExpenseCategories() {
-  return catalogs.listExpenseCategories(await getServiceContext());
+export async function listExpenseCategories(input: ExpenseCategoryListInputRaw = {}) {
+  return catalogs.listExpenseCategories(
+    await getServiceContext(),
+    expenseCategoryListInputSchema.parse(input),
+  );
 }
 
 export async function listTags(filter: TagFilterInput = {}) {

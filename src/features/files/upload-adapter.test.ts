@@ -31,7 +31,7 @@ describe("uploadAdapter (UploadAdapter over the file actions)", () => {
 
     const confirmed = await uploadAdapter.confirmUpload(requested.data.fileId);
     expect(confirmed).toMatchObject({ ok: true, data: { id: "fil_0001", status: "READY" } });
-    expect(getMockStore().files).toMatchObject([{ id: "fil_0001", status: "READY" }]);
+    expect(getMockStore().files.find((file) => file.id === "fil_0001")).toMatchObject({ status: "READY" });
   });
 
   it("put works without options", async () => {

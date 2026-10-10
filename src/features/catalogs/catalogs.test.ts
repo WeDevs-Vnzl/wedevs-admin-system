@@ -4,6 +4,7 @@ const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
+import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { lookupRateAction } from "./actions";
 import {
@@ -95,6 +96,7 @@ describe("catalog queries", () => {
   it("read through the session context", async () => {
     expect((await listCurrencies()).map((c) => c.code)).toContain("VES");
     expect(await listPaymentMethods()).toHaveLength(10);
+    expect(await listPaymentMethods({ includeInactive: true })).toHaveLength(10);
     expect((await getFiscalSettings()).ivaRates).toEqual(["16", "8", "0"]);
     expect(await getRateFor({ date: "2026-10-09", currency: "USD" })).toMatchObject({
       usdRate: "1",
@@ -113,6 +115,29 @@ describe("catalog queries", () => {
     ).toBe(true);
     expect((await listDocumentTypes({ requiresSignature: "true" as never })).total).toBe(5);
     expect((await listTags({ q: "cliente" })).items.map((t) => t.name)).toEqual(["Cliente clave"]);
+  });
+
+  it("hide inactive rows unless the Settings screens ask for them (m-g)", async () => {
+    const store = getMockStore();
+    store.currencies.find((c) => c.code === "COP")!.active = false;
+    store.paymentMethods[0]!.active = false;
+    store.expenseCategories.find((c) => c.name === "Otros")!.active = false;
+
+    expect((await listCurrencies()).map((c) => c.code)).not.toContain("COP");
+    expect((await listCurrencies({ includeInactive: true })).map((c) => c.code)).toContain("COP");
+    expect(await listPaymentMethods()).toHaveLength(9);
+    expect(await listPaymentMethods({ includeInactive: "true" as never })).toHaveLength(10);
+    expect((await listExpenseCategories()).map((n) => n.name)).not.toContain("Otros");
+    expect((await listExpenseCategories({ includeInactive: true })).map((n) => n.name)).toContain(
+      "Otros",
+    );
+  });
+
+  it("serve the moved tag and technology services with usage counts", async () => {
+    const tags = await listTags({ sort: "usageCount:desc" });
+    expect(tags.items[0]!.usageCount).toBeGreaterThan(0);
+    const techs = await listTechnologies({ sort: "usageCount:desc" });
+    expect(techs.items[0]!.usageCount).toBeGreaterThan(0);
   });
 
   it("reject an invalid filter", async () => {

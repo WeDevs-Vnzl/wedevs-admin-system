@@ -13,22 +13,12 @@ import type { FileDTO } from "@/lib/validators/files";
 import type { PreferenceKey, SetPreferenceInput } from "@/lib/validators/preferences";
 import type { CompanySettings, FiscalSettings } from "@/lib/validators/settings";
 import type { UserDetailDTO } from "@/lib/validators/users";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
-import type { ContactDetailDTO } from "@/lib/validators/contacts";
-import type { ProjectDetailDTO } from "@/lib/validators/projects";
 import type { BillingPlanDTO, InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentAllocationDTO, PaymentDetailDTO } from "@/lib/validators/payments";
 import type { AccountDTO, MovementDTO, TransferDTO } from "@/lib/validators/accounts";
 import type { ExpenseDetailDTO, RecurringExpenseDTO } from "@/lib/validators/expenses";
-import type {
-  DocumentDetailDTO,
-  DocumentLinkDTO,
-  DocumentVersionDetailDTO,
-} from "@/lib/validators/documents";
 import type { ShareAccessLogRowDTO, ShareLinkDetailDTO } from "@/lib/validators/shares";
-import type { NoteDetailDTO } from "@/lib/validators/notes";
-import type { ActivityEntryDTO } from "@/lib/validators/activity";
 import {
   createMockSequences,
   syncMockSequences,
@@ -42,9 +32,9 @@ import {
   type TagRow,
   type TechnologyRow,
 } from "./fixtures/catalogs";
-import { clientFixtures } from "./fixtures/clients";
-import { contactFixtures } from "./fixtures/contacts";
-import { projectFixtures } from "./fixtures/projects";
+import { createClientFixtures, type ClientRow } from "./fixtures/clients";
+import { createContactFixtures, type ContactRow } from "./fixtures/contacts";
+import { createProjectFixtures, type ProjectClientRow, type ProjectRow } from "./fixtures/projects";
 import {
   billingPlanFixtures,
   installmentFixtures,
@@ -59,10 +49,11 @@ import { paymentAllocationFixtures, paymentFixtures } from "./fixtures/payments"
 import { accountFixtures, movementFixtures, transferFixtures } from "./fixtures/accounts";
 import { expenseFixtures, recurringExpenseFixtures } from "./fixtures/expenses";
 import {
-  documentFixtures,
-  documentLinkFixtures,
-  documentVersionFixtures,
+  createDocumentFixtures,
   fileFixtures,
+  type DocumentLinkRow,
+  type DocumentRow,
+  type DocumentVersionRow,
 } from "./fixtures/documents";
 import {
   shareAccessLogFixtures,
@@ -70,14 +61,28 @@ import {
   shareLinkFixtures,
   type ShareDocumentKeyRow,
 } from "./fixtures/shares";
-import { noteFixtures } from "./fixtures/notes";
+import { createNoteFixtures, type NoteRow } from "./fixtures/notes";
 import {
-  activityFixtures,
   alertDismissalFixtures,
+  createActivityFixtures,
+  type ActivityRow,
   type AlertDismissalRow,
 } from "./fixtures/activity";
 
-export type { InvoiceTaxLineRow, ShareDocumentKeyRow, AlertDismissalRow };
+export type {
+  ActivityRow,
+  AlertDismissalRow,
+  ClientRow,
+  ContactRow,
+  DocumentLinkRow,
+  DocumentRow,
+  DocumentVersionRow,
+  InvoiceTaxLineRow,
+  NoteRow,
+  ProjectClientRow,
+  ProjectRow,
+  ShareDocumentKeyRow,
+};
 
 /** `UserPreference` row: `{ userId, key, value }` (PRD §8.15); one per user and key. */
 export interface PreferenceRow {
@@ -87,9 +92,11 @@ export interface PreferenceRow {
 }
 
 /**
- * One typed collection per model the UI needs. Catalog collections are filled by `fixtures/catalogs.ts`;
- * the module collections start empty and are owned by the module packages (typed with the DTOs of
- * `src/lib/validators`, which module packages may refine into stored rows).
+ * One typed collection per model the UI needs. Catalog collections are filled by `fixtures/catalogs.ts`.
+ * The commercial collections (`clients`, `contacts`, `projects`, `notes`, `documents`, `documentVersions`,
+ * `documentLinks`, `activity`) hold normalized rows with foreign keys (PD-3): derived from the contract
+ * types, never denormalized DTOs; services assemble the DTOs. The finance collections are still typed with
+ * the DTOs of `src/lib/validators`, which their module packages may refine into stored rows.
  */
 export interface MockStore {
   /** Last value handed out per entity-code prefix (`CLI`, `PRY`, `FAC`, `PAG`, `GAS`, `DOC`). */
@@ -115,9 +122,9 @@ export interface MockStore {
   tags: TagRow[];
 
   // Commercial core
-  clients: ClientDetailDTO[];
-  contacts: ContactDetailDTO[];
-  projects: ProjectDetailDTO[];
+  clients: ClientRow[];
+  contacts: ContactRow[];
+  projects: ProjectRow[];
 
   // Finance
   billingPlans: BillingPlanDTO[];
@@ -135,17 +142,17 @@ export interface MockStore {
   recurringExpenses: RecurringExpenseDTO[];
 
   // Documents and portal
-  documents: DocumentDetailDTO[];
-  documentVersions: DocumentVersionDetailDTO[];
-  documentLinks: DocumentLinkDTO[];
+  documents: DocumentRow[];
+  documentVersions: DocumentVersionRow[];
+  documentLinks: DocumentLinkRow[];
   shareLinks: ShareLinkDetailDTO[];
   /** Δ2: access-key hashes per shared document. Never copied into a read DTO (C22). */
   shareDocumentKeys: ShareDocumentKeyRow[];
   shareAccessLogs: ShareAccessLogRowDTO[];
 
   // Knowledge and cross-cutting
-  notes: NoteDetailDTO[];
-  activity: ActivityEntryDTO[];
+  notes: NoteRow[];
+  activity: ActivityRow[];
   alertDismissals: AlertDismissalRow[];
 }
 
@@ -203,11 +210,13 @@ function deriveSequences(store: MockStore): void {
 
 /**
  * Builds a fresh store from the fixtures (deep copies, so mutations never reach the fixtures) and runs the
- * derive hooks. `now` anchors the exchange-rate history; business "today" is the Caracas day (C11 allows
- * the clock here: this is store infrastructure, not a service).
+ * derive hooks. `now` anchors the exchange-rate history and every date that drives a status or an alert
+ * (project deadlines, document expiry, the activity window); business "today" is the Caracas day (C11
+ * allows the clock here: this is store infrastructure, not a service).
  */
 export function buildMockStore(now: Date = new Date()): MockStore {
   const catalogs = createCatalogFixtures(todayInCaracas(now));
+  const documents = createDocumentFixtures(now);
   const store: MockStore = structuredClone({
     sequences: createMockSequences(),
     idCounters: {},
@@ -227,9 +236,9 @@ export function buildMockStore(now: Date = new Date()): MockStore {
     technologies: catalogs.technologies,
     tags: catalogs.tags,
 
-    clients: clientFixtures,
-    contacts: contactFixtures,
-    projects: projectFixtures,
+    clients: createClientFixtures(now),
+    contacts: createContactFixtures(now),
+    projects: createProjectFixtures(now),
 
     billingPlans: billingPlanFixtures,
     installments: installmentFixtures,
@@ -244,15 +253,15 @@ export function buildMockStore(now: Date = new Date()): MockStore {
     expenses: expenseFixtures,
     recurringExpenses: recurringExpenseFixtures,
 
-    documents: documentFixtures,
-    documentVersions: documentVersionFixtures,
-    documentLinks: documentLinkFixtures,
+    documents: documents.documents,
+    documentVersions: documents.documentVersions,
+    documentLinks: documents.documentLinks,
     shareLinks: shareLinkFixtures,
     shareDocumentKeys: shareDocumentKeyFixtures,
     shareAccessLogs: shareAccessLogFixtures,
 
-    notes: noteFixtures,
-    activity: activityFixtures,
+    notes: createNoteFixtures(now),
+    activity: createActivityFixtures(now),
     alertDismissals: alertDismissalFixtures,
   } satisfies MockStore);
 

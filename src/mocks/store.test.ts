@@ -28,7 +28,7 @@ describe("getMockStore", () => {
     expect((globalThis as Record<string, unknown>)[GLOBAL_KEY]).toBeDefined();
   });
 
-  it("is built from the fixtures: catalogs filled, module collections empty and typed arrays", () => {
+  it("is built from the fixtures: catalogs and the commercial dataset filled, finance still empty", () => {
     const store = getMockStore();
     expect(store.currencies.map((c) => c.code)).toEqual(["USD", "VES", "EUR", "USDT", "COP"]);
     expect(store.fiscal.ivaRates).toEqual(["16", "8", "0"]);
@@ -37,6 +37,16 @@ describe("getMockStore", () => {
       "clients",
       "contacts",
       "projects",
+      "notes",
+      "documents",
+      "documentVersions",
+      "documentLinks",
+      "activity",
+      "files",
+    ] as const) {
+      expect(store[name].length).toBeGreaterThan(0);
+    }
+    for (const name of [
       "billingPlans",
       "installments",
       "recurringCharges",
@@ -49,24 +59,43 @@ describe("getMockStore", () => {
       "movements",
       "expenses",
       "recurringExpenses",
-      "documents",
-      "documentVersions",
-      "documentLinks",
       "shareLinks",
       "shareDocumentKeys",
       "shareAccessLogs",
-      "notes",
-      "activity",
       "alertDismissals",
       "preferences",
-      "files",
     ] as const) {
       expect(store[name]).toEqual([]);
     }
   });
 
-  it("starts every code sequence at zero", () => {
-    expect(getMockStore().sequences).toEqual({ CLI: 0, PRY: 0, FAC: 0, PAG: 0, GAS: 0, DOC: 0 });
+  it("holds normalized rows with foreign keys, not denormalized DTOs (PD-3)", () => {
+    const store = getMockStore();
+    expect(store.clients[0]).toHaveProperty("tagIds");
+    expect(store.clients[0]).not.toHaveProperty("tags");
+    expect(store.clients[0]).not.toHaveProperty("contacts");
+    expect(store.clients[0]).not.toHaveProperty("financials");
+    expect(store.contacts[0]).toHaveProperty("clientId");
+    expect(store.projects[0]).toHaveProperty("technologyIds");
+    expect(store.projects[0]).not.toHaveProperty("stack");
+    expect(store.projects[0]).not.toHaveProperty("hasBillingPlan");
+    expect(store.notes[0]).toHaveProperty("authorId");
+    expect(store.notes[0]).not.toHaveProperty("contentText");
+    expect(store.documents[0]).toHaveProperty("typeId");
+    expect(store.activity[0]).toHaveProperty("actorId");
+    expect(store.activity[0]).not.toHaveProperty("actor");
+  });
+
+  it("starts the code sequences at the highest code of the dataset", () => {
+    const store = getMockStore();
+    expect(store.sequences).toEqual({
+      CLI: store.clients.length,
+      PRY: store.projects.length,
+      FAC: 0,
+      PAG: 0,
+      GAS: 0,
+      DOC: store.documents.length,
+    });
   });
 });
 
@@ -113,8 +142,29 @@ describe("resetMockStore", () => {
 
     expect(store.tags.length).toBeGreaterThan(0);
     expect(store.fiscal.ivaRates).toEqual(["16", "8", "0"]);
-    expect(store.sequences.CLI).toBe(0);
-    expect(store.files).toEqual([]);
+    expect(store.sequences.CLI).toBe(store.clients.length);
+    expect(store.files).not.toContainEqual(expect.objectContaining({ id: "fil_x" }));
+  });
+
+  it("rebuilds the commercial collections, discarding mutations to them", () => {
+    const store = getMockStore();
+    const counts = {
+      clients: store.clients.length,
+      contacts: store.contacts.length,
+      projects: store.projects.length,
+      notes: store.notes.length,
+      documents: store.documents.length,
+      documentVersions: store.documentVersions.length,
+      documentLinks: store.documentLinks.length,
+      activity: store.activity.length,
+    };
+    for (const name of Object.keys(counts) as (keyof typeof counts)[]) store[name].length = 0;
+
+    resetMockStore(FIXED_NOW);
+
+    for (const name of Object.keys(counts) as (keyof typeof counts)[]) {
+      expect(store[name]).toHaveLength(counts[name]);
+    }
   });
 
   it("refills the same object, so a context created before the reset sees the fresh data", () => {
@@ -173,8 +223,8 @@ describe("derive hooks", () => {
 
 describe("sequence derivation", () => {
   it("is built in: codes already present raise the sequences when a store is built", () => {
-    // The module fixtures are empty stubs today; this pins the behaviour for when they are filled.
     const store = buildMockStore(FIXED_NOW);
-    expect(store.sequences.CLI).toBe(0);
+    expect(store.sequences.CLI).toBe(store.clients.length);
+    expect(store.clients.at(-1)?.code).toBe(`CLI-${String(store.sequences.CLI).padStart(4, "0")}`);
   });
 });
