@@ -1301,7 +1301,12 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
 - [x] **R11 (review)** `shell.alerts.counter` as ICU plural in ES and EN
       (`{count, plural, one {# alerta} other {# alertas}}`).
 - [x] **R12b (review)** `UserMenu` reset confirm disabled while the transition is pending.
-- [ ] Gate: lint, typecheck, test, `i18n:check`, build.
+- [x] Gate: lint, typecheck, test, `i18n:check`, build. Integrated by the Orchestrator: the new catch-all
+      made `/clients` a page route, so `use-unsaved-changes.test.tsx` got a justified eslint-disable for its
+      deliberate native anchor (d33f71f). Then 115 files, 1785 tests + 1 expected fail, i18n parity, build OK.
+      Worker deviations: `initialsOf` exported from `app-sidebar.tsx`; sign-in secondary text uses
+      `text-foreground/70` because `--muted-foreground` is ~3.2:1 on the light card (token → H1-FX); R7 has no
+      unit test (Tester checks `/clients` in-shell not-found).
 
 #### Wave 5 close
 
