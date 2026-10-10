@@ -2126,6 +2126,10 @@ block `richText`). No other file.
       `src/mocks/entity-refs.ts` (text nodes, blocks joined by one space) and `noteDisplayTitle` uses the
       same six first words as `resolveEntityRef`, so a note's card title and its `EntityRef` label agree.
       The mock copy stays mock-only (deleted with `src/mocks/` in Hito 2).
+      **r1 (Code Reviewer, W1):** the image rule is a strict object (`fileId`, `alt?`, `src?`); Tiptap's
+      `getJSON()` emits `null` for unset attributes. The custom Image extension declares only
+      `fileId`/`alt`/`src` and strips null attributes before saving; add a round-trip test editor JSON →
+      `richTextDocSchema`. Changing the validator is out of scope (stop and report if unavoidable).
 - [ ] `RichTextEditor`: Tiptap with exactly the extensions that produce `RICH_TEXT_NODE_TYPES` and
       `RICH_TEXT_MARK_TYPES` (StarterKit configured, task list, table, link limited to `http`, `https`,
       `mailto`, image limited to `fileId`/`alt`, placeholder); `immediatelyRender: false` (no hydration
