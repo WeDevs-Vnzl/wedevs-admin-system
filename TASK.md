@@ -14,7 +14,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | Planned in detail; awaiting user approval of the plan |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 running |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
@@ -1671,7 +1671,7 @@ below.
 - **DT-71 (binding):** `permission: "authenticated"` only for: the caller's own preferences; reads of
   reference catalogs (technologies, tags, document types and categories, currencies…); MOCK-only
   actions; and — Planner interpretation, the Code Reviewer confirms — the caller's own alert dismissals
-  and snoozes (per-user state, like preferences; PRD §7.9). Every other action and every read action
+  and snoozes (per-user state, like preferences; PRD §7.9) — **confirmed by the user, DT-79**. Every other action and every read action
   over business records (client, contact, project, document, note search; activity) declares a `can()`
   grant.
 - **User stories (UI part, over mocks):** HU-03 CA1–CA4 (CA4: the activity entry; the search index is
@@ -1690,7 +1690,7 @@ below.
   → 1.3. R15 per-page titles → every page created in this batch (`generateMetadata`; the root title
   template stays in H1-FX). **Kept out (H1-FX):** N1, N2, N4, R14, the R15 title template, coverage
   gaps, the flaky jsdom timeouts.
-- **Planner decisions taken in this plan** (to record in `decisions.md` at the next rules revision; none
+- **Planner decisions taken in this plan** (approved by the user 2026-10-10, recorded as DT-78; none
   changes the MVP scope):
   - **PD-1 Three waves, not two.** W1 = dataset and seams; W2 = services, adapters and cross-entity
     components; W3 = screens. Reason: the slices consume the cross-entity tabs and each other's queries

@@ -213,3 +213,12 @@ unless their row says so.
 | DT-75 | DECIDED (user) | **P7: no existing data to migrate.** No importers beyond the CSV rate import already planned; H2-B7 drops the migration step. |
 | DT-76 | DECIDED (user) | **Domain:** keep the Netlify URL as `APP_URL` for now (DT-52 unchanged). |
 | DT-77 | DECIDED (user) | **Secrets for Hito 2** (Clerk, Neon incl. `E2E_DATABASE_URL`, bucket, `SHARE_UNLOCK_SECRET`, Sentry) are configured by the user; the Orchestrator gives the exact list when H2-B1 starts. Agents never see or touch them. |
+
+## 12. H1-B2 plan decisions (user, 2026-10-10)
+
+The user approved the H1-B2 plan, including the Planner decisions PD-1…PD-6 (TASK.md, H1-B2 header).
+
+| Id | Status | Decision |
+|---|---|---|
+| DT-78 | DECIDED (user) | **H1-B2 plan decisions PD-1…PD-6 approved:** three waves (dataset and seams / services and cross-entity components / screens); one mock `exportCsv` service plus one export action per module, no central registry; normalized store rows with ids, DTOs assembled by services; client and project USD metrics computed on read; the bell panel lists alerts from H1-B2 (dashboard panels and "Marcar leídas" stay in H1-B5); `ActionError` gains an optional `entity: EntityRef` so a `CONFLICT` links the existing record. |
+| DT-79 | DECIDED (user) | **DT-71 extended:** the caller's own alert dismissals and snoozes (per-user state, like preferences; PRD §7.9) may use `permission: "authenticated"`. Reads over business records still declare `can()` grants. The Code Reviewer checks this (C9). |
