@@ -1,1 +1,57 @@
-{}
+{
+  "statusBadge": {
+    "partial": "Partial payment"
+  },
+  "detailHeader": {
+    "back": "Back",
+    "toggleLabel": "View",
+    "detail": "Detail",
+    "graph": "Graph",
+    "more": "More actions"
+  },
+  "overviewToggle": {
+    "label": "View",
+    "overview": "Overview",
+    "table": "Table"
+  },
+  "confirm": {
+    "dismiss": "Cancel",
+    "reason": "Reason",
+    "reasonRequired": "Enter a reason to continue",
+    "variants": {
+      "archive": {
+        "title": "Archive record?",
+        "description": "The record will stop appearing in lists. You can restore it later.",
+        "action": "Archive"
+      },
+      "void": {
+        "title": "Void record?",
+        "description": "The record will be voided. This action cannot be undone from this screen.",
+        "action": "Void"
+      },
+      "cancel": {
+        "title": "Cancel record?",
+        "description": "The record will be cancelled and will no longer be active.",
+        "action": "Cancel record"
+      }
+    }
+  },
+  "archived": {
+    "title": "Archived record",
+    "description": "It is hidden from lists and searches.",
+    "restore": "Restore"
+  },
+  "unsavedChanges": {
+    "message": "You have unsaved changes. Are you sure you want to leave?"
+  },
+  "relatedTable": {
+    "new": "New",
+    "empty": "No records yet"
+  },
+  "kpi": {
+    "open": "View details"
+  },
+  "financialSummary": {
+    "title": "Financial summary"
+  }
+}
