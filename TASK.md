@@ -295,28 +295,28 @@ Files: `src/lib/validators/common.ts`, `src/lib/validators/enums.ts`, `src/lib/v
 `src/lib/validators/files.ts`, `src/server/auth/types.ts`, `src/server/auth/permissions.ts`,
 `src/server/auth/session.ts`, `src/mocks/session.ts`, tests next to each file.
 
-- [ ] `common.ts`: `ActionResult<T>` and `actionError` helpers; error codes `UNAUTHENTICATED`,
+- [x] `common.ts`: `ActionResult<T>` and `actionError` helpers; error codes `UNAUTHENTICATED`,
       `FORBIDDEN`, `VALIDATION`, `NOT_FOUND`, `CONFLICT`, `INTEGRITY_LOCK`, `ACCESS_KEY_INVALID`,
       `ACCESS_KEY_LOCKED`, `INTERNAL`; `warnings[]`; `idSchema`; `EntityRef { id, code?, label, type }`;
       `dateOnlySchema` (`YYYY-MM-DD`); `listQuerySchema` (page ≥ 1, pageSize 25|50|100, sort
       `field:asc|desc`, `q`, typed filter map, `includeArchived`); `Paginated<T>`.
-- [ ] `enums.ts`: every enum of PRD §10.2 value by value, **with the approved delta** `ShareEvent` +
+- [x] `enums.ts`: every enum of PRD §10.2 value by value, **with the approved delta** `ShareEvent` +
       `UNLOCK`, `UNLOCK_FAILED` (`data-rules.md` §3a Δ2), as `const` tuples + `z.enum` + TS types (C8).
-- [ ] `money.ts`: `moneyAmountSchema` (decimal string, max 2 decimals, `Decimal(18,2)` range, sign
+- [x] `money.ts`: `moneyAmountSchema` (decimal string, max 2 decimals, `Decimal(18,2)` range, sign
       rules via options), `rateSchema` (> 0, max 8 decimals), `percentSchema` (0–100, 2 decimals, also
       used for VAT rates), `currencyCodeSchema`, `MoneyDTO`. No `z.number()` for money (C15).
-- [ ] `files.ts`: `requestUploadInputSchema` (name, mime, size, context), allowlists and limits per
+- [x] `files.ts`: `requestUploadInputSchema` (name, mime, size, context), allowlists and limits per
       context — 25 MB general, 10 MB payment receipts (DT-41, C23) — `UploadAdapter` interface, `FileDTO`.
-- [ ] `server/auth/types.ts`: `SessionUser { id, name, email, imageUrl, role, locale, theme }`,
+- [x] `server/auth/types.ts`: `SessionUser { id, name, email, imageUrl, role, locale, theme }`,
       `AuthContext`.
-- [ ] `server/auth/permissions.ts`: `can(user, action, resource, opts?)` implementing the full PRD §4.3
+- [x] `server/auth/permissions.ts`: `can(user, action, resource, opts?)` implementing the full PRD §4.3
       matrix (Member `D` on notes only when `opts.ownerId === user.id`; share, reports, activity,
       settings, users, trash rows), plus `canSeeFinancials(user)` (§11). Pure, framework-free (DT-40).
-- [ ] `server/auth/session.ts`: `getSessionUser(): Promise<SessionUser | null>` and
+- [x] `server/auth/session.ts`: `getSessionUser(): Promise<SessionUser | null>` and
       `requireSessionUser()`; in Hito 1 delegates to `@/mocks/session` (allowed by C9).
-- [ ] `mocks/session.ts` (`// MOCK`): two fictional Owner users (as in the wireframes) and the MOCK-only
+- [x] `mocks/session.ts` (`// MOCK`): two fictional Owner users (as in the wireframes) and the MOCK-only
       role override read from the `wd_mock_role` cookie.
-- [ ] Tests: table-driven test of the whole §4.3 matrix; schema tests for `listQuerySchema`,
+- [x] Tests: table-driven test of the whole §4.3 matrix; schema tests for `listQuerySchema`,
       `moneyAmountSchema` (rejects numbers, > 2 decimals), `rateSchema`, file limits per context.
 
 #### Package 2.2 — Money, rate and date libraries
