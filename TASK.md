@@ -1369,7 +1369,7 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
       preferences only), within proposed DT-71 — still to be recorded by the user with DT-70. Code Review
       may run on 688a325 now and its findings be folded into 5.3 before dispatch (as in wave 4), or after
       5.3 merges; the Orchestrator declares which.
-- [ ] **Code review:** C1, C2, C3, C5, C6, C7, C9, C10, C25; accessibility of sidebar, topbar and
+- [x] **Code review:** C1, C2, C3, C5, C6, C7, C9, C10, C25; accessibility of sidebar, topbar and
       command menu.
       Code Reviewer (2026-10-10, read-only on 688a325; tsc, lint, `i18n:check` re-run: PASS):
       **BLOCKED until 5.3 merges** — two C1 blockers and two WCAG AA failures, all point fixes folded
@@ -1434,6 +1434,46 @@ and their tests (existing test files may be edited; new `app-breadcrumbs.test.ts
         likely below 4.5:1; check when the counter is non-zero.
       - Notes (no action): `⌘K` hint shown on Windows/Linux too (`search.shortcut`); footer and sign-in
         year from `new Date()` instead of the Caracas date (only wrong for a few hours on 31 Dec UTC).
+      Second pass (2026-10-10, read-only on b75c46c, 5.3 = `bfc54e9..b75c46c`; tsc, lint, `i18n:check`,
+      vitest on `components/app`, `config`, `features/settings`, unsaved-changes: PASS; jsdom probe for
+      R1/R5/R6): **READY FOR TESTING.**
+      Verified fixed: M1 (`SETTINGS_NAV_ITEM.resource = null`, Member/Viewer tests); M2 (`value` = label,
+      key in `keywords`, ES "factu"/"pago" and EN "invoices" tests); M3 (both switchers call
+      `setPreferenceAction`, toast on `!ok` with the local change kept; preferences page reads
+      `getLocale()`); m1 (settings slug labelled from `settings.nav`); m2 (`canManage` from
+      `can(shell.user, "read", "settings")` in the layout); m3 (sidebar user block, avatar only in icon
+      mode); m4/R2 (translated rail label and title); m5 (back → `/dashboard`); R1 (input named "Menú de
+      comandos", listbox "Resultados de búsqueda"); R3 (brand link named); R4/R12a (theme tokens,
+      `<main>`); R5 (closed menu renders no heading; title and description inside the dialog); R6
+      (accessible name = visible text, description merges the link purpose and the tooltip; non-link chip
+      focusable); R7 (route manifest: `/[...missing]` alongside `/`, `/dashboard`, `/settings`,
+      `/settings/[section]`, `/settings/preferences`, `/sign-in/[[...sign-in]]` — static and more specific
+      routes win, `/` needs zero segments, so nothing is shadowed; the root not-found remains for
+      `notFound()` outside `(app)`); R8–R11, R12b. No `@/mocks`/Prisma in components, no attribution, no
+      secrets; scope = 5.3 list plus the declared extensions and the Orchestrator's test-only d33f71f.
+      Worker deviations: `initialsOf` in `app-sidebar.tsx` **ACCEPTED** (same component bundle; a pure
+      helper could later move to `src/lib/`, H1-FX nit); sign-in `text-foreground/70` **ACCEPTED**
+      (≈7:1 light, ≈8:1 dark); R7 without unit test **ACCEPTED** (route file only calls `notFound()`;
+      covered by the route manifest and the Tester's E2E below).
+      Remaining findings (none gates Testing):
+      - **N1 (major → Planner, design decision; resolve before H1-B1 closes)** Light-theme
+        `--muted-foreground` `#8e8e9a` (`src/app/globals.css:74`) fails WCAG 1.4.3 on every light surface:
+        3.24:1 on `--card`, 2.95:1 on `--background`, 2.75:1 on `--muted`. 86 usages, including the
+        shell on every page (footer, rate-chip label, sidebar role, form descriptions). Dark theme passes
+        (5.05–6.07:1). Pre-existing (wave 1 token from the wireframes, P9), so it is a brand-vs-§14
+        decision, not a 5.3 regression. `#686874` reaches ≥ 4.67:1 on all three light surfaces.
+      - **N2 (minor → H1-FX)** No favicon or `public/`: `/favicon.ico` now falls into the catch-all and
+        renders the full shell (`getShellData`) as a 404 on every page load. Add `src/app/icon.svg`
+        (brand mark).
+      - **N3 (note → Planner, Hito 2 auth)** The catch-all serves the authenticated `(app)` shell for
+        any unmatched URL, including under future public prefixes (`/s/<token>/extra`, unknown `/api/*`).
+        Hito 2's `proxy.ts` and the portal need their own not-found handling so a visitor without a
+        session never reaches the `(app)` layout.
+      - **N4 (nit → H1-FX)** Preference radio groups sit in `FieldSet`/`FieldLegend` (named group) but
+        the inner `radiogroup` lost its own name; optional `aria-labelledby` to the legend.
+      - Confirmed R16 → H1-B2: white on dark `--destructive` is 3.04:1 (counter badge).
+      - Tester E2E additions: `/clients` and `/settings/preferences/x` render the in-shell not-found
+        with status 404; `/`, `/sign-in`, `/dashboard`, `/settings/*` unaffected.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage`, `i18n:check`, build.
