@@ -31,12 +31,18 @@ const LENGTH_ORIGINS: ReadonlySet<string> = new Set(["string", "array", "set"]);
 
 type RawIssue = z.core.$ZodRawIssue;
 
+/** `null` is how a cleared nullable select/enum reaches the schema: it means "nothing chosen". */
+function isEmptyInput(input: unknown): boolean {
+  return input === undefined || input === null;
+}
+
 export function genericIssueMessage(issue: RawIssue): string {
   switch (issue.code) {
     case "invalid_type":
-      return issue.input === undefined ? M.required : M.invalidFormat;
+      return isEmptyInput(issue.input) ? M.required : M.invalidFormat;
     case "invalid_value":
-      return M.invalidOption;
+      // Enums and literals report a cleared (`null`/`undefined`) field as `invalid_value`, not `invalid_type`.
+      return isEmptyInput(issue.input) ? M.required : M.invalidOption;
     case "too_small":
       if (issue.origin === "string" && issue.minimum === 1) return M.required; // `.min(1)` = non-empty
       if (LENGTH_ORIGINS.has(issue.origin)) return M.tooShort;
