@@ -2,5 +2,49 @@
   "validation": {
     "duplicateIvaRate": "La alícuota está repetida",
     "defaultIvaRateNotAllowed": "La alícuota por defecto debe estar entre las permitidas"
+  },
+  "nav": {
+    "label": "Configuración",
+    "company": "Empresa",
+    "users": "Usuarios",
+    "preferences": "Preferencias",
+    "currencies": "Monedas",
+    "rates": "Tasas de cambio",
+    "fiscal": "Fiscal",
+    "paymentMethods": "Métodos de pago",
+    "technologies": "Tecnologías",
+    "documentTypes": "Documentos",
+    "expenseCategories": "Categorías de gasto",
+    "tags": "Etiquetas",
+    "trash": "Papelera"
+  },
+  "placeholder": {
+    "title": "Próximamente",
+    "description": "Esta sección llegará en una próxima entrega."
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "description": "Idioma, tema y zona horaria de tu cuenta.",
+    "language": {
+      "label": "Idioma",
+      "description": "Idioma de la interfaz.",
+      "es": "Español",
+      "en": "English"
+    },
+    "theme": {
+      "label": "Tema",
+      "description": "Claro, oscuro o según el sistema.",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "timezone": {
+      "label": "Zona horaria",
+      "description": "Se usa para mostrar fechas y horas. Por defecto, America/Caracas."
+    },
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "saved": "Preferencias guardadas",
+    "saveError": "No se pudieron guardar las preferencias"
   }
 }

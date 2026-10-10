@@ -1213,12 +1213,12 @@ Files: `src/app/(app)/settings/layout.tsx`, `src/app/(app)/settings/page.tsx`,
 `src/app/(app)/settings/preferences/page.tsx`, `src/config/settings-nav.ts`,
 `src/features/settings/components/**`, `src/i18n/messages/{es,en}/settings.json`, tests.
 
-- [ ] Settings layout with section navigation for all §8.15 sections, hidden per `can()` (users: Owner
+- [x] Settings layout with section navigation for all §8.15 sections, hidden per `can()` (users: Owner
       only). `/settings` redirects to `/settings/preferences`.
-- [ ] Preferences form: language, theme, time zone (default `America/Caracas`, stored as the `timezone`
+- [x] Preferences form: language, theme, time zone (default `America/Caracas`, stored as the `timezone`
       preference, DT-43) saved through `preferences/actions.ts`; language change also sets
       `NEXT_LOCALE` and refreshes; uses `FormPage` and the unsaved-changes guard.
-- [ ] Tests: form submits through the action; theme change applies.
+- [x] Tests: form submits through the action; theme change applies.
 - **Note:** `settings.json` already holds a `validation` block (3.2). Extend the namespace; keep
   `validation` intact.
 

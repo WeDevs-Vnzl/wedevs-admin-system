@@ -2,5 +2,49 @@
   "validation": {
     "duplicateIvaRate": "The VAT rate is repeated",
     "defaultIvaRateNotAllowed": "The default VAT rate must be one of the allowed rates"
+  },
+  "nav": {
+    "label": "Settings",
+    "company": "Company",
+    "users": "Users",
+    "preferences": "Preferences",
+    "currencies": "Currencies",
+    "rates": "Exchange rates",
+    "fiscal": "Tax",
+    "paymentMethods": "Payment methods",
+    "technologies": "Technologies",
+    "documentTypes": "Documents",
+    "expenseCategories": "Expense categories",
+    "tags": "Tags",
+    "trash": "Trash"
+  },
+  "placeholder": {
+    "title": "Coming soon",
+    "description": "This section will arrive in a later delivery."
+  },
+  "preferences": {
+    "title": "Preferences",
+    "description": "Language, theme and time zone of your account.",
+    "language": {
+      "label": "Language",
+      "description": "Language of the interface.",
+      "es": "Español",
+      "en": "English"
+    },
+    "theme": {
+      "label": "Theme",
+      "description": "Light, dark or following the system.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "timezone": {
+      "label": "Time zone",
+      "description": "Used to display dates and times. Default: America/Caracas."
+    },
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Preferences saved",
+    "saveError": "The preferences could not be saved"
   }
 }
