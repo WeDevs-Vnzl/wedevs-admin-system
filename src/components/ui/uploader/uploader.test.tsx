@@ -55,6 +55,10 @@ function makeAdapter(overrides: Partial<UploadAdapter> = {}) {
   return adapter;
 }
 
+function fileInput(): HTMLInputElement {
+  return document.querySelector<HTMLInputElement>('input[type="file"]') as HTMLInputElement;
+}
+
 function fileOf(name: string, type: string, size = 1024): File {
   const file = new File(["x"], name, { type });
   Object.defineProperty(file, "size", { value: size });
@@ -64,7 +68,7 @@ function fileOf(name: string, type: string, size = 1024): File {
 function setup(context: UploadContext, adapter = makeAdapter(), onChange = vi.fn()) {
   const user = userEvent.setup({ applyAccept: false });
   renderIntl(<Uploader adapter={adapter} context={context} onChange={onChange} />);
-  return { user, adapter, onChange, input: screen.getByLabelText("Seleccionar archivos") };
+  return { user, adapter, onChange, input: fileInput() };
 }
 
 describe("Uploader", () => {
@@ -164,7 +168,7 @@ describe("Uploader", () => {
       </NextIntlClientProvider>,
     );
 
-    await user.upload(screen.getByLabelText("Select files"), fileOf("a.pdf", "application/pdf"));
+    await user.upload(fileInput(), fileOf("a.pdf", "application/pdf"));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No permission");
     expect(adapter.put).not.toHaveBeenCalled();

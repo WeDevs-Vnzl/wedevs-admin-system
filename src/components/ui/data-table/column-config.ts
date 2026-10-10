@@ -1,7 +1,13 @@
+import {
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTH,
+  columnIdSchema,
+  type TableColumnsPreference,
+} from "@/lib/validators/preferences";
 import type { ColumnConfig } from "./types";
 
-/** Narrowest width a user can give a column (px). */
-export const MIN_COLUMN_WIDTH = 80;
+// One width range (80–1200 px) shared with the stored `table:<id>:columns` preference.
+export { MAX_COLUMN_WIDTH, MIN_COLUMN_WIDTH };
 export const DEFAULT_COLUMN_WIDTH = 150;
 
 export interface ColumnDescriptor {
@@ -76,5 +82,38 @@ export function visibleColumnIds(config: ColumnConfig[]): string[] {
 }
 
 export function clampWidth(width: number): number {
-  return Math.max(MIN_COLUMN_WIDTH, Math.round(width));
+  return Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.round(width)));
+}
+
+/** Kit config → stored `table:<tableId>:columns` value (ids the preference schema rejects are skipped). */
+export function columnConfigToPreference(config: ColumnConfig[]): TableColumnsPreference {
+  const valid = config.filter((column) => columnIdSchema.safeParse(column.id).success);
+  return {
+    order: valid.map((column) => column.id),
+    visibility: Object.fromEntries(valid.map((column) => [column.id, column.visible])),
+    widths: Object.fromEntries(
+      valid.flatMap((column) =>
+        column.width === undefined ? [] : [[column.id, clampWidth(column.width)] as const],
+      ),
+    ),
+  };
+}
+
+/**
+ * Stored value → kit config. Ids come from `order` first, then any id that only appears in `visibility` or
+ * `widths`; a missing visibility means visible. Pass the result to `resolveColumnConfig`, which merges it with
+ * the current column definitions (unknown ids dropped, new columns appended).
+ */
+export function preferenceToColumnConfig(
+  preference: Partial<TableColumnsPreference> | null | undefined,
+): ColumnConfig[] {
+  const order = preference?.order ?? [];
+  const visibility = preference?.visibility ?? {};
+  const widths = preference?.widths ?? {};
+  const ids = [...new Set([...order, ...Object.keys(visibility), ...Object.keys(widths)])];
+  return ids.map((id) => {
+    const width = widths[id];
+    const visible = visibility[id] ?? true;
+    return width === undefined ? { id, visible } : { id, visible, width: clampWidth(width) };
+  });
 }

@@ -213,20 +213,22 @@ export function Uploader({
           variant="outline"
           size="sm"
           disabled={disabled}
+          id={id}
+          aria-label={aria["aria-label"]}
           onClick={() => inputRef.current?.click()}
         >
           {t("forms.uploader.browse")}
         </Button>
         <input
           ref={inputRef}
-          id={id}
+          data-slot="uploader-input"
           type="file"
           className="sr-only"
           tabIndex={-1}
+          aria-hidden="true"
           multiple={multiple}
           disabled={disabled}
           accept={[...rules.allowedExtensions, ...rules.allowedMimeTypes].join(",")}
-          aria-label={aria["aria-label"] ?? t("forms.uploader.inputLabel")}
           onChange={(event) => {
             if (event.target.files) addFiles(event.target.files);
             event.target.value = "";

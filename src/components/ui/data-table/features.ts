@@ -28,6 +28,11 @@ export interface DataTableColumnMeta {
   /** False for columns that must always stay visible (selection, actions). */
   hideable?: boolean;
   pinned?: boolean;
+  /**
+   * False for display-only columns (selection, row actions): they never reach `onExport`. The kit sets it on
+   * the selection column; callers set it on their actions column.
+   */
+  exportable?: boolean;
 }
 
 // Only the features the kit uses are registered; server modes bypass client row models (manual flags).

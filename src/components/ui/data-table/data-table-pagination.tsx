@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,28 @@ interface DataTablePaginationProps {
   total: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: PageSize) => void;
+  /** Redirects an out-of-range `page` to the last page. Off while rows load, when `total` is not final. */
+  clamp?: boolean;
 }
 
 /** Server pagination: `total` comes from the query result, never from the visible rows. */
-export function DataTablePagination({ page, pageSize, total, onPageChange, onPageSizeChange }: DataTablePaginationProps) {
+export function DataTablePagination({
+  page: requestedPage,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
+  clamp = true,
+}: DataTablePaginationProps) {
   const t = useTranslations("table");
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = clamp ? Math.min(requestedPage, pageCount) : requestedPage;
+
+  // A hand-edited `?page=` beyond the last page goes to the last page instead of showing an empty range.
+  useEffect(() => {
+    if (clamp && requestedPage > pageCount) onPageChange(pageCount);
+  }, [clamp, requestedPage, pageCount, onPageChange]);
+
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 

@@ -196,3 +196,17 @@ describe("RateInput", () => {
     expect(screen.getByRole("textbox")).toHaveValue("");
   });
 });
+
+describe("RateInput deviation warning (locale)", () => {
+  it("formats the reference rate for the locale, not the canonical string", async () => {
+    const lookupRate = vi.fn<RateLookup>().mockResolvedValue(result({ usdRate: "755.16" }));
+    renderIntl(<Harness lookupRate={lookupRate} referenceRate="1234.5" initial="9999" prefillOnMount={false} />, "es");
+    expect(await screen.findByRole("alert")).toHaveTextContent("(1.234,5)");
+  });
+
+  it("uses English separators in en", async () => {
+    const lookupRate = vi.fn<RateLookup>().mockResolvedValue(result({ usdRate: "1234.5" }));
+    renderIntl(<Harness lookupRate={lookupRate} referenceRate="1234.5" initial="9999" prefillOnMount={false} />, "en");
+    expect(await screen.findByRole("alert")).toHaveTextContent("(1,234.5)");
+  });
+});

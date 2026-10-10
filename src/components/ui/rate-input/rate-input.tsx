@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useRef, useState, type Ref } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { formatDecimalForInput } from "@/components/ui/money-input/parse";
 import { useDecimalText } from "@/components/ui/money-input/use-decimal-text";
 import { cn } from "@/lib/utils";
 import { isDecimalString, RATE_DECIMALS } from "@/lib/money";
@@ -209,7 +210,7 @@ export function RateInput({
       ) : null}
       {deviates && reference ? (
         <p role="alert" data-slot="rate-input-warning" className="text-xs text-warning-foreground">
-          {t("deviationWarning", { percent: DEFAULT_RATE_DEVIATION_PERCENT, rate: reference })}
+          {t("deviationWarning", { percent: DEFAULT_RATE_DEVIATION_PERCENT, rate: formatDecimalForInput(reference, locale, { minFractionDigits: 0, maxFractionDigits: RATE_DECIMALS }) })}
         </p>
       ) : null}
     </div>
