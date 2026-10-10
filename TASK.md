@@ -14,7 +14,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | Opened 2026-10-10; Planner writing the detailed plan |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | Planned in detail; awaiting user approval of the plan |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
@@ -1629,26 +1629,864 @@ below.
 
 ---
 
-## H1-B2 — Commercial core UI (outline)
+## H1-B2 — Commercial core UI
 
-- **Objective:** clients, contacts, projects (links, stack, multi-client, transitions), notes,
-  technologies and tags settings, `/activity`, and the cross-entity tabs and alert list. PRD §7.2, §7.5,
-  §7.7, §7.9, §8.2, §8.3, §8.10, §8.14, §8.15. HU-03–HU-08, HU-23, HU-29 (UI). Invariants: C1–C10, C15,
-  C19 shape, C25.
-- **Waves (tentative, finalized when the batch opens):**
-  - W1 cross-entity components: notes feed + Tiptap editor with sanitized rendering — sonnet (C4);
-    activity timeline + diffs + `/activity` + mock `listActivity` — haiku; tags picker + `/settings/tags`
-    — haiku; `AlertList` + mock alert rules + dismiss/snooze + alert count in `features/shell/queries.ts`
-    (its only shared file) — haiku; `EntityDocumentsTab` + "Adjuntar documento" sheet (wireframe 4.6)
-    over a minimal documents mock service — haiku.
-  - W2 vertical slices: clients + contacts — haiku; projects (excluding billing) — haiku; notes module
-    routes — haiku; `/settings/technologies` — haiku.
-- Client Facturas/Pagos tabs and project Cobro/Facturas/Gastos tabs render an empty-state slot until
-  H1-B3 wires them (declared cross-batch edit).
-- **Tester:** local E2E of HU-03 (incl. duplicate tax-id error with link), HU-04, HU-05, HU-06 CA1–CA2,
-  HU-07, HU-08, HU-23, HU-29 over mocks; i18n parity; a11y of forms and tabs.
+### Header
 
-🛑 **MANDATORY STOP** between every wave; the detailed plan is written when the batch opens.
+- **Objective:** the commercial core, navigable over mocks: clients and contacts; projects (several
+  clients with roles, stack from the catalog, grouped links with drag reorder, status transitions);
+  notes (Tiptap editor, entity feed, global table); `/activity` and the entity *Actividad* tab; tags and
+  technologies settings; the shared cross-entity tabs (*Notas*, *Documentos*, *Actividad*); the nine
+  alert rules with `AlertList`, a live bell counter and the bell panel list; CSV export of the H1-B2
+  tables; breadcrumb labels for detail routes. At the close every H1-B2 route of PRD §11
+  (`coverage-matrix.md` §4) renders inside the shell over one coherent mock dataset, mutations last for
+  the server process, and HU-03…HU-08, HU-23 and HU-29 pass as local E2E over mocks.
+- **Type:** phase batch — Hito 1, UI batch 2 of 5 (DU-01).
+- **Base branch:** `batch/h1-b2-commercial-core`, created from the closed `batch/h1-b1-ui-foundations`
+  at `6acc4d8` (DT-69: no push or PR until Hito 1 ends).
+- **PRD sections implemented (UI over mocks):** §7.2 (detail), §7.3 (H1-B2 tables, CSV export, "Mostrar
+  archivados"), §7.4 (forms), §7.5 (tags), §7.7 (archive and restore dialogs, the client cascade lock,
+  the technology in-use lock), §7.9 (alert rules, `AlertList`, bell counter and panel list), §8.2, §8.3
+  (without the billing plan), §8.10, §8.14, §8.15 (Tecnologías, Etiquetas); §12 services `clients`,
+  `contacts`, `projects` (without `getProjectFinancials`, H1-B3), `notes`, `tags`, `activity`
+  (`listActivity`; mock `logActivity`), `settings` technology CRUD, `export` (`exportCsv` mock seam),
+  alerts (§7.9); and a minimal `documents` service (`listDocuments`, `createDocument` for files,
+  `linkDocument`, `unlinkDocument`) that serves only the *Documentos* tab.
+- **Decided stack:** `.rules/stack.md`. Every needed dependency is already installed (DT-38): Tiptap
+  3.31.4, `@dnd-kit/*`, `simple-icons`, `diff`, `nuqs`, `cmdk`. **No package in this batch changes the
+  lockfile.** Registry items not yet installed (`alert`, `item`, optionally `attachment`) are added only
+  by package 1.3; their dependencies (`cn`, `radix-ui`) are already installed. Registry check with the
+  shadcn MCP (`@shadcn`, 2026-10-10): there is **no** rich-text editor, timeline, colour picker or
+  sortable list item. So the Tiptap editor, the activity timeline, the tag colour swatches and the link
+  reorder are compositions of installed registry items (`toggle`, `toggle-group`, `button-group`,
+  `separator`, `tooltip`, `popover`, `sheet`, `collapsible`, `badge`, `avatar`, `item`) with Tiptap and
+  `@dnd-kit`. The registry block `dashboard-01` is the reference for `@dnd-kit` row reordering.
+- **Binding invariants:** C1, C2, C3, C4 (Tiptap editor and renderer, link and image attributes), C5
+  (fictional dataset, IPs from RFC 5737 documentation ranges), C6, C7, C8, C9, C10 (every action through
+  `defineAction`, DT-71), C11, C12 (Hito 1 form: mock services append activity entries), C15 (USD
+  aggregates as decimal strings through `lib/money`), C16 shape (client and project USD totals sum
+  stored snapshots), C19 shape (archive/restore, client cascade lock, technology in-use lock, archived
+  rows hidden unless asked), C20 shape (no edit or delete of activity anywhere), C23 shape (uploader in
+  the attach sheet and note attachments), C25.
+- **DT-71 (binding):** `permission: "authenticated"` only for: the caller's own preferences; reads of
+  reference catalogs (technologies, tags, document types and categories, currencies…); MOCK-only
+  actions; and — Planner interpretation, the Code Reviewer confirms — the caller's own alert dismissals
+  and snoozes (per-user state, like preferences; PRD §7.9). Every other action and every read action
+  over business records (client, contact, project, document, note search; activity) declares a `can()`
+  grant.
+- **User stories (UI part, over mocks):** HU-03 CA1–CA4 (CA4: the activity entry; the search index is
+  H1-B5/H2-B2), HU-04 CA1–CA2 (CA3 search and graph → H1-B5), HU-05, HU-06, HU-07, HU-08, HU-23 CA1–CA2
+  (CA3 → H1-B5), HU-29 CA2 (CA1 invoice-total diff → H1-B3). Shape only: HU-27 on the H1-B2 tables,
+  HU-28 (archive/restore; the trash page is H1-B5), HU-20 (*Documentos* tab), HU-10 CA4 and HU-19 CA2
+  (the alert rules exist; they fire on H1-B3/H1-B4 data). Full closure in H2-B3 (`coverage-matrix.md`
+  §5).
+- **Open decisions:** none blocking (`decisions.md` §6, blocking summary). R13 (`permissions.ts`
+  bundled into client components) waits for the next rules revision; it does not affect this batch.
+- **Carry-overs placed in this batch:** R16 → 2.7. DT-71 → every package with an action. DT-72 → 1.2
+  (contract comment) and 2.6 (`nameEn` field, English falls back to `name`). m-g (catalog list services
+  take `(ctx, input)` and filter inactive rows) → 1.1. m6 (export entity list) and the `toCsv`
+  money-column comment → 1.2. M5 note (`exportCsvAction` with the first module list) → 1.2 seam plus one
+  export action per module. m8 (owner of the files fixture) → 1.1. m1 (breadcrumb labels for detail ids)
+  → 1.3. R15 per-page titles → every page created in this batch (`generateMetadata`; the root title
+  template stays in H1-FX). **Kept out (H1-FX):** N1, N2, N4, R14, the R15 title template, coverage
+  gaps, the flaky jsdom timeouts.
+- **Planner decisions taken in this plan** (to record in `decisions.md` at the next rules revision; none
+  changes the MVP scope):
+  - **PD-1 Three waves, not two.** W1 = dataset and seams; W2 = services, adapters and cross-entity
+    components; W3 = screens. Reason: the slices consume the cross-entity tabs and each other's queries
+    (the client's *Proyectos* tab reads projects; the project form searches clients). The intra-wave rule
+    forbids that inside one wave.
+  - **PD-2 Export.** One mock service `exportCsv(ctx, input, source)` and one action factory (1.2). Each
+    module declares its own export action with its own `source`. There is no central registry file that
+    every module would edit. The `EXPORT` activity entry stays in H2-B6 (`coverage-matrix.md` §1 row
+    14).
+  - **PD-3 Normalized store rows.** The H1-B2 collections store rows with ids (tags, technologies,
+    clients, authors, links), not denormalized DTOs. Services assemble the DTOs, so a label never goes
+    stale after a rename. This is the shape the H2-B3 Prisma services return.
+  - **PD-4 Financial metrics computed on read.** Client and project USD metrics are computed by their
+    mock services from the finance collections (empty until H1-B3, so `"0.00"`), never typed into
+    fixtures (`data-rules.md` §2).
+  - **PD-5 Bell panel.** 2.7 lists the alerts in the existing bell panel so the counter and the panel
+    agree. The dashboard panels and "Marcar leídas" stay in H1-B5.
+  - **PD-6 Error with a link.** `ActionError` gains an optional `entity: EntityRef`, so a `CONFLICT` can
+    link the existing record (HU-03 CA3, frontend-patterns §6). Today the adapter cannot carry it.
+- **Declared cross-batch edits:**
+  - Client tabs *Facturas* and *Pagos* and the client financial card; project tabs *Cobro*, *Facturas*
+    and *Gastos*: H1-B2 renders `FinanceTabSlot` (empty state, 1.3). H1-B3 W3 replaces the slots and
+    owns `src/app/(app)/clients/[id]/**` and `src/app/(app)/projects/[id]/**` in that wave.
+  - `src/mocks/fixtures/documents.ts` (1.1), `src/mocks/services/documents.ts` and
+    `src/features/documents/**` (2.8) are minimal in H1-B2. H1-B4 takes ownership and extends them,
+    keeping the exported names.
+  - The note link picker (3.3) offers client, contact, project and document. H1-B3 adds invoice, payment
+    and expense to `src/features/notes/components/note-link-picker.tsx`.
+  - `src/mocks/services/{clients,projects,alerts}.ts` read the finance collections directly. H1-B3 may
+    switch those reads to `src/lib/finance` (owner declared in H1-B3).
+  - The "Detalle | Grafo" toggle links to `/<entity>/[id]/graph`, an in-shell 404 until H1-B5. Links to
+    `/documents/[id]` and `/projects/[id]/billing` are in-shell 404s until H1-B4 and H1-B3.
+- **i18n namespace ownership (DT-31).** One owner per namespace per wave; "add-only" = only new keys.
+  `enums`, `validation`, `patterns` (except 1.3's add-only block), `settings`, `search`, `mock`,
+  `common` are read-only in the whole batch.
+
+  | Namespace | W1 | W2 | W3 |
+  |---|---|---|---|
+  | `nav` | 1.3 (add `segments.detail`) | — | — |
+  | `patterns` | 1.3 (add-only block `financeSlot`) | — | — |
+  | `table` | 1.2 (add-only block `export`) | — | — |
+  | `clients`, `contacts` | — | 2.1 | 3.1 |
+  | `projects` | — | 2.2 | 3.2 |
+  | `notes` | — | 2.3 | 3.3 |
+  | `forms` | — | 2.3 (add-only block `richText`) | — |
+  | `activity` | — | 2.4 | — |
+  | `tags` | — | 2.5 | — |
+  | `catalogs` (block `technologies`; keep `validation`) | — | 2.6 | — |
+  | `alerts` | — | 2.7 | — |
+  | `shell` (block `alerts` only, add-only) | — | 2.7 | — |
+  | `documents` (keep `validation`) | — | 2.8 | — |
+
+- **Intra-wave rule:** packages of the same wave never import each other's new files; every package
+  builds only on outputs of earlier waves. A W2 mock service never imports another W2 mock service: it
+  reads the store collections (`ctx.db`) and resolves references with `src/mocks/entity-refs.ts` (1.1).
+- **Every package spec carries:** commit messages without any Claude attribution (C6); gate = `pnpm
+  lint && pnpm typecheck && pnpm test && pnpm i18n:check && pnpm build`; no persistent server or browser
+  in a Developer worker; a needed file outside the package's list → stop and report.
+
+---
+
+### WAVE 1 — Dataset, mock seams and shared follow-ups
+
+**Objective:** the coherent commercial dataset on normalized store rows, the mock seams every H1-B2
+service needs (`logActivity`, entity references, the diff helper, the catalog split), the contract
+follow-ups (error with link, safe rich-text images, export entity list), the CSV export seam, breadcrumb
+labels for detail routes, the finance-tab slot and the missing registry items.
+
+**Shared-file owners (wave 1):**
+
+| Shared file / area | Owner |
+|---|---|
+| `src/mocks/store.ts`, `src/mocks/fixtures/{clients,contacts,projects,notes,activity,documents}.ts`, new `src/mocks/entity-refs.ts`, `src/mocks/services/catalogs.ts`, new `src/mocks/services/{tags,technologies,activity}.ts`, `src/features/catalogs/queries.ts`, `src/lib/validators/catalogs.ts` (list-input schemas only), new `src/lib/activity-diff.ts` | 1.1 |
+| `src/lib/validators/{common,export,notes,technologies}.ts`, `src/server/errors.ts`, `src/server/actions/define-action.ts`, `src/lib/csv.ts` (comment only), new `src/mocks/services/export.ts`, new `src/features/export/**`, i18n `table` (add-only) | 1.2 |
+| `src/components/app/app-breadcrumbs.tsx`, new `src/components/app/breadcrumb-label.tsx`, `src/app/(app)/layout.tsx`, new `src/lib/entity-routes.ts`, new `src/components/patterns/finance-tab-slot.tsx`, registry `src/components/ui/{alert,item,attachment}.tsx`, i18n `nav`, `patterns` (add-only) | 1.3 |
+| `package.json` / lockfile, `src/mocks/{ctx,ids,session}.ts`, `src/mocks/fixtures/{catalogs,billing,invoices,payments,accounts,expenses,shares}.ts`, `src/server/context.ts`, `src/config/**`, every other `src/lib/validators/**` file | nobody |
+
+**Cross-package rule (wave 1):** 1.2 keeps every export name of the files it edits (`common.ts`,
+`errors.ts`, `define-action.ts`), so 1.1 and 1.3 compile after the merge. 1.1 keeps every export name
+of `catalogs.ts` (re-exports where a function moves).
+
+#### Package 1.1 — Commercial dataset, normalized store rows and mock seams
+
+Package 1.1 → Agent: wedevs-developer · sonnet — Reason: changes the shared mock-store shape (`store.ts`) and adds the service seams (`logActivity`, entity references, catalog list signatures) that every H1-B2 service and the Hito 2 swap depend on (shared signatures, C9–C12).
+
+Depends on: H1-B1 only.
+
+Files: `src/mocks/store.ts` (+ `store.test.ts`); `src/mocks/fixtures/{clients,contacts,projects,notes,activity,documents}.ts`
+(+ new `src/mocks/fixtures/commercial.test.ts`); new `src/mocks/entity-refs.ts` (+ test);
+`src/mocks/services/catalogs.ts` (+ test); new `src/mocks/services/{tags,technologies,activity}.ts`
+(+ tests); `src/features/catalogs/queries.ts` (+ `catalogs.test.ts`); `src/lib/validators/catalogs.ts`
+(list-input schemas only, + test); new `src/lib/activity-diff.ts` (+ test). No other file.
+
+- [ ] **PD-3 Store rows.** In `store.ts`, the collections `clients`, `contacts`, `projects`, `notes`,
+      `documents`, `documentVersions`, `documentLinks` and `activity` hold row types declared next to
+      their fixtures. Rows are derived from the contract types (`Pick`/`Omit` of the DTOs, C8) plus
+      foreign keys only: client rows without `contacts`, `financials` and embedded tags (`tagIds`);
+      contact rows with `clientId` and `tagIds`; project rows with `clients: { clientId, role }[]`,
+      `technologyIds`, `tagIds`, `links`, and without the financial headline and `hasBillingPlan`
+      (derived); note rows with `authorId`, `tagIds`, `links: NoteLinkTarget[]`, `attachmentFileIds`,
+      without `contentText`; document rows with ids instead of embedded refs; `deletedById` where the
+      schema has it. Finance collections are not touched. List the final row types in `worker_done`.
+- [ ] **Dataset** (`// MOCK`, fictional; the wireframes' names are allowed; every row valid against its
+      contract once assembled). Dates relative to the store's build `now` where they drive status or
+      alerts (factories like `createCatalogFixtures`):
+      - ≥ 60 clients: both kinds, several countries (VE with valid RIFs), every `ClientStatus` (≥ 3
+        `PROSPECTO`), tags; one archived client; one client with active projects (archive confirmation
+        path); one client with no projects or contacts. The fixture header documents one active
+        tax id + country for the duplicate E2E (HU-03 CA3).
+      - Contacts: clients with 0, 1 and 3 contacts; at most one primary per client; each contact has an
+        email or a phone.
+      - ~25 projects: every `ProjectStatus`; ≥ 5 with two or three clients and roles; Next.js in ≥ 2
+        projects (HU-06 CA2); ≥ 1 active technology used by no project (HU-06 CA3 delete path); links in
+        ≥ 4 groups, one project with ≥ 2 `REPOSITORIO` links (HU-07); descriptions with allowlisted
+        Tiptap nodes only.
+      - ~40 notes: pinned and unpinned; ≥ 1 linked to a client and a project at once (HU-23 CA2); notes
+        by the default mock user and by another user (Member own-delete check); attachments.
+      - ~10 documents (minimal, cross-batch with H1-B4): each `DocumentFormat`; one linked to a client
+        and two projects (HU-20 shape); one expiring within 30 days and one `VENCIDO` (alerts); versions
+        and files as their contracts require.
+      - ~150 activity entries over the last ~60 days: actors `USER`, `SYSTEM`, `PUBLIC`; actions
+        `CREATE`, `UPDATE` (with diffs), `DELETE`, `RESTORE`, `STATUS_CHANGE`, `LINK`, `UNLINK`, `UPLOAD`,
+        `LOGIN`, `SYSTEM_JOB`, `PORTAL_ACCESS`; IPs only from 192.0.2.0/24 and 198.51.100.0/24 (C5); no
+        sensitive field in any diff; long texts as the `"changed"` marker.
+- [ ] **m8 decision:** `fileFixtures` (in `fixtures/documents.ts`) belongs to the dataset in H1-B2 (note
+      attachments, document files); runtime uploads are appended by `services/files.ts` (unchanged);
+      H1-B4 takes ownership of `fixtures/documents.ts`. Write this in the file header.
+- [ ] `entity-refs.ts`: `resolveEntityRef(db, entityType, id): EntityRef | null` for every `EntityType`
+      that has a collection (H1-B2 ones now; finance ones answer from their collections when filled).
+      `label` = trade name / name / title or first words; `code` when the entity has one.
+- [ ] `services/activity.ts`: `mockTx(ctx)` → `{ db, now }` and `logActivity(tx, input)` (the contract
+      signature, C8): parses with `logActivityInputSchema`, appends an `ActivityEntryDTO` (id from
+      `nextMockId`, `createdAt` = `tx.now`), returns it. No update or delete function (C20).
+- [ ] `lib/activity-diff.ts`: pure, framework-free `diffFields(before, after, { fields, longText?,
+      exclude? })` → `ActivityChanges | undefined`: values only strings, booleans or `null` (money stays
+      a decimal string, C15); long texts → `"changed"`; excluded fields never appear. Reused by H2-B3.
+- [ ] **Catalog split.** Move `listTags` (+ new `getTag`, usage count) to `services/tags.ts` and
+      `listTechnologies` (+ new `getTechnology`, usage count) to `services/technologies.ts`, adapted to
+      the new rows (usage counts non-archived records only). `catalogs.ts` re-exports both under the same
+      names; document-type usage adapted to the new document rows.
+- [ ] **m-g.** Every catalog list service takes `(ctx, input)`. New list-input schemas in
+      `validators/catalogs.ts` (e.g. `includeInactive`, default `false`) for currencies, payment methods
+      and expense categories; pickers get active rows only, settings screens ask for all explicitly.
+      `listTechnologies` / `listDocumentTypes` keep their filter schemas (`active` facet).
+      `features/catalogs/queries.ts` updated; existing callers keep working.
+- [ ] Tests: every fixture assembles into a DTO that parses with its contract; referential integrity
+      (every id resolves; at most one primary contact per client; every note has ≥ 1 link; every active
+      project has ≥ 1 non-archived client); dataset counts and required cases above; `logActivity`
+      validates and appends; `diffFields` cases (money string, long text, excluded field, unchanged →
+      `undefined`); catalog re-exports; m-g inactive filtering; reset rebuilds the new collections.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 1.2 — Contract follow-ups, error with link and the CSV export seam
+
+Package 1.2 → Agent: wedevs-developer · sonnet — Reason: edits shared validators and the action adapter (`ActionError`, `ServiceError`, `toActionError`) that every module consumes, and creates the export service seam (C8, C10, C4 on rich-text images).
+
+Depends on: H1-B1 only.
+
+Files: `src/lib/validators/{common,export,notes,technologies}.ts` (+ tests); `src/server/errors.ts`
+(+ test); `src/server/actions/define-action.ts` (+ test); `src/lib/csv.ts` (comment only); new
+`src/mocks/services/export.ts` (+ test); new `src/features/export/define-csv-export-action.ts`, new
+`src/features/export/use-csv-export.ts` (+ tests); `src/i18n/messages/{es,en}/table.json` (add-only
+block `export`). No other file.
+
+- [ ] **PD-6.** `ActionError` gains `entity?: EntityRef`; `actionError` accepts it; `ServiceError`
+      accepts `{ entity }`; `toActionError` copies it. Tests: a `CONFLICT` with an entity survives the
+      adapter unchanged; nothing else leaks.
+- [ ] **C4, rich-text images** (`notes.ts`, consumed by notes and project descriptions): `image` nodes
+      require `attrs.fileId` (`idSchema`) and allow `alt` (≤ 200); `src`, when present, must equal
+      `/api/files/<fileId>/download`; any other image attribute is rejected. Tests: `javascript:`,
+      `data:` and external `src` rejected; a `fileId` image accepted.
+- [ ] **DT-72** `technologies.ts`: replace the stale "NOTE for H2-B1" with DT-72 (Δ4 decided; English
+      display falls back to `name`). Comment only.
+- [ ] **m6** `export.ts`: reconcile `EXPORT_ENTITY_VALUES` with every table of PRD §7.3/§8/§8.15 (at least
+      add `TECHNOLOGY`; check document types, currencies, payment methods, expense categories,
+      installments, recurring charges, users, trash). List the final set in `worker_done`.
+- [ ] **PD-2 export contract** in `export.ts`: `EXPORT_MAX_ROWS = 10_000`; `ExportCsvResultDTO =
+      { filename, content, rowCount, truncated }` (Zod schema + type); a TypeScript `ExportSource` type:
+      `{ entity, facets (for toModuleQuery), filterSchema, list(ctx, filter) → Paginated<Row>, columns:
+      Record<columnId, { labelKey, type?: "text" | "money", value(row) }> }`.
+- [ ] **PD-2 mock service** `exportCsv(ctx, input, source)` (`// MOCK`, framework-free, C11): `input.entity`
+      must equal `source.entity`; turns `input.query` into the module filter with `toModuleQuery` +
+      `source.filterSchema`; pages `source.list` (page size 100) up to 10,000 rows (`truncated` beyond);
+      keeps only `input.columns` in the requested order (unknown id → `VALIDATION`); serializes with
+      `toCsv` (BOM, CRLF, formula guard; money verbatim); filename `<entity>-<YYYY-MM-DD>.csv` with the
+      Caracas date of `ctx.now`. Headers arrive translated in the source (see the factory). No activity
+      entry (H2-B6).
+- [ ] `defineCsvExportAction({ entity, permission, source, exportCsv, namespace })`: wraps `defineAction`
+      (input = `exportCsvInputSchema` narrowed to `entity`); resolves each column's `labelKey` with
+      `getTranslations(namespace)`; calls the injected `exportCsv` (this file never imports `@/mocks`,
+      C9). `permission` must be a real `can()` grant (DT-71).
+- [ ] `useCsvExport(action)`: client hook returning the kit's `onExport(query, visibleColumns)`: calls
+      the action, downloads a `text/csv;charset=utf-8` Blob, toasts success, the "truncated at 10,000
+      rows" warning, or `common.errors.<code>`. Strings in `table.export.*` (ES and EN).
+- [ ] `csv.ts` nit: comment that money columns are decimal strings written verbatim, never
+      locale-formatted.
+- [ ] Tests: export seam with a fake source (filters applied, more than one page, cap with `truncated`,
+      column order, unknown column → `VALIDATION`, BOM, money verbatim, formula guard, filename date in
+      Caracas); factory (headers translated; Member on `{ read, activity }` → `FORBIDDEN`); hook (Blob
+      download and toasts with mocked action).
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 1.3 — Breadcrumb labels, entity routes, finance-tab slot and registry items
+
+Package 1.3 → Agent: wedevs-developer · haiku — Reason: shell UI over the existing breadcrumbs, a small presentational pattern, a pure route map and registry installs; no data, money or auth logic.
+
+Use the shadcn MCP.
+
+Depends on: H1-B1 only.
+
+Files: `src/components/app/app-breadcrumbs.tsx` (+ test); new `src/components/app/breadcrumb-label.tsx`
+(+ test); `src/app/(app)/layout.tsx`; new `src/lib/entity-routes.ts` (+ test); new
+`src/components/patterns/finance-tab-slot.tsx` (+ test); registry `src/components/ui/alert.tsx`,
+`src/components/ui/item.tsx` (and `src/components/ui/attachment.tsx` only if added);
+`src/i18n/messages/{es,en}/nav.json`; `src/i18n/messages/{es,en}/patterns.json` (add-only block
+`financeSlot`). No other file.
+
+- [ ] **m1.** `BreadcrumbLabelProvider` (client) wraps the shell content in `(app)/layout.tsx`;
+      `<BreadcrumbLabel segment label />` lets a detail page name its id segment (e.g. "CLI-0007 ·
+      Kairos Studio"). Until a label is registered, an id segment shows `nav.segments.detail`
+      ("Detalle" / "Detail"), the same markup on the server and the first client render (no hydration
+      mismatch; cf. 5.4 D2). Unregisters on unmount. Tests.
+- [ ] `lib/entity-routes.ts`: pure `entityHref({ type, id })` for every `EntityType` with its own route in
+      PRD §11; `null` for types without one (e.g. `CONTACT`, `FILE`, `TAG`, `SETTING`). Test every type.
+- [ ] `FinanceTabSlot`: `EmptyState` for finance tabs not built yet (title and description per tab kind
+      from `patterns.financeSlot.*`), so H1-B3 replaces one component.
+- [ ] Registry: `pnpm exec shadcn add alert item`; `attachment` only if the MCP shows it fits note and
+      document attachment chips (report the choice). Verify that `package.json` and `pnpm-lock.yaml` are
+      unchanged; if not, revert and report. Report any registry file edit (C3).
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Wave 1 close
+
+- [ ] **Integration checklist:** 1.1, 1.2, 1.3 merged into `batch/h1-b2-commercial-core`; no Claude
+      attribution; worktrees removed; lockfile unchanged (`git diff 6acc4d8 -- pnpm-lock.yaml` empty);
+      lint, typecheck, test, `i18n:check`, build pass.
+- [ ] **Planner coherence review** (`READY FOR CODE REVIEW` or blockers): row types derive from the
+      contracts (no invented field besides foreign keys); fixtures assemble into valid DTOs; every
+      catalog export name still resolves; `logActivity` matches the `ActivityService` contract signature;
+      `ExportSource` fits `toModuleQuery` and each H1-B2 filter schema; `ActionError.entity` reaches the
+      client; the image rule does not reject the 1.1 project descriptions; `entityHref` routes = PRD §11;
+      i18n blocks in both languages.
+- [ ] **Code review** (`wedevs-code-reviewer`, integrated branch): C1, C3 (registry installs, no
+      hand-written equivalents), C4 (image attributes), C5 (fixture data, IP ranges, `// MOCK`
+      headers), C6, C7, C8, C9 (export factory imports no mocks), C10 (error mapping), C11, C15, C20 (no
+      update/delete in the activity service), C25.
+- [ ] **User confirms the Tester may run.**
+- [ ] **Tester scope:** `vitest run --coverage` (report `mocks/`, `lib/activity-diff.ts`,
+      `mocks/services/export.ts`, `features/export/**`), `i18n:check`, build, lint, typecheck. No E2E (no
+      new route). No server, no container.
+- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+- [ ] **Summary** written by the Orchestrator.
+
+🛑 **MANDATORY STOP** — wave 2 does not start without the user's explicit approval.
+
+---
+
+### WAVE 2 — Services, adapters and cross-entity components
+
+**Objective:** every H1-B2 mock service with its queries and actions (PRD §12 names, `fn(ctx, input)`,
+`defineAction`), and the cross-entity UI the detail screens of W3 compose: the rich-text kit and the
+*Notas* tab, the activity timeline with `/activity` and the *Actividad* tab, the tag picker with
+`/settings/tags`, the technology picker with `/settings/technologies`, `AlertList` with the live bell,
+and the *Documentos* tab with its attach sheet.
+
+**Shared-file owners (wave 2):**
+
+| Shared file / area | Owner |
+|---|---|
+| `src/mocks/services/{clients,contacts}.ts`, `src/features/clients/{queries,actions,columns}.ts`, `src/features/contacts/{queries,actions}.ts`, i18n `clients`, `contacts` | 2.1 |
+| `src/mocks/services/projects.ts`, `src/features/projects/{queries,actions,columns}.ts`, i18n `projects` | 2.2 |
+| new `src/lib/rich-text.ts`, new `src/components/ui/rich-text/**`, `src/mocks/services/notes.ts`, `src/features/notes/**`, i18n `notes`, `forms` (add-only block `richText`) | 2.3 |
+| `src/mocks/services/activity.ts` (adds `listActivity`; `logActivity`/`mockTx` unchanged), `src/features/activity/**`, `src/app/(app)/activity/**`, i18n `activity` | 2.4 |
+| `src/mocks/services/tags.ts`, `src/features/tags/**`, `src/app/(app)/settings/tags/**`, i18n `tags` | 2.5 |
+| `src/mocks/services/technologies.ts`, `src/features/technologies/**`, `src/app/(app)/settings/technologies/**`, i18n `catalogs` (block `technologies`) | 2.6 |
+| `src/mocks/services/alerts.ts`, `src/features/alerts/**`, `src/features/shell/queries.ts`, `src/components/app/alerts-bell.tsx`, i18n `alerts`, `shell` (block `alerts`, add-only) | 2.7 |
+| `src/mocks/services/documents.ts`, `src/features/documents/**`, i18n `documents` (keep `validation`) | 2.8 |
+| `src/mocks/store.ts`, `src/mocks/fixtures/**`, `src/mocks/entity-refs.ts`, `src/mocks/services/{catalogs,export,files}.ts`, `src/features/{catalogs,export,files}/**`, `src/lib/validators/**`, `src/server/**`, `src/components/app/**` (except `alerts-bell.tsx`), `src/components/{ui,patterns}/**` (except `ui/rich-text/**`), `src/app/(app)/layout.tsx`, `src/config/**`, `package.json` / lockfile | nobody (read-only) |
+
+**Cross-package rule (wave 2):** a package that needs a fixture case, a contract field or a shared-file
+change does not edit it: it stops and reports (fix package after the wave). Mock services read other
+modules' rows through `ctx.db` and `entity-refs.ts`, never through another W2 service.
+
+#### Package 2.1 — Clients and contacts: mock services and adapters
+
+Package 2.1 → Agent: wedevs-developer · sonnet — Reason: carries the rules of the critical story HU-03 (code sequence, `CONFLICT` with a link, archive cascade lock C19, restore conflict) and USD aggregates (C15/C16); the service shape is what H2-B3 reproduces.
+
+Depends on: 1.1 (rows, `logActivity`, `diffFields`, `entity-refs`), 1.2 (`ActionError.entity`, export
+factory).
+
+Files: `src/mocks/services/{clients,contacts}.ts` (+ tests); `src/features/clients/{queries,actions,columns}.ts`
+(+ tests); `src/features/contacts/{queries,actions}.ts` (+ tests); `src/i18n/messages/{es,en}/{clients,contacts}.json`.
+No UI file.
+
+- [ ] Mock services with the exact names and signatures of `ClientsService` and `ContactsService` (C9):
+      - `createClient`: code from the `CLI` mock sequence (`CLI-####`, HU-03 CA2); status default
+        `PROSPECTO`; `CONFLICT` when a non-archived client has the same normalized tax id + country →
+        `ServiceError("CONFLICT", { message: "clients.errors.duplicateTaxId", entity: <existing ref> })`
+        (HU-03 CA3); `CREATE` activity (HU-03 CA4).
+      - `updateClient` (same `CONFLICT`; `UPDATE` with `diffFields`), `setClientStatus`
+        (`STATUS_CHANGE`; `activatedAt` the first time it becomes `ACTIVO`).
+      - `archiveClient` / `archiveClients`: with active projects or open invoices and `confirm: false` →
+        `INTEGRITY_LOCK` (`clients.errors.archiveNeedsConfirm`); with `confirm: true` archives the client
+        and its contacts (count in the result), `DELETE` entries (C19).
+      - `restoreClient`: `CONFLICT` (with entity) when an active client now holds the same tax id +
+        country; restores the contacts archived by the same cascade; `RESTORE`.
+      - `listClients` (every `clientFilterSchema` filter; `includeArchived` honoured only when
+        `can(ctx.user, "restore", "trash")`), `getClient` (contacts primary first), `getClientFinancials`,
+        `getClientsOverview`. PD-4: USD metrics from the finance collections with `sumMoney` over stored
+        snapshots (C15, C16); `projectCount` from non-archived project rows; `lastActivityAt` from the
+        activity rows.
+      - Contacts: `createContact`, `updateContact`, `setPrimaryContact` (unsets the previous primary,
+        HU-04 CA2), `archiveContact`, `listContacts` (by client); activity on `CONTACT`.
+- [ ] Adapters (`defineAction`, real grants, DT-71): create/update/status `{ create | update, client }`;
+      archive `{ delete, client }`; restore `{ restore, trash }`; contacts `{ … , contact }`; read actions
+      `searchClientsAction` (`{ read, client }`, `q`, ≤ 20 `EntityRef` options) and
+      `searchContactsAction` (`{ read, contact }`); `exportClientsCsvAction` through the 1.2 factory
+      (`{ read, client }`). Revalidate `/clients` paths.
+- [ ] `queries.ts`: `listClients`, `getClient` (`NOT_FOUND` lets the page call `notFound()`),
+      `getClientsOverview`, `getClientFinancials`, `listContacts`.
+- [ ] `clients/columns.ts`: table column ids of PRD §8.2 "Tabla", label keys `clients.columns.*`,
+      money flag; shared by the export source and the W3 table.
+- [ ] i18n `clients`, `contacts` (ES and EN): error keys, column labels, toast keys the actions return.
+- [ ] Tests: every rule above (sequence, `CONFLICT` with entity on create/update/restore, cascade with and
+      without `confirm`, primary uniqueness, `includeArchived` ignored for Member, metrics `"0.00"` with
+      empty finance collections and summed with seeded test rows, activity entries and diffs); adapters:
+      Member and Viewer on create → `FORBIDDEN`, bad input → `VALIDATION`, `CONFLICT` keeps `entity`.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.2 — Projects: mock services and adapters
+
+Package 2.2 → Agent: wedevs-developer · sonnet — Reason: the status state machine with required dates and hints, the N:M client links and link ordering are the contract H2-B3 reproduces, with activity side effects (C12 shape); borderline, so sonnet.
+
+Depends on: 1.1, 1.2.
+
+Files: `src/mocks/services/projects.ts` (+ test); `src/features/projects/{queries,actions,columns}.ts`
+(+ tests); `src/i18n/messages/{es,en}/projects.json`. No UI file.
+
+- [ ] `ProjectsService` names (C9) except `getProjectFinancials` (H1-B3; not exported in H1-B2):
+      - `createProject`: ≥ 1 client (HU-05 CA1), `PRY-####`, `PROPUESTA` by default; stack only active
+        technology ids (unknown or inactive → `VALIDATION` on the field, HU-06 CA1); links; `CREATE` and
+        `LINK` entries.
+      - `updateProject`, `setProjectClients` (roles, HU-05 CA2; `LINK`/`UNLINK`),
+        `setProjectTechnologies`, `upsertProjectLinks` (URL rule from the contract, HU-07 CA3),
+        `reorderProjectLinks` (order within a group persists, HU-07 CA2), `removeProjectLink`.
+      - `setProjectStatus`: only transitions allowed by `PROJECT_STATUS_TRANSITIONS`; dates required by
+        the contract (HU-08 CA1–CA2); hints per PRD §8.3 (`EN_CURSO` without a billing plan; `MANTENIMIENTO`
+        without an active recurring charge); `CANCELADO` applies the chosen options to the installment and
+        recurring collections (empty until H1-B3); `STATUS_CHANGE` with `[before, after]` (HU-08 CA4).
+      - `archiveProject` / `archiveProjects` (`DELETE`), `listProjects` (every `projectFilterSchema`
+        filter incl. `technologyId`, HU-06 CA2), `getProject`, `getProjectsOverview`. PD-4 financial
+        headline from the finance collections (`"0.00"` now).
+- [ ] Adapters: `{ create, project }`, `{ update, project }` (Member RU), `{ delete, project }`;
+      `searchProjectsAction` (`{ read, project }`); `exportProjectsCsvAction` (`{ read, project }`).
+- [ ] `projects/columns.ts`: column ids of PRD §8.3 "Tabla", label keys, money flags.
+- [ ] i18n `projects` (ES and EN): errors, hints, column labels, toast keys.
+- [ ] Tests: allowed and refused transitions, required dates, hints, cancel options, reorder per group,
+      inactive technology refused, technology filter, client links with roles, activity entries; adapters:
+      Member update allowed, Member create/archive `FORBIDDEN`, Viewer update `FORBIDDEN`.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.3 — Rich-text kit, notes service and the *Notas* tab
+
+Package 2.3 → Agent: wedevs-developer · sonnet — Reason: C4 (rich-text editing and rendering must never let scripts, iframes, `on*` handlers or `javascript:`/`data:` URLs reach the DOM) and the own-records delete grant for Members (`ownerOf`, C13 shape).
+
+Use the shadcn MCP.
+
+Depends on: 1.1, 1.2 (image rule, export factory), 1.3 (`entityHref`, registry `item`).
+
+Files: new `src/lib/rich-text.ts` (+ test); new `src/components/ui/rich-text/**` (editor, toolbar,
+viewer, extension allowlist, + tests); `src/mocks/services/notes.ts` (+ test);
+`src/features/notes/{queries,actions,columns}.ts` (+ tests); new
+`src/features/notes/components/{notes-feed,note-card,note-composer,note-attachments,entity-notes-tab}.tsx`
+(+ tests); `src/i18n/messages/{es,en}/notes.json`; `src/i18n/messages/{es,en}/forms.json` (add-only
+block `richText`). No other file.
+
+- [ ] `lib/rich-text.ts` (pure): `richTextToPlainText(doc)`, `richTextExcerpt(doc, max)`,
+      `noteDisplayTitle(title, doc)` (first words when there is no title, PRD §8.10).
+- [ ] `RichTextEditor`: Tiptap with exactly the extensions that produce `RICH_TEXT_NODE_TYPES` and
+      `RICH_TEXT_MARK_TYPES` (StarterKit configured, task list, table, link limited to `http`, `https`,
+      `mailto`, image limited to `fileId`/`alt`, placeholder); `immediatelyRender: false` (no hydration
+      mismatch); toolbar composed of registry `toggle`/`toggle-group`/`button-group`/`separator`/
+      `tooltip` with i18n labels; pasted HTML normalized by the schema; pasted or dropped images upload
+      through the existing `UploadAdapter` (`features/files/upload-adapter.ts`) and insert an `image`
+      node with `fileId`; the value is checked with `richTextDocSchema` before submit. Reused by the
+      project description in W3.
+- [ ] `RichTextView`: read-only Tiptap renderer with the same allowlist; images render as an attachment
+      placeholder (file name; no URL in Hito 1); links get `rel="noopener noreferrer nofollow"` and
+      open in a new tab. No `dangerouslySetInnerHTML` (C4).
+- [ ] Mock `NotesService`: `createNote` (author = `ctx.user`; every link target resolved with
+      `resolveEntityRef`, unknown → `NOT_FOUND`; attachments must be `READY` files; `CREATE` + `LINK`),
+      `updateNote` (author immutable; content diff recorded as `"changed"`), `pinNote`, `linkNote`,
+      `unlinkNote` (the last link is refused), `attachFile` (`UPLOAD`), `archiveNote` (`DELETE`),
+      `listNotes` (entity feed: pinned first, then newest; table filters), `getNote`; `contentText` and
+      `excerpt` derived with `lib/rich-text`.
+- [ ] Adapters: create/update/pin/link/unlink/attach `{ create | update, note }`; archive
+      `{ delete, note }` with `ownerOf` = the author (Member deletes only own notes, PRD §4.3);
+      `listNotesAction` (`{ read, note }`, "Cargar más"); `exportNotesCsvAction` (`{ read, note }`).
+- [ ] Components: `NotesFeed` and `NoteCard` (avatar, author · date with `DateText`, pin, title,
+      expandable preview through `RichTextView`, tag chips, attachment chips, actions filtered by
+      `can()`); `NoteComposer` in a `sheet` (title, editor, attachments through the `Uploader`, pinned,
+      links prefilled; **no tag picker in W2** — 3.3 adds it); `EntityNotesTab({ entity })` ("+ Nueva
+      nota" pre-linked, feed, empty state). Viewer sees no write action.
+- [ ] Tests: C4 — pasting `<script>`, `<iframe>`, `<img onerror>`, a `javascript:` link and a `data:` image
+      leaves none of them in the editor or viewer DOM, and the schema rejects the raw JSON; feed order;
+      Member archive own vs other's note through the adapter; title and excerpt derivation; ES and EN.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.4 — Activity: `listActivity`, timeline, `/activity` and the *Actividad* tab
+
+Package 2.4 → Agent: wedevs-developer · haiku — Reason: read-only list, timeline and diff UI over the existing contract and the 1.1 `logActivity` seam; no mutation.
+
+Use the shadcn MCP.
+
+Depends on: 1.1, 1.2 (export factory), 1.3 (`entityHref`, `item`).
+
+Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/features/activity/{queries,actions,columns}.ts`
+(+ tests); new `src/features/activity/components/{activity-feed,activity-item,activity-diff,activity-detail-sheet,activity-stats,activity-filters,entity-activity-tab}.tsx`
+(+ tests); new `src/app/(app)/activity/page.tsx` (+ `loading.tsx` if needed);
+`src/i18n/messages/{es,en}/activity.json`. No other file.
+
+- [ ] `listActivity` per `activityFilterSchema` (actor, actor type, action, entity type, entity pair,
+      Caracas date range; newest first). No update or delete function anywhere (C20).
+- [ ] `/activity` per wireframe 4.7 and frontend-patterns §13: stat cards; filters (user, action, entity
+      type, dates) in the URL through `nuqs`; list grouped by day (time, actor avatar or "Sistema" /
+      "Portal público", action badge, `EntityCodeChip` linked with `entityHref`, summary); detail `sheet`
+      with field diffs (before struck through → after; enum fields labelled from `enums`; the `"changed"`
+      marker as text), technical context (action, masked IP such as `192.0.2.•••`, browser from the user
+      agent, event id), link to the entity and the immutability note (`Lock`); "Cargar más" through
+      `listActivityAction` (`{ read, activity }`); "Exportar CSV" through `exportActivityCsvAction`
+      (`ACTIVITY`, `{ read, activity }`). `generateMetadata` title (R15).
+- [ ] Access: the page checks `can(user, "read", "activity")` on the server and calls `notFound()`
+      otherwise (Member, Viewer).
+- [ ] `EntityActivityTab({ entity })`: the same feed for one record with a readable diff ("Estado:
+      Emitida → Pagada"). Detail pages render it only when `can(read, activity)`.
+- [ ] No edit or delete control on any activity entry (HU-29 CA2).
+- [ ] Tests: filters, day grouping in Caracas, diff rendering (enum, money string, `"changed"`), IP
+      masking, page `notFound()` for Member, load more, ES and EN.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.5 — Tags: service, picker and `/settings/tags`
+
+Package 2.5 → Agent: wedevs-developer · haiku — Reason: configurable catalog CRUD and a picker over the existing kit (`AsyncCombobox` multi with inline create).
+
+Use the shadcn MCP.
+
+Depends on: 1.1 (`services/tags.ts` reads, rows), 1.2 (export factory).
+
+Files: `src/mocks/services/tags.ts` (adds `createTag`, `updateTag`, `assignTags`, `unassignTag`; + test);
+`src/features/tags/{queries,actions,columns}.ts` (+ tests); new
+`src/features/tags/components/{tag-picker,tag-chips,tag-form-dialog,tags-table,color-swatches}.tsx`
+(+ tests); new `src/app/(app)/settings/tags/page.tsx`; `src/i18n/messages/{es,en}/tags.json`. No other
+file.
+
+- [ ] Service: `createTag` (case-insensitive unique name → `CONFLICT` with entity), `updateTag`,
+      `assignTags` / `unassignTag` for every taggable type whose collection has rows (unknown or archived
+      entity → `NOT_FOUND`; `LINK`/`UNLINK` entries). The service also checks
+      `can(ctx.user, "update", <resource of the entity type>)` (a Member may tag projects and notes, not
+      clients) and throws `FORBIDDEN`.
+- [ ] Adapters: `createTagAction` any-of `[{ create, settings }, { update, client }, { update, project },
+      { create, note }, { create, document }]` (inline creation where the user can edit the record);
+      `updateTagAction` `{ update, settings }`; `assignTagsAction` / `unassignTagAction` any-of the
+      taggable updates plus the service check; `listTagsAction` `"authenticated"` (reference read,
+      DT-71); `exportTagsCsvAction` (`TAG`, `{ read, settings }`).
+- [ ] `/settings/tags` (Owner/Admin; the page calls `notFound()` otherwise): table (chip with colour,
+      usage count, created), create/edit dialog with name and colour (preset swatches through
+      `toggle-group` plus a hex input), readable chip text on any colour (pure luminance helper). No
+      delete (not in PRD §12). `generateMetadata` title.
+- [ ] `TagPicker` (multi, inline "Crear «…»" only when the user may create, colour chips) and `TagChips`.
+- [ ] Tests: unique name, assign/unassign rules and permission check, picker inline create, chip
+      contrast helper, page access per role, ES and EN.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.6 — Technologies: service, picker and `/settings/technologies`
+
+Package 2.6 → Agent: wedevs-developer · haiku — Reason: configurable catalog CRUD and pickers over the existing kit; the only rule (in-use lock) is a count over project rows.
+
+Use the shadcn MCP.
+
+Depends on: 1.1 (`services/technologies.ts` reads), 1.2 (export factory, DT-72 comment).
+
+Files: `src/mocks/services/technologies.ts` (adds create, update, set active, delete; + test);
+`src/features/technologies/{queries,actions,columns,label}.ts` (+ tests); new
+`src/features/technologies/components/{technologies-table,technology-form-dialog,technology-picker,tech-stack-icons}.tsx`
+(+ tests); new `src/app/(app)/settings/technologies/page.tsx`; `src/i18n/messages/{es,en}/catalogs.json`
+(block `technologies`; keep `validation`). No other file.
+
+- [ ] Service (`TechnologiesService`): `createTechnology` (unique name and slug → `CONFLICT`; slug
+      derived when omitted), `updateTechnology`, `setTechnologyActive`, `deleteTechnology` (in use by a
+      non-archived project → `INTEGRITY_LOCK` `catalogs.technologies.errors.inUse`, HU-06 CA3; otherwise
+      removed — catalog rows are not soft-deleted, `data-rules.md` §6); `SETTINGS_CHANGE` entries on
+      `SETTING`.
+- [ ] Adapters `{ create | update | delete, settings }`; `listTechnologiesAction` `"authenticated"`
+      (reference read, DT-71); `exportTechnologiesCsvAction` (`TECHNOLOGY`, `{ read, settings }`).
+- [ ] **DT-72:** `technologyLabel(tech, locale)` in `label.ts` = `nameEn ?? name` in English, `name` in
+      Spanish; used by the table, the picker and the icons.
+- [ ] `/settings/technologies` (Owner/Admin; `notFound()` otherwise): table (icon, name, `nameEn`,
+      category, usage count, active switch), facets category and active, create/edit dialog (name,
+      optional `nameEn`, slug preview, category with `enums` labels, Simple Icons slug with live preview,
+      colour), deactivate/activate, delete through `ConfirmDialog`; an in-use delete shows the lock and
+      offers deactivation. `generateMetadata` title.
+- [ ] `TechnologyPicker`: multi-select grouped by category, active technologies only, no free values
+      (HU-06 CA1). `TechStackIcons`: icons with tooltip names. **Simple Icons are resolved on the server
+      only** (RSC): never import `simple-icons` into a client component (bundle size); client pickers
+      show the colour dot.
+- [ ] Tests: lock and deactivate (HU-06 CA3), unique name/slug, picker shows only active and groups by
+      category, English fallback, page access per role.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.7 — Alerts: rules, `AlertList`, live bell (R16)
+
+Package 2.7 → Agent: wedevs-developer · sonnet — Reason: nine live rules with money comparisons (`compareMoney`, C15) and Caracas business dates that H2-B6 must reproduce, plus per-user dismiss/snooze state and a shell file; borderline, so sonnet.
+
+Use the shadcn MCP.
+
+Depends on: 1.1 (rows, dismissals collection), 1.3 (`entityHref`).
+
+Files: new `src/mocks/services/alerts.ts` (+ test); new `src/features/alerts/{queries,actions}.ts`
+(+ tests); new `src/features/alerts/components/{alert-list,alert-item,alert-snooze-menu}.tsx` (+ tests);
+`src/features/shell/queries.ts` (+ `queries.test.ts`); `src/components/app/alerts-bell.tsx` (+ new
+`alerts-bell.test.tsx`); `src/i18n/messages/{es,en}/alerts.json`; `src/i18n/messages/{es,en}/shell.json`
+(block `alerts`, add-only). No other file.
+
+- [ ] `listAlerts` (`AlertsService`): the nine rules of PRD §7.9 over the store with "today" =
+      `todayInCaracas(ctx.now)`: invoice overdue; invoice due within 7 days with balance > 0; installment
+      `PENDIENTE` due in ≤ 7 days or past; document expiring within its `alertDaysBefore` (default 30);
+      document `VENCIDO`; recurring expense `PENDIENTE` due in ≤ 5 days or past; payment
+      `PENDIENTE_VERIFICACION` older than 2 days; confirmed payment with unallocated > 0 older than 15
+      days; no VES rate today on a business day. Amounts compared with `compareMoney`; keys with
+      `buildAlertKey`. Dismissed (`dismissedUntil = null`) and snoozed (`> now`) alerts of the current user
+      are left out. Types filtered by role: finance types only when `canSeeFinancials(user)`, document
+      types when `can(read, document)`, the missing rate when `can(read, settings)`.
+- [ ] `dismissAlert`, `snoozeAlert` (1–90 days), `restoreAlert` on `alertDismissals` for `ctx.user.id`.
+- [ ] Adapters: dismiss/snooze/restore and `listAlertsAction` with `"authenticated"` (the caller's own
+      alert state and a role-filtered read; DT-71 interpretation, the Code Reviewer confirms).
+- [ ] `features/shell/queries.ts`: `alertCount` = `listAlerts(ctx, { limit: 1 }).total`.
+- [ ] `AlertList` (icon per type, title and context from i18n with ICU days, `MoneyText`/`DateText`, link
+      through `entityHref`, dismiss, snooze menu 1/3/7 days, undo toast through `restoreAlert`); compact
+      variant for the bell, full variant for overviews (props: `types`, `limit`).
+- [ ] **PD-5** `AlertsBell`: when opened, the panel loads the list through `listAlertsAction`; empty state
+      kept when there is none; "Marcar leídas" unchanged (H1-B5).
+- [ ] **R16** counter badge readable in both themes (≥ 4.5:1 at its size) without editing
+      `globals.css`; if a token change is unavoidable, stop and report. State the measured ratios.
+- [ ] Tests: each rule at its boundary (day 7 vs 8, 2 vs 3 days, 15 vs 16, balance `0.00` vs `0.01`,
+      weekend without a rate), dismiss/snooze/restore per user, role filtering, shell count, bell panel
+      load, badge classes.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.8 — *Documentos* tab: minimal documents service and the attach sheet
+
+Package 2.8 → Agent: wedevs-developer · haiku — Reason: a tab, a sheet and a minimal CRUD over existing contracts and the existing uploader; the documents module proper is H1-B4.
+
+Use the shadcn MCP.
+
+Depends on: 1.1 (document rows and files), 1.3 (`entityHref`, `item`).
+
+Files: new `src/mocks/services/documents.ts` (+ test); new `src/features/documents/{queries,actions}.ts`
+(+ tests); new `src/features/documents/components/{entity-documents-tab,attach-document-sheet,document-row-actions}.tsx`
+(+ tests); `src/i18n/messages/{es,en}/documents.json` (keep `validation`). No other file.
+
+- [ ] Minimal service with PRD §12 names (H1-B4 extends this file): `listDocuments` (by linked entity,
+      category/type facets, archived left out), `createDocument` (`ARCHIVO` format only here; type rules
+      through `createDocumentInputSchemaFor`; `DOC-####`; `CREATE`, `UPLOAD`, `LINK`), `linkDocument`,
+      `unlinkDocument` (`UNLINK`; other links untouched, HU-20 CA2), `searchDocuments`.
+- [ ] Adapters: `{ create, document }`, link/unlink `{ update, document }` (Member CRU),
+      `searchDocumentsAction` (`{ read, document }`).
+- [ ] `EntityDocumentsTab({ entity })` per wireframe 4.6: category chips with counts, table (code, title,
+      type, status badge, version, updated), "Adjuntar documento" `sheet` with two modes — upload a new
+      file (`Uploader`, 25 MB general context; type grouped by category; title; dates per the type rules)
+      or link an existing document (`AsyncCombobox`); unlink through `ConfirmDialog`; Viewer read-only.
+      Document links go to `/documents/[id]` (in-shell 404 until H1-B4, declared).
+- [ ] Tests: list by entity, attach new and link existing, unlink keeps other links, permission per role,
+      oversize and disallowed files refused by the uploader context, ES and EN.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Wave 2 close
+
+- [ ] **Integration checklist:** 2.1–2.8 merged; no Claude attribution; worktrees removed; lockfile
+      unchanged; lint, typecheck, test, `i18n:check`, build pass.
+- [ ] **Planner coherence review:** every mock service exports the PRD §12 names and contract signatures
+      (C9); no W2 service imports another W2 service; actions use real grants except the DT-71 cases
+      listed above; export actions use the 1.2 factory with sources matching `columns.ts`; search actions
+      return `EntityRef` options the kit's `AsyncCombobox` accepts; `EntityNotesTab`,
+      `EntityDocumentsTab` and `EntityActivityTab` share one prop shape (`entity: EntityRef`); `TagPicker`
+      and `TechnologyPicker` emit the id lists the client and project inputs expect; alert rules match
+      §7.9; `/settings/tags` and `/settings/technologies` override the `[section]` placeholder and enforce
+      access; namespaces in both languages.
+- [ ] **Code review:** C1, C2, C3 (no hand-written registry equivalents; editor and timeline are
+      compositions), **C4** (editor, viewer, paste, links, images), C5, C6, C7, C8, C9, C10 (incl. DT-71 and
+      the alert-dismissal interpretation), C11 (no `new Date()` in services), C12 shape (activity entries),
+      C15, C16 shape, C19 shape (client cascade, technology lock, archived filtering), C20, C23 shape,
+      C25; accessibility of the editor toolbar, the activity sheet, the bell panel and the attach sheet.
+- [ ] **User confirms the Tester may run.**
+- [ ] **Tester scope:**
+  - Unit: `vitest run --coverage` (report every W2 mock service and `components/ui/rich-text/**`),
+    `i18n:check`, build.
+  - E2E (`tests/e2e/h1-b2-w2.spec.ts`, written by the Tester), local only, three phases per
+    `safeguards.md` rule 1 (A: no server; B: start worker runs `next start` on a free port, polls with a
+    60 s timeout, reports; C: test worker runs Playwright once, then stops the server and frees the
+    port): `/settings/tags` (create, rename, recolour; Member and Viewer get the in-shell 404);
+    `/settings/technologies` (create with `nameEn`, EN shows `nameEn`, delete in use refused and
+    deactivate offered — HU-06 CA3, delete unused works); `/activity` (filters in the URL, detail sheet,
+    load more, CSV download with BOM; Member gets the in-shell 404); bell counter equals the panel list;
+    dismiss and snooze lower the counter.
+  - Accessibility: keyboard through the editor toolbar (component test), the activity sheet and the
+    bell panel; dark-mode badge contrast.
+- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+- [ ] **Summary** written by the Orchestrator.
+
+🛑 **MANDATORY STOP** — wave 3 does not start without the user's explicit approval.
+
+---
+
+### WAVE 3 — Screens: clients, projects, notes
+
+**Objective:** the module screens composed only of W1–W2 outputs and the kit: clients (with contacts),
+projects (with links, stack and transitions) and the notes module, with the cross-entity tabs, finance
+slots, archive/restore, CSV export and per-page titles.
+
+**Shared-file owners (wave 3):**
+
+| Shared file / area | Owner |
+|---|---|
+| new `src/app/(app)/clients/**`, new `src/features/clients/components/**`, new `src/features/contacts/components/**`, i18n `clients`, `contacts` | 3.1 |
+| new `src/app/(app)/projects/**` (no `[id]/billing`, H1-B3), new `src/features/projects/components/**`, i18n `projects` | 3.2 |
+| new `src/app/(app)/notes/**`, `src/features/notes/components/**` (keep the exported props of `EntityNotesTab` unchanged), new `src/features/notes/components/note-link-picker.tsx`, i18n `notes` | 3.3 |
+| every `queries.ts`, `actions.ts`, `columns.ts`, mock service, validator, kit, pattern, shell and config file | nobody (read-only; a needed change → stop and report) |
+
+**Cross-package rule (wave 3):** 3.1 and 3.2 import `EntityNotesTab` from the W2 file that 3.3 edits;
+3.3 keeps its exported props (`entity: EntityRef`) and behaviour, so the imports stay valid after the
+merge.
+
+#### Package 3.1 — Clients and contacts screens
+
+Package 3.1 → Agent: wedevs-developer · haiku — Reason: screens composed of the existing kit, patterns and the W2 queries/actions; the rules live in the 2.1 service.
+
+Use the shadcn MCP.
+
+Depends on: 1.2 (`useCsvExport`), 1.3 (breadcrumb label, `FinanceTabSlot`, `entityHref`), 2.1, 2.2
+(projects of a client), 2.3, 2.4, 2.5 (`TagPicker`), 2.7 (`AlertList`), 2.8.
+
+Files: new `src/app/(app)/clients/{page,loading}.tsx`, `clients/list/page.tsx`, `clients/new/page.tsx`,
+`clients/[id]/page.tsx`, `clients/[id]/edit/page.tsx`; new `src/features/clients/components/**` and
+`src/features/contacts/components/**` (+ tests); `src/i18n/messages/{es,en}/{clients,contacts}.json`.
+
+- [ ] `/clients` overview (`OverviewLayout`, `OverviewTableToggle`): count by status; top 5 by revenue and
+      clients with overdue balance (finance roles only); recently created; `AlertList` (invoice overdue,
+      due soon, unallocated credit — finance roles); quick action "Nuevo cliente".
+- [ ] `/clients/list`: `DataTable` with `clients/columns.ts`; facets status, kind, country, tag, created
+      range; search; sort; column preferences (`table:clients:columns`); "Mostrar archivados"
+      (Owner/Admin); bulk tag (`TagPicker` + `assignTagsAction`), bulk archive (`ConfirmDialog` with the
+      cascade warning, `confirm` flag), export (`useCsvExport(exportClientsCsvAction)`); financial columns
+      hidden without `canSeeFinancials`; empty state with CTA.
+- [ ] `/clients/new` and `/clients/[id]/edit` (`FormPage`, RHF + `zodResolver` with the create/update
+      schemas): kind; legal name required for `EMPRESA` (HU-03 CA1); tax id with the VE hint;
+      `CountryCombobox`; `PhoneInput`; address; email; website; status; `TagPicker`; unsaved-changes guard.
+      On `CONFLICT` the tax-id field shows the error with a link to `entityHref(error.entity)` (HU-03
+      CA3); on success a toast and the detail page.
+- [ ] `/clients/[id]`: `DetailHeader` (initials, code chip, name, status, tags, meta, Detalle | Grafo,
+      Editar, More: change status, archive with the cascade confirmation, restore when archived with
+      `ArchivedBanner`); `BreadcrumbLabel`; side panel with key data and `FinancialSummaryCard` (finance
+      roles); `DetailTabs` (`?tab=`, counts): Resumen (data, highlighted contacts, metrics), Contactos
+      (table and dialog to add/edit, set primary, archive; read-only for Member/Viewer, HU-04), Proyectos
+      (`RelatedMiniTable` from `listProjects({ clientId })`, "+ Nuevo" → `/projects/new?clientId=`,
+      HU-05 CA3), Facturas and Pagos (`FinanceTabSlot`, finance roles), Documentos
+      (`EntityDocumentsTab`), Notas (`EntityNotesTab`), Actividad (`EntityActivityTab` when
+      `can(read, activity)`). Unknown id, or archived for non-admins → `notFound()`.
+- [ ] `generateMetadata` titles on every page (R15). Strings only from i18n (C1).
+- [ ] Tests: `EMPRESA` legal-name rule, `CONFLICT` link rendering, tabs per role, contact primary toggle,
+      archive dialog sends `confirm`.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 3.2 — Projects screens
+
+Package 3.2 → Agent: wedevs-developer · haiku — Reason: screens over the kit, the rich-text kit, the pickers and the 2.2 actions; the transition rules live in the service and the contract.
+
+Use the shadcn MCP.
+
+Depends on: 1.2, 1.3, 2.1 (client search), 2.2, 2.3 (`RichTextEditor`/`View`, `EntityNotesTab`), 2.4,
+2.5, 2.6 (`TechnologyPicker`, `TechStackIcons`), 2.7, 2.8.
+
+Files: new `src/app/(app)/projects/{page,loading}.tsx`, `projects/list/page.tsx`, `projects/new/page.tsx`,
+`projects/[id]/page.tsx`, `projects/[id]/edit/page.tsx`; new `src/features/projects/components/**`
+(+ tests); `src/i18n/messages/{es,en}/projects.json`.
+
+- [ ] `/projects` overview: projects by status (registry `chart`), upcoming deliveries, without billing
+      plan, top technologies, highest to invoice (finance roles), `AlertList` (installments to invoice —
+      finance roles).
+- [ ] `/projects/list`: columns of `projects/columns.ts` (stack as icons); facets status, client (async),
+      technology (HU-06 CA2), tag, delivery range, without billing plan; bulk tag/archive; export.
+- [ ] `/projects/new` (`?clientId=` prefill) and `/projects/[id]/edit`: name; clients (`AsyncCombobox`
+      multi with a per-client role input, ≥ 1, HU-05 CA1–CA2); summary ≤ 280 with a counter; description
+      (`RichTextEditor`); dates; stack (`TechnologyPicker`); links editor; tags; unsaved-changes guard.
+      Status is not edited here (transition dialog).
+- [ ] Links editor (HU-07): collapsible cards per `ProjectLinkGroup`; add/edit/remove rows (label, URL with
+      the field error on invalid URLs, CA3); drag reorder within a group with `@dnd-kit` sortable,
+      keyboard sensor and i18n announcements (CA2, persisted through `reorderProjectLinksAction` on the
+      detail page); favicon from `https://<host>/favicon.ico` with the group icon as fallback (no
+      third-party favicon service); open in a new tab; copy URL with a toast.
+- [ ] `/projects/[id]`: header (code, name, status, tags, Detalle | Grafo, Editar, "Cambiar estado", More:
+      archive); `BreadcrumbLabel`; side panel (clients with roles, dates, stack, financial headline for
+      finance roles); tabs: Resumen (`RichTextView`, clients, dates, stack), Enlaces, Cobro / Facturas /
+      Gastos (`FinanceTabSlot`, finance roles), Documentos, Notas, Actividad.
+- [ ] Transition dialog (HU-08): targets from `PROJECT_STATUS_TRANSITIONS`; start date required for
+      `EN_CURSO`, end date for `ENTREGADO`; `CANCELADO` through `ConfirmDialog` with the two options
+      (cancel pending installments, end recurring charges, CA3); returned hints shown as non-blocking
+      warnings.
+- [ ] Member: edit allowed, no create or archive; Viewer read-only. `generateMetadata` titles (R15).
+- [ ] Tests: client role input and ≥ 1 rule, summary counter, link URL error, keyboard reorder,
+      transition dialog per target, role gating.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 3.3 — Notes module and tags in the composer
+
+Package 3.3 → Agent: wedevs-developer · haiku — Reason: a table, a form page and a detail over the 2.3 notes kit and actions plus the 2.5 picker.
+
+Use the shadcn MCP.
+
+Depends on: 1.2, 1.3, 2.1 (client/contact search), 2.2 (project search), 2.3, 2.5, 2.8 (document search).
+
+Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/page.tsx`;
+`src/features/notes/components/**` (edit `note-composer.tsx`; new `notes-table.tsx`,
+`note-link-picker.tsx`, `note-detail.tsx`; + tests); `src/i18n/messages/{es,en}/notes.json`.
+
+- [ ] `/notes`: global table (title or derived title, excerpt, author, linked entity chips through
+      `entityHref`, tags, attachment count, pinned, created/updated); facets author, tag, linked entity
+      type, created range; search; export (`exportNotesCsvAction`); bulk tag; per-row archive with the
+      own-notes rule.
+- [ ] `/notes/new`: the composer as a full page with `NoteLinkPicker` (type CLIENT / CONTACT / PROJECT /
+      DOCUMENT + `AsyncCombobox` over the W2 search actions; H1-B3 adds INVOICE / PAYMENT / EXPENSE),
+      prefill from `?entityType=&entityId=`, tags.
+- [ ] `/notes/[id]`: detail and edit (title, content, tags, links add/remove with the last-link guard,
+      pin, attachments, archive with the own-notes rule).
+- [ ] `NoteComposer` gains `TagPicker` (create and edit); `EntityNotesTab` props and behaviour unchanged.
+- [ ] `generateMetadata` titles (R15).
+- [ ] Tests: filters, link picker prefill, tags on create, last-link guard message, Member archive own
+      only.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Wave 3 close
+
+- [ ] **Integration checklist:** 3.1, 3.2, 3.3 merged; no Claude attribution; worktrees removed; lockfile
+      unchanged; lint, typecheck, test, `i18n:check`, build pass.
+- [ ] **Planner coherence review:** H1-B2 routes = PRD §11 and `coverage-matrix.md` §4; detail tabs = PRD
+      §8.2/§8.3 lists (finance tabs as slots, Grafo as the header toggle); screens read only through
+      `queries.ts` and mutate only through `actions.ts` (C7); the shared kit and patterns are used, not
+      re-implemented; forms use the same schemas as the actions; `?tab=` values stable for the E2E; every
+      page has a translated title; namespaces in both languages.
+- [ ] **Code review:** C1, C2, C3, C4 (description and notes rendering), C5, C6, C7, C8, C9, C10, C15
+      (no number math on money in screens), C16 shape, C19 shape (archive/restore dialogs, "Mostrar
+      archivados" only Owner/Admin), C20, C25; accessibility of forms (labels, errors linked to fields),
+      tabs (keyboard, `?tab=`), dialogs (focus trap and return), the links reorder (keyboard).
+- [ ] **User confirms the Tester may run.**
+- [ ] **Tester scope:**
+  - Unit: `vitest run --coverage`, `i18n:check` (ES/EN parity), build.
+  - E2E (`tests/e2e/h1-b2-*.spec.ts`, written by the Tester), local only over mocks, three phases per
+    `safeguards.md` rule 1 (start worker: `next start` on a free port, 60 s readiness timeout; test
+    worker: Playwright once, then stop the server and free the port; "Reset mock data" before each
+    spec):
+    - HU-03: CA1 required fields (legal name only for `EMPRESA`); CA2 new code `CLI-####` follows the
+      highest; CA3 duplicate tax id + country → error with a link that opens the existing client; CA4
+      `CREATE` visible in the *Actividad* tab.
+    - HU-04: CA1 name + email or phone; CA2 marking a primary unmarks the previous one.
+    - HU-05: CA1 no save without a client; CA2 role per client; CA3 project listed in each linked
+      client's *Proyectos* tab.
+    - HU-06: CA1 picker shows only active technologies grouped by category; CA2 filter "Next.js" on
+      `/projects/list`; CA3 (covered in W2, re-run).
+    - HU-07: CA1 several `REPOSITORIO` links; CA2 reorder by drag and by keyboard, order kept after
+      reload; CA3 invalid URL error on the field.
+    - HU-08: CA1 `EN_CURSO` needs a start date; CA2 `ENTREGADO` needs the delivery date; CA3 `CANCELADO`
+      offers both options; CA4 `STATUS_CHANGE` in *Actividad*.
+    - HU-23: CA1 author, date, tags and several attachments kept; CA2 one note linked to a client and a
+      project shows in both feeds.
+    - HU-29: CA2 no edit or delete control on any activity entry; a client edit shows its field diff.
+    - Shapes: archive a client with active projects (confirmation, contacts archived), restore it, and
+      "Mostrar archivados" (HU-28 shape); `/clients/list` column visibility kept after reload and CSV
+      with BOM, all filtered rows and only visible columns (HU-27 shape); *Documentos* tab attach and
+      unlink (HU-20 shape).
+    - Roles through "View as role": Member edits a project but cannot create one or archive a client,
+      archives only own notes, sees no finance tabs or columns; Viewer sees no write action.
+    - Navigation sweep: every H1-B2 route renders in the shell with a translated title; unknown ids → the
+      in-shell 404 with status 404; `/clients/[id]/graph` → in-shell 404 (H1-B5).
+  - Accessibility and responsive: keyboard through the client and project forms, detail tabs, dialogs and
+    the links reorder; ES ↔ EN on a detail page (dates and money reformat, HU-30 CA1); desktop and tablet
+    820×1180 without horizontal page scroll; dark-mode contrast spot-check.
+  - Manual pass (embedded browser): clients and projects golden path in both themes and languages.
+- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+- [ ] **Summary** written by the Orchestrator.
+
+🛑 **MANDATORY STOP** — H1-B2 closes only with the user's explicit approval; then the batch close below.
+
+### H1-B2 batch close
+
+- [ ] User approves the H1-B2 close after reviewing the UI locally with `pnpm dev`.
+- [ ] **Deferred to the end of Hito 1 (DT-69):** push `batch/h1-b2-commercial-core`, PR, CI, deploy
+      preview, merge by the user. Until then H1-B3 branches from `batch/h1-b2-commercial-core`.
 
 ## H1-B3 — Finance UI (outline)
 
