@@ -791,7 +791,7 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       Deviations accepted: 3.7 (a)(b), 3.5 `window.confirm` (H1-FX may restyle), 3.2 (1)(2)(4)(5), 3.1
       (2)(3). 3.6 real PDF render deferred to H1-B4. nuqs adapter covered by 5.1. Open for the user:
       IGTF single source (proposed DT-70) and Technology `nameEn` (Δ4 or drop; before H2-B1).
-- [ ] **Code review:** C1, C2, C3, C5, C6, C8, C13, C15, C20 (`activity` read-only), C22 shape (contracts), C23 shape, C25.
+- [x] **Code review:** C1, C2, C3, C5, C6, C8, C13, C15, C20 (`activity` read-only), C22 shape (contracts), C23 shape, C25.
       First pass CHANGES REQUIRED: B1 portal input schemas mix client and server-only fields
       (`unlockedDocumentIds`, `ip`) and the unlock contract lacks an IP for the lockout (C22); B2 account
       mask bypass (C5); B3 calendar without locale and composed labels in code (C1); M1 KPI card focus
@@ -803,6 +803,9 @@ Files: `src/lib/validators/shares.ts`, `src/lib/validators/accounts.ts` and thei
       row label; m8 ToggleGroup of links → ButtonGroup + `aria-current`; m10 dial `aria-label`.
       H1-B4: m11 verify the pdf.js worker under Turbopack. Nits n1 (`logActivity` signature) and
       n2 (document the server-only salt) → 4.3.
+      Second pass after 3.8 (merge 0dc22ec): READY FOR TESTING; B1–B3 and M1 fixed; C1, C2, C5, C6,
+      C22 shape, C25 PASS. New M3 → 4.3: remove the legacy `shares` `*InputSchema`/`*Input` aliases
+      that point at service schemas (risk of a portal action parsing client input with them).
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:** `vitest run --coverage` (contracts, kit component tests), `i18n:check`, build,
       a11y spot-check of kit components (labels, keyboard on combobox, date field, PDF toolbar). No E2E.
