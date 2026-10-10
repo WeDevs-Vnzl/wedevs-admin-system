@@ -19,7 +19,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
 | H1-FX — Fix/change cycle | change batches | Placeholder; ends with the user's explicit "UI accepted" |
-| H2-B1 … H2-B7 | Hito 2 implementation blocks | Outline; each closes with the deploy-preview gate. Open blockers: P3 (H2-B4), P6 (H2-B6), P7 (H2-B7) |
+| H2-B1 … H2-B7 | Hito 2 implementation blocks | Outline; each closes with the deploy-preview gate. No open blockers (P3/P6/P7 answered, DT-73…DT-75) |
 
 ---
 
@@ -1608,7 +1608,12 @@ Constraints: no persistent server and no browser in this worker (safeguards rule
       alerts, locale and theme, user menu, footer, breadcrumbs, skip link), the sign-in mock, the in-shell
       not-found with real 404s, and the settings frame with working preferences. It went through a
       coherence fix package (5.3) and a Tester-defect package (5.4); the E2E re-run passed 16/16 twice.
-      Open for the user: DT-70, Technology `nameEn`, DT-71; P3, P6, P7, domain and secrets before Hito 2.
+      User decisions 2026-10-10 (`decisions.md` §11): DT-70 IGTF single source (drop `igtfMethodCodes` →
+      H1-B3 finance packages); DT-71 `'authenticated'` scope; DT-72 Δ4 `Technology.nameEn` (H2-B1 schema);
+      DT-73 P3 unknown, stays configurable; DT-74 P6 proposal accepted; DT-75 P7 no migration; DT-76 domain
+      = Netlify URL; DT-77 secrets listed at H2-B1 start. Push/PR stays at the end of Hito 1 (DT-69).
+      `.mcp.json` pin confirmed (`shadcn@4.21.4`, tracked in the repo). The user runs
+      `pnpm exec playwright install` to replace the chromium symlink.
 
 🛑 **MANDATORY STOP** — H1-B1 closes only with the user's explicit approval; then the batch-close steps
 below.
@@ -1766,7 +1771,7 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
   cascades, restore conflicts, sequences), haiku for pure catalog CRUD.
 - Deploy-preview checklist: HU-03–HU-08, HU-23, HU-29 on real data.
 
-### H2-B4 — Finance real (blocked by P3)
+### H2-B4 — Finance real
 
 - Services + swap for finance catalogs, rates (`getRateFor`, CSV import), accounts, transfers,
   movements, reconciliation, billing, installments, recurring charges (`generateMissingPeriods`),
@@ -1788,7 +1793,7 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
 - Deploy-preview checklist: HU-18–HU-22 on real data, incl. 404 on an altered token, `X-Robots-Tag`,
   key-protected document flow and lockout, rate limiting active.
 
-### H2-B6 — Intelligence and jobs real (blocked by P6 for any retention job)
+### H2-B6 — Intelligence and jobs real (retention per DT-74)
 
 - Graph services (cache tag, IOU-01), `searchGlobal` (tsvector + trigram), dashboard/overview
   aggregates, reports and KPIs (IVA per rate from `InvoiceTaxLine`), live alerts with `AlertDismissal`,
@@ -1797,11 +1802,11 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
 - Deploy-preview checklist: HU-10 CA4, HU-12 CA4, HU-19 CA2–CA3 (job run triggered by the user),
   HU-24–HU-28, HU-31.
 
-### H2-B7 — Hardening and launch (blocked by P7)
+### H2-B7 — Hardening and launch (no data migration, DT-75)
 
 - E2E of critical HUs 03, 09, 11, 13, 18, 22, 24 (agents locally; CI on the Neon testing DB; the user on
   the preview); security audit (headers/CSP, authorization of every action, portal and access keys);
-  performance targets (§14); WCAG 2.1 AA; Sentry; data migration per P7; operations documentation;
+  performance targets (§14); WCAG 2.1 AA; Sentry; operations documentation;
   domain and `APP_URL` set by the user before go-live (DT-52); confirm `src/mocks/` deleted and flip the
   ESLint rule (IOU-03).
 - Deploy-preview checklist: full regression; then the user's production go-live decision.

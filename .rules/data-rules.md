@@ -118,6 +118,11 @@ header totals are derived from the lines (`conventions.md` C17 formula).
 **Δ3 — Time zone preference (DT-43).** No schema change: stored as `UserPreference` key `timezone`
 (PRD §8.15 lists it, §10.2 `User` has no column for it).
 
+**Δ4 — Technology English name (DT-72).** `Technology`: add
+```prisma
+nameEn String?   // English display name; falls back to `name` (C2)
+```
+
 ## 4. Complementary SQL migration (PRD §10.3)
 
 One hand-written migration, created right after the initial schema migration in H2-B1, containing the

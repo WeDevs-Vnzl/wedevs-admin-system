@@ -116,12 +116,12 @@ Reviewer verifies it.
 | # | Question (PRD §17, quoted) | Recommendation | Blocks |
 |---|---|---|---|
 | P1 | "¿Hace falta un reparto formal de utilidades entre socios (porcentajes, liquidaciones periódicas)?" | No for the MVP (DT-27). A "yes" is a scope change. | Nothing, unless "yes". |
-| P3 | "¿WeDevs es o será contribuyente especial? Esto cambia el tratamiento del IGTF y de las retenciones." | Keep IGTF/withholdings editable and configurable. | **H2-B4**. Not Hito 1. |
+| P3 | "¿WeDevs es o será contribuyente especial? Esto cambia el tratamiento del IGTF y de las retenciones." | **Answered 2026-10-10 (DT-73): not known yet** — IGTF/withholdings stay editable and configurable. | Nothing now; revisit if the status becomes known. |
 | P4 | "¿Se debe automatizar la obtención diaria de la tasa BCV en la Fase 2?" | Out of the MVP (§3.2). | Nothing in the MVP. |
-| P6 | "¿Cuánto tiempo se conservan `ActivityLog` y `ShareAccessLog`? (Propuesta: indefinido y 24 meses, respectivamente.)" | Accept the proposal. | **H2-B6** (retention job, if any). |
-| P7 | "¿Hay datos existentes (hojas de cálculo, Drive) que migrar? ¿En qué formato?" | Answer before H2-B7; may require CSV importers (scope). | **H2-B7**. |
+| P6 | "¿Cuánto tiempo se conservan `ActivityLog` y `ShareAccessLog`? (Propuesta: indefinido y 24 meses, respectivamente.)" | **Answered 2026-10-10 (DT-74): proposal accepted.** | Nothing (H2-B6 builds the retention job). |
+| P7 | "¿Hay datos existentes (hojas de cálculo, Drive) que migrar? ¿En qué formato?" | **Answered 2026-10-10 (DT-75): no data to migrate.** | Nothing. |
 
-Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51.
+Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51; P3 → DT-73; P6 → DT-74; P7 → DT-75.
 
 ### Blocking summary
 
@@ -131,10 +131,10 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51.
 | H2-B1 | none |
 | H2-B2 | none |
 | H2-B3 | none |
-| H2-B4 | **P3** |
+| H2-B4 | none (P3 answered, DT-73) |
 | H2-B5 | none |
-| H2-B6 | **P6** |
-| H2-B7 | **P7** (and the user's domain choice before go-live, DT-52) |
+| H2-B6 | none (P6 answered, DT-74) |
+| H2-B7 | none (P7 answered, DT-75); domain stays the Netlify URL (DT-52, reconfirmed DT-76) |
 
 ## 7. IOUs (known follow-ups, not decisions)
 
@@ -169,6 +169,7 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51.
 | D11 | §8.11 "PDF incrustado" | pdf.js viewer with custom toolbar | DT-50 |
 | D12 | §7.1 "tres secciones" but four listed | cosmetic; the sidebar follows the four listed groups + Configuración | — |
 | D13 | §9.2 rate prefill | several rates per day by source, selector with BCV default | DT-67 |
+| D14 | §10.2 `model Technology` | optional `nameEn` (schema delta Δ4) | DT-72 |
 
 ## 9. H1-B1 wave 1 findings (rules revision requested by the user)
 
@@ -199,3 +200,16 @@ unless their row says so.
 | DT-67 | DECIDED (user) | **Several exchange rates per day.** A date and currency may have one rate per source (`MANUAL`, `BCV`, `OTRA`), per `@@unique([date, currency, source])`. Prefill follows PRD §9.2 at the date level (exact date, else the latest earlier date with "Usando tasa del dd/mm", else manual). Within the chosen date, **every usable rate is offered in a selector labelled by source**. The default is `BCV`, or else the most recent `createdAt`. The user can pick another source or type the rate. The snapshot stores the chosen value (PRD §9.2 unchanged). Supersedes the "first row wins" note in `lib/rates.ts`. Implemented in packages 3.7 (`selectRate`) and 3.4 (`RateInput`). Amends PRD §9.2 (drift D13). |
 | DT-68 | DECIDED (user) | **`.mcp.json` pins `shadcn@4.21.4`**, the version the project's registry components come from. |
 | DT-69 | DECIDED (user) | **Git remote and push are deferred to the end of Hito 1.** Every branch (`main`, `batch/0-rules`, `batch/h1-b1-ui-foundations`, …) stays local until then. No push or PR is proposed earlier. |
+
+## 11. H1-B1 close decisions (user, 2026-10-10)
+
+| Id | Status | Decision |
+|---|---|---|
+| DT-70 | DECIDED (user) | **IGTF single source.** IGTF is proposed on a payment when its `PaymentMethod.suggestsIgtf` is true **or** its currency is in the fiscal `igtfCurrencies` list. The fiscal setting `igtfMethodCodes` is removed (schema, defaults, fixtures, tests). Implemented by the H1-B3 finance packages (fiscal settings screen, payments IGTF proposal). |
+| DT-71 | DECIDED (user) | **Scope of the `'authenticated'` permission.** Outside the `can()` matrix, `defineAction` accepts `'authenticated'` only for: the caller's own preferences, reads of reference catalogs, and the MOCK-only actions of Hito 1. Any other action must declare `can()` grants. The Code Reviewer checks this (C9). |
+| DT-72 | DECIDED (user) | **Technology `nameEn`.** Schema delta Δ4 `Technology.nameEn String?` (`data-rules.md` §3a), consistent with PRD:382 and C2; the contract keeps the field. Applied in the H2-B1 schema. Amends PRD §10.2 (drift D14). |
+| DT-73 | DECIDED (user) | **P3: special-taxpayer status unknown.** IGTF and withholdings stay editable and configurable; no special-taxpayer logic is built. |
+| DT-74 | DECIDED (user) | **P6: retention.** `ActivityLog` is kept indefinitely; `ShareAccessLog` 24 months (purge job in H2-B6). |
+| DT-75 | DECIDED (user) | **P7: no existing data to migrate.** No importers beyond the CSV rate import already planned; H2-B7 drops the migration step. |
+| DT-76 | DECIDED (user) | **Domain:** keep the Netlify URL as `APP_URL` for now (DT-52 unchanged). |
+| DT-77 | DECIDED (user) | **Secrets for Hito 2** (Clerk, Neon incl. `E2E_DATABASE_URL`, bucket, `SHARE_UNLOCK_SECRET`, Sentry) are configured by the user; the Orchestrator gives the exact list when H2-B1 starts. Agents never see or touch them. |
