@@ -1,0 +1,12 @@
+{
+  "required": "Campo obligatorio",
+  "invalidEmail": "Correo electrónico no válido",
+  "invalidFormat": "Formato no válido",
+  "invalidDate": "Fecha no válida",
+  "invalidId": "Identificador no válido",
+  "invalidOption": "Selecciona una opción válida",
+  "tooShort": "Debe tener al menos {min} caracteres",
+  "tooLong": "Debe tener como máximo {max} caracteres",
+  "positive": "Debe ser mayor que cero",
+  "nonNegative": "No puede ser negativo"
+}

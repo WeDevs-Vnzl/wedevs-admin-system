@@ -1,0 +1,20 @@
+{
+  "app": {
+    "name": "WeDevs Core"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "retry": "Reintentar"
+  },
+  "states": {
+    "loading": "Cargando…",
+    "empty": "Sin resultados",
+    "error": "Algo salió mal"
+  }
+}

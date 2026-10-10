@@ -1,0 +1,38 @@
+// Fixed namespace list (DT-31). Each entry is a file pair src/i18n/messages/{es,en}/<namespace>.json.
+// Created by H1-B1 wave 2 and not changed in Hito 1 without a dedicated package.
+export const namespaces = [
+  "common",
+  "validation",
+  "enums",
+  "mock",
+  "nav",
+  "shell",
+  "auth",
+  "table",
+  "forms",
+  "patterns",
+  "search",
+  "alerts",
+  "dashboard",
+  "clients",
+  "contacts",
+  "projects",
+  "billing",
+  "invoices",
+  "payments",
+  "accounts",
+  "expenses",
+  "documents",
+  "shares",
+  "portal",
+  "notes",
+  "tags",
+  "activity",
+  "graph",
+  "reports",
+  "settings",
+  "catalogs",
+  "trash",
+] as const;
+
+export type Namespace = (typeof namespaces)[number];

@@ -353,19 +353,19 @@ Files: `src/i18n/config.ts`, `src/i18n/namespaces.ts`, `src/i18n/request.ts`,
 `src/components/app/theme-provider.tsx`, `src/components/app/locale-switcher.tsx`,
 `src/components/app/theme-toggle.tsx`, `scripts/check-i18n.ts`, `scripts/check-i18n.test.ts`.
 
-- [ ] `config.ts`: locales `['es','en']`, default `es`, cookie `NEXT_LOCALE`, default time zone
+- [x] `config.ts`: locales `['es','en']`, default `es`, cookie `NEXT_LOCALE`, default time zone
       `America/Caracas`.
-- [ ] `namespaces.ts`: the fixed namespace list; `request.ts` reads the cookie, loads and merges every
+- [x] `namespaces.ts`: the fixed namespace list; `request.ts` reads the cookie, loads and merges every
       namespace for the locale, sets `timeZone` and default formats (DT-31).
-- [ ] Create every namespace file in both languages. Fill now: `common`, `validation`, `enums` (every
+- [x] Create every namespace file in both languages. Fill now: `common`, `validation`, `enums` (every
       enum value incl. the Δ2 `ShareEvent` additions, as `enums.<EnumName>.<VALUE>`, ES and EN), and the
       switcher keys under `shell`. All other namespaces start as `{}`.
-- [ ] `theme-provider.tsx` (next-themes, `class`, light/dark/system); `theme-toggle.tsx` and
+- [x] `theme-provider.tsx` (next-themes, `class`, light/dark/system); `theme-toggle.tsx` and
       `locale-switcher.tsx` from registry items. The locale switch writes the `NEXT_LOCALE` cookie on the
       client and calls `router.refresh()`.
-- [ ] `scripts/check-i18n.ts`: fails on missing/extra keys between locales, missing namespace files and
+- [x] `scripts/check-i18n.ts`: fails on missing/extra keys between locales, missing namespace files and
       empty-string values (C2).
-- [ ] Tests: the parity script on fixtures. The `enums` keys are written from the PRD §10.2 list + Δ2
+- [x] Tests: the parity script on fixtures. The `enums` keys are written from the PRD §10.2 list + Δ2
       (2.1 is built in parallel); the Planner checks `enums` ↔ `enums.ts` at the wave close.
 
 #### Wave 2 close
