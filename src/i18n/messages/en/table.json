@@ -31,7 +31,9 @@
     "resize": "Resize the {column} column"
   },
   "export": {
-    "label": "Export"
+    "label": "Export",
+    "success": "{count, plural, one {Exported # row} other {Exported # rows}}",
+    "truncated": "The export was cut at {max} rows; narrow the filters to export the rest"
   },
   "bulk": {
     "region": "Bulk actions",

@@ -153,7 +153,7 @@ describe("defineAction: permission rules", () => {
     expect(() => makeAction({ permission: [] } as never)).toThrow(/empty permission list/);
   });
 
-  it("only \"authenticated\" has no can() check: a one-entry list still denies a Viewer", async () => {
+  it('only "authenticated" has no can() check: a one-entry list still denies a Viewer', async () => {
     const { action, handler } = makeAction({
       permission: [{ action: "create", resource: "invoice" }],
     } as never);
@@ -391,6 +391,33 @@ describe("toActionError", () => {
   it("ignores a code that is not an ErrorCode", () => {
     expect(toActionError(Object.assign(new Error("x"), { code: "ECONNREFUSED" }))).toMatchObject({
       error: { code: "INTERNAL" },
+    });
+  });
+});
+
+describe("toActionError: entity link (PD-6)", () => {
+  it("a CONFLICT with an entity survives the adapter unchanged", () => {
+    const entity = { id: "cli_1", code: "CLI-0001", label: "Acme", type: "CLIENT" } as const;
+    const result = toActionError(
+      new ServiceError("CONFLICT", { message: "clients.errors.taxIdTaken", entity }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "CONFLICT", message: "clients.errors.taxIdTaken", entity },
+    });
+  });
+
+  it("adds nothing else: no entity key without an entity, nothing from other errors", () => {
+    const plain = toActionError(new ServiceError("CONFLICT"));
+    expect(plain).toEqual({
+      ok: false,
+      error: { code: "CONFLICT", message: "common.errors.CONFLICT" },
+    });
+    expect("entity" in (plain as { error: object }).error).toBe(false);
+    const stray = Object.assign(new Error("boom"), { entity: { id: "x" }, stack: "secret" });
+    expect(toActionError(stray)).toEqual({
+      ok: false,
+      error: { code: "INTERNAL", message: "common.errors.INTERNAL" },
     });
   });
 });

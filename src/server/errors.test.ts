@@ -22,13 +22,19 @@ describe("ServiceError", () => {
     expect(error.fieldErrors).toEqual({ taxId: ["clients.errors.duplicateTaxId"] });
   });
 
+  it("keeps the entity link a CONFLICT points at", () => {
+    const entity = { id: "cli_1", label: "Acme", type: "CLIENT" } as const;
+    expect(new ServiceError("CONFLICT", { entity }).entity).toEqual(entity);
+    expect(new ServiceError("CONFLICT").entity).toBeUndefined();
+  });
+
   it("is the same class the mock context re-exports", () => {
     expect(FromMocks).toBe(ServiceError);
   });
 
   it("is framework-free: no server-only, next, react or mocks import", () => {
     const source = readFileSync(new URL("./errors.ts", import.meta.url), "utf8");
-    const imports = [...source.matchAll(/^import .* from "([^"]+)"/gm)].map((m) => m[1]);
+    const imports = [...source.matchAll(/^import [^;]* from "([^"]+)"/gm)].map((m) => m[1]);
     expect(imports).toEqual(["@/lib/validators/common"]);
     expect(source).not.toContain('"server-only"');
   });

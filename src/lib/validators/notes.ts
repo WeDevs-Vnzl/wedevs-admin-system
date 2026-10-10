@@ -86,14 +86,46 @@ const richTextMarkSchema: z.ZodType<RichTextMark> = z
     }
   });
 
+/**
+ * Attributes of an `image` node (C4): the image is always an uploaded file, referenced by `fileId`. `src`
+ * is optional and, when present, must be the file's own download route, so a pasted `javascript:`, `data:`
+ * or external URL never gets stored. Any other attribute (`srcset`, `onerror`, `style`…) is rejected.
+ */
+const richTextImageAttrsSchema = z.strictObject({
+  fileId: idSchema,
+  alt: z.string().max(200).optional(),
+  src: z.string().optional(),
+});
+
 const richTextNodeSchema: z.ZodType<RichTextNode> = z.lazy(() =>
-  z.object({
-    type: z.enum(RICH_TEXT_NODE_TYPES),
-    attrs: z.record(z.string(), z.unknown()).optional(),
-    content: z.array(richTextNodeSchema).optional(),
-    marks: z.array(richTextMarkSchema).optional(),
-    text: z.string().optional(),
-  }),
+  z
+    .object({
+      type: z.enum(RICH_TEXT_NODE_TYPES),
+      attrs: z.record(z.string(), z.unknown()).optional(),
+      content: z.array(richTextNodeSchema).optional(),
+      marks: z.array(richTextMarkSchema).optional(),
+      text: z.string().optional(),
+    })
+    .superRefine((node, ctx) => {
+      if (node.type !== "image") return;
+      const attrs = richTextImageAttrsSchema.safeParse(node.attrs);
+      if (!attrs.success) {
+        ctx.addIssue({
+          code: "custom",
+          message: VALIDATION_MESSAGES.invalidFormat,
+          path: ["attrs"],
+        });
+        return;
+      }
+      const { fileId, src } = attrs.data;
+      if (src !== undefined && src !== `/api/files/${fileId}/download`) {
+        ctx.addIssue({
+          code: "custom",
+          message: VALIDATION_MESSAGES.invalidFormat,
+          path: ["attrs", "src"],
+        });
+      }
+    }),
 );
 
 /** Serialized size cap of one rich-text document. */

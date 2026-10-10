@@ -31,7 +31,9 @@
     "resize": "Redimensionar la columna {column}"
   },
   "export": {
-    "label": "Exportar"
+    "label": "Exportar",
+    "success": "{count, plural, one {Se exportó # fila} other {Se exportaron # filas}}",
+    "truncated": "La exportación se cortó en {max} filas; ajusta los filtros para acotarla"
   },
   "bulk": {
     "region": "Acciones en lote",

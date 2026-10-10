@@ -35,9 +35,7 @@ export interface ActionPermission {
  * (preferences of one's own, reference data, the MOCK "View as role").
  */
 export type PermissionRule =
-  | ActionPermission
-  | readonly [ActionPermission, ...ActionPermission[]]
-  | "authenticated";
+  ActionPermission | readonly [ActionPermission, ...ActionPermission[]] | "authenticated";
 
 /** What to refresh after a mutation: a path (`"/clients"`), a path with a type, or a cache tag. */
 export type RevalidateTarget =
@@ -68,7 +66,9 @@ function asChecks(rule: PermissionRule): readonly ActionPermission[] {
   if (rule === "authenticated") return [];
   if (Array.isArray(rule)) {
     if (rule.length === 0) {
-      throw new Error("defineAction: an empty permission list would skip can(); use 'authenticated'.");
+      throw new Error(
+        "defineAction: an empty permission list would skip can(); use 'authenticated'.",
+      );
     }
     return rule;
   }
@@ -94,7 +94,7 @@ function isErrorCode(value: unknown): value is ErrorCode {
 /**
  * Maps anything a service, the session or a handler can throw to an `ActionResult` error. Domain errors
  * (`ServiceError`; `UnauthenticatedError` and anything else carrying a known `code`) keep their code (and, for
- * `ServiceError`, message key and field errors); a stray `ZodError` is a `VALIDATION`; everything else is an `INTERNAL` whose details stay in
+ * `ServiceError`, message key, field errors and the linked entity); a stray `ZodError` is a `VALIDATION`; everything else is an `INTERNAL` whose details stay in
  * the server log. Framework control-flow errors are rethrown.
  */
 export function toActionError(error: unknown): ActionResult<never> {
@@ -103,7 +103,7 @@ export function toActionError(error: unknown): ActionResult<never> {
     return actionError("VALIDATION", undefined, zodFieldErrors(error));
   }
   if (error instanceof ServiceError) {
-    return actionError(error.code, error.message, error.fieldErrors);
+    return actionError(error.code, error.message, error.fieldErrors, error.entity);
   }
   // `UnauthenticatedError` and any other error that carries a known code, with the default message key.
   const code = error instanceof Error ? (error as { code?: unknown }).code : undefined;
@@ -134,7 +134,8 @@ export function defineAction<TSchema extends z.ZodType, TResult>(
       const { user } = ctx;
 
       // 2. Permission, before the input is even looked at.
-      const allowed = permission === "authenticated" || checks.some((c) => can(user, c.action, c.resource));
+      const allowed =
+        permission === "authenticated" || checks.some((c) => can(user, c.action, c.resource));
       const ownOnly =
         !allowed &&
         config.ownerOf !== undefined &&

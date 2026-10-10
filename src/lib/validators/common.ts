@@ -66,6 +66,8 @@ export interface ActionError {
   /** An i18n key, never prose (conventions: Errors and results). */
   message: string;
   fieldErrors?: FieldErrors;
+  /** Link to the record that caused the error (a `CONFLICT` on an existing tax id: "open it"). */
+  entity?: EntityRef;
 }
 
 /**
@@ -94,8 +96,11 @@ export function actionError(
   code: ErrorCode,
   message: string = errorMessageKey(code),
   fieldErrors?: FieldErrors,
+  entity?: EntityRef,
 ): ActionResult<never> {
-  const error: ActionError = fieldErrors ? { code, message, fieldErrors } : { code, message };
+  const error: ActionError = { code, message };
+  if (fieldErrors) error.fieldErrors = fieldErrors;
+  if (entity) error.entity = entity;
   return { ok: false, error };
 }
 
