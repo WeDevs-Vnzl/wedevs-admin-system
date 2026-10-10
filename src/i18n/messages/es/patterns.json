@@ -1,1 +1,57 @@
-{}
+{
+  "statusBadge": {
+    "partial": "Pago parcial"
+  },
+  "detailHeader": {
+    "back": "Volver",
+    "toggleLabel": "Vista",
+    "detail": "Detalle",
+    "graph": "Grafo",
+    "more": "Más acciones"
+  },
+  "overviewToggle": {
+    "label": "Vista",
+    "overview": "Resumen",
+    "table": "Tabla"
+  },
+  "confirm": {
+    "dismiss": "Cancelar",
+    "reason": "Motivo",
+    "reasonRequired": "Indica un motivo para continuar",
+    "variants": {
+      "archive": {
+        "title": "¿Archivar registro?",
+        "description": "El registro dejará de aparecer en las listas. Podrás restaurarlo después.",
+        "action": "Archivar"
+      },
+      "void": {
+        "title": "¿Anular registro?",
+        "description": "El registro quedará anulado. Esta acción no se puede deshacer desde esta pantalla.",
+        "action": "Anular"
+      },
+      "cancel": {
+        "title": "¿Cancelar registro?",
+        "description": "El registro quedará cancelado y dejará de estar activo.",
+        "action": "Cancelar registro"
+      }
+    }
+  },
+  "archived": {
+    "title": "Registro archivado",
+    "description": "Está oculto de las listas y de las búsquedas.",
+    "restore": "Restaurar"
+  },
+  "unsavedChanges": {
+    "message": "Tienes cambios sin guardar. ¿Seguro que quieres salir?"
+  },
+  "relatedTable": {
+    "new": "Nuevo",
+    "empty": "Sin registros todavía"
+  },
+  "kpi": {
+    "open": "Ver detalle"
+  },
+  "financialSummary": {
+    "title": "Estado financiero"
+  }
+}
