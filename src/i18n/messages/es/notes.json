@@ -1,1 +1,72 @@
-{}
+{
+  "columns": {
+    "title": "Título",
+    "excerpt": "Contenido",
+    "author": "Autor",
+    "links": "Vinculada a",
+    "tags": "Etiquetas",
+    "attachments": "Adjuntos",
+    "pinned": "Fijada",
+    "createdAt": "Creada",
+    "updatedAt": "Actualizada"
+  },
+  "errors": {
+    "alreadyLinked": "La nota ya está vinculada a este registro.",
+    "lastLink": "Una nota debe estar vinculada al menos a un registro."
+  },
+  "untitled": "Nota sin título",
+  "feed": {
+    "label": "Notas",
+    "loadMore": "Cargar más",
+    "loading": "Cargando…",
+    "loadFailed": "No se pudieron cargar las notas.",
+    "emptyTitle": "Aún no hay notas",
+    "emptyDescription": "Las notas que escribas sobre este registro aparecerán aquí.",
+    "emptyDescriptionReadOnly": "Todavía no hay notas sobre este registro."
+  },
+  "card": {
+    "pinned": "Fijada",
+    "expand": "Ver más",
+    "collapse": "Ver menos",
+    "loadingContent": "Cargando contenido…",
+    "loadContentFailed": "No se pudo cargar la nota.",
+    "actions": "Acciones de la nota",
+    "pin": "Fijar",
+    "unpin": "Desfijar",
+    "edit": "Editar",
+    "archive": "Archivar",
+    "attachmentCount": "{count, plural, one {# adjunto} other {# adjuntos}}"
+  },
+  "attachments": {
+    "label": "Adjuntos",
+    "size": "{name} · {size}"
+  },
+  "composer": {
+    "createTitle": "Nueva nota",
+    "editTitle": "Editar nota",
+    "description": "Escribe una nota y vincúlala a registros.",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Opcional: si lo dejas vacío se usan las primeras palabras",
+    "contentLabel": "Contenido",
+    "attachmentsLabel": "Adjuntos",
+    "pinnedLabel": "Fijar al inicio de la lista",
+    "linksLabel": "Vinculada a",
+    "noLinks": "Sin vínculos",
+    "submit": "Guardar nota",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "unsaved": "Tienes cambios sin guardar. ¿Salir de todas formas?"
+  },
+  "toast": {
+    "created": "Nota creada",
+    "updated": "Nota actualizada",
+    "pinned": "Nota fijada",
+    "unpinned": "Nota desfijada",
+    "archived": "Nota archivada",
+    "error": "No se pudo completar la acción"
+  },
+  "tab": {
+    "title": "Notas",
+    "newNote": "Nueva nota"
+  }
+}
