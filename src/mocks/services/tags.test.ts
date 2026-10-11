@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { TagsService } from "@/lib/validators/tags";
 import { tagFilterSchema } from "@/lib/validators/tags";
 import type { MockServiceContext } from "../ctx";
+import type { MockStore } from "../store";
 import { FIXED_NOW, makeTestContext } from "../test-helpers";
 import * as tagsService from "./tags";
 import { assignTags, createTag, getTag, listTags, tagUsage, unassignTag, updateTag } from "./tags";
@@ -189,5 +190,92 @@ describe("assignTags and unassignTag", () => {
     await expect(
       assignTags(ctx, { entityType: "INVOICE", entityId: "inv_1", tagIds: [db.tags[0]!.id] }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("tag activity (LINK / UNLINK on the tagged entity, PRD §8.14)", () => {
+  const activitySince = (db: MockStore, from: number) => db.activity.slice(from);
+
+  it("logs one LINK per tag actually added, on the tagged entity, with the tag in its metadata", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const project = db.projects.find((p) => !p.archivedAt)!;
+    const [a, b, c] = db.tags;
+    project.tagIds = [a!.id];
+    const from = db.activity.length;
+    await assignTags(ctx, {
+      entityType: "PROJECT",
+      entityId: project.id,
+      tagIds: [a!.id, b!.id, b!.id, c!.id],
+    });
+    const entries = activitySince(db, from);
+    expect(entries).toHaveLength(2);
+    expect(entries[0]).toMatchObject({
+      actorType: "USER",
+      actorId: ctx.user.id,
+      action: "LINK",
+      entityType: "PROJECT",
+      entityId: project.id,
+      entityLabel: project.name,
+      metadata: { tagId: b!.id, tagName: b!.name },
+      createdAt: FIXED_NOW.toISOString(),
+    });
+    expect(entries[1]).toMatchObject({
+      action: "LINK",
+      metadata: { tagId: c!.id, tagName: c!.name },
+    });
+  });
+
+  it("writes no entry when every tag was already assigned", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const project = db.projects.find((p) => !p.archivedAt)!;
+    project.tagIds = [db.tags[0]!.id];
+    const from = db.activity.length;
+    await assignTags(ctx, {
+      entityType: "PROJECT",
+      entityId: project.id,
+      tagIds: [db.tags[0]!.id],
+    });
+    expect(activitySince(db, from)).toHaveLength(0);
+  });
+
+  it("logs one UNLINK when a tag is removed, and none when it was not assigned", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const client = db.clients.find((c) => !c.archivedAt)!;
+    const [a, b] = db.tags;
+    client.tagIds = [a!.id];
+    const from = db.activity.length;
+    await unassignTag(ctx, { entityType: "CLIENT", entityId: client.id, tagId: b!.id });
+    expect(activitySince(db, from)).toHaveLength(0);
+    await unassignTag(ctx, { entityType: "CLIENT", entityId: client.id, tagId: a!.id });
+    expect(activitySince(db, from)).toEqual([
+      expect.objectContaining({
+        action: "UNLINK",
+        entityType: "CLIENT",
+        entityId: client.id,
+        entityLabel: client.tradeName,
+        metadata: { tagId: a!.id, tagName: a!.name },
+      }),
+    ]);
+  });
+
+  it("writes no entry for a refused tagging (FORBIDDEN) or an unknown entity", async () => {
+    const { ctx, db } = makeTestContext("MEMBER");
+    const client = db.clients.find((c) => !c.archivedAt)!;
+    const from = db.activity.length;
+    await expect(
+      assignTags(ctx, { entityType: "CLIENT", entityId: client.id, tagIds: [db.tags[0]!.id] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      assignTags(ctx, { entityType: "NOTE", entityId: "note_missing", tagIds: [db.tags[0]!.id] }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(activitySince(db, from)).toHaveLength(0);
+  });
+
+  it("writes no entry for createTag or updateTag: tag catalogue edits are not logged as SETTINGS_CHANGE", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const from = db.activity.length;
+    const created = await createTag(ctx, { name: "Sin registro", color: "#123456" });
+    await updateTag(ctx, { id: created.id, color: "#abcdef" });
+    expect(activitySince(db, from)).toHaveLength(0);
   });
 });

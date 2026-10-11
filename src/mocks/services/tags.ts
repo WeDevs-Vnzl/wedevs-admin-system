@@ -17,9 +17,11 @@ import type {
 } from "@/lib/validators/tags";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
+import { resolveEntityRef } from "../entity-refs";
 import type { TagRow } from "../fixtures/catalogs";
 import { nextMockId } from "../ids";
 import type { MockStore } from "../store";
+import { logActivity, mockTx } from "./activity";
 import { listRows, type ListSpec } from "./list";
 
 interface Taggable {
@@ -184,23 +186,63 @@ function chipsOf(db: MockStore, tagIds: readonly string[]): TagChipDTO[] {
     .map((tag) => ({ id: tag.id, name: tag.name, color: tag.color }));
 }
 
-/** `assignTags`: adds tags to one entity (already assigned ones are ignored). Returns the entity's chips. */
+/** One `LINK` / `UNLINK` entry on the tagged entity, carrying the tag in its metadata (PRD §8.14). */
+async function logTagLink(
+  ctx: MockServiceContext,
+  action: "LINK" | "UNLINK",
+  entityType: TaggableEntityType,
+  entityId: string,
+  tag: Pick<TagRow, "id" | "name">,
+): Promise<void> {
+  const entity = resolveEntityRef(ctx.db, entityType, entityId);
+  await logActivity(mockTx(ctx), {
+    actorType: "USER",
+    actorId: ctx.user.id,
+    action,
+    entityType,
+    entityId,
+    entityLabel: entity?.label ?? entityId,
+    metadata: { tagId: tag.id, tagName: tag.name },
+  });
+}
+
+/**
+ * `assignTags`: adds tags to one entity (already assigned ones are ignored). Returns the entity's chips.
+ * One `LINK` entry per tag actually added; no entry when every tag was already assigned.
+ */
 export async function assignTags(
   ctx: MockServiceContext,
   input: AssignTagsInput,
 ): Promise<TagChipDTO[]> {
   const record = taggedRecord(ctx, input.entityType, input.entityId);
   for (const tagId of input.tagIds) findTag(ctx.db, tagId);
-  record.tagIds = [...new Set([...(record.tagIds ?? []), ...input.tagIds])];
+  const current = record.tagIds ?? [];
+  const added = [...new Set(input.tagIds)].filter((tagId) => !current.includes(tagId));
+  record.tagIds = [...current, ...added];
+  for (const tagId of added) {
+    await logTagLink(ctx, "LINK", input.entityType, input.entityId, findTag(ctx.db, tagId));
+  }
   return chipsOf(ctx.db, record.tagIds);
 }
 
-/** `unassignTag`: removes one tag from one entity. Returns the entity's remaining chips. */
+/**
+ * `unassignTag`: removes one tag from one entity. Returns the entity's remaining chips. One `UNLINK`
+ * entry when the tag was assigned; no entry otherwise.
+ */
 export async function unassignTag(
   ctx: MockServiceContext,
   input: UnassignTagInput,
 ): Promise<TagChipDTO[]> {
   const record = taggedRecord(ctx, input.entityType, input.entityId);
-  record.tagIds = (record.tagIds ?? []).filter((id) => id !== input.tagId);
+  const current = record.tagIds ?? [];
+  const removed = current.includes(input.tagId);
+  record.tagIds = current.filter((id) => id !== input.tagId);
+  if (removed) {
+    const tag = ctx.db.tags.find((row) => row.id === input.tagId) ?? {
+      id: input.tagId,
+      name: input.tagId,
+    };
+    await logTagLink(ctx, "UNLINK", input.entityType, input.entityId, tag);
+  }
   return chipsOf(ctx.db, record.tagIds);
 }
