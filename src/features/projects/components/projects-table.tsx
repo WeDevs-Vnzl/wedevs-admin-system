@@ -51,6 +51,8 @@ export interface ProjectsTableProps {
   canCreate: boolean;
   canArchive: boolean;
   canTag: boolean;
+  /** `restore` on trash (Owner, Admin): shows "Mostrar archivados"; the service ignores it for anyone else (C19). */
+  canRestore: boolean;
 }
 
 const helper = createDataTableColumnHelper<ProjectListRowDTO>();
@@ -112,6 +114,7 @@ export function ProjectsTable({
   canCreate,
   canArchive,
   canTag,
+  canRestore,
 }: ProjectsTableProps) {
   const t = useTranslations("projects");
   const tList = useTranslations("projects.list");
@@ -289,6 +292,7 @@ export function ProjectsTable({
       loading={loading}
       facets={facets}
       searchPlaceholder={tList("search")}
+      showArchivedToggle={canRestore}
       onExport={exportCsv}
       bulkActions={(ids) => (
         <ProjectsBulkActions

@@ -305,10 +305,11 @@ export function ProjectForm({
               id="project-name"
               maxLength={120}
               aria-invalid={form.formState.errors.name ? true : undefined}
+              aria-describedby={form.formState.errors.name ? "project-name-error" : undefined}
               {...form.register("name")}
             />
             {form.formState.errors.name ? (
-              <FieldError>{tRoot(form.formState.errors.name.message as never)}</FieldError>
+              <FieldError id="project-name-error">{tRoot(form.formState.errors.name.message as never)}</FieldError>
             ) : null}
           </Field>
         </SectionCard>
@@ -339,7 +340,7 @@ export function ProjectForm({
                     )
                   }
                 />
-                {fieldState.error ? <FieldError>{t("form.clientsRequired")}</FieldError> : null}
+                {fieldState.error ? <FieldError id="project-clients-error">{t("form.clientsRequired")}</FieldError> : null}
               </Field>
             )}
           />
@@ -353,14 +354,18 @@ export function ProjectForm({
               rows={3}
               maxLength={PROJECT_SUMMARY_MAX}
               aria-invalid={form.formState.errors.summary ? true : undefined}
-              aria-describedby="project-summary-counter"
+              aria-describedby={
+                form.formState.errors.summary
+                  ? "project-summary-counter project-summary-error"
+                  : "project-summary-counter"
+              }
               {...form.register("summary")}
             />
             <FieldDescription id="project-summary-counter" className="tabular-nums">
               {t("form.summaryCounter", { count: summary.length, max: PROJECT_SUMMARY_MAX })}
             </FieldDescription>
             {form.formState.errors.summary ? (
-              <FieldError>{tRoot(form.formState.errors.summary.message as never)}</FieldError>
+              <FieldError id="project-summary-error">{tRoot(form.formState.errors.summary.message as never)}</FieldError>
             ) : null}
           </Field>
         </SectionCard>
@@ -378,13 +383,14 @@ export function ProjectForm({
                   uploadAdapter={uploadAdapter}
                   aria-label={t("form.description")}
                   aria-invalid={fieldState.error ? true : undefined}
+                  aria-describedby={fieldState.error ? "project-description-error" : undefined}
                   onChange={(value) => field.onChange(value)}
                   onInvalid={() =>
                     form.setError("description", { message: tRoot("forms.richText.invalid" as never) as unknown as string })
                   }
                   onBlur={field.onBlur}
                 />
-                {fieldState.error ? <FieldError>{tRoot(fieldState.error.message as never)}</FieldError> : null}
+                {fieldState.error ? <FieldError id="project-description-error">{tRoot(fieldState.error.message as never)}</FieldError> : null}
               </Field>
             )}
           />

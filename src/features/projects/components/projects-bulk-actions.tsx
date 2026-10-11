@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { TagPicker } from "@/features/tags/components/tag-picker";
 import { assignTagsAction } from "@/features/tags/actions";
-import { archiveProjectsAction } from "@/features/projects/actions";
+import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
+import { ProjectArchiveDialog } from "./project-archive-dialog";
 import type { TagChipDTO } from "@/lib/validators/tags";
 
 interface ProjectsBulkActionsProps {
@@ -40,7 +40,7 @@ export function ProjectsBulkActions({ ids, canTag, canArchive, onDone }: Project
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [tags, setTags] = useState<TagChipDTO[]>([]);
   const [saving, setSaving] = useState(false);
-  const [pending, setPending] = useState(false);
+  useOpenerFocus(tagOpen);
 
   async function applyTags() {
     setSaving(true);
@@ -58,19 +58,6 @@ export function ProjectsBulkActions({ ids, canTag, canArchive, onDone }: Project
       setTagOpen(false);
       setTags([]);
     }
-    onDone();
-  }
-
-  async function archive() {
-    setPending(true);
-    const result = await archiveProjectsAction({ ids, confirm: true });
-    setPending(false);
-    if (!result.ok) {
-      toast.error(tRoot(`common.errors.${result.error.code}` as never));
-      return;
-    }
-    toast.success(tToast("bulkArchived", { count: ids.length }));
-    setArchiveOpen(false);
     onDone();
   }
 
@@ -105,13 +92,12 @@ export function ProjectsBulkActions({ ids, canTag, canArchive, onDone }: Project
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        variant="archive"
+      <ProjectArchiveDialog
+        ids={ids}
         open={archiveOpen}
         onOpenChange={setArchiveOpen}
         description={t("archiveDescription", { count: ids.length })}
-        pending={pending}
-        onConfirm={() => void archive()}
+        onArchived={onDone}
       />
     </>
   );

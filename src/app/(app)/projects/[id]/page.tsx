@@ -8,6 +8,7 @@ import { EntityActivityTab } from "@/features/activity/components/entity-activit
 import { canReadActivity } from "@/features/activity/queries";
 import { EntityDocumentsTab } from "@/features/documents/components/entity-documents-tab";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
+import { DEFAULT_PROJECT_DETAIL_TAB, type ProjectDetailTab } from "@/features/projects/detail-tabs";
 import { getProject } from "@/features/projects/queries";
 import { loadProjectOr404 } from "@/features/projects/load-project";
 import { ProjectDetailHeader } from "@/features/projects/components/project-detail-header";
@@ -37,8 +38,9 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   }
 }
 
-// `/projects/[id]` (PRD §8.3 detail, §8.2 tabs): Resumen, Enlaces, finance slots (finance roles), Documentos,
-// Notas and Actividad (only when the user may read the activity log). `?tab=` selects the tab.
+// `/projects/[id]` (PRD §8.3 detail, §8.2 tabs): Summary, Links, finance slots (finance roles), Documents,
+// Notes and Activity (only when the user may read the activity log). `?tab=` selects the tab; its values are
+// `PROJECT_DETAIL_TAB_VALUES`.
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { id } = await params;
   const user = await requireSessionUser();
@@ -59,7 +61,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
   const tabs: DetailTab[] = [
     {
-      value: "resumen",
+      value: "summary" satisfies ProjectDetailTab,
       label: tTabs("summary"),
       content: (
         <div className="flex flex-col gap-4">
@@ -73,7 +75,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       ),
     },
     {
-      value: "enlaces",
+      value: "links" satisfies ProjectDetailTab,
       label: tTabs("links"),
       count: project.links.length,
       content: (
@@ -86,17 +88,17 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     },
     ...(showFinancials
       ? [
-          { value: "cobro", label: tTabs("billing"), content: <FinanceTabSlot kind="billing" /> },
-          { value: "facturas", label: tTabs("invoices"), content: <FinanceTabSlot kind="invoices" /> },
-          { value: "gastos", label: tTabs("expenses"), content: <FinanceTabSlot kind="expenses" /> },
+          { value: "billing" satisfies ProjectDetailTab, label: tTabs("billing"), content: <FinanceTabSlot kind="billing" /> },
+          { value: "invoices" satisfies ProjectDetailTab, label: tTabs("invoices"), content: <FinanceTabSlot kind="invoices" /> },
+          { value: "expenses" satisfies ProjectDetailTab, label: tTabs("expenses"), content: <FinanceTabSlot kind="expenses" /> },
         ]
       : []),
-    { value: "documentos", label: tTabs("documents"), content: <EntityDocumentsTab entity={ref} /> },
-    { value: "notas", label: tTabs("notes"), content: <EntityNotesTab entity={ref} /> },
+    { value: "documents" satisfies ProjectDetailTab, label: tTabs("documents"), content: <EntityDocumentsTab entity={ref} /> },
+    { value: "notes" satisfies ProjectDetailTab, label: tTabs("notes"), content: <EntityNotesTab entity={ref} /> },
     ...(showActivity
       ? [
           {
-            value: "actividad",
+            value: "activity" satisfies ProjectDetailTab,
             label: tTabs("activity"),
             content: <EntityActivityTab entity={{ type: "PROJECT", id: project.id }} />,
           },
@@ -122,7 +124,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       {/* Side panel: key data for every reader; the financial headline only for finance roles (PRD §11). */}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
-          <DetailTabs tabs={tabs} defaultTab="resumen" />
+          <DetailTabs tabs={tabs} defaultTab={DEFAULT_PROJECT_DETAIL_TAB} />
         </div>
         <aside className="space-y-6">
           <ProjectClientsCard project={project} />

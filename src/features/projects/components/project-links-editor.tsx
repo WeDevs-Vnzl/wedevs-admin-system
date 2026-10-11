@@ -244,7 +244,10 @@ export function ProjectLinksEditor({
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={onDragEnd}
-                accessibility={{ announcements: announcementsFor(group) }}
+                accessibility={{
+                  announcements: announcementsFor(group),
+                  screenReaderInstructions: { draggable: t("reorderInstructions") },
+                }}
               >
                 <SortableContext
                   items={items.map((row) => row.key)}

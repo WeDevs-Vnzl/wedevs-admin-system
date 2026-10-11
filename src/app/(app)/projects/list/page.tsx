@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { PlusIcon } from "lucide-react";
+import { createLoader } from "nuqs/server";
 import { PageHeader } from "@/components/patterns/page-header";
 import { OverviewTableToggle } from "@/components/patterns/overview-table-toggle";
 import { Button } from "@/components/ui/button";
+import { tableUrlParsers, urlStateToListQuery } from "@/components/ui/data-table";
 import { ProjectsTable } from "@/features/projects/components/projects-table";
-import { projectFilterFromParams } from "@/features/projects/table-filter";
+import { toProjectFilter } from "@/features/projects/table-filter";
 import { listProjects } from "@/features/projects/queries";
 import { getTags } from "@/features/tags/queries";
 import { listTechnologies } from "@/features/technologies/queries";
@@ -15,6 +17,9 @@ import { technologyLabel } from "@/features/technologies/label";
 import { isLocale, type Locale } from "@/i18n/config";
 import { requireSessionUser } from "@/server/auth/session";
 import { can, canSeeFinancials } from "@/server/auth/permissions";
+
+// The table's URL keys (the same names as the client table state), read on the server for the first page.
+const loadTableState = createLoader(tableUrlParsers);
 
 type ProjectsListPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -27,10 +32,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // `/projects/list` (wireframe 4.4): the full table. Facets, search, sort and the URL state come from `?…`; the
 // first render reads through the queries, later changes through `listProjectsAction`. Money columns only for
-// finance roles (never rendered for others, so never exported).
+// finance roles (never rendered for others, so never exported); "Mostrar archivados" for those who can restore (C19).
 export default async function ProjectsListPage({ searchParams }: ProjectsListPageProps) {
   const user = await requireSessionUser();
-  const filter = projectFilterFromParams(await searchParams);
+  const filter = toProjectFilter(urlStateToListQuery(loadTableState(await searchParams)));
   const localeValue = await getLocale();
   const locale: Locale = isLocale(localeValue) ? localeValue : "es";
   const t = await getTranslations("projects.page");
@@ -78,6 +83,7 @@ export default async function ProjectsListPage({ searchParams }: ProjectsListPag
         canCreate={can(user, "create", "project")}
         canArchive={can(user, "delete", "project")}
         canTag={can(user, "update", "project")}
+        canRestore={can(user, "restore", "trash")}
       />
     </div>
   );

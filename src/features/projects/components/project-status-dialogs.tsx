@@ -27,6 +27,7 @@ import {
 import { DateField } from "@/components/ui/date-field";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { setProjectStatusAction } from "@/features/projects/actions";
 import type { ProjectStatus } from "@/lib/validators/enums";
 import {
@@ -79,6 +80,7 @@ export function ProjectTransitionDialog({
   const tStatus = useTranslations("enums.ProjectStatus");
   const router = useRouter();
   const targets = PROJECT_STATUS_TRANSITIONS[project.status];
+  useOpenerFocus(open);
 
   const validate = zodResolver(setProjectStatusInputSchema) as unknown as Resolver<FieldValues>;
   const form = useForm<TransitionValues>({
@@ -243,6 +245,7 @@ export function ProjectCancelDialog({ open, onOpenChange, projectId }: ProjectCa
   const tRoot = useTranslations();
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  useOpenerFocus(open);
 
   async function confirm(result: { options?: Record<string, boolean> }) {
     setPending(true);
