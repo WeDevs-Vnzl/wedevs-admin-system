@@ -2213,10 +2213,10 @@ Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/feat
 (+ tests); new `src/app/(app)/activity/page.tsx` (+ `loading.tsx` if needed);
 `src/i18n/messages/{es,en}/activity.json`. No other file.
 
-- [ ] `listActivity` per `activityFilterSchema` (rows assembled with `toActivityEntryDTO`; type test
+- [x] `listActivity` per `activityFilterSchema` (rows assembled with `toActivityEntryDTO`; type test
       `satisfies Pick<ActivityService<MockServiceContext, MockTx>, "logActivity" | "listActivity">`) (actor, actor type, action, entity type, entity pair,
       Caracas date range; newest first). No update or delete function anywhere (C20).
-- [ ] `/activity` per wireframe 4.7 and frontend-patterns §13: stat cards; filters (user, action, entity
+- [x] `/activity` per wireframe 4.7 and frontend-patterns §13: stat cards; filters (user, action, entity
       type, dates) in the URL through `nuqs`; list grouped by day (time, actor avatar or "Sistema" /
       "Portal público", action badge, `EntityCodeChip` linked with `entityHref`, summary); detail `sheet`
       with field diffs (before struck through → after; enum fields labelled from `enums`; the `"changed"`
@@ -2226,12 +2226,12 @@ Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/feat
       (`ACTIVITY`, `{ read, activity }`, `namespace: "activity"`; the date facet is
       `{ kind: "dateRange", fromKey: "from", toKey: "to" }`, matching `activityFilterSchema`);
       `EntityCodeChip` without a link when `entityHref` is `null`. `generateMetadata` title (R15).
-- [ ] Access: the page checks `can(user, "read", "activity")` on the server and calls `notFound()`
+- [x] Access: the page checks `can(user, "read", "activity")` on the server and calls `notFound()`
       otherwise (Member, Viewer).
-- [ ] `EntityActivityTab({ entity })`: the same feed for one record with a readable diff ("Estado:
+- [x] `EntityActivityTab({ entity })`: the same feed for one record with a readable diff ("Estado:
       Emitida → Pagada"). Detail pages render it only when `can(read, activity)`.
-- [ ] No edit or delete control on any activity entry (HU-29 CA2).
-- [ ] Tests: filters, day grouping in Caracas, diff rendering (enum, money string, `"changed"`), IP
+- [x] No edit or delete control on any activity entry (HU-29 CA2).
+- [x] Tests: filters, day grouping in Caracas, diff rendering (enum, money string, `"changed"`), IP
       masking, page `notFound()` for Member, load more, ES and EN.
 - [ ] Gate. Commit messages without any Claude attribution.
 

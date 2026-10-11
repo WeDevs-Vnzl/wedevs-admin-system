@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import { activityEntrySchema } from "@/lib/validators/activity";
 import { FIXED_NOW, makeTestContext } from "../test-helpers";
 import * as activityService from "./activity";
-import { logActivity, mockTx, toActivityEntryDTO } from "./activity";
+import { listActivity, logActivity, mockTx, toActivityEntryDTO, type MockTx } from "./activity";
+import type { MockServiceContext } from "../ctx";
+import { activityFilterSchema, type ActivityService } from "@/lib/validators/activity";
+
+// Type test: the module satisfies the PRD §12 activity contract (C8, C9).
+const contract = { logActivity, listActivity } satisfies Pick<
+  ActivityService<MockServiceContext, MockTx>,
+  "logActivity" | "listActivity"
+>;
 
 describe("mockTx", () => {
   it("is the store and the clock of the context", () => {
@@ -118,5 +126,97 @@ describe("toActivityEntryDTO", () => {
     expect(toActivityEntryDTO(db, user).actor.name).not.toBeNull();
     const system = db.activity.find((row) => row.actorType === "SYSTEM")!;
     expect(toActivityEntryDTO(db, system).actor).toMatchObject({ id: null, name: null });
+  });
+});
+
+describe("listActivity", () => {
+  const filter = (input: Record<string, unknown> = {}) => activityFilterSchema.parse(input);
+
+  it("is the contract's listActivity and returns entries newest first", async () => {
+    const { ctx } = makeTestContext();
+    expect(contract.listActivity).toBe(listActivity);
+    const result = await listActivity(ctx, filter({ pageSize: 100 }));
+    expect(result.total).toBeGreaterThan(100);
+    const times = result.items.map((item) => item.createdAt);
+    expect([...times].sort().reverse()).toEqual(times);
+    result.items.forEach((item) => activityEntrySchema.parse(item));
+  });
+
+  it("filters by actor type, action and entity type (lists are ORed inside a facet)", async () => {
+    const { ctx } = makeTestContext();
+    const system = await listActivity(ctx, filter({ actorType: "SYSTEM", pageSize: 100 }));
+    expect(system.items.length).toBeGreaterThan(0);
+    expect(system.items.every((item) => item.actor.type === "SYSTEM")).toBe(true);
+
+    const updates = await listActivity(
+      ctx,
+      filter({ action: ["UPDATE", "STATUS_CHANGE"], pageSize: 100 }),
+    );
+    expect(updates.items.every((item) => ["UPDATE", "STATUS_CHANGE"].includes(item.action))).toBe(
+      true,
+    );
+
+    const clients = await listActivity(ctx, filter({ entityType: "CLIENT", pageSize: 100 }));
+    expect(clients.items.every((item) => item.entityType === "CLIENT")).toBe(true);
+  });
+
+  it("filters one record's timeline by entity type and id", async () => {
+    const { ctx, db } = makeTestContext();
+    const target = db.activity.find((row) => row.entityType === "CLIENT")!;
+    const timeline = await listActivity(
+      ctx,
+      filter({ entityType: "CLIENT", entityId: target.entityId }),
+    );
+    expect(timeline.items.length).toBeGreaterThan(0);
+    expect(timeline.items.every((item) => item.entityId === target.entityId)).toBe(true);
+  });
+
+  it("filters by actor id (user filter)", async () => {
+    const { ctx, db } = makeTestContext();
+    const actorId = db.activity.find((row) => row.actorType === "USER")!.actorId!;
+    const result = await listActivity(ctx, filter({ actorId, pageSize: 100 }));
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.every((item) => item.actor.id === actorId)).toBe(true);
+  });
+
+  it("bounds the date range by the Caracas calendar day, inclusive", async () => {
+    const { ctx, db } = makeTestContext();
+    // 02:30 UTC on 2026-10-08 is still 2026-10-07 in Caracas (UTC-4): the day boundary is Caracas, not UTC.
+    db.activity.push({
+      ...db.activity[0]!,
+      id: "act_boundary_probe",
+      actorType: "SYSTEM",
+      actorId: null,
+      createdAt: "2026-10-08T02:30:00.000Z",
+    });
+    const day = await listActivity(
+      ctx,
+      filter({ from: "2026-10-07", to: "2026-10-07", pageSize: 100 }),
+    );
+    expect(day.items.map((item) => item.id)).toContain("act_boundary_probe");
+    const nextDay = await listActivity(
+      ctx,
+      filter({ from: "2026-10-08", to: "2026-10-08", pageSize: 100 }),
+    );
+    expect(nextDay.items.map((item) => item.id)).not.toContain("act_boundary_probe");
+  });
+
+  it("pages the result with total and pageCount", async () => {
+    const { ctx } = makeTestContext();
+    const first = await listActivity(ctx, filter({ pageSize: 25, page: 1 }));
+    const second = await listActivity(ctx, filter({ pageSize: 25, page: 2 }));
+    expect(first.items).toHaveLength(25);
+    expect(second.page).toBe(2);
+    expect(first.items[0]!.id).not.toBe(second.items[0]!.id);
+    expect(first.pageCount).toBe(Math.ceil(first.total / 25));
+  });
+
+  it("returns an empty page for an unmatched filter", async () => {
+    const { ctx } = makeTestContext();
+    const none = await listActivity(
+      ctx,
+      filter({ entityType: "TAG", entityId: "tag_missing_probe" }),
+    );
+    expect(none).toMatchObject({ items: [], total: 0 });
   });
 });

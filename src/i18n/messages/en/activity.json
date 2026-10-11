@@ -1,1 +1,128 @@
-{}
+{
+  "page": {
+    "title": "Activity",
+    "description": "Immutable record of the system's changes.",
+    "export": "Export CSV"
+  },
+  "stats": {
+    "total": "Events",
+    "totalHint": "Matching the filters",
+    "today": "Today",
+    "todayHint": "Current day in Caracas",
+    "users": "User actions",
+    "usersHint": "Matching the filters"
+  },
+  "filters": {
+    "actor": "User",
+    "action": "Action",
+    "entityType": "Record type",
+    "from": "From",
+    "to": "To",
+    "all": "All",
+    "allActors": "All users",
+    "clear": "Clear filters",
+    "pickDate": "Pick a date"
+  },
+  "feed": {
+    "empty": "No activity",
+    "emptyDescription": "No event matches the filters.",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
+    "loadError": "More activity could not be loaded",
+    "viewDetail": "View details of {action}",
+    "group": "Events of {day}"
+  },
+  "actor": {
+    "system": "System",
+    "public": "Public portal",
+    "unknown": "Deleted user"
+  },
+  "summary": {
+    "CREATE": "Created {entity}",
+    "UPDATE": "Updated {entity}",
+    "DELETE": "Archived {entity}",
+    "RESTORE": "Restored {entity}",
+    "STATUS_CHANGE": "Changed the status of {entity}",
+    "LINK": "Linked {entity}",
+    "UNLINK": "Unlinked {entity}",
+    "UPLOAD": "Uploaded {entity}",
+    "VERSION_PUBLISH": "Published a version of {entity}",
+    "SHARE_CREATE": "Shared {entity}",
+    "SHARE_REVOKE": "Revoked the link to {entity}",
+    "ALLOCATE": "Allocated a payment in {entity}",
+    "DEALLOCATE": "Deallocated a payment in {entity}",
+    "EXPORT": "Exported {entity}",
+    "LOGIN": "Signed in",
+    "SETTINGS_CHANGE": "Changed the settings {entity}",
+    "SYSTEM_JOB": "System job on {entity}",
+    "PORTAL_ACCESS": "Portal access to {entity}"
+  },
+  "diff": {
+    "title": "Changes",
+    "changed": "Content changed",
+    "empty": "—",
+    "yes": "Yes",
+    "no": "No",
+    "before": "Before",
+    "after": "After",
+    "arrow": "→"
+  },
+  "fields": {
+    "tradeName": "Trade name",
+    "legalName": "Legal name",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "address": "Address",
+    "status": "Status",
+    "kind": "Kind",
+    "name": "Name",
+    "title": "Title",
+    "summary": "Summary",
+    "description": "Description",
+    "targetEndDate": "Target date",
+    "content": "Content",
+    "format": "Format",
+    "role": "Role",
+    "amount": "Amount",
+    "currency": "Currency",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "notes": "Notes",
+    "code": "Code"
+  },
+  "detail": {
+    "title": "Event details",
+    "technical": "Technical context",
+    "action": "Action",
+    "ip": "IP address",
+    "browser": "Browser",
+    "eventId": "Event ID",
+    "when": "Date and time",
+    "entity": "Record",
+    "openEntity": "Open record",
+    "noChanges": "This event records no field changes.",
+    "immutable": "This record is immutable: it cannot be edited or deleted.",
+    "actorType": "Origin"
+  },
+  "browser": {
+    "chrome": "Chrome",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "edge": "Edge",
+    "other": "Other",
+    "unknown": "Unknown"
+  },
+  "tab": {
+    "title": "Activity",
+    "empty": "This record has no activity yet."
+  },
+  "columns": {
+    "createdAt": "Date",
+    "actor": "User",
+    "action": "Action",
+    "entityType": "Record type",
+    "entityLabel": "Record",
+    "entityId": "Record ID"
+  }
+}

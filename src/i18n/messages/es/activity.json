@@ -1,1 +1,128 @@
-{}
+{
+  "page": {
+    "title": "Actividad",
+    "description": "Registro inmutable de los cambios del sistema.",
+    "export": "Exportar CSV"
+  },
+  "stats": {
+    "total": "Eventos",
+    "totalHint": "Según los filtros",
+    "today": "Hoy",
+    "todayHint": "Día actual en Caracas",
+    "users": "Acciones de usuarios",
+    "usersHint": "Según los filtros"
+  },
+  "filters": {
+    "actor": "Usuario",
+    "action": "Acción",
+    "entityType": "Tipo de registro",
+    "from": "Desde",
+    "to": "Hasta",
+    "all": "Todos",
+    "allActors": "Todos los usuarios",
+    "clear": "Limpiar filtros",
+    "pickDate": "Elegir fecha"
+  },
+  "feed": {
+    "empty": "Sin actividad",
+    "emptyDescription": "Ningún evento coincide con los filtros.",
+    "loadMore": "Cargar más",
+    "loadingMore": "Cargando…",
+    "loadError": "No se pudo cargar más actividad",
+    "viewDetail": "Ver detalle de {action}",
+    "group": "Eventos del {day}"
+  },
+  "actor": {
+    "system": "Sistema",
+    "public": "Portal público",
+    "unknown": "Usuario eliminado"
+  },
+  "summary": {
+    "CREATE": "Creó {entity}",
+    "UPDATE": "Actualizó {entity}",
+    "DELETE": "Archivó {entity}",
+    "RESTORE": "Restauró {entity}",
+    "STATUS_CHANGE": "Cambió el estado de {entity}",
+    "LINK": "Vinculó {entity}",
+    "UNLINK": "Desvinculó {entity}",
+    "UPLOAD": "Subió {entity}",
+    "VERSION_PUBLISH": "Publicó una versión de {entity}",
+    "SHARE_CREATE": "Compartió {entity}",
+    "SHARE_REVOKE": "Revocó el enlace de {entity}",
+    "ALLOCATE": "Asignó un cobro en {entity}",
+    "DEALLOCATE": "Desasignó un cobro en {entity}",
+    "EXPORT": "Exportó {entity}",
+    "LOGIN": "Inicio de sesión",
+    "SETTINGS_CHANGE": "Cambió la configuración {entity}",
+    "SYSTEM_JOB": "Tarea del sistema sobre {entity}",
+    "PORTAL_ACCESS": "Acceso al portal a {entity}"
+  },
+  "diff": {
+    "title": "Cambios",
+    "changed": "Contenido modificado",
+    "empty": "—",
+    "yes": "Sí",
+    "no": "No",
+    "before": "Antes",
+    "after": "Después",
+    "arrow": "→"
+  },
+  "fields": {
+    "tradeName": "Nombre comercial",
+    "legalName": "Razón social",
+    "phone": "Teléfono",
+    "email": "Correo",
+    "website": "Sitio web",
+    "address": "Dirección",
+    "status": "Estado",
+    "kind": "Tipo",
+    "name": "Nombre",
+    "title": "Título",
+    "summary": "Resumen",
+    "description": "Descripción",
+    "targetEndDate": "Fecha objetivo",
+    "content": "Contenido",
+    "format": "Formato",
+    "role": "Rol",
+    "amount": "Monto",
+    "currency": "Moneda",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin",
+    "notes": "Notas",
+    "code": "Código"
+  },
+  "detail": {
+    "title": "Detalle del evento",
+    "technical": "Contexto técnico",
+    "action": "Acción",
+    "ip": "Dirección IP",
+    "browser": "Navegador",
+    "eventId": "ID del evento",
+    "when": "Fecha y hora",
+    "entity": "Registro",
+    "openEntity": "Abrir registro",
+    "noChanges": "Este evento no registra cambios de campos.",
+    "immutable": "Este registro es inmutable: no se puede editar ni eliminar.",
+    "actorType": "Origen"
+  },
+  "browser": {
+    "chrome": "Chrome",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "edge": "Edge",
+    "other": "Otro",
+    "unknown": "Desconocido"
+  },
+  "tab": {
+    "title": "Actividad",
+    "empty": "Este registro todavía no tiene actividad."
+  },
+  "columns": {
+    "createdAt": "Fecha",
+    "actor": "Usuario",
+    "action": "Acción",
+    "entityType": "Tipo de registro",
+    "entityLabel": "Registro",
+    "entityId": "ID del registro"
+  }
+}
