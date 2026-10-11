@@ -4,5 +4,42 @@
     "updated": "Contact updated",
     "primaryChanged": "Primary contact updated",
     "archived": "Contact archived"
+  },
+  "tab": {
+    "readOnly": "Read-only: your role can view the contacts but cannot change them."
+  },
+  "columns": {
+    "fullName": "Name",
+    "position": "Position",
+    "email": "Email",
+    "phone": "Phone",
+    "primary": "Primary",
+    "tags": "Tags",
+    "actions": "Actions"
+  },
+  "actions": {
+    "new": "New contact",
+    "edit": "Edit {name}",
+    "setPrimary": "Mark as primary",
+    "archive": "Archive {name}",
+    "primary": "Primary"
+  },
+  "empty": {
+    "title": "No contacts yet",
+    "description": "Add at least one person with an email or a phone."
+  },
+  "form": {
+    "createTitle": "New contact",
+    "editTitle": "Edit contact",
+    "description": "A contact needs a name and at least one email or phone.",
+    "fields": {
+      "fullName": "Full name",
+      "position": "Position",
+      "email": "Email",
+      "phone": "Phone",
+      "isPrimary": "Primary contact",
+      "isPrimaryHint": "Marking it demotes the previous primary contact.",
+      "tags": "Tags"
+    }
   }
 }
