@@ -1,1 +1,27 @@
-{}
+{
+  "columns": {
+    "code": "Código",
+    "tradeName": "Nombre comercial",
+    "kind": "Tipo",
+    "country": "País",
+    "status": "Estado",
+    "projectCount": "Proyectos",
+    "totalInvoicedUsd": "Total facturado (USD)",
+    "receivableUsd": "Saldo por cobrar (USD)",
+    "tags": "Etiquetas",
+    "lastActivityAt": "Última actividad"
+  },
+  "errors": {
+    "duplicateTaxId": "Ya existe un cliente activo con este identificador fiscal y país",
+    "restoreTaxIdConflict": "No se puede restaurar: otro cliente activo ya usa este identificador fiscal y país",
+    "archiveNeedsConfirm": "Este cliente tiene proyectos activos o facturas abiertas. Confirma para archivarlo junto con sus contactos"
+  },
+  "toast": {
+    "created": "Cliente creado",
+    "updated": "Cliente actualizado",
+    "statusChanged": "Estado del cliente actualizado",
+    "archived": "Cliente archivado",
+    "archivedMany": "{count, plural, one {# cliente archivado} other {# clientes archivados}}",
+    "restored": "Cliente restaurado"
+  }
+}

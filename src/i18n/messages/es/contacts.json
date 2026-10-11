@@ -1,1 +1,8 @@
-{}
+{
+  "toast": {
+    "created": "Contacto creado",
+    "updated": "Contacto actualizado",
+    "primaryChanged": "Contacto principal actualizado",
+    "archived": "Contacto archivado"
+  }
+}
