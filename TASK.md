@@ -2790,15 +2790,15 @@ Files: `src/features/notes/constants.ts` (new), `src/features/notes/components/{
 `src/features/tags/color.ts` (new), `src/features/tags/components/{color-swatches,tag-chips}.tsx`; one new guard
 test next to the existing static/structure tests (+ tests everywhere touched).
 
-- [ ] **T1 (major).** The *Notas* tab (`?tab=notes`) of every client and project detail renders the error page
+- [x] **T1 (major).** The *Notas* tab (`?tab=notes`) of every client and project detail renders the error page
       under `next start`: the server component `entity-notes-tab.tsx` imports the value `NOTES_FEED_PAGE_SIZE` from
       the `"use client"` module `notes-feed.tsx`; in RSC it is a client reference, `pageSize` becomes NaN and
       `listQuerySchema` throws (`ZodError`, `validation.invalidFormat`). Move the constant to a server-safe
       `src/features/notes/constants.ts`; both files import it from there.
-- [ ] **Latent.** `readableTextColor` moves from `color-swatches.tsx` (`"use client"`) to a server-safe
+- [x] **Latent.** `readableTextColor` moves from `color-swatches.tsx` (`"use client"`) to a server-safe
       `src/features/tags/color.ts`; `color-swatches.tsx` and `tag-chips.tsx` import it from there. Its tests
       follow it.
-- [ ] **Guard.** A Vitest test scans `src/**/*.{ts,tsx}`: for every module **without** `"use client"` that imports
+- [x] **Guard.** A Vitest test scans `src/**/*.{ts,tsx}`: for every module **without** `"use client"` that imports
       from a module **with** `"use client"`, each imported binding must be a component (PascalCase) or a type-only
       import; any other value fails naming the file and binding. Passes on the fixed tree and fails if T1 is
       reintroduced (show it in the report).

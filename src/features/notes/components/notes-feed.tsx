@@ -18,10 +18,9 @@ import {
 import type { Paginated } from "@/lib/validators/common";
 import type { NoteDetailDTO, NoteListRowDTO } from "@/lib/validators/notes";
 import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { NOTES_FEED_PAGE_SIZE } from "../constants";
 import { NoteCard } from "./note-card";
 import { NoteComposer, type NoteLinkRef } from "./note-composer";
-
-export const NOTES_FEED_PAGE_SIZE = 25;
 
 export interface NotesFeedProps {
   /** First page of the feed (server-rendered). */

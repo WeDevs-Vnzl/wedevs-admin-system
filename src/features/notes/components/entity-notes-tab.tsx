@@ -1,7 +1,8 @@
 import { listNotes, getNotesViewer } from "@/features/notes/queries";
 import { noteLinkEntityTypeSchema } from "@/lib/validators/notes";
 import type { EntityRef } from "@/lib/validators/common";
-import { NOTES_FEED_PAGE_SIZE, NotesFeed } from "./notes-feed";
+import { NOTES_FEED_PAGE_SIZE } from "../constants";
+import { NotesFeed } from "./notes-feed";
 
 /**
  * The shared *Notas* tab of a detail page (PRD §7.2, §8.10): the feed of the notes linked to `entity`, with
