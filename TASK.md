@@ -2068,7 +2068,7 @@ Files: `src/mocks/services/{clients,contacts}.ts` (+ tests); `src/features/clien
 (+ tests); `src/features/contacts/{queries,actions}.ts` (+ tests); `src/i18n/messages/{es,en}/{clients,contacts}.json`.
 No UI file.
 
-- [ ] Mock services with the exact names and signatures of `ClientsService` and `ContactsService` (C9):
+- [x] Mock services with the exact names and signatures of `ClientsService` and `ContactsService` (C9):
       - `createClient`: code from the `CLI` mock sequence (`CLI-####`, HU-03 CA2); status default
         `PROSPECTO`; `CONFLICT` when a non-archived client has the same normalized tax id + country →
         `ServiceError("CONFLICT", { message: "clients.errors.duplicateTaxId", entity: <existing ref> })`
@@ -2089,23 +2089,23 @@ No UI file.
         activity rows.
       - Contacts: `createContact`, `updateContact`, `setPrimaryContact` (unsets the previous primary,
         HU-04 CA2), `archiveContact`, `listContacts` (by client); activity on `CONTACT`.
-- [ ] Adapters (`defineAction`, real grants, DT-71): create/update/status `{ create | update, client }`;
+- [x] Adapters (`defineAction`, real grants, DT-71): create/update/status `{ create | update, client }`;
       archive `{ delete, client }`; restore `{ restore, trash }`; contacts `{ … , contact }`; read actions
       `searchClientsAction` (`{ read, client }`, `q`, ≤ 20 `EntityRef` options) and
       `searchContactsAction` (`{ read, contact }`); `exportClientsCsvAction` through the 1.2 factory
       (`{ read, client }`, `namespace: "clients"`, source = `listClients` + `clientFilterSchema` +
       `clients/columns.ts`); no `CONTACT` export (`contactFilterSchema` requires `clientId`). Mutations log
       through `mockTx(ctx)` + `logActivity`; `UPDATE` diffs with `diffFields`. Revalidate `/clients` paths.
-- [ ] `queries.ts`: `listClients`, `getClient` (`NOT_FOUND` lets the page call `notFound()`),
+- [x] `queries.ts`: `listClients`, `getClient` (`NOT_FOUND` lets the page call `notFound()`),
       `getClientsOverview`, `getClientFinancials`, `listContacts`.
-- [ ] `clients/columns.ts`: table column ids of PRD §8.2 "Tabla", label keys `clients.columns.*`,
+- [x] `clients/columns.ts`: table column ids of PRD §8.2 "Tabla", label keys `clients.columns.*`,
       money flag; shared by the export source and the W3 table.
-- [ ] i18n `clients`, `contacts` (ES and EN): error keys, column labels, toast keys the actions return.
-- [ ] Tests: every rule above (sequence, `CONFLICT` with entity on create/update/restore, cascade with and
+- [x] i18n `clients`, `contacts` (ES and EN): error keys, column labels, toast keys the actions return.
+- [x] Tests: every rule above (sequence, `CONFLICT` with entity on create/update/restore, cascade with and
       without `confirm`, primary uniqueness, `includeArchived` ignored for Member, metrics `"0.00"` with
       empty finance collections and summed with seeded test rows, activity entries and diffs); adapters:
       Member and Viewer on create → `FORBIDDEN`, bad input → `VALIDATION`, `CONFLICT` keeps `entity`.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.2 — Projects: mock services and adapters
 
