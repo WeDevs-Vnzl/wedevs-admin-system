@@ -2459,17 +2459,17 @@ Files: `src/features/activity/components/{activity-feed,activity-item,activity-d
 `tests/e2e/h1-b2-w2.spec.ts` (remove the two `test.fail()` marks and their defect comments only). No other file;
 `src/components/ui/**` stays read-only (the shallow `useTableUrlState` is the kit's contract).
 
-- [ ] **T1.** Closing the activity detail sheet (Escape, the close button or the overlay) returns focus to the
+- [x] **T1.** Closing the activity detail sheet (Escape, the close button or the overlay) returns focus to the
       "Ver detalle de …" trigger that opened it, also after "load more" re-renders the list. Component test asserts
       `document.activeElement` is the trigger after Escape.
-- [ ] **T2.** Typing in the `/settings/technologies` search (and changing sort, page, page size, the archived toggle or
+- [x] **T2.** Typing in the `/settings/technologies` search (and changing sort, page, page size, the archived toggle or
       a facet) updates the rows and the total to the filtered set for the URL query; reloading the URL shows the same
       result. Server-resolved icons still render for the new rows. Component test proves the rows follow the query.
-- [ ] **T2 (tags).** `tags-table.tsx` checked for the same defect; fixed with the same approach if it reproduces, or
+- [x] **T2 (tags).** `tags-table.tsx` checked for the same defect; fixed with the same approach if it reproduces, or
       stated as unaffected (with the reason) in worker_done.
-- [ ] E2E: the two `test.fail()` marks removed from `tests/e2e/h1-b2-w2.spec.ts` (the Orchestrator re-runs the spec in
+- [x] E2E: the two `test.fail()` marks removed from `tests/e2e/h1-b2-w2.spec.ts` (the Orchestrator re-runs the spec in
       phases B and C; the developer runs no browser).
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 2 close
 
