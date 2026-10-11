@@ -2464,7 +2464,7 @@ Files: `src/features/activity/components/{activity-diff,activity-detail-sheet}.t
 - [x] **Fix round 2.9–2.11 integrated and re-reviewed.** *(2026-10-10: merges 278d21d (2.11), ccaeb7b (2.9), 9b80127 (2.10); no Claude attribution; worktrees removed; lockfile and package.json unchanged. HEAD 9b80127: 180 files, 2409 tests + 1 expected fail, no flake; lint, typecheck, i18n:check (32 namespaces), build pass. Deviations accepted: 2.9 edited `tech-stack-icons.test.tsx` (resolver tests moved to `icons.test.ts`), non-USD plans add 0 to the placeholder headline (C16, H1-B3 replaces it); 2.10 shadcn CLI instead of MCP, unlink confirmation without the document name, `DateField`/`Uploader` without `aria-describedby`; 2.11 `onInvalid` prop, Radix Toolbar composed with installed Toggle/Button. Code Reviewer re-check: **READY FOR TESTING**, every 2.9–2.11 checkbox met in code and tests. Minor: `note-composer.tsx` ignores `onInvalid` / `aria-describedby` and its `FieldError` has no id → 3.3; `DateField`/`Uploader` accept no `aria-describedby`/`aria-invalid` → H1-FX; unlink confirmation without `{name}` → H1-B4; missing tests for bell `aria-labelledby`, attach-sheet server `fieldErrors`, dismiss/snooze labels with the subject → Tester (E2E) / H1-FX. Nits: non-READY content image error lands on `attachmentFileIds`, removed images stay attachments in `updateNote`, image-id collector and tag-name snapshot duplicated → H2-B3; `mailto` rule duplicated in `rich-text/extensions.ts` → H1-FX; documents archived-target tests miss DOCUMENT/NOTE → H1-B4; inactive-technology chip button name lacks "remove" → H1-FX.)*
 - [x] **User confirms the Tester may run.** Confirmed 2026-10-10 ("corre los test"); afterwards the app is left
       running on :3000 for the user's review.
-- [ ] **Tester scope:**
+- [x] **Tester scope:**
   - Unit: `vitest run --coverage` (report every W2 mock service and `components/ui/rich-text/**`),
     `i18n:check`, build.
   - E2E (`tests/e2e/h1-b2-w2.spec.ts`, written by the Tester), local only, three phases per
@@ -2477,6 +2477,19 @@ Files: `src/features/activity/components/{activity-diff,activity-detail-sheet}.t
     dismiss and snooze lower the counter.
   - Accessibility: keyboard through the editor toolbar (component test), the activity sheet and the
     bell panel; dark-mode badge contrast.
+  - **Result (Tester, haiku, 2026-10-10, three phases per safeguards rule 1):** Phase A (worker, no server): install,
+    lint, typecheck, i18n:check (32 namespaces), build pass; one `test:coverage` run 180/180 files, 2409 tests + 1
+    expected fail, no flake. W2 mock services 89.3–99.3 % statements (documents 89.3, activity 90.6);
+    `rich-text/**` 73.8 % statements, toolbar 34 %. Spec `tests/e2e/h1-b2-w2.spec.ts` written (b76c727, 21 tests).
+    Phase B (Orchestrator): `next start` on :3105, ready in 1 s. Phase C (worker): 19 pass, 0 fail, 2 `test.fail`;
+    shell regression `h1-b1-shell.spec.ts` 16/16; spec-only fix 7b073e0 (alerts focus target, dark-mode setup);
+    server stopped, port freed. Merged ac43e63; gate re-run green. Defects:
+    - **T1 (major)** the activity detail sheet does not return focus to its "Ver detalle de" trigger after Escape
+      (`activity-detail-sheet.tsx`, `activity-feed.tsx:107-111`; `document.activeElement` is BODY) (`test.fail`).
+    - **T2 (major)** the `/settings/technologies` search only changes `?q=`; the table keeps all 25 rows
+      (`use-table-url-state.ts:93`, shallow `useQueryStates`, no refetch or filtering) (`test.fail`).
+      `tags-table.tsx` uses the same hook and was not verified.
+    - Coverage gaps (not gated): rich-text toolbar 34 %, documents service 89.3 %.
 - [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
 - [ ] **Summary** written by the Orchestrator.
 
