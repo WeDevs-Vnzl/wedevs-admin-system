@@ -33,6 +33,16 @@
         "title": "Cancel record?",
         "description": "The record will be cancelled and will no longer be active.",
         "action": "Cancel record"
+      },
+      "delete": {
+        "title": "Delete record?",
+        "description": "The record will be deleted and you cannot recover it from this screen.",
+        "action": "Delete"
+      },
+      "unlink": {
+        "title": "Unlink record?",
+        "description": "The record will stop appearing on this link. It stays available in its list and on its other links.",
+        "action": "Unlink"
       }
     }
   },

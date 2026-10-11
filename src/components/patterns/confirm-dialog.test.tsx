@@ -22,7 +22,10 @@ function Harness({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       <button type="button" onClick={() => setOpen(true)}>
         open
       </button>
@@ -55,7 +58,9 @@ describe("ConfirmDialog", () => {
     render(<Harness onConfirm={onConfirm} />);
     await userEvent.click(screen.getByRole("button", { name: "open" }));
 
-    const confirm = await screen.findByRole("button", { name: enPatterns.confirm.variants.archive.action });
+    const confirm = await screen.findByRole("button", {
+      name: enPatterns.confirm.variants.archive.action,
+    });
     expect(confirm).toBeDisabled();
     await userEvent.type(screen.getByLabelText(enPatterns.confirm.reason), "   ");
     expect(confirm).toBeDisabled();
@@ -90,7 +95,103 @@ describe("ConfirmDialog", () => {
     const onConfirm = vi.fn();
     render(<Harness requireReason={false} extra="" onConfirm={onConfirm} />);
     await userEvent.click(screen.getByRole("button", { name: "open" }));
-    await userEvent.click(await screen.findByRole("button", { name: enPatterns.confirm.variants.archive.action }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: enPatterns.confirm.variants.archive.action }),
+    );
     expect(onConfirm).toHaveBeenCalledWith({ reason: undefined, extraChecked: undefined });
+  });
+
+  it("returns one boolean per option, checked or not", async () => {
+    const onConfirm = vi.fn();
+    function OptionsHarness() {
+      const [open, setOpen] = useState(false);
+      return (
+        <NextIntlClientProvider locale="en" messages={{ patterns: enPatterns }}>
+          <button type="button" onClick={() => setOpen(true)}>
+            open
+          </button>
+          <ConfirmDialog
+            variant="cancel"
+            open={open}
+            onOpenChange={setOpen}
+            onConfirm={onConfirm}
+            options={[
+              { id: "cancelPendingInstallments", label: "Cancel pending installments" },
+              { id: "finishRecurringCharges", label: "Finish recurring charges" },
+            ]}
+          />
+        </NextIntlClientProvider>
+      );
+    }
+    render(<OptionsHarness />);
+    await userEvent.click(screen.getByRole("button", { name: "open" }));
+    await userEvent.click(await screen.findByLabelText("Finish recurring charges"));
+    await userEvent.click(
+      screen.getByRole("button", { name: enPatterns.confirm.variants.cancel.action }),
+    );
+
+    expect(onConfirm).toHaveBeenCalledWith({
+      reason: undefined,
+      extraChecked: undefined,
+      options: { cancelPendingInstallments: false, finishRecurringCharges: true },
+    });
+  });
+
+  it("replaces the variant description with the given one", async () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ patterns: enPatterns }}>
+        <ConfirmDialog
+          variant="delete"
+          open
+          onOpenChange={vi.fn()}
+          onConfirm={vi.fn()}
+          description="“Acme” will be removed."
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(await screen.findByText("“Acme” will be removed.")).toBeInTheDocument();
+    expect(
+      screen.queryByText(enPatterns.confirm.variants.delete.description),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders the delete and unlink variants with their own copy", async () => {
+    render(
+      <NextIntlClientProvider locale="es" messages={{ patterns: esPatterns }}>
+        <ConfirmDialog variant="unlink" open onOpenChange={vi.fn()} onConfirm={vi.fn()} />
+      </NextIntlClientProvider>,
+    );
+    expect(await screen.findByText(esPatterns.confirm.variants.unlink.title)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: esPatterns.confirm.variants.unlink.action }),
+    ).toBeInTheDocument();
+  });
+
+  it("unchecks the options every time it opens", async () => {
+    function OptionsHarness() {
+      const [open, setOpen] = useState(false);
+      return (
+        <NextIntlClientProvider locale="en" messages={{ patterns: enPatterns }}>
+          <button type="button" onClick={() => setOpen(true)}>
+            open
+          </button>
+          <ConfirmDialog
+            variant="archive"
+            open={open}
+            onOpenChange={setOpen}
+            onConfirm={vi.fn()}
+            options={[{ id: "keep", label: "Keep linked" }]}
+          />
+        </NextIntlClientProvider>
+      );
+    }
+    render(<OptionsHarness />);
+    await userEvent.click(screen.getByRole("button", { name: "open" }));
+    await userEvent.click(await screen.findByLabelText("Keep linked"));
+    expect(screen.getByLabelText("Keep linked")).toBeChecked();
+    await userEvent.click(screen.getByRole("button", { name: enPatterns.confirm.dismiss }));
+
+    await userEvent.click(screen.getByRole("button", { name: "open" }));
+    expect(await screen.findByLabelText("Keep linked")).not.toBeChecked();
   });
 });

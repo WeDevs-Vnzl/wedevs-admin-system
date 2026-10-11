@@ -16,9 +16,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export type ConfirmVariant = "archive" | "void" | "cancel";
+export type ConfirmVariant = "archive" | "void" | "cancel" | "delete" | "unlink";
 
-export type ConfirmResult = { reason?: string; extraChecked?: boolean };
+export type ConfirmOption = { id: string; label: string };
+
+export type ConfirmResult = {
+  reason?: string;
+  extraChecked?: boolean;
+  // Present only when the dialog was given `options`: one entry per option id.
+  options?: Record<string, boolean>;
+};
 
 type ConfirmDialogProps = {
   variant: ConfirmVariant;
@@ -29,10 +36,14 @@ type ConfirmDialogProps = {
   requireReason?: boolean;
   // Optional extra checkbox label (e.g. "También anular las facturas emitidas").
   extraCheckboxLabel?: string;
+  // Already translated copy that replaces the variant description (a record name, a cascade warning).
+  description?: string;
+  // Checkboxes, all unchecked at each opening; the result carries one boolean per id.
+  options?: ConfirmOption[];
   pending?: boolean;
 };
 
-// Archive / void / cancel confirmation (frontend-patterns §4). Destructive copy comes from patterns.
+// Archive / void / cancel / delete / unlink confirmation (frontend-patterns §4). Destructive copy comes from patterns.
 export function ConfirmDialog({
   variant,
   open,
@@ -40,11 +51,14 @@ export function ConfirmDialog({
   onConfirm,
   requireReason = false,
   extraCheckboxLabel,
+  description,
+  options,
   pending = false,
 }: ConfirmDialogProps) {
   const t = useTranslations("patterns.confirm");
   const [reason, setReason] = useState("");
   const [extraChecked, setExtraChecked] = useState(false);
+  const [optionChecked, setOptionChecked] = useState<Record<string, boolean>>({});
   const [wasOpen, setWasOpen] = useState(open);
   const baseId = useId();
   const reasonId = `${baseId}-reason`;
@@ -57,6 +71,7 @@ export function ConfirmDialog({
     if (open) {
       setReason("");
       setExtraChecked(false);
+      setOptionChecked({});
     }
   }
 
@@ -67,7 +82,9 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t(`variants.${variant}.title`)}</AlertDialogTitle>
-          <AlertDialogDescription>{t(`variants.${variant}.description`)}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {description ?? t(`variants.${variant}.description`)}
+          </AlertDialogDescription>
         </AlertDialogHeader>
 
         {requireReason ? (
@@ -81,7 +98,7 @@ export function ConfirmDialog({
               aria-describedby={reasonMissing ? reasonErrorId : undefined}
             />
             {reasonMissing ? (
-              <p id={reasonErrorId} className="text-destructive text-xs">
+              <p id={reasonErrorId} className="text-xs text-destructive">
                 {t("reasonRequired")}
               </p>
             ) : null}
@@ -99,6 +116,22 @@ export function ConfirmDialog({
           </div>
         ) : null}
 
+        {options?.map((option) => {
+          const optionId = `${baseId}-option-${option.id}`;
+          return (
+            <div key={option.id} className="flex items-center gap-2">
+              <Checkbox
+                id={optionId}
+                checked={optionChecked[option.id] === true}
+                onCheckedChange={(checked) =>
+                  setOptionChecked((current) => ({ ...current, [option.id]: checked === true }))
+                }
+              />
+              <Label htmlFor={optionId}>{option.label}</Label>
+            </div>
+          );
+        })}
+
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>{t("dismiss")}</AlertDialogCancel>
           <AlertDialogAction
@@ -109,6 +142,13 @@ export function ConfirmDialog({
               onConfirm({
                 reason: requireReason ? reason.trim() : undefined,
                 extraChecked: extraCheckboxLabel ? extraChecked : undefined,
+                ...(options
+                  ? {
+                      options: Object.fromEntries(
+                        options.map((option) => [option.id, optionChecked[option.id] === true]),
+                      ),
+                    }
+                  : {}),
               });
             }}
           >
