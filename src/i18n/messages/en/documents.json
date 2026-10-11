@@ -17,10 +17,7 @@
     },
     "unlink": {
       "trigger": "Unlink",
-      "title": "Unlink document?",
       "description": "The document will stop appearing on this record. It stays available in Documents and on its other links.",
-      "confirm": "Unlink",
-      "cancel": "Cancel",
       "done": "Document unlinked",
       "failed": "The document could not be unlinked"
     }

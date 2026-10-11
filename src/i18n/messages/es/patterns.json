@@ -33,6 +33,16 @@
         "title": "¿Cancelar registro?",
         "description": "El registro quedará cancelado y dejará de estar activo.",
         "action": "Cancelar registro"
+      },
+      "delete": {
+        "title": "¿Eliminar registro?",
+        "description": "El registro se eliminará y no podrás recuperarlo desde esta pantalla.",
+        "action": "Eliminar"
+      },
+      "unlink": {
+        "title": "¿Desvincular registro?",
+        "description": "El registro dejará de aparecer en este vínculo. Seguirá disponible en su lista y en sus otros vínculos.",
+        "action": "Desvincular"
       }
     }
   },

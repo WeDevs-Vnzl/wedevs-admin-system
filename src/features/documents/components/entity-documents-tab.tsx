@@ -13,19 +13,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { entityHref } from "@/lib/entity-routes";
-import type { DocumentListRowDTO } from "@/lib/validators/documents";
-import {
-  getDocumentPermissions,
-  listDocumentCategories,
-  listEntityDocuments,
-  type DocumentsTabEntity,
-} from "../queries";
+import type { EntityRef } from "@/lib/validators/common";
+import type { DocumentLinkTarget, DocumentListRowDTO } from "@/lib/validators/documents";
+import { getDocumentPermissions, listDocumentCategories, listEntityDocuments } from "../queries";
 import { AttachDocumentSheet } from "./attach-document-sheet";
 import { DocumentRowActions } from "./document-row-actions";
 
+/** The link this record's documents get; `null` for entities the tab does not serve (CLIENT and PROJECT only). */
+function linkTargetOf(entity: EntityRef): DocumentLinkTarget | null {
+  if (entity.type !== "CLIENT" && entity.type !== "PROJECT") return null;
+  return { entityType: entity.type, entityId: entity.id };
+}
+
 interface EntityDocumentsTabProps {
-  /** The client or project whose documents the tab lists. */
-  entity: DocumentsTabEntity;
+  /** The client or project whose documents the tab lists; any other entity renders nothing. */
+  entity: EntityRef;
 }
 
 /**
@@ -34,6 +36,8 @@ interface EntityDocumentsTabProps {
  * Category chips show counts only; filtering by category comes with the documents module (H1-B4).
  */
 export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
+  const target = linkTargetOf(entity);
+  if (!target) return null;
   const t = await getTranslations("documents.tab");
   const locale = await getLocale();
   const [page, categories, permissions] = await Promise.all([
@@ -93,7 +97,7 @@ export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
               <DocumentTableRow
                 key={row.id}
                 row={row}
-                entity={entity}
+                target={target}
                 typeName={localName(row.type, locale)}
                 canUpdate={permissions.canUpdate}
                 versionLabel={(number) => t("versionLabel", { number })}
@@ -109,7 +113,7 @@ export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
 
 interface DocumentTableRowProps {
   row: DocumentListRowDTO;
-  entity: DocumentsTabEntity;
+  target: DocumentLinkTarget;
   typeName: string;
   canUpdate: boolean;
   versionLabel: (number: number) => string;
@@ -118,7 +122,7 @@ interface DocumentTableRowProps {
 
 function DocumentTableRow({
   row,
-  entity,
+  target,
   typeName,
   canUpdate,
   versionLabel,
@@ -143,11 +147,7 @@ function DocumentTableRow({
       </TableCell>
       {canUpdate ? (
         <TableCell className="text-right">
-          <DocumentRowActions
-            documentId={row.id}
-            documentTitle={row.title}
-            target={{ entityType: entity.type, entityId: entity.id }}
-          />
+          <DocumentRowActions documentId={row.id} documentTitle={row.title} target={target} />
         </TableCell>
       ) : null}
     </TableRow>

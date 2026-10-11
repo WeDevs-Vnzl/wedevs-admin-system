@@ -32,6 +32,8 @@ import { AttachDocumentSheet } from "./attach-document-sheet";
 
 const MB = 1024 * 1024;
 
+const clientRef = { type: "CLIENT" as const, id: "cli_0001", code: "CLI-0001", label: "Acme" };
+
 const categories: DocumentCategoryDetailDTO[] = [
   {
     id: "dcat_legal",
@@ -82,7 +84,7 @@ function renderSheet(locale: "en" | "es" = "en") {
   };
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <AttachDocumentSheet entity={{ type: "CLIENT", id: "cli_0001" }} categories={categories} />
+      <AttachDocumentSheet entity={clientRef} categories={categories} />
     </NextIntlClientProvider>,
   );
 }
@@ -127,6 +129,17 @@ describe("AttachDocumentSheet, upload mode", () => {
     await user.click(screen.getByRole("button", { name: "Upload and attach" }));
     expect(await screen.findByText("Attach a file to continue")).toBeInTheDocument();
     expect(actions.createDocumentAction).not.toHaveBeenCalled();
+  });
+
+  it("marks the invalid field with aria-invalid and points it at its error", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    renderSheet();
+    await openSheet(user);
+    await user.click(screen.getByRole("button", { name: "Upload and attach" }));
+    const title = await screen.findByLabelText("Title");
+    expect(title).toHaveAttribute("aria-invalid", "true");
+    const error = document.getElementById(title.getAttribute("aria-describedby") ?? "");
+    expect(error).toHaveAttribute("role", "alert");
   });
 
   it("applies the title rule on the client: no document is created without a title", async () => {

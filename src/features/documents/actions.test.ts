@@ -133,9 +133,25 @@ describe("searchDocumentsAction", () => {
   it("answers every signed-in role, Viewer included, with the documents matching q", async () => {
     asRole("VIEWER");
     const doc = getMockStore().documents.find((row) => row.archivedAt === null)!;
-    const result = await searchDocumentsAction({ q: doc.code, pageSize: 25 });
+    const result = await searchDocumentsAction({ q: doc.code });
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.data.items.map((row) => row.id)).toContain(doc.id);
+    if (result.ok) expect(result.data.map((row) => row.id)).toContain(doc.id);
+  });
+
+  it("answers EntityRef options: code, title as label, type DOCUMENT, at most 20", async () => {
+    asRole("MEMBER");
+    const doc = getMockStore().documents.find((row) => row.archivedAt === null)!;
+    const result = await searchDocumentsAction({ q: doc.code });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.find((row) => row.id === doc.id)).toEqual({
+      id: doc.id,
+      code: doc.code,
+      label: doc.title,
+      type: "DOCUMENT",
+    });
+    const all = await searchDocumentsAction({ q: "" });
+    expect(all.ok && all.data.length).toBeLessThanOrEqual(20);
   });
 
   it("requires a session", async () => {

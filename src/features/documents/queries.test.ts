@@ -35,7 +35,11 @@ describe("listEntityDocuments", () => {
     const client = store.clients.find((row) =>
       store.documentLinks.some((link) => link.entityType === "CLIENT" && link.entityId === row.id),
     )!;
-    const clientPage = await listEntityDocuments({ type: "CLIENT", id: client.id });
+    const clientPage = await listEntityDocuments({
+      type: "CLIENT",
+      id: client.id,
+      label: client.tradeName,
+    });
     expect(clientPage.total).toBeGreaterThan(0);
     for (const row of clientPage.items) {
       expect(row.links.map((ref) => ref.id)).toContain(client.id);
@@ -44,8 +48,24 @@ describe("listEntityDocuments", () => {
     const project = store.projects.find((row) =>
       store.documentLinks.some((link) => link.entityType === "PROJECT" && link.entityId === row.id),
     )!;
-    const projectPage = await listEntityDocuments({ type: "PROJECT", id: project.id });
+    const projectPage = await listEntityDocuments({
+      type: "PROJECT",
+      id: project.id,
+      label: project.name,
+    });
     expect(projectPage.total).toBeGreaterThan(0);
+  });
+
+  it("answers an empty page for an entity the tab does not serve", async () => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    const store = getMockStore();
+    const contact = store.contacts[0]!;
+    expect(
+      await listEntityDocuments({ type: "CONTACT", id: contact.id, label: "x" }),
+    ).toMatchObject({
+      items: [],
+      total: 0,
+    });
   });
 });
 

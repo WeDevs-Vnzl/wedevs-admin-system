@@ -105,13 +105,15 @@ async function renderTab(loc: "en" | "es" = "en") {
     enums: loc === "es" ? esEnums : enEnums,
     patterns: loc === "es" ? esPatterns : enPatterns,
   };
-  const tab = await EntityDocumentsTab({ entity: { type: "CLIENT", id: "cli_0001" } });
+  const tab = await EntityDocumentsTab({ entity: clientRef });
   return render(
     <NextIntlClientProvider locale={loc} messages={messages}>
       {tab}
     </NextIntlClientProvider>,
   );
 }
+
+const clientRef = { type: "CLIENT" as const, id: "cli_0001", code: "CLI-0001", label: "Acme" };
 
 beforeEach(() => {
   queries.listEntityDocuments
@@ -133,7 +135,27 @@ describe("EntityDocumentsTab", () => {
     );
     expect(within(row).getByText("Contract")).toBeInTheDocument();
     expect(within(row).getByText("v2")).toBeInTheDocument();
-    expect(queries.listEntityDocuments).toHaveBeenCalledWith({ type: "CLIENT", id: "cli_0001" });
+    expect(queries.listEntityDocuments).toHaveBeenCalledWith(clientRef);
+  });
+
+  it("serves a project the same way", async () => {
+    const projectRef = { type: "PROJECT" as const, id: "prj_0001", code: "PRJ-0001", label: "Web" };
+    const tab = await EntityDocumentsTab({ entity: projectRef });
+    render(
+      <NextIntlClientProvider
+        locale="en"
+        messages={{ documents: enDocuments, enums: enEnums, patterns: enPatterns }}
+      >
+        {tab}
+      </NextIntlClientProvider>,
+    );
+    expect(queries.listEntityDocuments).toHaveBeenCalledWith(projectRef);
+  });
+
+  it("renders nothing for an entity the tab does not serve", async () => {
+    const contactRef = { type: "CONTACT" as const, id: "ctc_0001", label: "Ana" };
+    expect(await EntityDocumentsTab({ entity: contactRef })).toBeNull();
+    expect(queries.listEntityDocuments).not.toHaveBeenCalledWith(contactRef);
   });
 
   it("shows the category chips with their counts, from the catalog", async () => {

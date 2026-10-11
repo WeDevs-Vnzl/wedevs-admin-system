@@ -17,10 +17,7 @@
     },
     "unlink": {
       "trigger": "Desvincular",
-      "title": "¿Desvincular documento?",
       "description": "El documento dejará de aparecer en este registro. Seguirá disponible en Documentos y en sus otros vínculos.",
-      "confirm": "Desvincular",
-      "cancel": "Cancelar",
       "done": "Documento desvinculado",
       "failed": "No se pudo desvincular el documento"
     }

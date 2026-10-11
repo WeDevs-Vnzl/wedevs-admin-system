@@ -5,26 +5,16 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link2OffIcon } from "lucide-react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import type { DocumentLinkEntityType } from "@/lib/validators/documents";
+import type { DocumentLinkTarget } from "@/lib/validators/documents";
 import { unlinkDocumentAction } from "../actions";
 
 interface DocumentRowActionsProps {
   documentId: string;
   documentTitle: string;
   /** The link to remove: the record the tab belongs to. The document's other links stay (HU-20 CA2). */
-  target: { entityType: DocumentLinkEntityType; entityId: string };
+  target: DocumentLinkTarget;
 }
 
 /**
@@ -51,31 +41,24 @@ export function DocumentRowActions({ documentId, documentTitle, target }: Docume
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={`${t("trigger")}: ${documentTitle}`}>
-          <Link2OffIcon aria-hidden="true" />
-          {t("trigger")}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("title")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("description")}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{t("cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(event) => {
-              event.preventDefault();
-              unlink();
-            }}
-            disabled={pending}
-          >
-            {t("confirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label={`${t("trigger")}: ${documentTitle}`}
+        onClick={() => setOpen(true)}
+      >
+        <Link2OffIcon aria-hidden="true" />
+        {t("trigger")}
+      </Button>
+      <ConfirmDialog
+        variant="unlink"
+        open={open}
+        onOpenChange={setOpen}
+        description={t("description")}
+        pending={pending}
+        onConfirm={unlink}
+      />
+    </>
   );
 }
