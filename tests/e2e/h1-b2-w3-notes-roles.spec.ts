@@ -14,7 +14,6 @@ import { expect, test, type Page } from "@playwright/test";
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const NOTE_TITLE = "Alcance acordado con Kairos";
 const RAW_KEY = /^[a-z]+(\.[A-Za-z0-9]+)+$/;
-const NO_MAIN_H1 = new Set(["/projects/new", "/projects/pry_kairos_web/edit"]);
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
@@ -257,16 +256,9 @@ test.describe("navigation sweep (read only)", () => {
       expect(RAW_KEY.test(text), `${path} shows a raw key: ${text}`).toBe(false);
     };
 
-    if (NO_MAIN_H1.has(path)) {
-      // PRODUCT DEFECT (minor, a11y): the project form pages have no <h1> in <main> (checked after the network is idle).
-      test.fail(`renders ${path} in the shell with a translated heading`, async ({ page }) => {
-        await check(page);
-      });
-    } else {
-      test(`renders ${path} in the shell with a translated heading`, async ({ page }) => {
-        await check(page);
-      });
-    }
+    test(`renders ${path} in the shell with a translated heading`, async ({ page }) => {
+      await check(page);
+    });
   }
 
   test("unknown ids and the graph route render the in-shell 404 page", async ({ page }) => {
@@ -289,9 +281,7 @@ test.describe("navigation sweep (read only)", () => {
     }
   });
 
-  // PRODUCT DEFECT (major, status): the in-shell 404 body of an unknown client or project id is served with HTTP 200
-  // (same defect as the clients and projects files).
-  test.fail("unknown client and project ids answer HTTP 404", async ({ page }) => {
+  test("unknown client and project ids answer HTTP 404", async ({ page }) => {
     for (const path of ["/clients/cli_no_existe", "/projects/pry_no_existe"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
@@ -317,9 +307,7 @@ test.describe("accessibility (read only)", () => {
     await expect(page.getByRole("combobox", { name: "Clientes", exact: true })).toBeFocused();
   });
 
-  // PRODUCT DEFECT (minor, a11y WCAG 2.4.3): after Escape the contact dialog closes but focus lands on <body>, not on
-  // the "Nuevo contacto" button that opened it (checked in the browser: document.activeElement is BODY).
-  test.fail(
+  test(
     "Escape closes the contact dialog and returns focus to its opener",
     async ({ page }) => {
       await open(page, "/clients/cli_zafiro_labs?tab=contacts");
@@ -356,11 +344,7 @@ test.describe("locale on a detail page (mutates mock preferences)", () => {
     await resetMockData(page);
   });
 
-  // PRODUCT DEFECT (major, crash): switching the language on a project detail page replaces the page with the error
-  // boundary ("This page couldn't load") and logs "Cannot read properties of null (reading 'commands')". Other
-  // routes switch fine. Likely origin: src/components/ui/rich-text/rich-text-view.tsx:46 (`editor.commands`
-  // read after `useEditor` is re-created when the `extensions` memo changes with the locale).
-  test.fail(
+  test(
     "switching ES to EN reformats the dates and money of a project detail",
     async ({ page }) => {
       await open(page, "/projects/pry_kairos_web");

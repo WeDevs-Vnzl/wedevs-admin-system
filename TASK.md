@@ -2824,24 +2824,24 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 `src/features/clients/components/use-opener-focus*` (D5, only if no kit change is needed);
 `tests/e2e/h1-b2-w3-*.spec.ts` (remove the matching `test.fail` markers only).
 
-- [ ] **D1 (major).** Unknown client and project ids (`/clients/cli_no_existe`, `/projects/pry_no_existe`) render
+- [x] **D1 (major).** _Done: `(overview)/` group holds `page.tsx` + `loading.tsx`; `/list` stays outside it (a kit test pins its path)._ Unknown client and project ids (`/clients/cli_no_existe`, `/projects/pry_no_existe`) render
       the in-shell 404 but answer HTTP 200: `clients/loading.tsx` and `projects/loading.tsx` (the overview
       skeletons) also wrap `[id]`, so the response streams before `notFound()` (Next docs `not-found.md`,
       `streaming.md`). Scope each skeleton to the overview only (e.g. a route group `(overview)/` holding
       `page.tsx` + `loading.tsx`), keep URLs unchanged; `/notes/[id]` already answers 404 and is the reference.
-- [ ] **D2 (major, kit exception).** ES → EN on `/projects/pry_kairos_web` crashes ("Cannot read properties of
+- [x] **D2 (major, kit exception).** _Done: `isDestroyed` guard + regression test._ ES → EN on `/projects/pry_kairos_web` crashes ("Cannot read properties of
       null (reading 'commands')"): `rich-text-view.tsx:46` calls `editor.commands.setContent` on an editor
       destroyed/re-created when the locale-dependent `extensions` memo changes. Guard as `rich-text-editor.tsx:185`
       does (`!editor || editor.isDestroyed`) and add a regression test.
-- [ ] **D3 (major).** *Documentos* → "Adjuntar documento" → "Vincular existente": the results listbox opens under
+- [x] **D3 (major).** _Done (unverified in a browser): pointer-events on the combobox popup + `onInteractOutside` guard in the sheet._ *Documentos* → "Adjuntar documento" → "Vincular existente": the results listbox opens under
       the sheet footer, so a pointer click never selects a result (keyboard works). Fix in the feature (layout,
       stacking or scroll area of the sheet). If it can only be fixed in the kit, stop and escalate.
-- [ ] **D4 (minor, a11y).** The project form pages (`/projects/new`, `/projects/[id]/edit`) have no `<h1>` in
+- [x] **D4 (minor, a11y).** _Done: sr-only h1 in `ProjectForm`._ The project form pages (`/projects/new`, `/projects/[id]/edit`) have no `<h1>` in
       `<main>`; match the client form pages.
-- [ ] **D5 (minor, a11y WCAG 2.4.3).** Escape on the contact dialog (*Contactos* → "Nuevo contacto") leaves focus
+- [x] **D5 (minor, a11y WCAG 2.4.3).** _Done (unverified in a browser): `useOpenerFocus` reads the opener in a layout effect._ Escape on the contact dialog (*Contactos* → "Nuevo contacto") leaves focus
       on `<body>`; return it to the opener. Feature-only fix; if it needs the kit, leave the `test.fail` and
       report it (stays in H1-FX with `ConfirmDialog` focus / `useOpenerFocus`).
-- [ ] Remove the `test.fail` markers of the fixed defects (no other E2E change). Gate. Orchestrator smoke under
+- [x] Remove the `test.fail` markers of the fixed defects (no other E2E change). Gate. Orchestrator smoke under
       `next start`: unknown ids → 404, overview skeletons still stream, ES ↔ EN on a project detail, clean log.
       Tester phase C re-run of the affected specs. Commit messages without any Claude attribution.
 

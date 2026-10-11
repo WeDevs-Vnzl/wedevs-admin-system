@@ -258,6 +258,18 @@ describe("RichTextView", () => {
     expect(await screen.findByText("Attached image: plano.png")).toBeInTheDocument();
   });
 
+  it("survives a locale change that re-creates the editor (extensions memo changes)", async () => {
+    const tree = (locale: "es" | "en") => (
+      <NextIntlClientProvider locale={locale} messages={{ forms: locale === "es" ? esForms : enForms }}>
+        <RichTextView content={doc} />
+      </NextIntlClientProvider>
+    );
+    const view = render(tree("es"));
+    expect(await screen.findByText("Imagen adjunta: plano.png")).toBeInTheDocument();
+    expect(() => view.rerender(tree("en"))).not.toThrow();
+    expect(await screen.findByText("Attached image: plano.png")).toBeInTheDocument();
+  });
+
   it("exports an empty paragraph as the empty document", () => {
     expect(richTextDocSchema.safeParse(EMPTY_RICH_TEXT).success).toBe(true);
   });

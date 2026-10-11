@@ -298,6 +298,7 @@ export function ProjectForm({
           </>
         }
       >
+        <h1 className="sr-only">{mode === "create" ? t("form.createTitle") : t("form.editTitle")}</h1>
         <SectionCard title={t("form.name")}>
           <Field data-invalid={form.formState.errors.name ? true : undefined}>
             <FieldLabel htmlFor="project-name">{t("form.name")}</FieldLabel>

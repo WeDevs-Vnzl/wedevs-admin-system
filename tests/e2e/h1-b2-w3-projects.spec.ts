@@ -312,9 +312,7 @@ test.describe("projects (read only)", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  // PRODUCT DEFECT (major, status): the in-shell 404 body of an unknown project id is served with HTTP 200
-  // (curl http://localhost:3105/projects/pry_no_existe). /notes/note_no_existe answers 404.
-  test.fail("an unknown project id answers HTTP 404", async ({ page }) => {
+  test("an unknown project id answers HTTP 404", async ({ page }) => {
     const response = await page.goto("/projects/pry_no_existe");
     expect(response?.status()).toBe(404);
   });

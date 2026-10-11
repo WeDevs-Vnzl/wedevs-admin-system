@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 /**
  * Returns focus to the element that opened a dialog once it closes (wave 2 defect T1). Dialogs opened
@@ -11,14 +11,17 @@ export function useOpenerFocus(open: boolean) {
   const opener = useRef<HTMLElement | null>(null);
   const wasOpen = useRef(open);
 
+  // Read before the dialog's focus scope moves focus into the dialog (its effect runs after every layout effect),
+  // otherwise the element kept is a field inside the dialog and the focus is lost on close.
+  useLayoutEffect(() => {
+    if (!open || wasOpen.current) return;
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }, [open]);
+
   useEffect(() => {
     if (open === wasOpen.current) return;
     wasOpen.current = open;
-    if (open) {
-      opener.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      return;
-    }
+    if (open) return;
     const target = opener.current;
     opener.current = null;
     if (!target) return;

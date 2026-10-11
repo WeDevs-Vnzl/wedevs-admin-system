@@ -43,7 +43,7 @@ export function RichTextView({ content, className }: RichTextViewProps) {
   );
 
   useEffect(() => {
-    if (editor && checked.success) editor.commands.setContent(checked.data, { emitUpdate: false });
+    if (editor && !editor.isDestroyed && checked.success) editor.commands.setContent(checked.data, { emitUpdate: false });
   }, [editor, checked]);
 
   if (!checked.success) {
