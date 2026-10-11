@@ -1,1 +1,47 @@
-{}
+{
+  "page": {
+    "title": "Tags",
+    "description": "Global tags with a name and a colour, used on clients, contacts, projects, documents and notes."
+  },
+  "columns": {
+    "name": "Tag",
+    "usageCount": "Uses",
+    "createdAt": "Created",
+    "actions": "Actions"
+  },
+  "actions": {
+    "new": "New tag",
+    "edit": "Edit {name}"
+  },
+  "search": {
+    "placeholder": "Search tags…"
+  },
+  "empty": {
+    "title": "No tags yet",
+    "description": "Create a tag to classify clients, projects, documents and notes."
+  },
+  "toast": {
+    "created": "Tag created",
+    "updated": "Tag saved"
+  },
+  "form": {
+    "createTitle": "New tag",
+    "editTitle": "Edit tag",
+    "description": "The name is unique (case-insensitive). The colour helps you spot it in lists.",
+    "name": "Name",
+    "color": "Colour",
+    "presets": "Preset colours",
+    "swatch": "Colour {color}",
+    "colorHex": "Hex colour",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "picker": {
+    "placeholder": "Add tags…",
+    "usage": "{count, plural, one {# record} other {# records}}"
+  },
+  "errors": {
+    "nameTaken": "A tag with that name already exists."
+  }
+}

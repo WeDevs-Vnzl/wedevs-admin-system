@@ -1,1 +1,47 @@
-{}
+{
+  "page": {
+    "title": "Etiquetas",
+    "description": "Etiquetas globales con nombre y color, usadas en clientes, contactos, proyectos, documentos y notas."
+  },
+  "columns": {
+    "name": "Etiqueta",
+    "usageCount": "Usos",
+    "createdAt": "Creada",
+    "actions": "Acciones"
+  },
+  "actions": {
+    "new": "Nueva etiqueta",
+    "edit": "Editar {name}"
+  },
+  "search": {
+    "placeholder": "Buscar etiquetas…"
+  },
+  "empty": {
+    "title": "Todavía no hay etiquetas",
+    "description": "Crea una etiqueta para clasificar clientes, proyectos, documentos y notas."
+  },
+  "toast": {
+    "created": "Etiqueta creada",
+    "updated": "Etiqueta guardada"
+  },
+  "form": {
+    "createTitle": "Nueva etiqueta",
+    "editTitle": "Editar etiqueta",
+    "description": "El nombre es único (no distingue mayúsculas). El color ayuda a reconocerla en las listas.",
+    "name": "Nombre",
+    "color": "Color",
+    "presets": "Colores predefinidos",
+    "swatch": "Color {color}",
+    "colorHex": "Color hexadecimal",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando…"
+  },
+  "picker": {
+    "placeholder": "Añadir etiquetas…",
+    "usage": "{count, plural, one {# registro} other {# registros}}"
+  },
+  "errors": {
+    "nameTaken": "Ya existe una etiqueta con ese nombre."
+  }
+}

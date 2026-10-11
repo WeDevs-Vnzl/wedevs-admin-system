@@ -2249,26 +2249,26 @@ Files: `src/mocks/services/tags.ts` (adds `createTag`, `updateTag`, `assignTags`
 (+ tests); new `src/app/(app)/settings/tags/page.tsx`; `src/i18n/messages/{es,en}/tags.json`. No other
 file.
 
-- [ ] Service (keeps `listTags`, `getTag`, `tagUsage`, re-exported by `catalogs.ts`; type test
+- [x] Service (keeps `listTags`, `getTag`, `tagUsage`, re-exported by `catalogs.ts`; type test
       `satisfies TagsService<MockServiceContext>`; assignments write the rows' `tagIds`; finance types
       answer `NOT_FOUND` until H1-B3): `createTag` (case-insensitive unique name → `CONFLICT` with entity), `updateTag`,
       `assignTags` / `unassignTag` for every taggable type whose collection has rows (unknown or archived
       entity → `NOT_FOUND`; `LINK`/`UNLINK` entries). The service also checks
       `can(ctx.user, "update", <resource of the entity type>)` (a Member may tag projects and notes, not
       clients) and throws `FORBIDDEN`.
-- [ ] Adapters: `createTagAction` any-of `[{ create, settings }, { update, client }, { update, project },
+- [x] Adapters: `createTagAction` any-of `[{ create, settings }, { update, client }, { update, project },
       { create, note }, { create, document }]` (inline creation where the user can edit the record);
       `updateTagAction` `{ update, settings }`; `assignTagsAction` / `unassignTagAction` any-of the
       taggable updates plus the service check; `listTagsAction` `"authenticated"` (reference read,
       DT-71); `exportTagsCsvAction` (`TAG`, `{ read, settings }`).
-- [ ] `/settings/tags` (Owner/Admin; the page calls `notFound()` otherwise): table (chip with colour,
+- [x] `/settings/tags` (Owner/Admin; the page calls `notFound()` otherwise): table (chip with colour,
       usage count, created), create/edit dialog with name and colour (preset swatches through
       `toggle-group` plus a hex input), readable chip text on any colour (pure luminance helper). No
       delete (not in PRD §12). `generateMetadata` title.
-- [ ] `TagPicker` (multi, inline "Crear «…»" only when the user may create, colour chips) and `TagChips`.
-- [ ] Tests: unique name, assign/unassign rules and permission check, picker inline create, chip
+- [x] `TagPicker` (multi, inline "Crear «…»" only when the user may create, colour chips) and `TagChips`.
+- [x] Tests: unique name, assign/unassign rules and permission check, picker inline create, chip
       contrast helper, page access per role, ES and EN.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.6 — Technologies: service, picker and `/settings/technologies`
 
