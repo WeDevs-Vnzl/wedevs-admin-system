@@ -1,5 +1,5 @@
 import type { TagChipDTO } from "@/lib/validators/tags";
-import { readableTextColor } from "./color-swatches";
+import { readableTextColor } from "../color";
 
 /** Coloured chips of tags. The text colour is chosen for contrast on each tag's own colour. */
 export function TagChips({ tags }: { tags: readonly TagChipDTO[] }) {
