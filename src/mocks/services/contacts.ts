@@ -39,6 +39,14 @@ export function toContactDTO(db: MockStore, row: ContactRow): ContactDetailDTO {
   return { ...rest, tags };
 }
 
+/** Names of the tags behind `tagIds`, sorted and joined with ", ": the readable snapshot a diff logs (C1). Shared with `clients.ts`. */
+export function tagNames(db: MockStore, tagIds: readonly string[]): string {
+  return tagIds
+    .map((id) => db.tags.find((tag) => tag.id === id)?.name ?? id)
+    .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+    .join(", ");
+}
+
 /** Primary first, then by name: the order of the "highlighted contacts" and of the tab's default view. */
 export function sortContacts(rows: readonly ContactRow[]): ContactRow[] {
   return [...rows].sort(
@@ -134,7 +142,7 @@ export async function updateContact(
   const row = findLiveContact(db, input.id);
   assertTagsExist(db, input.tagIds);
 
-  const before = { ...row, tagIds: [...row.tagIds].sort() };
+  const before = { ...row, tagIds: tagNames(db, row.tagIds) };
   row.fullName = input.fullName;
   row.position = input.position ?? null;
   row.email = input.email ?? null;
@@ -143,7 +151,7 @@ export async function updateContact(
   row.tagIds = [...input.tagIds];
   const changes = diffFields(
     before,
-    { ...row, tagIds: [...row.tagIds].sort() },
+    { ...row, tagIds: tagNames(db, row.tagIds) },
     {
       fields: CONTACT_DIFF_FIELDS,
     },

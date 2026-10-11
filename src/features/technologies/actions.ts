@@ -18,7 +18,7 @@ import * as technologies from "@/mocks/services/technologies";
 import { defineAction } from "@/server/actions/define-action";
 import type { ServiceContext } from "@/server/context";
 import { technologyExportColumns } from "./columns";
-import { resolveTechnologyIcon } from "./components/tech-stack-icons";
+import { resolveTechnologyIcon } from "./icons";
 
 const SETTINGS_PATH = "/settings/technologies";
 
@@ -64,11 +64,12 @@ export const listTechnologiesAction = defineAction({
 });
 
 /**
- * Reference read (DT-71) behind the form's Simple Icons preview: the brand glyph of a slug, or `null`. The
- * resolver is server only, so the dialog gets plain data and never imports `simple-icons`.
+ * Preview behind the settings form's Simple Icons field: the brand glyph of a slug, or `null`. Only the
+ * roles that open Settings → Tecnologías need it (`read` on `settings`). The resolver is server only, so
+ * the dialog gets plain data and never imports `simple-icons`.
  */
 export const resolveTechnologyIconAction = defineAction({
-  permission: "authenticated",
+  permission: { action: "read", resource: "settings" },
   input: z.object({ slug: iconSlugSchema.nullable() }),
   handler: async (_ctx, data) => resolveTechnologyIcon(data.slug),
 });

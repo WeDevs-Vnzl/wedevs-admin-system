@@ -69,10 +69,20 @@ describe("technology actions: permissions (DT-71)", () => {
     expect(result.data.rowCount).toBeGreaterThan(0);
   });
 
-  it("resolves a Simple Icons slug for any signed-in role (reference read)", async () => {
-    asRole("VIEWER");
+  it("resolves a Simple Icons slug for Owner and Admin (read on settings)", async () => {
+    asRole("ADMIN");
     const result = await resolveTechnologyIconAction({ slug: "nextdotjs" });
     expect(result).toMatchObject({ ok: true, data: { title: "Next.js" } });
+  });
+
+  it("refuses the icon preview to Member and Viewer with FORBIDDEN", async () => {
+    for (const role of ["MEMBER", "VIEWER"] as const) {
+      asRole(role);
+      await expect(resolveTechnologyIconAction({ slug: "nextdotjs" })).resolves.toMatchObject({
+        ok: false,
+        error: { code: "FORBIDDEN" },
+      });
+    }
   });
 });
 

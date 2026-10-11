@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/patterns/page-header";
 import { getOpenableSettingsSection } from "@/features/settings/queries";
-import { resolveTechnologyIcon } from "@/features/technologies/components/tech-stack-icons";
 import { TechnologiesTable } from "@/features/technologies/components/technologies-table";
+import { resolveTechnologyIcon } from "@/features/technologies/icons";
 import { listTechnologies, technologyFilterFromParams } from "@/features/technologies/queries";
 
 export async function generateMetadata() {
@@ -22,7 +22,7 @@ export default async function TechnologiesPage({ searchParams }: TechnologiesPag
 
   const t = await getTranslations("catalogs.technologies");
   const page = await listTechnologies(technologyFilterFromParams(await searchParams));
-  // Brand icons are resolved here, on the server; the client table gets plain data (see tech-stack-icons.tsx).
+  // Brand icons are resolved here, on the server; the client table gets plain data (see icons.ts).
   const icons = Object.fromEntries(page.items.map((row) => [row.id, resolveTechnologyIcon(row.iconSlug)]));
 
   return (

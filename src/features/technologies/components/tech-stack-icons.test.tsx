@@ -1,22 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import { describe, expect, it } from "vitest";
-import { TechStackIcons, resolveTechnologyIcon } from "./tech-stack-icons";
+import { describe, expect, it, vi } from "vitest";
 
-describe("resolveTechnologyIcon (server only)", () => {
-  it("resolves a Simple Icons slug to its path and brand colour", () => {
-    const icon = resolveTechnologyIcon("nextdotjs");
-    expect(icon).not.toBeNull();
-    expect(icon!.title).toBe("Next.js");
-    expect(icon!.path.length).toBeGreaterThan(0);
-    expect(icon!.hex).toMatch(/^[0-9A-Fa-f]{6}$/);
-  });
+vi.mock("server-only", () => ({}));
 
-  it("returns null for an unknown slug and for no slug", () => {
-    expect(resolveTechnologyIcon("no-such-brand-xyz")).toBeNull();
-    expect(resolveTechnologyIcon(null)).toBeNull();
-  });
-});
+import { TechStackIcons } from "./tech-stack-icons";
 
 describe("TechStackIcons", () => {
   const technologies = [

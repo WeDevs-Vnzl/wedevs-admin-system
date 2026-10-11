@@ -2390,20 +2390,20 @@ Files: `src/mocks/services/{projects,notes,tags,clients,contacts,documents}.ts` 
 new `src/features/technologies/icons.ts` (+ test); `src/features/technologies/components/tech-stack-icons.tsx`;
 `src/features/technologies/actions.ts` (+ `actions.test.ts`); `src/app/(app)/settings/technologies/page.tsx`. No other file.
 
-- [ ] **F3 (C15).** `projects.ts`: delete `money()`; money sorters return the stored USD decimal string (the `listRows` numeric collation orders non-negative 2-decimal strings correctly, as `clients.ts` does). Test: `"10.00"` sorts after `"9.00"` both directions.
-- [ ] **F6 (C19 shape).** `getProject` and `getNote` answer `NOT_FOUND` for an archived record unless `can(ctx.user, "restore", "trash")`, the same rule as `getClient`. Tests per role.
-- [ ] **F7 (C12 shape).** `createTag` logs `CREATE` and `updateTag` logs `UPDATE` (with `diffFields` over `name`, `color`) on entity type `TAG` through `mockTx` + `logActivity`. Tests.
-- [ ] **F8.** Move `resolveTechnologyIcon` and `ResolvedIcon` to new `src/features/technologies/icons.ts` starting with `import "server-only"`; `tech-stack-icons.tsx`, `actions.ts` and the settings page import from it. `resolveTechnologyIconAction` permission becomes `{ action: "read", resource: "settings" }`. Test: Member → `FORBIDDEN`.
-- [ ] **F9.** `notes.ts:116` field error uses `VALIDATION_MESSAGES.invalidOption`.
-- [ ] **F10.** `projects.ts:564` unknown link id → `ServiceError("NOT_FOUND")` without the id as a message.
-- [ ] **F12.** Type tests: projects `satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">`; notes `satisfies NotesService<MockServiceContext>`; alerts `satisfies AlertsService<MockServiceContext>`; documents `satisfies Pick<DocumentsService<MockServiceContext>, "listDocuments" | "createDocument" | "uploadVersion" | "linkDocument" | "unlinkDocument">`.
-- [ ] **CR-B1 (C14/C19).** `createNote`, `linkNote`, `createDocument` and `linkDocument` refuse an archived target (client, contact, project, document) with `NOT_FOUND` (checked locally; `entity-refs.ts` stays read-only). Tests per type.
-- [ ] **CR-B2 (C14/C23).** `createNote`, `updateNote`, `createProject` and `updateProject` require every `image` `fileId` inside rich-text content to be a `READY` file; notes add those ids to `attachmentFileIds`. Tests.
-- [ ] **CR-B3 (C16).** `projectHeadline` never converts with today's rate; mark it as an H1-B2 placeholder that H1-B3 replaces with the `lib/finance` §8.4.4 summary. Test: a non-USD plan does not move when a new rate is added.
-- [ ] **CR-B4 (C1).** Tag and technology diffs in clients, contacts, projects and notes log sorted names joined with ", " (snapshot at log time), not ids. Tests.
-- [ ] **CR-m7.** Document `LINK`/`UNLINK` entries carry `metadata.entityType` / `metadata.entityId` (as notes do).
-- [ ] **CR-n1.** Add the `// MOCK` header to `alerts.test.ts`.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] **F3 (C15).** `projects.ts`: delete `money()`; money sorters return the stored USD decimal string (the `listRows` numeric collation orders non-negative 2-decimal strings correctly, as `clients.ts` does). Test: `"10.00"` sorts after `"9.00"` both directions.
+- [x] **F6 (C19 shape).** `getProject` and `getNote` answer `NOT_FOUND` for an archived record unless `can(ctx.user, "restore", "trash")`, the same rule as `getClient`. Tests per role.
+- [x] **F7 (C12 shape).** `createTag` logs `CREATE` and `updateTag` logs `UPDATE` (with `diffFields` over `name`, `color`) on entity type `TAG` through `mockTx` + `logActivity`. Tests.
+- [x] **F8.** Move `resolveTechnologyIcon` and `ResolvedIcon` to new `src/features/technologies/icons.ts` starting with `import "server-only"`; `tech-stack-icons.tsx`, `actions.ts` and the settings page import from it. `resolveTechnologyIconAction` permission becomes `{ action: "read", resource: "settings" }`. Test: Member → `FORBIDDEN`.
+- [x] **F9.** `notes.ts:116` field error uses `VALIDATION_MESSAGES.invalidOption`.
+- [x] **F10.** `projects.ts:564` unknown link id → `ServiceError("NOT_FOUND")` without the id as a message.
+- [x] **F12.** Type tests: projects `satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">`; notes `satisfies NotesService<MockServiceContext>`; alerts `satisfies AlertsService<MockServiceContext>`; documents `satisfies Pick<DocumentsService<MockServiceContext>, "listDocuments" | "createDocument" | "uploadVersion" | "linkDocument" | "unlinkDocument">`.
+- [x] **CR-B1 (C14/C19).** `createNote`, `linkNote`, `createDocument` and `linkDocument` refuse an archived target (client, contact, project, document) with `NOT_FOUND` (checked locally; `entity-refs.ts` stays read-only). Tests per type.
+- [x] **CR-B2 (C14/C23).** `createNote`, `updateNote`, `createProject` and `updateProject` require every `image` `fileId` inside rich-text content to be a `READY` file; notes add those ids to `attachmentFileIds`. Tests.
+- [x] **CR-B3 (C16).** `projectHeadline` never converts with today's rate; mark it as an H1-B2 placeholder that H1-B3 replaces with the `lib/finance` §8.4.4 summary. Test: a non-USD plan does not move when a new rate is added.
+- [x] **CR-B4 (C1).** Tag and technology diffs in clients, contacts, projects and notes log sorted names joined with ", " (snapshot at log time), not ids. Tests.
+- [x] **CR-m7.** Document `LINK`/`UNLINK` entries carry `metadata.entityType` / `metadata.entityId` (as notes do).
+- [x] **CR-n1.** Add the `// MOCK` header to `alerts.test.ts`.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.10 — Wave 2 coherence fixes: ConfirmDialog, entity-tab props, documents search, technology picker (Planner F1, F2, F4, F5)
 

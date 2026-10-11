@@ -1,11 +1,14 @@
+// MOCK — tests for the alert rules and the dismiss/snooze/restore services (PRD §7.9).
 import { describe, expect, it } from "vitest";
 import { addDays } from "@/lib/dates";
-import type { AlertType } from "@/lib/validators/alerts";
+import type { AlertType, AlertsService } from "@/lib/validators/alerts";
 import type { InstallmentDTO } from "@/lib/validators/billing";
 import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentDetailDTO } from "@/lib/validators/payments";
+import type { MockServiceContext } from "../ctx";
 import { FIXED_NOW, FIXED_TODAY, makeTestContext } from "../test-helpers";
+import * as alertsService from "./alerts";
 import { dismissAlert, listAlerts, restoreAlert, snoozeAlert } from "./alerts";
 
 type Harness = ReturnType<typeof makeTestContext>;
@@ -282,5 +285,12 @@ describe("dismiss, snooze, restore", () => {
     });
     expect(await types(h, ["INVOICE_OVERDUE"])).toEqual(["INVOICE_OVERDUE"]);
     expect(h.db.alertDismissals).toMatchObject([{ userId: "usr_other" }]);
+  });
+});
+
+describe("type contract (F12)", () => {
+  it("satisfies AlertsService over the mock context", () => {
+    const service = alertsService satisfies AlertsService<MockServiceContext>;
+    expect(typeof service.listAlerts).toBe("function");
   });
 });

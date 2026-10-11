@@ -1,6 +1,7 @@
 // MOCK — tests for the projects service: state machine, dates, hints, cancel options, links, clients, stack.
 import { describe, expect, it } from "vitest";
 import { PROJECT_STATUS_VALUES } from "@/lib/validators/enums";
+import type { ProjectsService } from "@/lib/validators/projects";
 import {
   createProjectInputSchema,
   projectFilterSchema,
@@ -9,6 +10,7 @@ import {
   type CreateProjectInput,
 } from "@/lib/validators/projects";
 import type { InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
+import type { MockServiceContext } from "../ctx";
 import { makeTestContext } from "../test-helpers";
 import * as svc from "./projects";
 
@@ -213,7 +215,7 @@ describe("updateProject", () => {
     expect(entry.changes).toMatchObject({
       name: ["Sitio web Kairos Studio", "Sitio web Kairos 2"],
       description: "changed",
-      tagIds: [expect.any(String), "[]"],
+      tagIds: [expect.any(String), ""],
     });
     expect(entry.changes).not.toHaveProperty("summary");
   });
@@ -842,5 +844,154 @@ describe("getProject / getProjectsOverview", () => {
       true,
     );
     expect(overview.highestToInvoice).toEqual([]);
+  });
+});
+
+// ───────────────────────────── Wave 2 fix round (package 2.9) ─────────────────────────────
+
+const imageDoc = (fileId: string) => ({
+  type: "doc" as const,
+  content: [
+    { type: "paragraph", content: [{ type: "text", text: "Con imagen" }] },
+    { type: "image", attrs: { fileId, src: `/api/files/${fileId}/download` } },
+  ],
+});
+
+describe("type contract (F12)", () => {
+  it("satisfies ProjectsService over the mock context, financials aside", () => {
+    const service = svc satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">;
+    expect(typeof service.createProject).toBe("function");
+  });
+});
+
+describe("money sorters (F3, C15)", () => {
+  it("orders the stored USD strings numerically, in both directions", async () => {
+    const { ctx, db } = makeTestContext();
+    const [a, b, c] = db.projects.filter((row) => !row.archivedAt);
+    const bill = (projectId: string, contractAmount: string) =>
+      db.billingPlans.push({ id: `bpl_${projectId}`, projectId, currency: "USD", contractAmount } as never);
+    bill(a!.id, "9.00");
+    bill(b!.id, "10.00");
+    bill(c!.id, "100.00");
+    const ids = [a!.id, b!.id, c!.id];
+    const sorted = async (sort: string) =>
+      (await svc.listProjects(ctx, filter({ sort })))
+        .items.filter((row) => ids.includes(row.id))
+        .map((row) => row.contractedValueUsd);
+    expect(await sorted("contractedValueUsd:asc")).toEqual(["9.00", "10.00", "100.00"]);
+    expect(await sorted("contractedValueUsd:desc")).toEqual(["100.00", "10.00", "9.00"]);
+  });
+});
+
+describe("getProject on an archived project (F6, C19)", () => {
+  it.each([
+    ["OWNER", true],
+    ["ADMIN", true],
+    ["MEMBER", false],
+    ["VIEWER", false],
+  ] as const)("%s reads it: %s", async (role, allowed) => {
+    const { ctx, db } = makeTestContext(role);
+    db.projects.find((row) => row.id === "pry_kairos_web")!.archivedAt = "2026-10-01T00:00:00.000Z";
+    const read = svc.getProject(ctx, { id: "pry_kairos_web" });
+    if (allowed) await expect(read).resolves.toMatchObject({ id: "pry_kairos_web" });
+    else await expect(read).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("unknown link id (F10)", () => {
+  it("answers a bare NOT_FOUND that does not echo the id", async () => {
+    const { ctx } = makeTestContext();
+    const error = await svc
+      .upsertProjectLinks(ctx, {
+        projectId: "pry_kairos_web",
+        links: [{ id: "plk_nope", group: "OTRO", label: "x", url: "https://x.example.com", order: 0 }],
+      })
+      .catch((e: unknown) => e as { code: string; message: string; fieldErrors?: unknown });
+    expect(error).toMatchObject({ code: "NOT_FOUND" });
+    expect(JSON.stringify(error)).not.toContain("plk_nope");
+    expect((error as { message: string }).message).not.toContain("plk_nope");
+    expect((error as { fieldErrors?: unknown }).fieldErrors).toBeUndefined();
+  });
+});
+
+describe("rich-text images (CR-B2, C14/C23)", () => {
+  const withDescription = (id: string, description: unknown) => ({
+    id,
+    name: "Sitio",
+    summary: "Resumen",
+    description,
+    technologyIds: [],
+    tagIds: [],
+    clients: [{ clientId: "cli_kairos" }],
+  });
+
+  it("accepts READY images and refuses unknown or not-ready ones on create and update", async () => {
+    const { ctx, db } = makeTestContext();
+    const ready = db.files.find((file) => file.status === "READY")!;
+    const created = await svc.createProject(ctx, newProject({ description: imageDoc(ready.id) }));
+    expect(created.description).toBeTruthy();
+
+    await expect(
+      svc.createProject(ctx, newProject({ description: imageDoc("fil_missing") })),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    const pending = { ...ready, id: "fil_pending", status: "PENDING" as const };
+    db.files.push(pending);
+    await expect(
+      svc.createProject(ctx, newProject({ description: imageDoc(pending.id) })),
+    ).rejects.toMatchObject({ code: "VALIDATION", fieldErrors: { description: expect.any(Array) } });
+
+    await expect(
+      svc.updateProject(ctx, withDescription(created.id, imageDoc(pending.id)) as never),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(
+      svc.updateProject(ctx, withDescription(created.id, imageDoc("fil_missing")) as never),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("financial headline placeholder (CR-B3, C16)", () => {
+  it("does not move a non-USD plan when a newer rate appears", async () => {
+    const { ctx, db } = makeTestContext();
+    db.billingPlans.push({
+      id: "bpl_eur",
+      projectId: "pry_kairos_web",
+      currency: "EUR",
+      contractAmount: "1000.00",
+    } as never);
+    const before = await svc.getProject(ctx, { id: "pry_kairos_web" });
+    db.exchangeRates.push({
+      currency: "EUR",
+      date: "2026-10-09",
+      usdRate: "1.50000000",
+    } as never);
+    const after = await svc.getProject(ctx, { id: "pry_kairos_web" });
+    expect(after.contractedValueUsd).toBe(before.contractedValueUsd);
+    expect(after.toInvoiceUsd).toBe(before.toInvoiceUsd);
+  });
+});
+
+describe("tag and technology diffs (CR-B4, C1)", () => {
+  it("logs sorted names joined with ', ', never ids", async () => {
+    const { ctx, db } = makeTestContext();
+    const current = await svc.getProject(ctx, { id: "pry_kairos_web" });
+    const techs = db.technologies.filter((t) => t.active).slice(0, 2);
+    const tags = db.tags.slice(0, 2);
+    await svc.updateProject(ctx, {
+      id: current.id,
+      name: current.name,
+      summary: current.summary,
+      startDate: current.startDate ?? undefined,
+      targetEndDate: current.targetEndDate ?? undefined,
+      technologyIds: techs.map((t) => t.id).reverse(),
+      tagIds: tags.map((t) => t.id).reverse(),
+      clients: current.clients.map((c) => ({ clientId: c.client.id, role: c.role ?? undefined })),
+    } as never);
+    const changes = activityOf(db, current.id).at(-1)!.changes as Record<string, [string, string]>;
+    const sortedJoin = (names: string[]) =>
+      names.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" })).join(", ");
+    expect(changes.technologyIds![1]).toBe(sortedJoin(techs.map((t) => t.name)));
+    expect(changes.tagIds![1]).toBe(sortedJoin(tags.map((t) => t.name)));
+    expect(JSON.stringify(changes)).not.toMatch(/tec_|tag_/);
   });
 });

@@ -6,7 +6,12 @@
 import { toDateOnly } from "@/lib/dates";
 import { diffFields } from "@/lib/activity-diff";
 import { noteDisplayTitle, richTextExcerpt, richTextToPlainText } from "@/lib/rich-text";
-import { paginated, type EntityRef, type Paginated } from "@/lib/validators/common";
+import {
+  paginated,
+  VALIDATION_MESSAGES,
+  type EntityRef,
+  type Paginated,
+} from "@/lib/validators/common";
 import type {
   ArchiveNoteInput,
   AttachFileInput,
@@ -100,10 +105,48 @@ function findNote(db: MockStore, id: string, options: { archived?: boolean } = {
   return row;
 }
 
+/** Whether the target record is archived (`resolveEntityRef` still resolves archived rows). */
+function isArchivedTarget(db: MockStore, target: NoteLinkTarget): boolean {
+  const collections: Partial<Record<string, readonly { id: string; archivedAt?: string | null }[]>> = {
+    CLIENT: db.clients,
+    CONTACT: db.contacts,
+    PROJECT: db.projects,
+    DOCUMENT: db.documents,
+    NOTE: db.notes,
+  };
+  const row = collections[target.entityType]?.find((item) => item.id === target.entityId);
+  return Boolean(row?.archivedAt);
+}
+
+/** A record a note may hang from: it must exist and not be archived (C14/C19), both answer `NOT_FOUND`. */
 function requireTarget(db: MockStore, target: NoteLinkTarget): EntityRef {
   const ref = refOf(db, target);
-  if (!ref) throw new ServiceError("NOT_FOUND");
+  if (!ref || isArchivedTarget(db, target)) throw new ServiceError("NOT_FOUND");
   return ref;
+}
+
+/** `fileId` of every `image` node of a rich-text document (C4: images are uploaded files). */
+function imageFileIds(node: unknown, found: Set<string> = new Set()): Set<string> {
+  if (typeof node !== "object" || node === null) return found;
+  const { type, attrs, content } = node as {
+    type?: unknown;
+    attrs?: { fileId?: unknown };
+    content?: unknown;
+  };
+  if (type === "image" && typeof attrs?.fileId === "string") found.add(attrs.fileId);
+  if (Array.isArray(content)) for (const child of content) imageFileIds(child, found);
+  return found;
+}
+
+/** The note's attachments plus the images of its content (all must be `READY`, C14/C23). */
+function withContentImages(
+  db: MockStore,
+  content: unknown,
+  attachmentFileIds: readonly string[],
+): string[] {
+  const ids = [...imageFileIds(content)];
+  requireReadyFiles(db, ids);
+  return [...new Set([...attachmentFileIds, ...ids])];
 }
 
 /** Attachments must be `READY` files; an unknown, `PENDING` or `FAILED` one is refused. */
@@ -113,7 +156,7 @@ function requireReadyFiles(db: MockStore, ids: readonly string[]): void {
     if (!file) throw new ServiceError("NOT_FOUND");
     if (file.status !== "READY") {
       throw new ServiceError("VALIDATION", {
-        fieldErrors: { attachmentFileIds: ["invalidOption"] },
+        fieldErrors: { attachmentFileIds: [VALIDATION_MESSAGES.invalidOption] },
       });
     }
   }
@@ -146,11 +189,14 @@ async function logNote(
 }
 
 /** The shape `diffFields` compares: the content is a long text, so only "changed" is recorded. */
-function diffable(row: NoteRow) {
+function diffable(db: MockStore, row: NoteRow) {
+  const tagNames = row.tagIds
+    .map((id) => db.tags.find((tag) => tag.id === id)?.name ?? id)
+    .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
   return {
     title: row.title,
     content: JSON.stringify(row.content),
-    tagIds: [...row.tagIds].sort().join(","),
+    tagIds: tagNames.join(", "),
   };
 }
 
@@ -162,6 +208,7 @@ export async function createNote(
 ): Promise<NoteDetailDTO> {
   const refs = input.links.map((target) => requireTarget(ctx.db, target));
   requireReadyFiles(ctx.db, input.attachmentFileIds);
+  const attachmentFileIds = withContentImages(ctx.db, input.content, input.attachmentFileIds);
   for (const id of input.tagIds) {
     if (!ctx.db.tags.some((tag) => tag.id === id)) throw new ServiceError("NOT_FOUND");
   }
@@ -176,7 +223,7 @@ export async function createNote(
     pinned: input.pinned,
     tagIds: [...input.tagIds],
     links: input.links.map((target) => ({ ...target })),
-    attachmentFileIds: [...input.attachmentFileIds],
+    attachmentFileIds,
     createdAt: now,
     updatedAt: now,
     archivedAt: null,
@@ -203,12 +250,14 @@ export async function updateNote(
   for (const id of input.tagIds) {
     if (!ctx.db.tags.some((tag) => tag.id === id)) throw new ServiceError("NOT_FOUND");
   }
-  const before = diffable(row);
+  const attachmentFileIds = withContentImages(ctx.db, input.content, row.attachmentFileIds);
+  const before = diffable(ctx.db, row);
   // The author never changes: `authorId` is not an input and is never written here.
   row.title = input.title ?? null;
   row.content = structuredClone(input.content);
   row.tagIds = [...input.tagIds];
-  const changes = diffFields(before, diffable(row), {
+  row.attachmentFileIds = attachmentFileIds;
+  const changes = diffFields(before, diffable(ctx.db, row), {
     fields: ["title", "content", "tagIds"],
     longText: ["content"],
   });
@@ -384,7 +433,9 @@ export async function listNotes(
   );
 }
 
-/** One note. An archived note is still readable by id (history keeps pointing at it). */
+/** One note. An archived note is readable by id only for roles that may restore (C19), like `getClient`. */
 export async function getNote(ctx: MockServiceContext, input: NoteIdInput): Promise<NoteDetailDTO> {
-  return toDetail(ctx.db, findNote(ctx.db, input.id, { archived: true }));
+  const row = findNote(ctx.db, input.id, { archived: true });
+  if (row.archivedAt && !can(ctx.user, "restore", "trash")) throw new ServiceError("NOT_FOUND");
+  return toDetail(ctx.db, row);
 }
