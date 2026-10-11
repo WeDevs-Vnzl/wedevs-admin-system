@@ -2778,6 +2778,36 @@ the archive dialog is shared there), `src/app/(app)/projects/list/page.tsx`, `sr
       `client-form.tsx` removed.
 - [ ] Gate. Commit messages without any Claude attribution.
 
+#### Package 3.7 — Wave 3 Tester fix: notes tab RSC boundary (T1) + guard
+
+Package 3.7 → Agent: wedevs-developer · sonnet — Reason: a client/server boundary defect invisible to jsdom plus
+a static guard test that must parse imports across `src/`.
+
+Depends on: 3.1–3.6 merged (72adac7) and Tester phase C (cfe5d34, not merged). Approved by the user 2026-10-11
+("procede").
+
+Files: `src/features/notes/constants.ts` (new), `src/features/notes/components/{entity-notes-tab,notes-feed}.tsx`;
+`src/features/tags/color.ts` (new), `src/features/tags/components/{color-swatches,tag-chips}.tsx`; one new guard
+test next to the existing static/structure tests (+ tests everywhere touched).
+
+- [x] **T1 (major).** The *Notas* tab (`?tab=notes`) of every client and project detail renders the error page
+      under `next start`: the server component `entity-notes-tab.tsx` imports the value `NOTES_FEED_PAGE_SIZE` from
+      the `"use client"` module `notes-feed.tsx`; in RSC it is a client reference, `pageSize` becomes NaN and
+      `listQuerySchema` throws (`ZodError`, `validation.invalidFormat`). Move the constant to a server-safe
+      `src/features/notes/constants.ts`; both files import it from there.
+- [x] **Latent.** `readableTextColor` moves from `color-swatches.tsx` (`"use client"`) to a server-safe
+      `src/features/tags/color.ts`; `color-swatches.tsx` and `tag-chips.tsx` import it from there. Its tests
+      follow it.
+- [x] **Guard.** A Vitest test scans `src/**/*.{ts,tsx}`: for every module **without** `"use client"` that imports
+      from a module **with** `"use client"`, each imported binding must be a component (PascalCase) or a type-only
+      import; any other value fails naming the file and binding. Passes on the fixed tree and fails if T1 is
+      reintroduced (show it in the report).
+- [x] Gate. Orchestrator smoke: `next start`, `?tab=notes` on a client and a project detail render the feed, server
+      log clean. Commit messages without any Claude attribution. *(2026-10-11: merged eaa1598; gate green — test 202
+      files, 2514 passed + 1 expected fail after re-running the known jsdom 5 s flake in `phone-input.test.tsx`;
+      smoke on :3105: `cli_kairos` and `pry_titan_app` `?tab=notes` render, three lists 25 rows, clean log. Guard
+      allow-lists 4 kit barrel re-exports (read-only kit; all consumers are client modules) → H1-FX.)*
+
 #### Wave 3 close
 
 - [x] **Integration checklist:** 3.1–3.6 merged (3.3 d027bb1, 3.1 1b5255d, 3.2 934b99e, 3.4 766b0ed, 3.5 8bb188a,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { PRESET_TAG_COLORS, readableTextColor, relativeLuminance } from "./color-swatches";
+import { PRESET_TAG_COLORS } from "./components/color-swatches";
+import { readableTextColor, relativeLuminance } from "./color";
 
 // WCAG 2.1 contrast ratio between two `#rrggbb` colours, for the assertions below.
 function contrast(a: string, b: string): number {
