@@ -51,6 +51,8 @@ export interface ProjectsTableProps {
   canCreate: boolean;
   canArchive: boolean;
   canTag: boolean;
+  /** Inline tag creation in the bulk tag picker (`canCreateTagsInline()`). */
+  canCreateTags: boolean;
   /** `restore` on trash (Owner, Admin): shows "Mostrar archivados"; the service ignores it for anyone else (C19). */
   canRestore: boolean;
 }
@@ -114,6 +116,7 @@ export function ProjectsTable({
   canCreate,
   canArchive,
   canTag,
+  canCreateTags,
   canRestore,
 }: ProjectsTableProps) {
   const t = useTranslations("projects");
@@ -299,6 +302,7 @@ export function ProjectsTable({
           ids={ids}
           canTag={canTag}
           canArchive={canArchive}
+          canCreateTags={canCreateTags}
           onDone={reload}
         />
       )}

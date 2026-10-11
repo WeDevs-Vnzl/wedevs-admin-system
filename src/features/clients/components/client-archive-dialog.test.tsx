@@ -42,12 +42,14 @@ function Harness() {
   );
 }
 
+const LOCK = { ok: false, error: { code: "INTEGRITY_LOCK", message: "clients.errors.archiveNeedsConfirm" } };
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("ClientArchiveDialog", () => {
-  it("sends confirm: true with the selected clients after the user confirms", async () => {
+  it("sends the selected clients without confirm first and archives when there is no lock", async () => {
     vi.mocked(archiveClientsAction).mockResolvedValue({
       ok: true,
       data: { archived: [{ id: "cli_1", archivedContacts: 2 }] },
@@ -59,10 +61,49 @@ describe("ClientArchiveDialog", () => {
     await userEvent.click(screen.getByRole("button", { name: "Archive" }));
 
     await waitFor(() =>
-      expect(archiveClientsAction).toHaveBeenCalledWith({ ids: ["cli_1"], confirm: true }),
+      expect(archiveClientsAction).toHaveBeenCalledWith({ ids: ["cli_1"], confirm: false }),
     );
+    expect(archiveClientsAction).toHaveBeenCalledTimes(1);
     expect(mocks.toast.success).toHaveBeenCalledWith("1 client archived");
     expect(onArchived).toHaveBeenCalled();
+  });
+
+  it("on INTEGRITY_LOCK keeps the dialog open with the lock message and re-sends with confirm: true", async () => {
+    vi.mocked(archiveClientsAction)
+      .mockResolvedValueOnce(LOCK as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { archived: [{ id: "cli_1", archivedContacts: 0 }] },
+      } as never);
+    const onArchived = vi.fn();
+    renderDialog(["cli_1"], onArchived);
+    await userEvent.click(screen.getByRole("button", { name: "Archive" }));
+
+    expect(await screen.findByText(enClients.errors.archiveNeedsConfirm)).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(onArchived).not.toHaveBeenCalled();
+    expect(mocks.toast.error).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Archive" }));
+    await waitFor(() =>
+      expect(archiveClientsAction).toHaveBeenLastCalledWith({ ids: ["cli_1"], confirm: true }),
+    );
+    await waitFor(() => expect(onArchived).toHaveBeenCalled());
+  });
+
+  it("cancelling after the lock message archives nothing and the next opening starts at the first step", async () => {
+    vi.mocked(archiveClientsAction).mockResolvedValue(LOCK as never);
+    render(<Harness />);
+    await userEvent.click(screen.getByRole("button", { name: "open-archive" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Archive" }));
+    expect(await screen.findByText(enClients.errors.archiveNeedsConfirm)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(archiveClientsAction).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "open-archive" }));
+    expect(await screen.findByText(enClients.archive.cascade)).toBeInTheDocument();
   });
 
   it("uses the plural cascade warning for a bulk selection", () => {

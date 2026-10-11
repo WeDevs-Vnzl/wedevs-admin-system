@@ -460,9 +460,12 @@ function SortableLinkRow({
               maxLength={80}
               value={row.label}
               aria-invalid={errors.label ? true : undefined}
+              aria-describedby={errors.label ? `${labelId}-error` : undefined}
               onChange={(event) => onPatch({ label: event.target.value })}
             />
-            {errors.label ? <FieldError>{tRoot(errors.label as never)}</FieldError> : null}
+            {errors.label ? (
+              <FieldError id={`${labelId}-error`}>{tRoot(errors.label as never)}</FieldError>
+            ) : null}
           </Field>
           <Field data-invalid={urlErrorText ? true : undefined}>
             <FieldLabel htmlFor={urlId}>{t("url")}</FieldLabel>

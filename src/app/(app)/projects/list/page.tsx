@@ -10,7 +10,7 @@ import { tableUrlParsers, urlStateToListQuery } from "@/components/ui/data-table
 import { ProjectsTable } from "@/features/projects/components/projects-table";
 import { toProjectFilter } from "@/features/projects/table-filter";
 import { listProjects } from "@/features/projects/queries";
-import { getTags } from "@/features/tags/queries";
+import { canCreateTagsInline, getTags } from "@/features/tags/queries";
 import { listTechnologies } from "@/features/technologies/queries";
 import { resolveTechnologyIcon } from "@/features/technologies/icons";
 import { technologyLabel } from "@/features/technologies/label";
@@ -40,10 +40,11 @@ export default async function ProjectsListPage({ searchParams }: ProjectsListPag
   const locale: Locale = isLocale(localeValue) ? localeValue : "es";
   const t = await getTranslations("projects.page");
 
-  const [page, technologies, tags] = await Promise.all([
+  const [page, technologies, tags, canCreateTags] = await Promise.all([
     listProjects(filter),
     listTechnologies({ pageSize: 100, sort: "name:asc" }),
     getTags({ pageSize: 100, sort: "name:asc" }),
+    canCreateTagsInline(),
   ]);
   // Brand icons resolve here, once for the whole catalogue: the client table takes plain data (see icons.ts).
   const icons = Object.fromEntries(
@@ -83,6 +84,7 @@ export default async function ProjectsListPage({ searchParams }: ProjectsListPag
         canCreate={can(user, "create", "project")}
         canArchive={can(user, "delete", "project")}
         canTag={can(user, "update", "project")}
+        canCreateTags={canCreateTags}
         canRestore={can(user, "restore", "trash")}
       />
     </div>

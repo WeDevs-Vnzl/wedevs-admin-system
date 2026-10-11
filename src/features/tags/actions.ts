@@ -13,6 +13,7 @@ import { exportCsv } from "@/mocks/services/export";
 import * as tags from "@/mocks/services/tags";
 import { defineAction } from "@/server/actions/define-action";
 import { TAG_EXPORT_COLUMNS } from "./columns";
+import { CREATE_TAG_GRANTS } from "./grants";
 
 const SETTINGS_TAGS_PATH = "/settings/tags";
 
@@ -21,13 +22,7 @@ const SETTINGS_TAGS_PATH = "/settings/tags";
  * may create one inline from that record (Member: notes and documents, PRD §4.3).
  */
 export const createTagAction = defineAction({
-  permission: [
-    { action: "create", resource: "settings" },
-    { action: "update", resource: "client" },
-    { action: "update", resource: "project" },
-    { action: "create", resource: "note" },
-    { action: "create", resource: "document" },
-  ],
+  permission: CREATE_TAG_GRANTS,
   input: createTagInputSchema,
   revalidate: [SETTINGS_TAGS_PATH],
   handler: (ctx, data) => tags.createTag(ctx, data),
