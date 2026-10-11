@@ -1,4 +1,65 @@
 {
+  "tab": {
+    "title": "Documents",
+    "all": "All",
+    "attach": "Attach document",
+    "empty": "This record has no linked documents.",
+    "noVersion": "No version",
+    "versionLabel": "v{number}",
+    "columns": {
+      "code": "Code",
+      "title": "Title",
+      "type": "Type",
+      "status": "Status",
+      "version": "Version",
+      "updated": "Updated",
+      "actions": "Actions"
+    },
+    "unlink": {
+      "trigger": "Unlink",
+      "title": "Unlink document?",
+      "description": "The document will stop appearing on this record. It stays available in Documents and on its other links.",
+      "confirm": "Unlink",
+      "cancel": "Cancel",
+      "done": "Document unlinked",
+      "failed": "The document could not be unlinked"
+    }
+  },
+  "sheet": {
+    "title": "Attach document",
+    "description": "Upload a new file or link a document that already exists.",
+    "modes": {
+      "upload": "Upload file",
+      "link": "Link existing"
+    },
+    "fields": {
+      "title": "Title",
+      "type": "Document type",
+      "summary": "Summary",
+      "effectiveDate": "Effective date",
+      "signedAt": "Signed date",
+      "expiresAt": "Expiry date",
+      "file": "File",
+      "document": "Document"
+    },
+    "placeholders": {
+      "title": "E.g. Master agreement 2026",
+      "type": "Choose a type",
+      "date": "Choose a date",
+      "document": "Search by code or title"
+    },
+    "fileRequired": "Attach a file to continue",
+    "submit": {
+      "upload": "Upload and attach",
+      "link": "Link document"
+    },
+    "cancel": "Cancel",
+    "uploaded": "Document attached",
+    "linked": "Document linked",
+    "createFailed": "The document could not be created",
+    "versionFailed": "The document was created, but the file could not be uploaded. Upload it from the document.",
+    "linkFailed": "The document could not be linked"
+  },
   "validation": {
     "signedAtNotAllowed": "This document type does not require a signature, so it takes no signed date",
     "expiresAtNotAllowed": "This document type does not expire, so it takes no expiration date",
