@@ -23,6 +23,8 @@ interface ProjectsBulkActionsProps {
   ids: string[];
   canTag: boolean;
   canArchive: boolean;
+  /** Whether the tag picker offers the inline "Crear" (`canCreateTagsInline()`, resolved on the server). */
+  canCreateTags: boolean;
   /** Called after a bulk change so the table reloads its rows. */
   onDone: () => void;
 }
@@ -32,7 +34,7 @@ interface ProjectsBulkActionsProps {
  * `assignTagsAction` per project (there is no bulk contract); archiving is all-or-none (`INTEGRITY_LOCK`
  * when one project has active billing).
  */
-export function ProjectsBulkActions({ ids, canTag, canArchive, onDone }: ProjectsBulkActionsProps) {
+export function ProjectsBulkActions({ ids, canTag, canArchive, canCreateTags, onDone }: ProjectsBulkActionsProps) {
   const t = useTranslations("projects.list.bulk");
   const tRoot = useTranslations();
   const tToast = useTranslations("projects.toast");
@@ -78,7 +80,7 @@ export function ProjectsBulkActions({ ids, canTag, canArchive, onDone }: Project
             <DialogTitle>{t("tagTitle")}</DialogTitle>
             <DialogDescription>{t("tagDescription")}</DialogDescription>
           </DialogHeader>
-          <TagPicker value={tags} onChange={setTags} canCreate={false} aria-label={t("tag")} />
+          <TagPicker value={tags} onChange={setTags} canCreate={canCreateTags} aria-label={t("tag")} />
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">

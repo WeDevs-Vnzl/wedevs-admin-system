@@ -35,7 +35,7 @@ beforeEach(() => {
 function renderBulk(onDone = vi.fn()) {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <ProjectsBulkActions ids={["pry_1", "pry_2"]} canTag canArchive onDone={onDone} />
+      <ProjectsBulkActions ids={["pry_1", "pry_2"]} canTag canArchive canCreateTags onDone={onDone} />
     </NextIntlClientProvider>,
   );
   return { onDone };

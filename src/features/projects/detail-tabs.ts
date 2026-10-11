@@ -17,13 +17,3 @@ export const PROJECT_DETAIL_TAB_VALUES = [
 export type ProjectDetailTab = (typeof PROJECT_DETAIL_TAB_VALUES)[number];
 
 export const DEFAULT_PROJECT_DETAIL_TAB: ProjectDetailTab = "summary";
-
-/** `?tab=` value → a known tab, else `summary`. */
-export function parseProjectDetailTab(value: unknown): ProjectDetailTab {
-  return PROJECT_DETAIL_TAB_VALUES.find((tab) => tab === value) ?? DEFAULT_PROJECT_DETAIL_TAB;
-}
-
-/** URL of a project detail tab (`summary` is the bare detail URL). */
-export function projectDetailTabHref(id: string, tab: ProjectDetailTab): string {
-  return tab === DEFAULT_PROJECT_DETAIL_TAB ? `/projects/${id}` : `/projects/${id}?tab=${tab}`;
-}

@@ -15,9 +15,9 @@ export {
   patchToUrlState,
   tableUrlParsers,
   urlStateToListQuery,
-  useTableUrlState,
   type TableUrlState,
-} from "./use-table-url-state";
+} from "./table-url-state";
+export { useTableUrlState } from "./use-table-url-state";
 export {
   DEFAULT_COLUMN_WIDTH,
   MAX_COLUMN_WIDTH,
