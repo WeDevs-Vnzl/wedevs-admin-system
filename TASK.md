@@ -2881,7 +2881,11 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
       `archiveNeedsConfirm` for bulk; N3 one shared archive-with-lock dialog. m4 archived records editable →
       H1-FX/H1-B5.
 - [x] **User confirms the Tester may run.** Confirmed 2026-10-11 ("procede").
-- [ ] **Tester scope:**
+- [x] **Tester scope:** *(2026-10-11, three phase-C runs on :3105 under `next start`, :3000 untouched. Specs
+      1164085/cfe5d34/9a58edf/1800a31. First run found T1 (*Notas* tab error page, RSC boundary) → 3.7; re-run found
+      D1–D5 → 3.8; final run (two full passes, `--workers=1`): shell 16, w2 21, clients 17, notes-roles 33 + 1
+      expected fail (D5), projects 17 + 1 skipped (archive `INTEGRITY_LOCK` needs H1-B3 billing data; covered by unit
+      tests) — 105 passed, 0 failed, 0 flaky. D1–D4 verified in the browser.)*
   - Unit: `vitest run --coverage`, `i18n:check` (ES/EN parity), build.
   - E2E (`tests/e2e/h1-b2-*.spec.ts`, written by the Tester), local only over mocks, three phases per
     `safeguards.md` rule 1 (start worker: `next start` on a free port, 60 s readiness timeout; test
@@ -2914,8 +2918,24 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
     the links reorder; ES ↔ EN on a detail page (dates and money reformat, HU-30 CA1); desktop and tablet
     820×1180 without horizontal page scroll; dark-mode contrast spot-check.
   - Manual pass (embedded browser): clients and projects golden path in both themes and languages.
-- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
-- [ ] **Summary** written by the Orchestrator.
+- [x] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+      *(Developers: 3.6 merge duplicated ~2000 lines of `TASK.md` (base taken); the jsdom 5 s timeout flakes
+      (`phone-input`, `country-combobox`) recurred in the gates and passed on re-run (→ H1-FX); 3.8 D5 fix
+      (`useOpenerFocus` in a layout effect) did not work in the browser — the contact dialog likely mounts already
+      open, so the opener is never recorded (inferred) → H1-FX with the kit `ConfirmDialog` focus item. Planner:
+      F1–F6, F10 fixed in 3.4/3.5; F7, F9 → H1-FX; F8 → H1-B5. Code Reviewer: B1–B3, (a) and the SSR blocker fixed
+      in 3.4–3.6; deferred items listed above. Tester: T1 (RSC boundary) → 3.7 + guard; D1 404 status, D2 ES→EN
+      crash (kit exception `rich-text-view.tsx`), D3 sheet pointer, D4 project form `<h1>` → 3.8, re-tested green;
+      D5 open (`test.fail`). New H1-FX items: the RSC guard ALLOW_LIST of 4 kit barrel re-exports; `/clients/list`
+      and `/projects/list` lost their loading skeleton; the D3 global `pointer-events` style should move into the
+      kit `AsyncCombobox`. Lesson: jsdom misses RSC boundary, streaming status and pointer hit-testing — the
+      Orchestrator smoke under `next start` (status codes, row counts, `digest`, server log) is part of every gate.)*
+- [x] **Summary** written by the Orchestrator. *(Wave 3 delivered the commercial core screens: clients overview,
+      list, detail tabs and forms with contacts; projects overview, list, detail tabs, forms, links reorder and
+      status flows; the notes screens and entity notes tabs; activity and documents tabs wired in both details;
+      archive/restore with the integrity lock; plus review fixes 3.4–3.6 and Tester fixes 3.7–3.8. Merged into
+      `batch/h1-b2-commercial-core` at c48a078; gate green (202 files, 2516 tests + 1 expected fail), i18n 32
+      namespaces, build OK; E2E 105/105 with one open minor a11y defect (D5).)*
 
 🛑 **MANDATORY STOP** — H1-B2 closes only with the user's explicit approval; then the batch close below.
 
