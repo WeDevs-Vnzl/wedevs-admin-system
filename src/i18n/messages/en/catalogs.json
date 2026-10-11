@@ -6,5 +6,90 @@
     "invalidCode": "Invalid code (uppercase letters, digits and underscore)",
     "usdRateMustBeOne": "For USD transactions the rate must be 1",
     "categoryParentIsSelf": "A category cannot be its own parent"
+  },
+  "technologies": {
+    "page": {
+      "title": "Technologies",
+      "description": "Catalog of the project stack. A technology in use is not deleted: it is deactivated."
+    },
+    "table": {
+      "new": "New technology",
+      "search": "Search by name or identifier",
+      "usage": "{count, plural, =0 {No projects} one {# project} other {# projects}}",
+      "activate": "Activate {name}",
+      "deactivate": "Deactivate {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "columns": {
+        "icon": "Icon",
+        "name": "Name",
+        "nameEn": "English name",
+        "slug": "Identifier",
+        "iconSlug": "Icon (Simple Icons)",
+        "color": "Colour",
+        "category": "Category",
+        "usageCount": "Projects",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "facets": {
+        "category": "Category",
+        "active": "Status",
+        "activeOn": "Active",
+        "activeOff": "Inactive"
+      },
+      "empty": {
+        "title": "No technologies",
+        "description": "Add the technologies your projects use."
+      }
+    },
+    "form": {
+      "createTitle": "New technology",
+      "editTitle": "Edit technology",
+      "description": "Name, category and icon of a technology in the catalog.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "slug": "Identifier",
+        "slugHint": "Generated from the name when created; it does not change when edited.",
+        "category": "Category",
+        "iconSlug": "Simple Icons icon (optional)",
+        "iconSlugHint": "Icon identifier on simpleicons.org, for example nextdotjs.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB. Without a colour the brand colour of the icon is used.",
+        "active": "Active"
+      },
+      "iconNotFound": "No icon has that identifier.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Create"
+    },
+    "delete": {
+      "title": "Delete technology?",
+      "description": "“{name}” will be removed from the catalog.",
+      "action": "Delete",
+      "cancel": "Cancel",
+      "inUseTitle": "Technology in use",
+      "inUseDescription": "Projects use “{name}”, so it cannot be deleted. Deactivate it so it stops being offered; existing projects keep their stack.",
+      "deactivate": "Deactivate"
+    },
+    "toast": {
+      "created": "Technology created",
+      "updated": "Technology updated",
+      "activated": "Technology activated",
+      "deactivated": "Technology deactivated",
+      "deleted": "Technology deleted"
+    },
+    "picker": {
+      "placeholder": "Select technologies",
+      "search": "Search technology",
+      "empty": "No results"
+    },
+    "errors": {
+      "nameTaken": "A technology with that name already exists",
+      "slugTaken": "A technology with that identifier already exists",
+      "inUse": "The technology is in use by projects"
+    }
   }
 }

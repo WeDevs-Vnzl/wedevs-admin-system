@@ -6,5 +6,90 @@
     "invalidCode": "Código no válido (mayúsculas, números y guion bajo)",
     "usdRateMustBeOne": "Para transacciones en USD la tasa debe ser 1",
     "categoryParentIsSelf": "Una categoría no puede ser su propia categoría padre"
+  },
+  "technologies": {
+    "page": {
+      "title": "Tecnologías",
+      "description": "Catálogo del stack de los proyectos. Una tecnología en uso no se elimina: se desactiva."
+    },
+    "table": {
+      "new": "Nueva tecnología",
+      "search": "Buscar por nombre o identificador",
+      "usage": "{count, plural, =0 {Sin proyectos} one {# proyecto} other {# proyectos}}",
+      "activate": "Activar {name}",
+      "deactivate": "Desactivar {name}",
+      "edit": "Editar {name}",
+      "delete": "Eliminar {name}",
+      "columns": {
+        "icon": "Icono",
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés",
+        "slug": "Identificador",
+        "iconSlug": "Icono (Simple Icons)",
+        "color": "Color",
+        "category": "Categoría",
+        "usageCount": "Proyectos",
+        "active": "Activa",
+        "actions": "Acciones"
+      },
+      "facets": {
+        "category": "Categoría",
+        "active": "Estado",
+        "activeOn": "Activas",
+        "activeOff": "Inactivas"
+      },
+      "empty": {
+        "title": "Sin tecnologías",
+        "description": "Agrega las tecnologías que usan tus proyectos."
+      }
+    },
+    "form": {
+      "createTitle": "Nueva tecnología",
+      "editTitle": "Editar tecnología",
+      "description": "Nombre, categoría e icono de una tecnología del catálogo.",
+      "fields": {
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés (opcional)",
+        "nameEnHint": "Si lo dejas vacío, en inglés se muestra el nombre.",
+        "slug": "Identificador",
+        "slugHint": "Se genera del nombre al crearla y no cambia al editarla.",
+        "category": "Categoría",
+        "iconSlug": "Icono de Simple Icons (opcional)",
+        "iconSlugHint": "Identificador del icono en simpleicons.org, por ejemplo nextdotjs.",
+        "color": "Color (opcional)",
+        "colorHint": "Formato #RRGGBB. Sin color se usa el de la marca del icono.",
+        "active": "Activa"
+      },
+      "iconNotFound": "No hay un icono con ese identificador.",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "create": "Crear"
+    },
+    "delete": {
+      "title": "¿Eliminar tecnología?",
+      "description": "«{name}» se eliminará del catálogo.",
+      "action": "Eliminar",
+      "cancel": "Cancelar",
+      "inUseTitle": "Tecnología en uso",
+      "inUseDescription": "Hay proyectos que usan «{name}», así que no se puede eliminar. Desactívala para que deje de ofrecerse; los proyectos existentes conservan su stack.",
+      "deactivate": "Desactivar"
+    },
+    "toast": {
+      "created": "Tecnología creada",
+      "updated": "Tecnología actualizada",
+      "activated": "Tecnología activada",
+      "deactivated": "Tecnología desactivada",
+      "deleted": "Tecnología eliminada"
+    },
+    "picker": {
+      "placeholder": "Seleccionar tecnologías",
+      "search": "Buscar tecnología",
+      "empty": "Sin resultados"
+    },
+    "errors": {
+      "nameTaken": "Ya existe una tecnología con ese nombre",
+      "slugTaken": "Ya existe una tecnología con ese identificador",
+      "inUse": "La tecnología está en uso por proyectos"
+    }
   }
 }

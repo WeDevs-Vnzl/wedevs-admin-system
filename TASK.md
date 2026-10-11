@@ -2284,29 +2284,29 @@ Files: `src/mocks/services/technologies.ts` (adds create, update, set active, de
 (+ tests); new `src/app/(app)/settings/technologies/page.tsx`; `src/i18n/messages/{es,en}/catalogs.json`
 (block `technologies`; keep `validation`). No other file.
 
-- [ ] Service (`TechnologiesService`; keeps `listTechnologies`, `getTechnology`, `technologyUsage`,
+- [x] Service (`TechnologiesService`; keeps `listTechnologies`, `getTechnology`, `technologyUsage`,
       re-exported by `catalogs.ts`; `deleteTechnology` uses `technologyUsage`; `TechnologyRow` already
       carries `nameEn` (no store change); type test `satisfies TechnologiesService<MockServiceContext>`): `createTechnology` (unique name and slug → `CONFLICT`; slug
       derived when omitted), `updateTechnology`, `setTechnologyActive`, `deleteTechnology` (in use by a
       non-archived project → `INTEGRITY_LOCK` `catalogs.technologies.errors.inUse`, HU-06 CA3; otherwise
       removed — catalog rows are not soft-deleted, `data-rules.md` §6); `SETTINGS_CHANGE` entries on
       `SETTING`.
-- [ ] Adapters `{ create | update | delete, settings }`; `listTechnologiesAction` `"authenticated"`
+- [x] Adapters `{ create | update | delete, settings }`; `listTechnologiesAction` `"authenticated"`
       (reference read, DT-71); `exportTechnologiesCsvAction` (`TECHNOLOGY`, `{ read, settings }`).
-- [ ] **DT-72:** `technologyLabel(tech, locale)` in `label.ts` = `nameEn ?? name` in English, `name` in
+- [x] **DT-72:** `technologyLabel(tech, locale)` in `label.ts` = `nameEn ?? name` in English, `name` in
       Spanish; used by the table, the picker and the icons.
-- [ ] `/settings/technologies` (Owner/Admin; `notFound()` otherwise): table (icon, name, `nameEn`,
+- [x] `/settings/technologies` (Owner/Admin; `notFound()` otherwise): table (icon, name, `nameEn`,
       category, usage count, active switch), facets category and active, create/edit dialog (name,
       optional `nameEn`, slug preview, category with `enums` labels, Simple Icons slug with live preview,
       colour), deactivate/activate, delete through `ConfirmDialog`; an in-use delete shows the lock and
       offers deactivation. `generateMetadata` title.
-- [ ] `TechnologyPicker`: multi-select grouped by category, active technologies only, no free values
+- [x] `TechnologyPicker`: multi-select grouped by category, active technologies only, no free values
       (HU-06 CA1). `TechStackIcons`: icons with tooltip names. **Simple Icons are resolved on the server
       only** (RSC): never import `simple-icons` into a client component (bundle size); client pickers
       show the colour dot.
-- [ ] Tests: lock and deactivate (HU-06 CA3), unique name/slug, picker shows only active and groups by
+- [x] Tests: lock and deactivate (HU-06 CA3), unique name/slug, picker shows only active and groups by
       category, English fallback, page access per role.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.7 — Alerts: rules, `AlertList`, live bell (R16)
 
