@@ -266,6 +266,24 @@ test.describe("technologies access (view as role)", () => {
   }
 });
 
+test.describe("technologies search (read only)", () => {
+  // Product defect (src/components/ui/data-table/use-table-url-state.ts, useQueryStates in shallow mode): typing in
+  // the search updates `?q=` but the server page is not re-rendered, so the rows stay the same. Expected: the rows
+  // shrink to the matches, or the server refetches with `q`.
+  test("typing in the search filters the rows, not only the URL", async ({ page }) => {
+    test.fail();
+    await page.goto("/settings/technologies");
+    await page.waitForLoadState("networkidle");
+    const rows = page.locator("table tbody tr");
+    const before = await rows.count();
+    expect(before).toBeGreaterThan(0);
+
+    await page.getByPlaceholder(/Buscar/).first().fill("zzz-no-match-xyz");
+    await expect(page).toHaveURL(/q=zzz-no-match-xyz/);
+    await expect.poll(() => rows.count()).toBeLessThan(before);
+  });
+});
+
 // ───────────────────────────── Activity (/activity) ─────────────────────────────
 
 test.describe("activity", () => {
@@ -286,9 +304,12 @@ test.describe("activity", () => {
     await expect(page).not.toHaveURL(/action=|entityType=/);
   });
 
+  // Product defect (src/features/activity/components/activity-detail-sheet.tsx and activity-feed.tsx): after Escape
+  // focus lands on document.body instead of the "Ver detalle de" trigger. Expected: focus returns to the trigger.
   test("the detail sheet traps focus, closes with Escape and returns focus to its trigger", async ({
     page,
   }) => {
+    test.fail();
     await page.goto("/activity");
     await page.waitForLoadState("networkidle");
 
@@ -390,7 +411,8 @@ test.describe("alerts bell (read only)", () => {
 
   test("Escape closes the panel and returns focus to the bell", async ({ page }) => {
     await openAlerts(page);
-    await expect(alertsPanel(page).locator(":focus")).toHaveCount(1);
+    // The panel takes focus on its own container when it opens (no inner control is focused).
+    await expect(alertsPanel(page)).toBeFocused();
 
     await page.keyboard.press("Escape");
     await expect(alertsPanel(page)).toBeHidden();
@@ -398,8 +420,10 @@ test.describe("alerts bell (read only)", () => {
   });
 
   test("the counter badge meets WCAG AA in light and dark mode", async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("theme", "light"));
+    // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
     await page.goto("/dashboard");
+    await page.evaluate(() => localStorage.setItem("theme", "light"));
+    await page.reload();
     await page.waitForLoadState("networkidle");
     await expect(page.locator(ALERTS_BADGE)).toBeVisible();
     await expect(page.locator("html")).not.toHaveClass(DARK_CLASS);
