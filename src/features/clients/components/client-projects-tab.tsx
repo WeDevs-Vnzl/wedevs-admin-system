@@ -7,9 +7,16 @@ import { listProjects } from "@/features/projects/queries";
 
 /**
  * "Proyectos" tab (HU-05 CA3): the client's non-archived projects, with "+ Nuevo" pre-linking this client.
- * Read through the projects query, so the list is the same one the projects module shows.
+ * Read through the projects query, so the list is the same one the projects module shows. "+ Nuevo" shows only
+ * when `canCreate` (`can(user, "create", "project")`, computed on the server).
  */
-export async function ClientProjectsTab({ clientId }: { clientId: string }) {
+export async function ClientProjectsTab({
+  clientId,
+  canCreate,
+}: {
+  clientId: string;
+  canCreate: boolean;
+}) {
   const t = await getTranslations("clients.detail.projects");
   const page = await listProjects({ clientId });
 
@@ -40,7 +47,7 @@ export async function ClientProjectsTab({ clientId }: { clientId: string }) {
           ),
         ],
       }))}
-      newHref={`/projects/new?clientId=${encodeURIComponent(clientId)}`}
+      newHref={canCreate ? `/projects/new?clientId=${encodeURIComponent(clientId)}` : undefined}
     />
   );
 }

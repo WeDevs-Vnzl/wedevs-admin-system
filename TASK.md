@@ -2732,20 +2732,22 @@ Files: `src/features/notes/components/**`, `src/app/(app)/notes/**`; `src/featur
 helper + test); `src/app/(app)/projects/new/page.tsx`, `src/app/(app)/projects/[id]/edit/page.tsx`;
 `src/i18n/messages/{es,en}/{notes,clients,contacts}.json` (+ tests everywhere touched).
 
-- [ ] **B1.** Notes table attachment column id = `"attachments"` (`NOTE_COLUMN_IDS`); CSV export succeeds. Test.
-- [ ] **F4.** One server helper `canCreateTagsInline()` in `tags/queries.ts` mirroring the `createTagAction`
+- [x] **B1.** Notes table attachment column id = `"attachments"` (`NOTE_COLUMN_IDS`); CSV export succeeds. Test.
+- [x] **F4.** One server helper `canCreateTagsInline()` in `tags/queries.ts` mirroring the `createTagAction`
       grants (any of create settings, update client, update project, create note, create document); used by
       the clients pages, the notes pages and `projects/new` + `projects/[id]/edit`. Test per role.
-- [ ] **F5.** `projects/[id]/edit` renders `BreadcrumbLabel` with the project label.
-- [ ] **F2.** The client *Proyectos* tab shows "+ Nuevo" only when `can(create, project)`.
-- [ ] **F3.** `/notes` reads its URL state with the `/clients/list` loader pattern.
-- [ ] **F6.** Note edit validates with the update schema; clearing the title is sent (not dropped). Test.
-- [ ] **m1.** Focus returns to the opener after the notes archive `ConfirmDialog` (table row and detail).
-- [ ] **m2.** `aria-describedby` from each field to its `FieldError` id in `client-form` and
-      `contact-form-dialog`.
-- [ ] Nits: "Cambiar estado" hidden on archived clients; note edit shows no success toast when attach or pin
+- [x] **F5.** `projects/[id]/edit` renders `BreadcrumbLabel` with the project label.
+- [x] **F2.** The client *Proyectos* tab shows "+ Nuevo" only when `can(create, project)`.
+- [x] **F3.** `/notes` reads its URL state with the `/clients/list` loader pattern.
+- [x] **F6.** Note edit validates with the update schema; clearing the title is sent (not dropped). Test.
+- [x] **m1.** Focus returns to the opener after the notes archive `ConfirmDialog` (table row and detail).
+- [x] **m2.** `aria-describedby` from each field to its `FieldError` id in `client-form` and
+      `contact-form-dialog`. *Deviation (coordinator decision, option b):* the two phone fields keep their
+      `FieldError` ids but no `aria-describedby`, because the kit's `PhoneInput` has no such prop (kit read-only in
+      this wave); deferred to H1-FX with `DateField` and `AsyncCombobox` (same gap, 3.4).
+- [x] Nits: "Cambiar estado" hidden on archived clients; note edit shows no success toast when attach or pin
       failed.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 3 close
 

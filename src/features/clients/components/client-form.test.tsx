@@ -107,6 +107,20 @@ describe("ClientForm", () => {
     expect(screen.getByLabelText("Legal name")).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("describes each invalid field by its error message, and keeps the hint in the description", async () => {
+    renderForm(company);
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByText("Required field");
+
+    const legalName = screen.getByLabelText("Legal name");
+    const error = screen.getByText("Required field");
+    expect(error).toHaveAttribute("id", "client-legal-name-error");
+    expect(legalName.getAttribute("aria-describedby")).toBe(
+      "client-legal-name-hint client-legal-name-error",
+    );
+  });
+
   it("links a CONFLICT on the tax id to the record that holds it (HU-03 CA3)", async () => {
     vi.mocked(updateClientAction).mockResolvedValue({
       ok: false,

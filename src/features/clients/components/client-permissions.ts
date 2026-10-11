@@ -13,11 +13,14 @@ export type ClientScreenPermissions = {
   canSeeFinancials: boolean;
   canReadActivity: boolean;
   canManageContacts: boolean;
-  /** Inline "Crear" in the tag pickers: the same roles the tag actions accept for a clients screen. */
+  /** Inline "Crear" in the tag pickers: `canCreateTagsInline()`, the grants the tag action accepts. */
   canCreateTags: boolean;
 };
 
-export function clientScreenPermissions(user: PermissionSubject): ClientScreenPermissions {
+export function clientScreenPermissions(
+  user: PermissionSubject,
+  canCreateTags: boolean,
+): ClientScreenPermissions {
   return {
     canCreate: can(user, "create", "client"),
     canUpdate: can(user, "update", "client"),
@@ -26,10 +29,6 @@ export function clientScreenPermissions(user: PermissionSubject): ClientScreenPe
     canSeeFinancials: canSeeFinancials(user),
     canReadActivity: can(user, "read", "activity"),
     canManageContacts: can(user, "update", "contact"),
-    canCreateTags:
-      can(user, "create", "settings") ||
-      can(user, "update", "client") ||
-      can(user, "create", "note") ||
-      can(user, "create", "document"),
+    canCreateTags,
   };
 }

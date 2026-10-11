@@ -8,6 +8,7 @@ import { NoteComposerPage } from "@/features/notes/components/note-composer";
 import type { NoteLinkRef } from "@/features/notes/components/note-link-picker";
 import { getNotesViewer } from "@/features/notes/queries";
 import { getProject } from "@/features/projects/queries";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { ServiceError } from "@/server/context";
 import { can } from "@/server/auth/permissions";
 
@@ -56,15 +57,16 @@ export default async function NewNotePage({ searchParams }: NewNotePageProps) {
   const params = await searchParams;
   const entityType = typeof params.entityType === "string" ? params.entityType : undefined;
   const entityId = typeof params.entityId === "string" ? params.entityId : undefined;
-  const [initialLinks, t] = await Promise.all([
+  const [initialLinks, canCreateTags, t] = await Promise.all([
     prefillLink(entityType, entityId),
+    canCreateTagsInline(),
     getTranslations("notes.composer"),
   ]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("createTitle")} description={t("description")} />
-      <NoteComposerPage initialLinks={initialLinks} canCreateTags />
+      <NoteComposerPage initialLinks={initialLinks} canCreateTags={canCreateTags} />
     </div>
   );
 }

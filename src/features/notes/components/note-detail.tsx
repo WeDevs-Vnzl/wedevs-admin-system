@@ -11,6 +11,7 @@ import { DateText } from "@/components/patterns/date-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RichTextView } from "@/components/ui/rich-text";
+import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { archiveNoteAction, linkNoteAction, unlinkNoteAction } from "@/features/notes/actions";
 import { TagChips } from "@/features/tags/components/tag-chips";
 import { entityHref } from "@/lib/entity-routes";
@@ -45,6 +46,7 @@ export function NoteDetail({ note: initial, canUpdate, canArchive, canCreateTags
   const [linkError, setLinkError] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
   const [archivePending, setArchivePending] = useState(false);
+  useOpenerFocus(archiving);
 
   const title = noteDisplayTitle(note.title, note.content) || t("untitled");
   const links = note.links.flatMap((ref) => toNoteLinkRef(ref) ?? []);

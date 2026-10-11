@@ -12,6 +12,7 @@ const actions = vi.hoisted(() => ({
 }));
 const mocks = vi.hoisted(() => ({
   toast: { success: vi.fn(), error: vi.fn() },
+  exportCsv: vi.fn(),
   query: { page: 1, pageSize: 25, includeArchived: false, filters: {} } as Record<string, unknown>,
 }));
 
@@ -24,7 +25,7 @@ vi.mock("@/features/tags/actions", () => ({
   assignTagsAction: actions.assignTagsAction,
   listTagsAction: actions.listTagsAction,
 }));
-vi.mock("@/features/export/use-csv-export", () => ({ useCsvExport: () => vi.fn() }));
+vi.mock("@/features/export/use-csv-export", () => ({ useCsvExport: () => mocks.exportCsv }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("@/components/ui/data-table", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/components/ui/data-table")>();
@@ -42,6 +43,7 @@ import enPatterns from "@/i18n/messages/en/patterns.json";
 import enTable from "@/i18n/messages/en/table.json";
 import enTags from "@/i18n/messages/en/tags.json";
 import type { NoteListRowDTO } from "@/lib/validators/notes";
+import { NOTE_COLUMN_IDS } from "../columns";
 import { NotesTable, type NotesTableProps } from "./notes-table";
 
 const messages = {
@@ -166,5 +168,26 @@ describe("NotesTable", () => {
       expect(actions.archiveNoteAction).toHaveBeenCalledWith({ id: "not_mine" }),
     );
     await waitFor(() => expect(actions.listNotesAction).toHaveBeenCalled());
+  });
+
+  it("sends only export columns the export action accepts (B1: the attachments column)", async () => {
+    render(tree());
+    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    expect(mocks.exportCsv).toHaveBeenCalledTimes(1);
+    const columns: string[] = mocks.exportCsv.mock.calls[0]?.[1] ?? [];
+    expect(columns).toContain("attachments");
+    for (const id of columns) expect(NOTE_COLUMN_IDS).toContain(id);
+  });
+
+  it("returns focus to the row's archive button when the confirmation is cancelled (m1)", async () => {
+    render(tree({ canArchiveAll: false, canArchiveOwn: true }));
+    const opener = screen.getByRole("button", { name: "Archive Mine" });
+    opener.focus();
+    await userEvent.click(opener);
+    const dialog = await screen.findByRole("alertdialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: /cancel/i }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Archive Mine" })).toHaveFocus());
   });
 });

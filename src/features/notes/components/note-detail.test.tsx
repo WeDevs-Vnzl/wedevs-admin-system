@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -103,5 +103,16 @@ describe("NoteDetail", () => {
     expect(screen.queryByRole("button", { name: "Remove Kairos Studio" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
     expect(screen.getByText("Kairos Studio")).toBeInTheDocument();
+  });
+
+  it("returns focus to the Archive button when the confirmation is cancelled (m1)", async () => {
+    renderDetail();
+    const opener = screen.getByRole("button", { name: "Archive" });
+    opener.focus();
+    await userEvent.click(opener);
+    const dialog = await screen.findByRole("alertdialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: /cancel/i }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Archive" })).toHaveFocus());
   });
 });

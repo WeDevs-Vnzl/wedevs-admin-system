@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { ProjectForm } from "@/features/projects/components/project-form";
 import { loadProjectOr404 } from "@/features/projects/load-project";
 import { getProject } from "@/features/projects/queries";
 import { listActiveTechnologies } from "@/features/technologies/queries";
-import { canManageTags } from "@/features/tags/queries";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { requireSessionUser } from "@/server/auth/session";
 import { can } from "@/server/auth/permissions";
 
@@ -33,16 +34,19 @@ export default async function EditProjectPage({ params }: EditProjectPageProps) 
   const [project, technologies, canCreateTags] = await Promise.all([
     loadProjectOr404(id),
     listActiveTechnologies(),
-    canManageTags(),
+    canCreateTagsInline(),
   ]);
 
   return (
-    <ProjectForm
-      mode="edit"
-      project={project}
-      technologies={technologies}
-      canCreateTags={canCreateTags}
-      backHref={`/projects/${project.id}`}
-    />
+    <>
+      <BreadcrumbLabel segment={project.id} label={`${project.code} · ${project.name}`} />
+      <ProjectForm
+        mode="edit"
+        project={project}
+        technologies={technologies}
+        canCreateTags={canCreateTags}
+        backHref={`/projects/${project.id}`}
+      />
+    </>
   );
 }
