@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -8,10 +8,12 @@ import enPatterns from "@/i18n/messages/en/patterns.json";
 import enProjects from "@/i18n/messages/en/projects.json";
 import enTags from "@/i18n/messages/en/tags.json";
 import enValidation from "@/i18n/messages/en/validation.json";
+import { archiveProjectAction } from "@/features/projects/actions";
 import { ProjectDetailHeader, type ProjectDetailHeaderProps } from "./project-detail-header";
 
 vi.mock("@/features/projects/actions", () => ({
   archiveProjectAction: vi.fn(),
+  archiveProjectsAction: vi.fn(),
   setProjectStatusAction: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -84,5 +86,40 @@ describe("ProjectDetailHeader role gating", () => {
     renderHeader({ canEdit: true, status: "CANCELADO" });
     expect(screen.queryByRole("button", { name: "Change status" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Edit" })).toBeInTheDocument();
+  });
+});
+
+describe("ProjectDetailHeader archive (B2)", () => {
+  async function openArchive() {
+    const user = userEvent.setup();
+    renderHeader({ canEdit: true, canArchive: true });
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Archive project" }));
+    return { user, dialog: await screen.findByRole("alertdialog") };
+  }
+
+  it("sends without confirm first, then asks for confirmation on INTEGRITY_LOCK and re-sends with confirm: true", async () => {
+    vi.mocked(archiveProjectAction)
+      .mockResolvedValueOnce({
+        ok: false,
+        error: { code: "INTEGRITY_LOCK", message: "projects.errors.archiveNeedsConfirm" },
+      } as never)
+      .mockResolvedValueOnce({ ok: true, data: { id: "pry_kairos_web" } } as never);
+    const { user, dialog } = await openArchive();
+    await user.click(within(dialog).getByRole("button", { name: "Archive" }));
+
+    expect(await screen.findByText(enProjects.errors.archiveNeedsConfirm)).toBeInTheDocument();
+    expect(archiveProjectAction).toHaveBeenCalledWith({ id: "pry_kairos_web", confirm: false });
+
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }));
+    await waitFor(() =>
+      expect(archiveProjectAction).toHaveBeenLastCalledWith({ id: "pry_kairos_web", confirm: true }),
+    );
+  });
+
+  it("returns focus to the More trigger when the archive dialog is dismissed", async () => {
+    const { user, dialog } = await openArchive();
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "More actions" })).toHaveFocus());
   });
 });

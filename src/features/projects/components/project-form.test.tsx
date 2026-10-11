@@ -123,6 +123,21 @@ describe("ProjectForm (create)", () => {
     expect(actions.createProjectAction).not.toHaveBeenCalled();
   });
 
+  it("links the name and summary inputs to their FieldError through aria-describedby (m2)", async () => {
+    const user = userEvent.setup();
+    renderCreate();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const name = screen.getByLabelText("Name");
+    await waitFor(() => expect(name).toHaveAttribute("aria-invalid", "true"));
+    const nameError = document.getElementById(name.getAttribute("aria-describedby") ?? "");
+    expect(nameError).toHaveAttribute("role", "alert");
+    const summary = screen.getByLabelText("Summary");
+    const described = (summary.getAttribute("aria-describedby") ?? "").split(" ");
+    expect(described).toContain("project-summary-counter");
+    expect(described.some((id) => document.getElementById(id)?.getAttribute("role") === "alert")).toBe(true);
+  });
+
   it("counts the summary against the 280-character limit (PRD §8.3)", async () => {
     const user = userEvent.setup();
     renderCreate();

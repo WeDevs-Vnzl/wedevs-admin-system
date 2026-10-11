@@ -2701,22 +2701,22 @@ new `src/features/projects/detail-tabs.ts` (+ test);
 `src/app/(app)/projects/list/page.tsx`, `src/app/(app)/projects/[id]/page.tsx`; `src/i18n/messages/{es,en}/projects.json`.
 Not `projects/new` or `projects/[id]/edit` pages (3.5).
 
-- [ ] **B2.** Project archive (bulk and detail header) sends without `confirm` first; on `INTEGRITY_LOCK` the
+- [x] **B2.** Project archive (bulk and detail header) sends without `confirm` first; on `INTEGRITY_LOCK` the
       dialog shows `projects.errors.archiveNeedsConfirm` and a second confirmation re-sends with
       `confirm: true`. Tests for both entry points.
-- [ ] **B3.** dnd-kit `screenReaderInstructions` (and announcements) of the links editor come from i18n
+- [x] **B3.** dnd-kit `screenReaderInstructions` (and announcements) of the links editor come from i18n
       keys, es+en. Test.
-- [ ] **F1.** `?tab=` values in English through an exported `PROJECT_DETAIL_TAB_VALUES` (`summary`, `links`,
+- [x] **F1.** `?tab=` values in English through an exported `PROJECT_DETAIL_TAB_VALUES` (`summary`, `links`,
       `billing`, `invoices`, `expenses`, `documents`, `notes`, `activity`); unknown value → `summary`.
-- [ ] **F3.** `/projects/list` reads its URL state with the same loader/pattern as `/clients/list`
+- [x] **F3.** `/projects/list` reads its URL state with the same loader/pattern as `/clients/list`
       (`?archived`, `q` cap, one bad part does not reset the whole query).
-- [ ] **m3.** `/projects/list` "Mostrar archivados" (`showArchivedToggle`, `includeArchived`) for
+- [x] **m3.** `/projects/list` "Mostrar archivados" (`showArchivedToggle`, `includeArchived`) for
       `can(restore, trash)` only (C19).
-- [ ] **m1.** Focus returns to the opener after `ProjectTransitionDialog`, `ProjectCancelDialog` and the
+- [x] **m1.** Focus returns to the opener after `ProjectTransitionDialog`, `ProjectCancelDialog` and the
       project bulk dialogs close (reuse the `useOpenerFocus` approach). Test.
-- [ ] **m2.** `aria-describedby` from each field to its `FieldError` id in `project-form` and
+- [x] **m2.** `aria-describedby` from each field to its `FieldError` id in `project-form` and
       `project-status-dialogs`.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 3.5 — Wave 3 review fixes: clients, notes, tag grants (CR B1; Planner F2–F6; m1, m2, nits)
 

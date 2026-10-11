@@ -102,6 +102,12 @@ describe("ProjectLinksEditor", () => {
     expect(screen.queryByText(textOf(VALIDATION_MESSAGES.invalidFormat))).not.toBeInTheDocument();
   });
 
+  it("gives the drag handles their screen-reader instructions from the catalogue (B3)", () => {
+    renderEditor({ initial: ROWS, editable: true, reorderable: true });
+    expect(screen.getAllByText(enProjects.links.reorderInstructions).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/To pick up a draggable item/)).not.toBeInTheDocument();
+  });
+
   it("adds a link to a group (HU-07 CA1) and reports the new row", async () => {
     const user = userEvent.setup();
     const { onRows } = renderEditor({ initial: ROWS, editable: true, reorderable: true });

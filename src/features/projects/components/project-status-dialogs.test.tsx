@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
+import { useState } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import enCommon from "@/i18n/messages/en/common.json";
 import enEnums from "@/i18n/messages/en/enums.json";
@@ -133,5 +134,41 @@ describe("ProjectCancelDialog (HU-08 CA3)", () => {
         finishRecurringCharges: false,
       }),
     );
+  });
+});
+
+describe("focus return (m1)", () => {
+  function Harness({ which }: { which: "transition" | "cancel" }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <NextIntlClientProvider locale="en" messages={messages} timeZone="America/Caracas">
+        <button type="button" onClick={() => setOpen(true)}>
+          open-dialog
+        </button>
+        {which === "transition" ? (
+          <ProjectTransitionDialog
+            open={open}
+            onOpenChange={setOpen}
+            project={{ id: "pry_kairos_web", status: "EN_CURSO", startDate: "2026-07-01", endDate: null }}
+            onRequestCancel={vi.fn()}
+          />
+        ) : (
+          <ProjectCancelDialog open={open} onOpenChange={setOpen} projectId="pry_kairos_web" />
+        )}
+      </NextIntlClientProvider>
+    );
+  }
+
+  it.each([
+    ["transition", "dialog"],
+    ["cancel", "alertdialog"],
+  ] as const)("%s dialog returns focus to its opener when dismissed", async (which, role) => {
+    const user = userEvent.setup();
+    render(<Harness which={which} />);
+    const opener = screen.getByRole("button", { name: "open-dialog" });
+    await user.click(opener);
+    const dialog = await screen.findByRole(role);
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(opener).toHaveFocus());
   });
 });

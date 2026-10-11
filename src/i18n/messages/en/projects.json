@@ -143,7 +143,8 @@
     "reorderPicked": "{label} picked up. Use the arrows or drag to move it within {group}.",
     "reorderMoved": "{label} moved to position {position} of {total} in {group}.",
     "reorderDropped": "{label} dropped at position {position} of {total}.",
-    "reorderCancelled": "Reorder cancelled."
+    "reorderCancelled": "Reorder cancelled.",
+    "reorderInstructions": "To reorder a link, press space or enter on its handle. Move it with the arrow keys, drop it with space or enter, and cancel with escape."
   },
   "transition": {
     "title": "Change status",
