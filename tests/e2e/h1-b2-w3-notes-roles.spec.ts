@@ -307,7 +307,12 @@ test.describe("accessibility (read only)", () => {
     await expect(page.getByRole("combobox", { name: "Clientes", exact: true })).toBeFocused();
   });
 
-  test(
+  // PRODUCT DEFECT D5 (minor, a11y WCAG 2.4.3), still present after fix package 3.8: route /clients/cli_zafiro_labs?tab=contacts,
+  // focus the "Nuevo contacto" button, Enter, Escape. The dialog closes but document.activeElement is BODY, not the opener
+  // (reproduced in headless Chromium on the integrated build, :3105). Likely cause, from reading use-opener-focus.ts:
+  // ContactFormDialog is mounted with key={dialog.key} and open=true in one commit, so its useRef(open) starts true and the
+  // hook never records the opener. Remove test.fail once the opener receives focus after Escape.
+  test.fail(
     "Escape closes the contact dialog and returns focus to its opener",
     async ({ page }) => {
       await open(page, "/clients/cli_zafiro_labs?tab=contacts");
