@@ -18,3 +18,24 @@ export async function canManageTags(): Promise<boolean> {
   const ctx = await getServiceContext();
   return can(ctx.user, "read", "settings");
 }
+
+/**
+ * The grants `createTagAction` accepts (any one of them). Kept equal to that action's `permission` list: the
+ * action checks the same grants again on submit (C13), so a drift only hides or shows the inline "Crear".
+ */
+const INLINE_TAG_GRANTS = [
+  { action: "create", resource: "settings" },
+  { action: "update", resource: "client" },
+  { action: "update", resource: "project" },
+  { action: "create", resource: "note" },
+  { action: "create", resource: "document" },
+] as const;
+
+/**
+ * Whether the signed-in user may create a tag inline from a tag picker ("Crear"): the clients, contacts, notes and
+ * projects screens pass this boolean to their components (R13).
+ */
+export async function canCreateTagsInline(): Promise<boolean> {
+  const ctx = await getServiceContext();
+  return INLINE_TAG_GRANTS.some(({ action, resource }) => can(ctx.user, action, resource));
+}
