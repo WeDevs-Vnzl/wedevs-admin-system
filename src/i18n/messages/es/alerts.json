@@ -1,1 +1,58 @@
-{}
+{
+  "types": {
+    "INVOICE_OVERDUE": {
+      "title": "Factura vencida",
+      "when": "{state, select, past {Venció hace {days, plural, one {# día} other {# días}}} today {Vence hoy} other {Vence en {days, plural, one {# día} other {# días}}}}"
+    },
+    "INVOICE_DUE_SOON": {
+      "title": "Factura por vencer",
+      "when": "{state, select, past {Venció hace {days, plural, one {# día} other {# días}}} today {Vence hoy} other {Vence en {days, plural, one {# día} other {# días}}}}"
+    },
+    "INSTALLMENT_TO_INVOICE": {
+      "title": "Cuota por facturar",
+      "when": "{state, select, past {Debía facturarse hace {days, plural, one {# día} other {# días}}} today {Se factura hoy} other {Se factura en {days, plural, one {# día} other {# días}}}}"
+    },
+    "DOCUMENT_EXPIRING": {
+      "title": "Documento por vencer",
+      "when": "{state, select, past {Venció hace {days, plural, one {# día} other {# días}}} today {Vence hoy} other {Vence en {days, plural, one {# día} other {# días}}}}"
+    },
+    "DOCUMENT_EXPIRED": {
+      "title": "Documento vencido",
+      "when": "{state, select, past {Venció hace {days, plural, one {# día} other {# días}}} today {Vence hoy} other {Vence en {days, plural, one {# día} other {# días}}}}"
+    },
+    "RECURRING_EXPENSE_PENDING": {
+      "title": "Gasto recurrente pendiente",
+      "when": "{state, select, past {Venció hace {days, plural, one {# día} other {# días}}} today {Vence hoy} other {Vence en {days, plural, one {# día} other {# días}}}}"
+    },
+    "PAYMENT_PENDING_VERIFICATION": {
+      "title": "Pago por verificar",
+      "when": "{state, select, past {Registrado hace {days, plural, one {# día} other {# días}}} today {Registrado hoy} other {Registrado en {days, plural, one {# día} other {# días}}}}"
+    },
+    "UNALLOCATED_CREDIT": {
+      "title": "Saldo a favor sin asignar",
+      "when": "{state, select, past {Sin asignar hace {days, plural, one {# día} other {# días}}} today {Sin asignar desde hoy} other {Sin asignar en {days, plural, one {# día} other {# días}}}}"
+    },
+    "MISSING_RATE": {
+      "title": "Tasa VES faltante",
+      "when": "{state, select, past {Sin tasa} today {Sin tasa para hoy} other {Sin tasa}}"
+    }
+  },
+  "list": {
+    "label": "Lista de alertas",
+    "loading": "Cargando alertas",
+    "loadFailed": "No se pudieron cargar las alertas",
+    "empty": "No tienes alertas pendientes"
+  },
+  "actions": {
+    "menu": "Acciones de la alerta: {title}",
+    "dismiss": "Descartar",
+    "snooze": "Posponer",
+    "snoozeDays": "{days, plural, one {# día} other {# días}}",
+    "undo": "Deshacer"
+  },
+  "toasts": {
+    "dismissed": "Alerta descartada",
+    "snoozed": "Alerta pospuesta {days, plural, one {# día} other {# días}}",
+    "restored": "Alerta restaurada"
+  }
+}

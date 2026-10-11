@@ -1,1 +1,58 @@
-{}
+{
+  "types": {
+    "INVOICE_OVERDUE": {
+      "title": "Overdue invoice",
+      "when": "{state, select, past {Overdue by {days, plural, one {# day} other {# days}}} today {Due today} other {Due in {days, plural, one {# day} other {# days}}}}"
+    },
+    "INVOICE_DUE_SOON": {
+      "title": "Invoice due soon",
+      "when": "{state, select, past {Overdue by {days, plural, one {# day} other {# days}}} today {Due today} other {Due in {days, plural, one {# day} other {# days}}}}"
+    },
+    "INSTALLMENT_TO_INVOICE": {
+      "title": "Installment to invoice",
+      "when": "{state, select, past {Should have been invoiced {days, plural, one {# day} other {# days}} ago} today {To invoice today} other {To invoice in {days, plural, one {# day} other {# days}}}}"
+    },
+    "DOCUMENT_EXPIRING": {
+      "title": "Document expiring",
+      "when": "{state, select, past {Expired {days, plural, one {# day} other {# days}} ago} today {Expires today} other {Expires in {days, plural, one {# day} other {# days}}}}"
+    },
+    "DOCUMENT_EXPIRED": {
+      "title": "Expired document",
+      "when": "{state, select, past {Expired {days, plural, one {# day} other {# days}} ago} today {Expires today} other {Expires in {days, plural, one {# day} other {# days}}}}"
+    },
+    "RECURRING_EXPENSE_PENDING": {
+      "title": "Pending recurring expense",
+      "when": "{state, select, past {Overdue by {days, plural, one {# day} other {# days}}} today {Due today} other {Due in {days, plural, one {# day} other {# days}}}}"
+    },
+    "PAYMENT_PENDING_VERIFICATION": {
+      "title": "Payment to verify",
+      "when": "{state, select, past {Recorded {days, plural, one {# day} other {# days}} ago} today {Recorded today} other {Recorded in {days, plural, one {# day} other {# days}}}}"
+    },
+    "UNALLOCATED_CREDIT": {
+      "title": "Unallocated credit",
+      "when": "{state, select, past {Unallocated for {days, plural, one {# day} other {# days}}} today {Unallocated since today} other {Unallocated in {days, plural, one {# day} other {# days}}}}"
+    },
+    "MISSING_RATE": {
+      "title": "Missing VES rate",
+      "when": "{state, select, past {No rate} today {No rate for today} other {No rate}}"
+    }
+  },
+  "list": {
+    "label": "Alerts list",
+    "loading": "Loading alerts",
+    "loadFailed": "Alerts could not be loaded",
+    "empty": "You have no pending alerts"
+  },
+  "actions": {
+    "menu": "Alert actions: {title}",
+    "dismiss": "Dismiss",
+    "snooze": "Snooze",
+    "snoozeDays": "{days, plural, one {# day} other {# days}}",
+    "undo": "Undo"
+  },
+  "toasts": {
+    "dismissed": "Alert dismissed",
+    "snoozed": "Alert snoozed for {days, plural, one {# day} other {# days}}",
+    "restored": "Alert restored"
+  }
+}
