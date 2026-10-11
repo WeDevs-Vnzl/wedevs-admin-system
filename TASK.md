@@ -14,7 +14,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 awaiting approval |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 approved 2026-10-10 ("aprobado, procede"), running |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
