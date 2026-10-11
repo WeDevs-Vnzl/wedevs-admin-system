@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -27,10 +27,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { isLocale, type Locale } from "@/i18n/config";
 import { TECH_CATEGORY_VALUES } from "@/lib/validators/enums";
-import type { TechnologyListRowDTO } from "@/lib/validators/technologies";
+import type { ListQuery } from "@/lib/validators/common";
+import type { TechnologyFilterInput, TechnologyListRowDTO } from "@/lib/validators/technologies";
 import {
   deleteTechnologyAction,
   exportTechnologiesCsvAction,
+  listTechnologiesAction,
+  resolveTechnologyIconAction,
   setTechnologyActiveAction,
 } from "../actions";
 import { technologyLabel } from "../label";
@@ -38,6 +41,7 @@ import type { ResolvedIcon } from "./tech-stack-icons";
 import { TechnologyFormDialog } from "./technology-form-dialog";
 
 type TechnologiesTableProps = {
+  /** First page, read on the server for the query in the URL. */
   rows: TechnologyListRowDTO[];
   total: number;
   /** Brand icons resolved on the server, by technology id (`null` when the slug has none). */
@@ -45,6 +49,14 @@ type TechnologiesTableProps = {
 };
 
 type FormTarget = { mode: "create" } | { mode: "edit"; technology: TechnologyListRowDTO } | null;
+
+/** The table query as the list filter: the facets live in `filters`, the filter schema takes them top level. */
+function toFilter(query: ListQuery): TechnologyFilterInput {
+  const { filters, ...rest } = query;
+  const active = Array.isArray(filters.active) ? filters.active[0] : filters.active;
+  // The facet values are free strings here; the action validates them against the schema.
+  return { ...rest, category: filters.category as TechnologyFilterInput["category"], active };
+}
 
 const helper = createDataTableColumnHelper<TechnologyListRowDTO>();
 
@@ -78,7 +90,11 @@ function IconGlyph({
 
 // Settings → Tecnologías (PRD §8.15): the catalog table, the create and edit dialog, activation, delete with the
 // in-use lock (HU-06 CA3) and the CSV export of the filtered set.
-export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps) {
+export function TechnologiesTable({
+  rows: initialRows,
+  total: initialTotal,
+  icons: initialIcons,
+}: TechnologiesTableProps) {
   const t = useTranslations("catalogs.technologies");
   const tEnums = useTranslations("enums");
   const tErrors = useTranslations("common.errors");
@@ -91,8 +107,64 @@ export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps
   const [deleteTarget, setDeleteTarget] = useState<TechnologyListRowDTO | null>(null);
   const [deleteMode, setDeleteMode] = useState<"delete" | "inUse">("delete");
   const [pending, startTransition] = useTransition();
+  const [rows, setRows] = useState(initialRows);
+  const [total, setTotal] = useState(initialTotal);
+  const [icons, setIcons] = useState(initialIcons);
+  const [loading, setLoading] = useState(false);
 
-  const refresh = useCallback(() => router.refresh(), [router]);
+  // `useTableUrlState` writes the URL shallowly, so the server page is not re-rendered on a query change: the first
+  // render shows the server page for this URL, later changes read through the action (like the tags table).
+  const queryKey = JSON.stringify(query);
+  const firstQueryKey = useRef(queryKey);
+  const slugIcons = useRef(
+    new Map(
+      initialRows.flatMap((row) =>
+        row.iconSlug ? [[row.iconSlug, initialIcons[row.id] ?? null] as const] : [],
+      ),
+    ),
+  );
+  const load = useCallback(
+    async (next: ListQuery) => {
+      setLoading(true);
+      const result = await listTechnologiesAction(toFilter(next));
+      if (!result.ok) {
+        setLoading(false);
+        toast.error(tErrors(result.error.code));
+        return;
+      }
+      // Brand icons only resolve on the server: ask once per slug that has no glyph yet.
+      const resolved: Record<string, ResolvedIcon | null> = {};
+      await Promise.all(
+        result.data.items.map(async (row) => {
+          if (!row.iconSlug) {
+            resolved[row.id] = null;
+            return;
+          }
+          if (!slugIcons.current.has(row.iconSlug)) {
+            const icon = await resolveTechnologyIconAction({ slug: row.iconSlug });
+            slugIcons.current.set(row.iconSlug, icon.ok ? icon.data : null);
+          }
+          resolved[row.id] = slugIcons.current.get(row.iconSlug) ?? null;
+        }),
+      );
+      setLoading(false);
+      setRows(result.data.items);
+      setTotal(result.data.total);
+      setIcons(resolved);
+    },
+    [tErrors],
+  );
+
+  useEffect(() => {
+    if (queryKey === firstQueryKey.current) return;
+    void load(query);
+  }, [query, queryKey, load]);
+
+  // After a mutation: reload the visible page and refresh the server tree (the page header count).
+  const refresh = useCallback(() => {
+    router.refresh();
+    void load(query);
+  }, [router, load, query]);
 
   const setActive = useCallback(
     (technology: TechnologyListRowDTO, active: boolean) => {
@@ -259,6 +331,7 @@ export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps
         columns={columns}
         getRowId={(row) => row.id}
         total={total}
+        loading={loading}
         query={query}
         onQueryChange={setQuery}
         facets={facets}
