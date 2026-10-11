@@ -2233,7 +2233,7 @@ Files: `src/mocks/services/activity.ts` (adds `listActivity`; + test); `src/feat
 - [x] No edit or delete control on any activity entry (HU-29 CA2).
 - [x] Tests: filters, day grouping in Caracas, diff rendering (enum, money string, `"changed"`), IP
       masking, page `notFound()` for Member, load more, ES and EN.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution. *(Ticked by the Orchestrator at integration: the worker left it open because of the known jsdom flakes; integrated gate green.)*
 
 #### Package 2.5 — Tags: service, picker and `/settings/tags`
 
@@ -2382,8 +2382,8 @@ Files: new `src/mocks/services/documents.ts` (+ test); new `src/features/documen
 
 #### Wave 2 close
 
-- [ ] **Integration checklist:** 2.1–2.8 merged; no Claude attribution; worktrees removed; lockfile
-      unchanged; lint, typecheck, test, `i18n:check`, build pass.
+- [x] **Integration checklist:** 2.1–2.8 merged; no Claude attribution; worktrees removed; lockfile
+      unchanged; lint, typecheck, test, `i18n:check`, build pass. *(2026-10-10: merges e752971 (2.7), aeae46f (2.1), 4ae7838 (2.2), 3d9f977 (2.8), 99af613 (2.4), 4ce9384 (2.6), 13a58a6 (2.3), 3445623 (2.5 incl. fix round r1: LINK/UNLINK activity and `actions.test.ts`, missing in the first delivery). HEAD 3445623: 179 files, 2355 tests + 1 expected fail; lint, typecheck, i18n:check (32 namespaces), build pass; lockfile and package.json unchanged; no Claude attribution.)*
 - [ ] **Planner coherence review:** every mock service exports the PRD §12 names and contract signatures
       (C9); no W2 service imports another W2 service; actions use real grants except the DT-71 cases
       listed above; export actions use the 1.2 factory with sources matching `columns.ts`; search actions
