@@ -2386,7 +2386,7 @@ Package 2.9 → Agent: wedevs-developer · sonnet — Reason: removes a C15 brea
 
 Depends on: 2.1–2.8 (merged). Runs after the Wave 2 Code Review (its findings on these files join this package), before the Tester.
 
-Files: `src/mocks/services/{projects,notes,tags}.ts` (+ tests); `src/mocks/services/{documents,alerts}.test.ts` (type tests only);
+Files: `src/mocks/services/{projects,notes,tags,clients,contacts,documents}.ts` (+ tests; `clients`, `contacts`, `documents` added by the Code Review); `src/mocks/services/{documents,alerts}.test.ts` (type tests only);
 new `src/features/technologies/icons.ts` (+ test); `src/features/technologies/components/tech-stack-icons.tsx`;
 `src/features/technologies/actions.ts` (+ `actions.test.ts`); `src/app/(app)/settings/technologies/page.tsx`. No other file.
 
@@ -2397,6 +2397,12 @@ new `src/features/technologies/icons.ts` (+ test); `src/features/technologies/co
 - [ ] **F9.** `notes.ts:116` field error uses `VALIDATION_MESSAGES.invalidOption`.
 - [ ] **F10.** `projects.ts:564` unknown link id → `ServiceError("NOT_FOUND")` without the id as a message.
 - [ ] **F12.** Type tests: projects `satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">`; notes `satisfies NotesService<MockServiceContext>`; alerts `satisfies AlertsService<MockServiceContext>`; documents `satisfies Pick<DocumentsService<MockServiceContext>, "listDocuments" | "createDocument" | "uploadVersion" | "linkDocument" | "unlinkDocument">`.
+- [ ] **CR-B1 (C14/C19).** `createNote`, `linkNote`, `createDocument` and `linkDocument` refuse an archived target (client, contact, project, document) with `NOT_FOUND` (checked locally; `entity-refs.ts` stays read-only). Tests per type.
+- [ ] **CR-B2 (C14/C23).** `createNote`, `updateNote`, `createProject` and `updateProject` require every `image` `fileId` inside rich-text content to be a `READY` file; notes add those ids to `attachmentFileIds`. Tests.
+- [ ] **CR-B3 (C16).** `projectHeadline` never converts with today's rate; mark it as an H1-B2 placeholder that H1-B3 replaces with the `lib/finance` §8.4.4 summary. Test: a non-USD plan does not move when a new rate is added.
+- [ ] **CR-B4 (C1).** Tag and technology diffs in clients, contacts, projects and notes log sorted names joined with ", " (snapshot at log time), not ids. Tests.
+- [ ] **CR-m7.** Document `LINK`/`UNLINK` entries carry `metadata.entityType` / `metadata.entityId` (as notes do).
+- [ ] **CR-n1.** Add the `// MOCK` header to `alerts.test.ts`.
 - [ ] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.10 — Wave 2 coherence fixes: ConfirmDialog, entity-tab props, documents search, technology picker (Planner F1, F2, F4, F5)
@@ -2417,6 +2423,25 @@ Files: `src/components/patterns/confirm-dialog.tsx` (+ test); `src/i18n/messages
 - [ ] **F1.** `EntityDocumentsTab({ entity }: { entity: EntityRef })`; inside, only `CLIENT` / `PROJECT` are served (any other type renders nothing). `listEntityDocuments` and `AttachDocumentSheet` accept `EntityRef` the same way; `DocumentsTabEntity` is removed or becomes internal.
 - [ ] **F4.** `searchDocumentsAction`: input `{ q }` (trimmed, ≤ 200), returns `EntityRef[]` (≤ 20, `{ id, code, label: title, type: "DOCUMENT" }`) built from `listDocuments`; the attach sheet maps `EntityRef` → `AsyncComboboxOption` (`value: id, label, description: code`). Grant unchanged `{ read, document }`.
 - [ ] **F5.** `TechnologyPicker` gains `selected?: readonly TechnologyChipDTO[]` (the record's current stack): a selected id not among the active `technologies` renders as a removable chip marked inactive (`catalogs.technologies.picker.inactive`, ES and EN) and is never offered for a new selection. Tests.
+- [ ] **CR-m5.** The attach sheet uses registry `Field` / `FieldLabel` / `FieldError` (C3), wires `aria-invalid` and `aria-describedby`, and maps server `fieldErrors` onto fields (frontend-patterns §6).
+- [ ] **CR-m6.** `TechnologyPicker` exposes the selected state to assistive technology (`aria-checked` or sr-only text). Test.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.11 — Wave 2 code-review fixes: activity labels, rich-text editor, bell panel (CR-B4 UI, m1–m4)
+
+Package 2.11 → Agent: wedevs-developer · sonnet — Reason: changes the C4 rich-text kit's controlled-value behaviour and keyboard model, plus accessibility semantics; borderline for haiku.
+
+Use the shadcn MCP.
+
+Depends on: 2.1–2.8 (merged). Same fix wave as 2.9 and 2.10 (no shared file). Runs before the Tester.
+
+Files: `src/features/activity/components/{activity-diff,activity-detail-sheet}.tsx` (+ tests); `src/i18n/messages/{es,en}/activity.json` (add-only `fields.*`); `src/components/ui/rich-text/{rich-text-editor.tsx,rich-text-toolbar.tsx,extensions.ts}` (+ test); `src/components/app/alerts-bell.tsx` (+ test); `src/features/alerts/components/{alert-list,alert-item}.tsx` (+ test); `src/i18n/messages/{es,en}/alerts.json` (add-only). No other file.
+
+- [ ] **CR-B4.** `activity.fields.*` covers every field the W2 services diff (ES and EN: `taxId`, `country`, `fullName`, `position`, `isPrimary`, `tagIds`, `technologyIds`, `pinned`, `nameEn`, `slug`, `category`, `iconSlug`, `color`, `active`, `technology`, and any other the services log); the technology `category` value is labelled from `enums.TechCategory`; a test fails on an unlabelled field.
+- [ ] **CR-m1.** `isAllowedRichTextUri` uses the validator's link rule; an unparsable document (bad `mailto:`, over `RICH_TEXT_MAX_BYTES`) reports an invalid state (e.g. `onChange(null)` or `onInvalid`) instead of silently keeping the last valid value. Tests (`mailto:x`, oversize document).
+- [ ] **CR-m2/m3.** `aria-invalid` and the `Field` `aria-describedby` go on the `role="textbox"` element; the toolbar follows the toolbar keyboard pattern (roving focus, e.g. the Radix Toolbar primitive from `radix-ui`) or drops `role="toolbar"`. Keyboard component test.
+- [ ] **CR-m4.** Bell: "Marcar leídas" stays disabled until H1-B5; the popover is labelled by its title (`aria-labelledby`); focus moves to the next alert or the list after dismiss or snooze; dismiss/snooze labels include the alert subject.
+- [ ] **CR-nit.** `ActivityDetailSheet` keeps the last entry while it closes (no cut animation).
 - [ ] Gate. Commit messages without any Claude attribution.
 
 #### Wave 2 close
@@ -2431,11 +2456,11 @@ Files: `src/components/patterns/confirm-dialog.tsx` (+ test); `src/i18n/messages
       and `TechnologyPicker` emit the id lists the client and project inputs expect; alert rules match
       §7.9; `/settings/tags` and `/settings/technologies` override the `[section]` placeholder and enforce
       access; namespaces in both languages. *(2026-10-10, Planner: READY FOR CODE REVIEW. Pass: C9 names/signatures, no W2 service imports another, grants (DT-71 cases only), export sources = `columns.ts`, alert rules = §7.9, settings pages override `[section]` and enforce access, i18n parity. Findings: F1 entity-tab prop shapes differ and F2 `ConfirmDialog` lacks `delete`/`unlink`/`description`/`options` (W3 blockers) → 2.10; F3 projects money sorted with `Number()` (C15) → 2.9; F4 `searchDocumentsAction` shape → 2.10; F5 inactive technologies invisible in the picker → 2.10; F6 archived project/note readable by every role → 2.9; F7 tag create/update without activity → 2.9; F8 icon resolver without `server-only` and `"authenticated"` → 2.9; F9, F10 error keys → 2.9; F11 CSV money columns for every reader → H2-B3 (W3 screen rule); F12 type tests → 2.9; nits F13–F15 accepted or deferred. The other reported deviations accepted. W3 facts and H2 obligations recorded.)*
-- [ ] **Code review:** C1, C2, C3 (no hand-written registry equivalents; editor and timeline are
+- [x] **Code review:** C1, C2, C3 (no hand-written registry equivalents; editor and timeline are
       compositions), **C4** (editor, viewer, paste, links, images), C5, C6, C7, C8, C9, C10 (incl. DT-71 and
       the alert-dismissal interpretation), C11 (no `new Date()` in services), C12 shape (activity entries),
       C15, C16 shape, C19 shape (client cascade, technology lock, archived filtering), C20, C23 shape,
-      C25; accessibility of the editor toolbar, the activity sheet, the bell panel and the attach sheet.
+      C25; accessibility of the editor toolbar, the activity sheet, the bell panel and the attach sheet. *(2026-10-10, Code Reviewer, HEAD 08eefe1: BLOCKED until 2.9–2.11 merge. Blockers: B1 archived link targets accepted (notes, documents); B2 rich-text `image` fileIds never checked; B3 project headline converts with today's rate (C16); B4 activity diff shows raw field keys and id arrays (C1) → 2.9 (B1–B4 service side) and new 2.11 (B4 labels). Minor: m1–m4 editor value/a11y, toolbar keyboard, bell panel → 2.11; m5 attach-sheet `Field` + m6 picker selected state → 2.10; m7 document link metadata → 2.9; m8 raw IP to the browser → H2-B3; m9 `getClientFinancials` without `canSeeFinancials` → H1-B3/H2-B3; m10 alerts ignore archived finance rows → H1-B3. Nits: `// MOCK` header → 2.9; ICU instead of `": "` concatenation → H1-FX; documents tab counts capped at 100 → H1-B4; restored project loses a deleted technology → H2-B3. Fine: C4, C10/DT-71 (alerts "authenticated" confirmed), C11, C19, C20, C15/C16 in clients, C5, C25, activity sheet a11y, R16. Registry consulted with `shadcn@4.21.4 search` (MCP unavailable); editor and timeline are legitimate compositions.)*
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage` (report every W2 mock service and `components/ui/rich-text/**`),
@@ -2677,6 +2702,7 @@ Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/pag
   8 %, 0 % and exempt → per-rate bases/IVA and total match C17; ±0.01 adjustment accepted and 0.02
   rejected; HU-12 status transitions; HU-13 CA2 100/3/0 → 97 allocatable, 100 net; HU-13 CA4 VES→USD;
   HU-15 running balance; HU-16 CA1); coverage of `lib/finance`; local E2E of HU-09, HU-11, HU-13 UI.
+- **From H1-B2 W2 review:** `projectHeadline` delegates to `lib/finance` per §8.4.4 (proportional collected, adjustments, `toInvoice` only `FIJO`/`MIXTO`); **open question for the Planner:** the USD value of a non-USD contract (§10 has no snapshot on the billing plan); the client financial card calls `getClientFinancials` only when `canSeeFinancials`; alerts leave out archived finance rows once the finance DTOs carry `archivedAt`.
 
 🛑 **MANDATORY STOP** between every wave.
 
@@ -2700,6 +2726,7 @@ Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/pag
   not executed), HU-19 UI, HU-20, HU-21, HU-22 CA2–CA4 and CA6 over mocks; key-protected document:
   view/download blocked until the correct key, wrong key error, lockout after 5 failures; portal mobile
   layout; PDF toolbar.
+- **From H1-B2 W2 review:** `createDocument` with a file must be atomic (no version-less `BORRADOR` left linked when the upload fails); category chips filter and count over all documents (not one page capped at 100); `LINK`/`UNLINK` entries carry target metadata.
 
 🛑 **MANDATORY STOP** between every wave.
 
@@ -2775,7 +2802,7 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
   when the block opens: sonnet for services with transactional side effects or integrity locks (archive
   cascades, restore conflicts, sequences), haiku for pure catalog CRUD.
 - Deploy-preview checklist: HU-03–HU-08, HU-23, HU-29 on real data.
-- From H1-B2 W2 review: `clients.service` / `contacts.service` export `searchClients` / `searchContacts` (or the actions switch to `listClients` / `listContacts`); `deleteTechnology` deletes the `ProjectTechnology` rows of archived projects in the same transaction (PRD §10 relation is Restrict); CSV export and list DTOs drop USD fields for roles without `canSeeFinancials` (C13); `archiveNoteAction` revalidates the linked records' paths.
+- From H1-B2 W2 review: `clients.service` / `contacts.service` export `searchClients` / `searchContacts` (or the actions switch to `listClients` / `listContacts`); `deleteTechnology` deletes the `ProjectTechnology` rows of archived projects in the same transaction (PRD §10 relation is Restrict); CSV export and list DTOs drop USD fields for roles without `canSeeFinancials` (C13); `archiveNoteAction` revalidates the linked records' paths; the activity service masks the IP (the raw IP never reaches the browser); `getClientFinancials` gated by `canSeeFinancials`; restoring a project does not recover a technology deleted while it was archived (document it).
 
 ### H2-B4 — Finance real
 
