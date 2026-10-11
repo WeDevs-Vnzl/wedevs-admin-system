@@ -3,17 +3,21 @@
 // client; here the "transaction" is `{ db, now }`. Framework-free (C11). Replaced by
 // `src/server/services/activity.service.ts` in Hito 2 (C9). **Append-only: there is no update or delete
 // function here, and there must never be one (C20).**
+import { toDateOnly } from "@/lib/dates";
 import {
   logActivityInputSchema,
   type ActivityEntryDTO,
+  type ActivityFilter,
+  type ActivityListRowDTO,
   type LogActivityInput,
 } from "@/lib/validators/activity";
-import { zodFieldErrors } from "@/lib/validators/common";
+import { zodFieldErrors, type Paginated } from "@/lib/validators/common";
 import type { z } from "@/lib/validators/zod";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
 import { nextMockId } from "../ids";
 import type { ActivityRow, MockStore } from "../store";
+import { listRows, type ListSpec } from "./list";
 
 /** The mock transaction: the store the mutation writes to and the clock of the call. */
 export interface MockTx {
@@ -74,4 +78,39 @@ export async function logActivity(
   };
   log.push(row);
   return toActivityEntryDTO(tx.db, row);
+}
+
+/** Sorters and the default order of the activity list (newest first, PRD §8.14). */
+const activitySpec: ListSpec<ActivityListRowDTO> = {
+  searchText: (row) => [row.entityLabel, row.actor.name],
+  sorters: {
+    createdAt: (row) => row.createdAt,
+    action: (row) => row.action,
+    entityType: (row) => row.entityType,
+  },
+  defaultSort: "createdAt:desc",
+};
+
+/**
+ * The activity log, newest first (PRD §8.14). Read-only: the only reader of the log (C20). The filter
+ * `from` / `to` are Caracas calendar days of `createdAt` (both inclusive); `entityType` + `entityId` give
+ * one record's timeline. Rows are assembled with `toActivityEntryDTO` (PD-3).
+ */
+export async function listActivity(
+  ctx: MockServiceContext,
+  input: ActivityFilter,
+): Promise<Paginated<ActivityListRowDTO>> {
+  const rows = ctx.db.activity
+    .filter((row) => !input.actorId || input.actorId.includes(row.actorId ?? ""))
+    .filter((row) => !input.actorType || input.actorType.includes(row.actorType))
+    .filter((row) => !input.action || input.action.includes(row.action))
+    .filter((row) => !input.entityType || input.entityType.includes(row.entityType))
+    .filter((row) => input.entityId === undefined || row.entityId === input.entityId)
+    .filter((row) => {
+      if (!input.from && !input.to) return true;
+      const day = toDateOnly(new Date(row.createdAt));
+      return (!input.from || day >= input.from) && (!input.to || day <= input.to);
+    })
+    .map((row) => toActivityEntryDTO(ctx.db, row));
+  return listRows(rows, input, activitySpec);
 }
