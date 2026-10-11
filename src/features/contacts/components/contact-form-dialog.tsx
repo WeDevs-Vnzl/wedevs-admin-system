@@ -131,9 +131,12 @@ function ContactForm({
           <Input
             id="contact-full-name"
             aria-invalid={errors.fullName ? true : undefined}
+            aria-describedby={errors.fullName ? "contact-full-name-error" : undefined}
             {...form.register("fullName")}
           />
-          <FieldError>{fieldMessage(errors.fullName?.message)}</FieldError>
+          <FieldError id="contact-full-name-error">
+            {fieldMessage(errors.fullName?.message)}
+          </FieldError>
         </Field>
 
         <Field data-invalid={errors.position ? true : undefined}>
@@ -141,9 +144,12 @@ function ContactForm({
           <Input
             id="contact-position"
             aria-invalid={errors.position ? true : undefined}
+            aria-describedby={errors.position ? "contact-position-error" : undefined}
             {...form.register("position")}
           />
-          <FieldError>{fieldMessage(errors.position?.message)}</FieldError>
+          <FieldError id="contact-position-error">
+            {fieldMessage(errors.position?.message)}
+          </FieldError>
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -153,9 +159,10 @@ function ContactForm({
               id="contact-email"
               type="email"
               aria-invalid={errors.email ? true : undefined}
+              aria-describedby={errors.email ? "contact-email-error" : undefined}
               {...form.register("email")}
             />
-            <FieldError>{fieldMessage(errors.email?.message)}</FieldError>
+            <FieldError id="contact-email-error">{fieldMessage(errors.email?.message)}</FieldError>
           </Field>
 
           <Field data-invalid={errors.phone ? true : undefined}>
@@ -174,7 +181,7 @@ function ContactForm({
                 />
               )}
             />
-            <FieldError>{fieldMessage(errors.phone?.message)}</FieldError>
+            <FieldError id="contact-phone-error">{fieldMessage(errors.phone?.message)}</FieldError>
           </Field>
         </div>
 

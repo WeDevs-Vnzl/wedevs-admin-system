@@ -8,6 +8,7 @@ import { EntityActivityTab } from "@/features/activity/components/entity-activit
 import { ClientDetailHeader } from "@/features/clients/components/client-detail-header";
 import { visibleClientDetailTabs } from "@/features/clients/components/client-detail-tabs";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { ClientProjectsTab } from "@/features/clients/components/client-projects-tab";
 import { ClientSidePanel } from "@/features/clients/components/client-side-panel";
 import { ClientSummary } from "@/features/clients/components/client-summary";
@@ -17,6 +18,7 @@ import { listContacts } from "@/features/contacts/queries";
 import { EntityDocumentsTab } from "@/features/documents/components/entity-documents-tab";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
 import { requireSessionUser } from "@/server/auth/session";
+import { can } from "@/server/auth/permissions";
 import { ServiceError } from "@/server/errors";
 import type { EntityRef } from "@/lib/validators/common";
 import type { ClientDetailDTO } from "@/lib/validators/clients";
@@ -49,7 +51,7 @@ export async function generateMetadata({ params }: ClientDetailPageProps): Promi
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
   const user = await requireSessionUser();
-  const permissions = clientScreenPermissions(user);
+  const permissions = clientScreenPermissions(user, await canCreateTagsInline());
   const client = await readClient(id);
   if (!client || (client.archivedAt && !permissions.canRestore)) notFound();
 
@@ -88,7 +90,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       value: "projects",
       label: t("projects"),
       count: client.financials.projectCount,
-      content: <ClientProjectsTab clientId={client.id} />,
+      content: (
+        <ClientProjectsTab clientId={client.id} canCreate={can(user, "create", "project")} />
+      ),
     },
     invoices: {
       value: "invoices",

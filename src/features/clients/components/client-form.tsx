@@ -205,6 +205,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                     id="client-kind"
                     aria-label={t("form.kindOptions")}
                     aria-invalid={errors.kind ? true : undefined}
+                    aria-describedby={errors.kind ? "client-kind-error" : undefined}
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -218,7 +219,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 </Select>
               )}
             />
-            <FieldError>{fieldMessage(errors.kind?.message)}</FieldError>
+            <FieldError id="client-kind-error">{fieldMessage(errors.kind?.message)}</FieldError>
           </Field>
 
           <Field data-invalid={errors.tradeName ? true : undefined}>
@@ -226,9 +227,12 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
             <Input
               id="client-trade-name"
               aria-invalid={errors.tradeName ? true : undefined}
+              aria-describedby={errors.tradeName ? "client-trade-name-error" : undefined}
               {...form.register("tradeName")}
             />
-            <FieldError>{fieldMessage(errors.tradeName?.message)}</FieldError>
+            <FieldError id="client-trade-name-error">
+              {fieldMessage(errors.tradeName?.message)}
+            </FieldError>
           </Field>
 
           <Field data-invalid={errors.legalName ? true : undefined}>
@@ -237,25 +241,36 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
               id="client-legal-name"
               aria-required={kind === "EMPRESA" ? true : undefined}
               aria-invalid={errors.legalName ? true : undefined}
-              aria-describedby="client-legal-name-hint"
+              aria-describedby={
+                errors.legalName
+                  ? ["client-legal-name-hint", "client-legal-name-error"].join(" ")
+                  : "client-legal-name-hint"
+              }
               {...form.register("legalName")}
             />
             <FieldDescription id="client-legal-name-hint">
               {t("form.fields.legalNameHint")}
             </FieldDescription>
-            <FieldError>{fieldMessage(errors.legalName?.message)}</FieldError>
+            <FieldError id="client-legal-name-error">
+              {fieldMessage(errors.legalName?.message)}
+            </FieldError>
           </Field>
 
           <Field data-invalid={errors.taxId ? true : undefined}>
             <FieldLabel htmlFor="client-tax-id">{t("form.fields.taxId")}</FieldLabel>
             <Input
               id="client-tax-id"
-              aria-describedby="client-tax-id-hint"
+
               aria-invalid={errors.taxId ? true : undefined}
+              aria-describedby={
+                errors.taxId
+                  ? ["client-tax-id-hint", "client-tax-id-error"].join(" ")
+                  : "client-tax-id-hint"
+              }
               {...form.register("taxId")}
             />
             <FieldDescription id="client-tax-id-hint">{taxIdHint}</FieldDescription>
-            <FieldError>{fieldMessage(errors.taxId?.message)}</FieldError>
+            <FieldError id="client-tax-id-error">{fieldMessage(errors.taxId?.message)}</FieldError>
             {conflict && conflictHref ? (
               <Link
                 href={conflictHref}
@@ -272,6 +287,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
               id="client-country"
               value={country}
               aria-invalid={errors.country ? true : undefined}
+              aria-describedby={errors.country ? "client-country-error" : undefined}
               onChange={(next) =>
                 form.setValue("country", next as CountryCode, {
                   shouldDirty: true,
@@ -279,7 +295,9 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 })
               }
             />
-            <FieldError>{fieldMessage(errors.country?.message)}</FieldError>
+            <FieldError id="client-country-error">
+              {fieldMessage(errors.country?.message)}
+            </FieldError>
           </Field>
 
           <Field data-invalid={errors.address ? true : undefined} className="md:col-span-2">
@@ -288,9 +306,12 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
               id="client-address"
               rows={3}
               aria-invalid={errors.address ? true : undefined}
+              aria-describedby={errors.address ? "client-address-error" : undefined}
               {...form.register("address")}
             />
-            <FieldError>{fieldMessage(errors.address?.message)}</FieldError>
+            <FieldError id="client-address-error">
+              {fieldMessage(errors.address?.message)}
+            </FieldError>
           </Field>
 
           <Field data-invalid={errors.phone ? true : undefined}>
@@ -304,7 +325,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 form.setValue("phone", next, { shouldDirty: true, shouldValidate: true })
               }
             />
-            <FieldError>{fieldMessage(errors.phone?.message)}</FieldError>
+            <FieldError id="client-phone-error">{fieldMessage(errors.phone?.message)}</FieldError>
           </Field>
 
           <Field data-invalid={errors.email ? true : undefined}>
@@ -314,9 +335,10 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
               type="email"
               autoComplete="off"
               aria-invalid={errors.email ? true : undefined}
+              aria-describedby={errors.email ? "client-email-error" : undefined}
               {...form.register("email")}
             />
-            <FieldError>{fieldMessage(errors.email?.message)}</FieldError>
+            <FieldError id="client-email-error">{fieldMessage(errors.email?.message)}</FieldError>
           </Field>
 
           <Field data-invalid={errors.website ? true : undefined}>
@@ -326,9 +348,12 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
               type="url"
               placeholder="https://"
               aria-invalid={errors.website ? true : undefined}
+              aria-describedby={errors.website ? "client-website-error" : undefined}
               {...form.register("website")}
             />
-            <FieldError>{fieldMessage(errors.website?.message)}</FieldError>
+            <FieldError id="client-website-error">
+              {fieldMessage(errors.website?.message)}
+            </FieldError>
           </Field>
 
           <Field data-invalid={errors.status ? true : undefined}>
@@ -345,6 +370,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 id="client-status"
                 aria-label={t("form.statusOptions")}
                 aria-invalid={errors.status ? true : undefined}
+                aria-describedby={errors.status ? "client-status-error" : undefined}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -356,7 +382,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 ))}
               </SelectContent>
             </Select>
-            <FieldError>{fieldMessage(errors.status?.message)}</FieldError>
+            <FieldError id="client-status-error">{fieldMessage(errors.status?.message)}</FieldError>
           </Field>
 
           <Field className="md:col-span-2">

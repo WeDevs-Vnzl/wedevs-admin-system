@@ -15,6 +15,7 @@ import { preferenceToColumnConfig } from "@/components/ui/data-table/column-conf
 import { ClientsTable } from "@/features/clients/components/clients-table";
 import { clientFilterOf } from "@/features/clients/components/client-table-query";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { listClients } from "@/features/clients/queries";
 import { getPreferences } from "@/features/preferences/queries";
 import { requireSessionUser } from "@/server/auth/session";
@@ -35,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // only, and the service ignores `archived` for anyone else (C19).
 export default async function ClientsListPage({ searchParams }: ClientsListPageProps) {
   const user = await requireSessionUser();
-  const permissions = clientScreenPermissions(user);
+  const permissions = clientScreenPermissions(user, await canCreateTagsInline());
   const query = urlStateToListQuery(loadTableState(await searchParams));
   const [page, preferences, t] = await Promise.all([
     listClients(clientFilterOf(query)),

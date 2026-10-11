@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { ClientForm } from "@/features/clients/components/client-form";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { getClient } from "@/features/clients/queries";
 import { requireSessionUser } from "@/server/auth/session";
 import { ServiceError } from "@/server/errors";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: ClientEditPageProps): Promise
 export default async function ClientEditPage({ params }: ClientEditPageProps) {
   const { id } = await params;
   const user = await requireSessionUser();
-  const permissions = clientScreenPermissions(user);
+  const permissions = clientScreenPermissions(user, await canCreateTagsInline());
   if (!permissions.canUpdate) notFound();
   const client = await readClient(id);
   if (!client || client.archivedAt) notFound();

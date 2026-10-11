@@ -108,9 +108,9 @@ export function ClientDetailHeader({ client, permissions }: ClientDetailHeaderPr
           ) : null
         }
         moreActions={
-          permissions.canUpdate || (permissions.canArchive && !archived) ? (
+          (permissions.canUpdate && !archived) || (permissions.canArchive && !archived) ? (
             <>
-              {permissions.canUpdate ? (
+              {permissions.canUpdate && !archived ? (
                 <DropdownMenuItem onSelect={() => setStatusOpen(true)}>
                   {t("detail.actions.changeStatus")}
                 </DropdownMenuItem>
@@ -132,7 +132,7 @@ export function ClientDetailHeader({ client, permissions }: ClientDetailHeaderPr
         />
       ) : null}
 
-      {permissions.canUpdate ? (
+      {permissions.canUpdate && !archived ? (
         <ClientStatusDialog
           clientId={client.id}
           current={client.status}
