@@ -72,4 +72,57 @@ describe("ActivityDiff", () => {
     expect(enumNameFor("DOCUMENT", "format")).toBe("DocumentFormat");
     expect(enumNameFor("NOTE", "status")).toBeNull();
   });
+
+  it("labels a technology category from enums.TechCategory", () => {
+    expect(enumNameFor("SETTING", "category")).toBe("TechCategory");
+    wrap(
+      <ActivityDiff entityType="SETTING" changes={{ category: ["FRONTEND", "BASE_DE_DATOS"] }} />,
+    );
+    expect(screen.getByText("Categoría")).toBeInTheDocument();
+    expect(screen.getByText("Base de datos")).toBeInTheDocument();
+  });
+
+  it.each(["es", "en"] as const)("labels every field the W2 services log (%s)", (locale) => {
+    const fields = locale === "es" ? esActivity.fields : enActivity.fields;
+    for (const field of LOGGED_FIELDS) {
+      expect(fields, `unlabelled field: ${field}`).toHaveProperty(field);
+    }
+  });
 });
+
+/** Every field key the W2 services (clients, contacts, projects, notes, tags, technologies) put in `changes`. */
+const LOGGED_FIELDS = [
+  "kind",
+  "tradeName",
+  "legalName",
+  "taxId",
+  "country",
+  "address",
+  "phone",
+  "email",
+  "website",
+  "tagIds",
+  "fullName",
+  "position",
+  "isPrimary",
+  "name",
+  "summary",
+  "description",
+  "startDate",
+  "targetEndDate",
+  "endDate",
+  "technologyIds",
+  "status",
+  "title",
+  "content",
+  "pinned",
+  "nameEn",
+  "slug",
+  "category",
+  "iconSlug",
+  "color",
+  "active",
+  "technology",
+  "clientRole",
+  "links",
+];

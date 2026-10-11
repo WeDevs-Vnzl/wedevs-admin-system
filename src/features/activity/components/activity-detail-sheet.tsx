@@ -2,6 +2,7 @@
 
 import { ExternalLink, Lock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import Link from "next/link";
 import { EntityCodeChip } from "@/components/patterns/entity-code-chip";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,7 @@ export function browserKey(
 
 /** One event: its field diff, technical context, the link to its record and the immutability note. */
 export function ActivityDetailSheet({
-  entry,
+  entry: entryProp,
   open,
   onOpenChange,
 }: {
@@ -58,6 +59,10 @@ export function ActivityDetailSheet({
   const t = useTranslations("activity");
   const tEnums = useTranslations("enums");
   const tBrowser = useTranslations("activity.browser");
+  // Keeps the last entry while the sheet closes, so the exit animation does not cut to empty.
+  const [lastEntry, setLastEntry] = useState(entryProp);
+  if (entryProp && entryProp !== lastEntry) setLastEntry(entryProp);
+  const entry = entryProp ?? lastEntry;
   if (!entry) return null;
 
   const href = entityHref({ type: entry.entityType, id: entry.entityId });

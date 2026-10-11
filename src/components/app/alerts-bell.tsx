@@ -2,7 +2,7 @@
 
 import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -27,10 +27,11 @@ export const ALERTS_BADGE_CLASSES =
 
 // Bell with a counter and a popover panel (frontend-patterns §8). The panel mounts when it opens and loads
 // the list through `listAlertsAction` (PD-5), so the panel and the counter agree; dismissing or snoozing
-// updates the badge at once and the layout refresh brings the server count. "Mark all as read" stays as it
-// was (H1-B5).
+// updates the badge at once and the layout refresh brings the server count. "Mark all as read" stays
+// disabled until H1-B5 gives it an action.
 export function AlertsBell({ count }: AlertsBellProps) {
   const t = useTranslations("shell.alerts");
+  const titleId = useId();
   // The live total only applies to the server count it was measured against.
   const [live, setLive] = useState<{ base: number; total: number } | null>(null);
   const shown = live && live.base === count ? live.total : count;
@@ -52,9 +53,13 @@ export function AlertsBell({ count }: AlertsBellProps) {
           ) : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 max-w-[calc(100vw-2rem)] p-0">
+      <PopoverContent
+        align="end"
+        aria-labelledby={titleId}
+        className="w-96 max-w-[calc(100vw-2rem)] p-0"
+      >
         <PopoverHeader className="border-b p-4">
-          <PopoverTitle>{t("title")}</PopoverTitle>
+          <PopoverTitle id={titleId}>{t("title")}</PopoverTitle>
           <PopoverDescription>{t("description")}</PopoverDescription>
         </PopoverHeader>
         <div className="max-h-96 overflow-y-auto p-4">
@@ -65,7 +70,7 @@ export function AlertsBell({ count }: AlertsBellProps) {
           />
         </div>
         <div className="flex justify-end border-t p-3">
-          <Button variant="ghost" size="sm" disabled={shown === 0}>
+          <Button variant="ghost" size="sm" disabled>
             {t("markAllRead")}
           </Button>
         </div>

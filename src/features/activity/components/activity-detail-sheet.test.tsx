@@ -94,4 +94,18 @@ describe("ActivityDetailSheet", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open record/ })).toBeInTheDocument();
   });
+
+  it("keeps rendering the last entry while it closes", () => {
+    const messages = { activity: esActivity, enums: esEnums };
+    const ui = (entry: ActivityListRowDTO | null, open: boolean) => (
+      <NextIntlClientProvider locale="es" messages={messages}>
+        <ActivityDetailSheet entry={entry} open={open} onOpenChange={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+    const { rerender } = render(ui(row, true));
+    expect(screen.getByText("act_0042")).toBeInTheDocument();
+    // The parent clears the entry as the sheet closes; the exit animation still shows the last one.
+    rerender(ui(null, true));
+    expect(screen.getByText("act_0042")).toBeInTheDocument();
+  });
 });

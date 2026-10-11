@@ -18,7 +18,14 @@ import { useTranslations } from "next-intl";
 import { DateText } from "@/components/patterns/date-text";
 import { MoneyText } from "@/components/patterns/money-text";
 import { Button } from "@/components/ui/button";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { entityHref } from "@/lib/entity-routes";
 import type { AlertDTO, AlertType } from "@/lib/validators/alerts";
 import { cn } from "@/lib/utils";
@@ -56,11 +63,22 @@ export function AlertItem({ alert, compact = false, busy, onDismiss, onSnooze }:
     state: days < 0 ? "past" : days === 0 ? "today" : "future",
     days: Math.abs(days),
   });
-  const href = alert.entity ? entityHref(alert.entity) : alert.type === "MISSING_RATE" ? MISSING_RATE_HREF : null;
+  const href = alert.entity
+    ? entityHref(alert.entity)
+    : alert.type === "MISSING_RATE"
+      ? MISSING_RATE_HREF
+      : null;
   const subject = [alert.entity?.label, alert.context].filter(Boolean).join(" · ");
+  // Accessible name of the row actions: the alert type plus its subject, so rows of one type differ.
+  const actionTarget = subject ? `${title} · ${subject}` : title;
 
   return (
-    <Item variant="outline" size="sm" className={cn(compact && "flex-nowrap")} data-alert-key={alert.alertKey}>
+    <Item
+      variant="outline"
+      size="sm"
+      className={cn(compact && "flex-nowrap")}
+      data-alert-key={alert.alertKey}
+    >
       <ItemMedia variant="icon">
         <Icon aria-hidden />
       </ItemMedia>
@@ -87,19 +105,27 @@ export function AlertItem({ alert, compact = false, busy, onDismiss, onSnooze }:
             {alert.amount ? (
               <>
                 {" · "}
-                <MoneyText amount={alert.amount.amount} currency={alert.amount.currency} className="font-medium" />
+                <MoneyText
+                  amount={alert.amount.amount}
+                  currency={alert.amount.currency}
+                  className="font-medium"
+                />
               </>
             ) : null}
           </span>
         </ItemDescription>
       </ItemContent>
       <ItemActions>
-        <AlertSnoozeMenu title={title} disabled={busy} onSnooze={(d) => onSnooze(alert, d)} />
+        <AlertSnoozeMenu
+          title={actionTarget}
+          disabled={busy}
+          onSnooze={(d) => onSnooze(alert, d)}
+        />
         <Button
           variant="ghost"
           size="icon-sm"
           disabled={busy}
-          aria-label={`${t("actions.dismiss")}: ${title}`}
+          aria-label={`${t("actions.dismiss")}: ${actionTarget}`}
           onClick={() => onDismiss(alert)}
         >
           <X aria-hidden />

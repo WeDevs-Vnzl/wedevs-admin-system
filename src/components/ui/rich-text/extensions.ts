@@ -6,6 +6,7 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
 import { TaskItem } from "@tiptap/extension-task-item";
 import { TaskList } from "@tiptap/extension-task-list";
 import StarterKit from "@tiptap/starter-kit";
+import { isHttpUrl } from "@/lib/validators/tags";
 
 /**
  * The extension allowlist of the rich-text kit (C4). It produces exactly `RICH_TEXT_NODE_TYPES` and
@@ -16,12 +17,10 @@ import StarterKit from "@tiptap/starter-kit";
 /** Link protocols the editor accepts (the validator accepts the same ones). */
 export const RICH_TEXT_LINK_PROTOCOLS = ["http", "https", "mailto"] as const;
 
-const LINK_URI = /^(?:https?:\/\/|mailto:)[^\s]+$/i;
-
-/** `true` for an `http(s):` or `mailto:` URL; `javascript:`, `data:` and relative URLs are refused. */
+/** `true` for an `http(s):` URL or a well-formed `mailto:`: the validator's link rule (notes.ts). */
 export function isAllowedRichTextUri(uri: string | null | undefined): boolean {
   if (typeof uri !== "string") return false;
-  return LINK_URI.test(uri);
+  return isHttpUrl(uri) || /^mailto:[^\s@]+@[^\s@]+$/i.test(uri);
 }
 
 /** `rel` and `target` of every rendered link (C4); the stored mark keeps only the `href`. */

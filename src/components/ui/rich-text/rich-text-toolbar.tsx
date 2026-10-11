@@ -23,6 +23,7 @@ import {
   UnlinkIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Toolbar } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
@@ -53,15 +54,17 @@ function ToggleButton(props: {
   const Glyph = props.icon;
   return (
     <Tip label={props.label}>
-      <Toggle
-        size="sm"
-        aria-label={props.label}
-        pressed={props.pressed}
-        disabled={props.disabled}
-        onPressedChange={props.onPressedChange}
-      >
-        <Glyph />
-      </Toggle>
+      <Toolbar.Button asChild>
+        <Toggle
+          size="sm"
+          aria-label={props.label}
+          pressed={props.pressed}
+          disabled={props.disabled}
+          onPressedChange={props.onPressedChange}
+        >
+          <Glyph />
+        </Toggle>
+      </Toolbar.Button>
     </Tip>
   );
 }
@@ -75,16 +78,18 @@ function ActionButton(props: {
   const Glyph = props.icon;
   return (
     <Tip label={props.label}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label={props.label}
-        disabled={props.disabled}
-        onClick={props.onClick}
-      >
-        <Glyph />
-      </Button>
+      <Toolbar.Button asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={props.label}
+          disabled={props.disabled}
+          onClick={props.onClick}
+        >
+          <Glyph />
+        </Button>
+      </Toolbar.Button>
     </Tip>
   );
 }
@@ -119,9 +124,11 @@ function LinkControl({ editor, disabled }: { editor: Editor; disabled: boolean }
     >
       <Tip label={t("link")}>
         <PopoverTrigger asChild>
-          <Toggle size="sm" aria-label={t("link")} pressed={active} disabled={disabled}>
-            <LinkIcon />
-          </Toggle>
+          <Toolbar.Button asChild>
+            <Toggle size="sm" aria-label={t("link")} pressed={active} disabled={disabled}>
+              <LinkIcon />
+            </Toggle>
+          </Toolbar.Button>
         </PopoverTrigger>
       </Tip>
       <PopoverContent className="flex w-80 flex-col gap-2">
@@ -158,7 +165,7 @@ function LinkControl({ editor, disabled }: { editor: Editor; disabled: boolean }
   );
 }
 
-/** Formatting toolbar of `RichTextEditor`: registry toggle / button-group / separator / tooltip, i18n labels. */
+/** Formatting toolbar of `RichTextEditor`: registry toggle / button-group / separator / tooltip inside the Radix Toolbar (roving focus: one tab stop, arrows move), i18n labels. */
 export function RichTextToolbar({ editor, disabled = false }: { editor: Editor; disabled?: boolean }) {
   const t = useTranslations("forms.richText.toolbar");
   const state = useEditorState({
@@ -185,8 +192,7 @@ export function RichTextToolbar({ editor, disabled = false }: { editor: Editor; 
 
   return (
     <TooltipProvider>
-      <div
-        role="toolbar"
+      <Toolbar.Root
         aria-label={t("label")}
         className="flex flex-wrap items-center gap-1 border-b bg-muted/40 p-1"
       >
@@ -225,7 +231,7 @@ export function RichTextToolbar({ editor, disabled = false }: { editor: Editor; 
           <ActionButton label={t("undo")} icon={Undo2Icon} disabled={disabled || !state.canUndo} onClick={() => run().undo().run()} />
           <ActionButton label={t("redo")} icon={Redo2Icon} disabled={disabled || !state.canRedo} onClick={() => run().redo().run()} />
         </ButtonGroup>
-      </div>
+      </Toolbar.Root>
     </TooltipProvider>
   );
 }
