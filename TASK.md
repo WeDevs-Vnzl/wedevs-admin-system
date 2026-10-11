@@ -2517,8 +2517,27 @@ Files: `src/features/activity/components/{activity-feed,activity-item,activity-d
       (`use-table-url-state.ts:93`, shallow `useQueryStates`, no refetch or filtering) (`test.fail`).
       `tags-table.tsx` uses the same hook and was not verified.
     - Coverage gaps (not gated): rich-text toolbar 34 %, documents service 89.3 %.
-- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
-- [ ] **Summary** written by the Orchestrator.
+  - **Re-test after 2.12 (2026-10-11):** 2.12 merged 11f3817 (no Claude attribution, in scope, worktree removed);
+    gate green: 180 files, 2411 tests + 1 expected fail, lint, typecheck, i18n:check, build. Phase B (Orchestrator)
+    `next start` on :3105; phase C (Tester, haiku, read-only, no commits): `h1-b2-w2.spec.ts` 21/21 with no
+    `test.fail`/skip left, T1 and T2 pass; `h1-b1-shell.spec.ts` 16/16. Server stopped, :3105 freed; the review app on
+    :3000 restarted on the 11f3817 build.
+- [x] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+      *(Developers: 2.5 returned once (LINK/UNLINK activity, missing `actions.test.ts`) → r1; 2.8 and 2.10 used the
+      shadcn CLI because the MCP did not connect; jsdom timeouts under load in phone-input/country-combobox/date-field/
+      faceted-filter/documents tests (→ H1-FX), none in the final runs; 2.12 none (tags table unaffected: it already
+      reloads through `listTagsAction`). Planner: F1–F10, F12 fixed in 2.9/2.10; F11 → H2-B3; nits F13–F15 accepted or
+      deferred. Code Reviewer: B1–B4, m1–m7 fixed in 2.9–2.11; m8 → H2-B3, m9 → H1-B3/H2-B3, m10 → H1-B3; re-check
+      minors: `note-composer` `onInvalid`/`aria-describedby` → 3.3, `DateField`/`Uploader` aria and `mailto` helper →
+      H1-FX, unlink `{name}` and documents tab counts → H1-B4, nits → H2-B3, non-USD headline placeholder → H1-B3.
+      Tester: T1 and T2 fixed in 2.12 and re-tested green; coverage gaps (rich-text toolbar 34 %, documents service
+      89.3 %, not gated) → H1-FX.)*
+- [x] **Summary** written by the Orchestrator. *(Wave 2 delivered the mock services and UI building blocks of the
+      commercial core: clients/contacts and projects services, the rich-text kit and notes, the activity timeline and
+      `/activity`, tags and technologies (services, pickers, `/settings/tags`, `/settings/technologies`), the alerts
+      service and live bell, and the documents tab; plus the coherence/code-review fix round 2.9–2.11 and the Tester
+      fix 2.12. Twelve packages (2.1–2.12) and the Tester E2E spec merged into `batch/h1-b2-commercial-core` at
+      11f3817; gate green (2411 tests), E2E 21/21 + shell 16/16.)*
 
 🛑 **MANDATORY STOP** — wave 3 does not start without the user's explicit approval.
 
