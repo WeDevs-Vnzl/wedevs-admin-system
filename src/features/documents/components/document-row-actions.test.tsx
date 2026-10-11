@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import enDocuments from "@/i18n/messages/en/documents.json";
+import enPatterns from "@/i18n/messages/en/patterns.json";
 import esDocuments from "@/i18n/messages/es/documents.json";
+import esPatterns from "@/i18n/messages/es/patterns.json";
 import { DocumentRowActions } from "./document-row-actions";
 
 const actions = vi.hoisted(() => ({ unlinkDocumentAction: vi.fn() }));
@@ -15,7 +17,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 const target = { entityType: "CLIENT" as const, entityId: "cli_0001" };
 
 function renderRow(locale: "es" | "en" = "en") {
-  const messages = { documents: locale === "es" ? esDocuments : enDocuments };
+  const messages = {
+    documents: locale === "es" ? esDocuments : enDocuments,
+    patterns: locale === "es" ? esPatterns : enPatterns,
+  };
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
       <DocumentRowActions documentId="doc_0001" documentTitle="Contrato marco" target={target} />

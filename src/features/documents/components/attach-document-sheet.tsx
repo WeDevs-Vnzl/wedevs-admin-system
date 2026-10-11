@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { AsyncCombobox, type AsyncComboboxOption } from "@/components/ui/async-combobox";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/ui/date-field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Uploader } from "@/components/ui/uploader";
 import { uploadAdapter } from "@/features/files/upload-adapter";
 import type { DocumentCategoryDetailDTO } from "@/lib/validators/document-types";
+import type { EntityRef } from "@/lib/validators/common";
 import {
   createDocumentInputSchemaFor,
   type CreateDocumentFormValues,
@@ -46,15 +47,36 @@ import {
   searchDocumentsAction,
   uploadDocumentVersionAction,
 } from "../actions";
-import type { DocumentsTabEntity } from "../queries";
 
 type Mode = "upload" | "link";
 
-const SEARCH_PAGE_SIZE = 25;
+/**
+ * The link this record's documents get. Only CLIENT and PROJECT records take documents in H1-B2; `null` for any
+ * other entity. (A client module cannot export a helper the server tab calls, so the tab keeps its own copy.)
+ */
+function linkTargetOf(entity: EntityRef): DocumentLinkTarget | null {
+  if (entity.type !== "CLIENT" && entity.type !== "PROJECT") return null;
+  return { entityType: entity.type, entityId: entity.id };
+}
+
+/** Form fields the server may answer `fieldErrors` for (the keys of `CreateDocumentFormValues`). */
+const FORM_FIELDS = [
+  "title",
+  "typeId",
+  "summary",
+  "effectiveDate",
+  "signedAt",
+  "expiresAt",
+] as const;
+type FormField = (typeof FORM_FIELDS)[number];
+
+function isFormField(name: string): name is FormField {
+  return (FORM_FIELDS as readonly string[]).includes(name);
+}
 
 interface AttachDocumentSheetProps {
   /** The client or project the document is attached to. */
-  entity: DocumentsTabEntity;
+  entity: EntityRef;
   /** Categories with their types, from `listDocumentCategories`; the type picker groups them. */
   categories: readonly DocumentCategoryDetailDTO[];
 }
@@ -72,7 +94,8 @@ export function AttachDocumentSheet({ entity, categories }: AttachDocumentSheetP
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("upload");
 
-  const target: DocumentLinkTarget = { entityType: entity.type, entityId: entity.id };
+  const target = linkTargetOf(entity);
+  if (!target) return null;
   const types = categories.flatMap((category) => category.types.filter((type) => type.active));
 
   function close() {
@@ -165,8 +188,18 @@ function UploadDocumentForm({
     startTransition(async () => {
       const created = await createDocumentAction({ ...values, links: [target] });
       if (!created.ok) {
-        const message = created.error.message;
-        toast.error(t.has(message) ? t(message) : t("documents.sheet.createFailed"));
+        // The server's field errors land on their fields; anything else is a failure of the whole request.
+        let onFields = false;
+        for (const [name, messages] of Object.entries(created.error.fieldErrors ?? {})) {
+          if (isFormField(name) && messages[0]) {
+            form.setError(name, { message: messages[0] });
+            onFields = true;
+          }
+        }
+        if (!onFields) {
+          const message = created.error.message;
+          toast.error(t.has(message) ? t(message) : t("documents.sheet.createFailed"));
+        }
         return;
       }
       const version = await uploadDocumentVersionAction({
@@ -180,6 +213,8 @@ function UploadDocumentForm({
     });
   });
 
+  const errors = form.formState.errors;
+
   return (
     <form
       noValidate
@@ -190,8 +225,8 @@ function UploadDocumentForm({
         void submitValid(event);
       }}
     >
-      <div className="grid gap-2">
-        <Label htmlFor="attach-file">{t("documents.sheet.fields.file")}</Label>
+      <Field data-invalid={fileMissing || undefined}>
+        <FieldLabel htmlFor="attach-file">{t("documents.sheet.fields.file")}</FieldLabel>
         <Uploader
           id="attach-file"
           adapter={uploadAdapter}
@@ -205,29 +240,32 @@ function UploadDocumentForm({
           aria-label={t("documents.sheet.fields.file")}
         />
         {fileMissing ? (
-          <p role="alert" className="text-sm text-destructive">
-            {t("documents.sheet.fileRequired")}
-          </p>
+          <FieldError
+            id="attach-file-error"
+            errors={[{ message: t("documents.sheet.fileRequired") }]}
+          />
         ) : null}
-      </div>
+      </Field>
 
-      <div className="grid gap-2">
-        <Label htmlFor="attach-title">{t("documents.sheet.fields.title")}</Label>
+      <Field data-invalid={errors.title ? true : undefined}>
+        <FieldLabel htmlFor="attach-title">{t("documents.sheet.fields.title")}</FieldLabel>
         <Input
           id="attach-title"
-          aria-invalid={form.formState.errors.title ? true : undefined}
+          aria-invalid={errors.title ? true : undefined}
+          aria-describedby={errors.title ? "attach-title-error" : undefined}
           placeholder={t("documents.sheet.placeholders.title")}
           {...form.register("title")}
         />
-        <FieldError message={form.formState.errors.title?.message} />
-      </div>
+        <FormFieldError id="attach-title-error" message={errors.title?.message} />
+      </Field>
 
-      <div className="grid gap-2">
-        <Label htmlFor="attach-type">{t("documents.sheet.fields.type")}</Label>
+      <Field data-invalid={errors.typeId ? true : undefined}>
+        <FieldLabel htmlFor="attach-type">{t("documents.sheet.fields.type")}</FieldLabel>
         <Select value={typeId || undefined} onValueChange={pickType}>
           <SelectTrigger
             id="attach-type"
-            aria-invalid={form.formState.errors.typeId ? true : undefined}
+            aria-invalid={errors.typeId ? true : undefined}
+            aria-describedby={errors.typeId ? "attach-type-error" : undefined}
           >
             <SelectValue placeholder={t("documents.sheet.placeholders.type")} />
           </SelectTrigger>
@@ -248,14 +286,19 @@ function UploadDocumentForm({
             })}
           </SelectContent>
         </Select>
-        <FieldError message={form.formState.errors.typeId?.message} />
-      </div>
+        <FormFieldError id="attach-type-error" message={errors.typeId?.message} />
+      </Field>
 
-      <div className="grid gap-2">
-        <Label htmlFor="attach-summary">{t("documents.sheet.fields.summary")}</Label>
-        <Textarea id="attach-summary" {...form.register("summary")} />
-        <FieldError message={form.formState.errors.summary?.message} />
-      </div>
+      <Field data-invalid={errors.summary ? true : undefined}>
+        <FieldLabel htmlFor="attach-summary">{t("documents.sheet.fields.summary")}</FieldLabel>
+        <Textarea
+          id="attach-summary"
+          aria-invalid={errors.summary ? true : undefined}
+          aria-describedby={errors.summary ? "attach-summary-error" : undefined}
+          {...form.register("summary")}
+        />
+        <FormFieldError id="attach-summary-error" message={errors.summary?.message} />
+      </Field>
 
       <DateFieldRow
         form={form}
@@ -302,9 +345,10 @@ interface DateFieldRowProps {
 
 /** A date of the form: empty means "not set", so the value stays `undefined` and the schema reads it as absent. */
 function DateFieldRow({ form, name, id, label, placeholder }: DateFieldRowProps) {
+  const message = form.formState.errors[name]?.message;
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
+    <Field data-invalid={message ? true : undefined}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Controller
         control={form.control}
         name={name}
@@ -314,11 +358,12 @@ function DateFieldRow({ form, name, id, label, placeholder }: DateFieldRowProps)
             value={field.value ?? ""}
             onChange={(value) => field.onChange(value || undefined)}
             placeholder={placeholder}
+            aria-invalid={message ? true : undefined}
           />
         )}
       />
-      <FieldError message={form.formState.errors[name]?.message} />
-    </div>
+      <FormFieldError id={`${id}-error`} message={message} />
+    </Field>
   );
 }
 
@@ -334,13 +379,14 @@ function LinkDocumentForm({ target, onDone }: LinkDocumentFormProps) {
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<AsyncComboboxOption | null>(null);
 
-  // The server answers the query over every document; a link that already exists changes nothing.
+  // The server answers the query over every document (at most 20, archived left out); a link that already exists
+  // changes nothing.
   async function loadOptions(query: string): Promise<AsyncComboboxOption[]> {
-    const result = await searchDocumentsAction({ q: query, pageSize: SEARCH_PAGE_SIZE });
+    const result = await searchDocumentsAction({ q: query });
     if (!result.ok) return [];
-    return result.data.items.map((document) => ({
+    return result.data.map((document) => ({
       value: document.id,
-      label: document.title,
+      label: document.label,
       description: document.code,
     }));
   }
@@ -366,8 +412,8 @@ function LinkDocumentForm({ target, onDone }: LinkDocumentFormProps) {
         submit();
       }}
     >
-      <div className="grid gap-2">
-        <Label htmlFor="attach-existing">{t("fields.document")}</Label>
+      <Field>
+        <FieldLabel htmlFor="attach-existing">{t("fields.document")}</FieldLabel>
         <AsyncCombobox
           id="attach-existing"
           value={selected}
@@ -376,7 +422,7 @@ function LinkDocumentForm({ target, onDone }: LinkDocumentFormProps) {
           placeholder={t("placeholders.document")}
           disabled={pending}
         />
-      </div>
+      </Field>
       <div className="flex justify-end gap-2">
         <Button type="submit" disabled={pending || !selected}>
           {t("submit.link")}
@@ -399,12 +445,9 @@ function localName(item: { name: string; nameEn: string | null }, locale: string
   return locale === "en" && item.nameEn ? item.nameEn : item.name;
 }
 
-function FieldError({ message }: { message: string | undefined }) {
+/** A field's message, translated when it is a key (zod messages are keys). Renders nothing without a message. */
+function FormFieldError({ id, message }: { id: string; message: string | undefined }) {
   const t = useTranslations();
   if (!message) return null;
-  return (
-    <p role="alert" className="text-sm text-destructive">
-      {t.has(message) ? t(message) : message}
-    </p>
-  );
+  return <FieldError id={id} errors={[{ message: t.has(message) ? t(message) : message }]} />;
 }

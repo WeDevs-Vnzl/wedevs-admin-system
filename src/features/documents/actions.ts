@@ -7,8 +7,12 @@ import {
   unlinkDocumentInputSchema,
   uploadVersionInputSchema,
 } from "@/lib/validators/documents";
+import { listQuerySchema, type EntityRef } from "@/lib/validators/common";
 import * as documents from "@/mocks/services/documents";
 import { defineAction } from "@/server/actions/define-action";
+
+/** At most this many options in the attach sheet's document combobox. */
+const SEARCH_LIMIT = 20;
 
 // Minimal documents actions of H1-B2 (H1-B4 extends them). Writes go through `can()` grants of the PRD §4.3
 // matrix: `document` is CRU for Owner, Admin and Member, READ for Viewer. The type rules of the document are
@@ -47,11 +51,19 @@ export const unlinkDocumentAction = defineAction({
 });
 
 /**
- * Read behind the link picker's `AsyncCombobox`: documents matching `q`, the list service with the query. Every
- * role reads documents (`document` READ), so the search needs no write grant.
+ * Read behind the link picker's `AsyncCombobox`: at most 20 `EntityRef` options (archived documents excluded) for the
+ * trimmed `q`. Every role reads documents (`document` READ), so the search needs no write grant.
  */
 export const searchDocumentsAction = defineAction({
   permission: { action: "read", resource: "document" },
-  input: documentFilterSchema,
-  handler: (ctx, data) => documents.listDocuments(ctx, data),
+  input: listQuerySchema.pick({ q: true }),
+  handler: async (ctx, data): Promise<EntityRef[]> => {
+    const page = await documents.listDocuments(ctx, documentFilterSchema.parse({ q: data.q }));
+    return page.items.slice(0, SEARCH_LIMIT).map((row) => ({
+      id: row.id,
+      code: row.code,
+      label: row.title,
+      type: "DOCUMENT" as const,
+    }));
+  },
 });
