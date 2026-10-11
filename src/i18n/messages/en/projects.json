@@ -1,1 +1,40 @@
-{}
+{
+  "errors": {
+    "clientNotFound": "One of the clients does not exist or is archived",
+    "technologyUnknown": "One of the technologies is not in the catalog",
+    "technologyInactive": "One of the technologies is inactive and cannot be added to the stack",
+    "tagUnknown": "One of the tags does not exist",
+    "invalidTransition": "The project cannot move to that status from its current one",
+    "archiveNeedsConfirm": "The project has active billing or invoices. Confirm to archive it."
+  },
+  "hints": {
+    "NO_BILLING_PLAN": "The project is in progress without a billing plan. Define one so you can invoice.",
+    "SUGGEST_RECURRING_CHARGE": "The project moved to maintenance without an active recurring charge. Consider creating one."
+  },
+  "columns": {
+    "code": "Code",
+    "name": "Name",
+    "clients": "Clients",
+    "status": "Status",
+    "startDate": "Start",
+    "targetEndDate": "Target delivery",
+    "stack": "Stack",
+    "contractedValueUsd": "Contracted value (USD)",
+    "invoicedUsd": "Invoiced (USD)",
+    "collectedUsd": "Collected (USD)",
+    "toInvoiceUsd": "To invoice (USD)",
+    "tags": "Tags"
+  },
+  "toast": {
+    "created": "Project {code} created",
+    "updated": "Project updated",
+    "statusChanged": "Project status updated",
+    "clientsUpdated": "Project clients updated",
+    "technologiesUpdated": "Project stack updated",
+    "linksSaved": "Links saved",
+    "linksReordered": "Link order saved",
+    "linkRemoved": "Link removed",
+    "archived": "Project archived",
+    "archivedMany": "{count, plural, one {# project archived} other {# projects archived}}"
+  }
+}
