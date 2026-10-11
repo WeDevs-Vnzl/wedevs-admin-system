@@ -12,6 +12,7 @@ import type { EntityType, EnumName } from "@/lib/validators/enums";
 export function enumNameFor(entityType: EntityType, field: string): EnumName | null {
   if (field === "kind" && entityType === "CLIENT") return "ClientKind";
   if (field === "format" && entityType === "DOCUMENT") return "DocumentFormat";
+  if (field === "category" && entityType === "SETTING") return "TechCategory";
   if (field !== "status") return null;
   const byEntity: Partial<Record<EntityType, EnumName>> = {
     CLIENT: "ClientStatus",

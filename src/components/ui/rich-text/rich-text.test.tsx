@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import enForms from "@/i18n/messages/en/forms.json";
@@ -14,6 +15,7 @@ import {
   normalizeRichTextJson,
 } from "./extensions";
 import { Editor } from "@tiptap/react";
+import { RICH_TEXT_MAX_BYTES } from "@/lib/validators/notes";
 
 beforeAll(() => {
   // jsdom lacks the layout APIs ProseMirror calls when it scrolls the selection into view.
@@ -21,6 +23,12 @@ beforeAll(() => {
   const createRange = document.createRange.bind(document);
   document.createRange = () => Object.assign(createRange(), empty);
   Element.prototype.getClientRects = () => [] as unknown as DOMRectList;
+  // Radix tooltips (the toolbar buttons) observe their size when they open on focus.
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
 
   // `EditorView.pasteHTML` builds a ClipboardEvent over a DataTransfer; jsdom has neither.
   class FakeDataTransfer {
@@ -78,7 +86,7 @@ describe("allowlist (C4)", () => {
     expect(isAllowedRichTextUri("https://a.example/x")).toBe(true);
     expect(isAllowedRichTextUri("http://a.example")).toBe(true);
     expect(isAllowedRichTextUri("mailto:ana@example.com")).toBe(true);
-    for (const bad of ["javascript:alert(1)", "data:text/html,x", "ftp://a.example", "/rel", " java\tscript:x", "", undefined]) {
+    for (const bad of ["mailto:x", "mailto:", "javascript:alert(1)", "data:text/html,x", "ftp://a.example", "/rel", " java\tscript:x", "", undefined]) {
       expect(isAllowedRichTextUri(bad)).toBe(false);
     }
   });
@@ -252,5 +260,74 @@ describe("RichTextView", () => {
 
   it("exports an empty paragraph as the empty document", () => {
     expect(richTextDocSchema.safeParse(EMPTY_RICH_TEXT).success).toBe(true);
+  });
+});
+
+describe("RichTextEditor value state and accessibility", () => {
+  function liveEditor() {
+    return (document.querySelector(".ProseMirror") as unknown as { editor: Editor }).editor;
+  }
+
+  it("reports an invalid state for a document over RICH_TEXT_MAX_BYTES instead of keeping the last value", async () => {
+    const onChange = vi.fn();
+    const onInvalid = vi.fn();
+    wrap(<RichTextEditor onChange={onChange} onInvalid={onInvalid} />);
+    await readyEditor();
+    onChange.mockClear();
+    act(() => {
+      liveEditor().commands.insertContent("a".repeat(RICH_TEXT_MAX_BYTES + 10));
+    });
+    expect(onInvalid).toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("reports an invalid state for a document the validator refuses (bad mailto)", async () => {
+    const onInvalid = vi.fn();
+    wrap(<RichTextEditor onInvalid={onInvalid} />);
+    await readyEditor();
+    act(() => {
+      liveEditor().commands.insertContent({
+        type: "text",
+        text: "x",
+        marks: [{ type: "link", attrs: { href: "mailto:x" } }],
+      });
+    });
+    expect(onInvalid).toHaveBeenCalled();
+  });
+
+  it("puts aria-invalid and aria-describedby on the textbox, and updates them", async () => {
+    const view = wrap(<RichTextEditor aria-label="Nota" aria-describedby="err-1" aria-invalid />);
+    await readyEditor();
+    const textbox = screen.getByRole("textbox", { name: "Nota" });
+    expect(textbox).toHaveAttribute("aria-invalid", "true");
+    expect(textbox).toHaveAttribute("aria-describedby", "err-1");
+    expect(document.querySelector('[data-slot="rich-text-editor"]')).not.toHaveAttribute("aria-invalid");
+    view.rerender(
+      <NextIntlClientProvider locale="es" messages={{ forms: esForms }}>
+        <RichTextEditor aria-label="Nota" />
+      </NextIntlClientProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "Nota" })).not.toHaveAttribute("aria-invalid"),
+    );
+    expect(screen.getByRole("textbox", { name: "Nota" })).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("the toolbar has one tab stop and arrow keys move focus between its buttons", async () => {
+    const user = userEvent.setup();
+    wrap(<RichTextEditor />);
+    await readyEditor();
+    const toolbar = await screen.findByRole("toolbar");
+    const buttons = Array.from(toolbar.querySelectorAll<HTMLElement>("button"));
+    // Roving focus: at most one button is a tab stop (the group itself receives the first Tab).
+    expect(buttons.filter((button) => button.tabIndex === 0).length).toBeLessThanOrEqual(1);
+    buttons[0]!.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(buttons[1]);
+    await user.keyboard("{End}");
+    expect(toolbar.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(buttons[1]);
+    await user.keyboard("{Home}");
+    expect(document.activeElement).toBe(buttons[0]);
   });
 });

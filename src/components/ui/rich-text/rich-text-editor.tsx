@@ -27,6 +27,11 @@ export interface RichTextEditorProps {
   value?: RichTextDoc | null;
   /** Called with the normalized document of every change, already checked with `richTextDocSchema`. */
   onChange?: (value: RichTextDoc) => void;
+  /**
+   * Called when the current content does not parse (a link the validator refuses, a document over
+   * `RICH_TEXT_MAX_BYTES`): the last `onChange` value is stale, so the form must treat the field as invalid.
+   */
+  onInvalid?: () => void;
   onBlur?: () => void;
   /** Where pasted or dropped images are uploaded (`features/files/upload-adapter.ts`). */
   uploadAdapter?: UploadAdapter;
@@ -35,6 +40,8 @@ export interface RichTextEditorProps {
   id?: string;
   "aria-label"?: string;
   "aria-invalid"?: boolean;
+  /** Ids of the field description / error; set on the `role="textbox"` element. */
+  "aria-describedby"?: string;
   className?: string;
 }
 
@@ -50,6 +57,7 @@ function imageFiles(list: FileList | null | undefined): File[] {
 export function RichTextEditor({
   value,
   onChange,
+  onInvalid,
   onBlur,
   uploadAdapter,
   placeholder,
@@ -61,11 +69,13 @@ export function RichTextEditor({
   const t = useTranslations("forms.richText");
   const adapterRef = useRef(uploadAdapter);
   const changeRef = useRef(onChange);
+  const invalidRef = useRef(onInvalid);
   const blurRef = useRef(onBlur);
   const editorRef = useRef<Editor | null>(null);
   useEffect(() => {
     adapterRef.current = uploadAdapter;
     changeRef.current = onChange;
+    invalidRef.current = onInvalid;
     blurRef.current = onBlur;
   });
 
@@ -112,6 +122,13 @@ export function RichTextEditor({
     }
   }
 
+  // The textbox element carries the field semantics; `attributes` is re-read on every view update.
+  const ariaRef = useRef({
+    invalid: aria["aria-invalid"],
+    describedBy: aria["aria-describedby"],
+    label: aria["aria-label"] ?? t("editorLabel"),
+  });
+
   const editor = useEditor(
     {
       extensions,
@@ -119,13 +136,17 @@ export function RichTextEditor({
       editable: !disabled,
       immediatelyRender: false,
       editorProps: {
-        attributes: {
+        attributes: () => ({
           role: "textbox",
           "aria-multiline": "true",
-          "aria-label": aria["aria-label"] ?? t("editorLabel"),
+          "aria-label": ariaRef.current.label,
+          ...(ariaRef.current.invalid ? { "aria-invalid": "true" } : {}),
+          ...(ariaRef.current.describedBy
+            ? { "aria-describedby": ariaRef.current.describedBy }
+            : {}),
           ...(id ? { id } : {}),
           class: "min-h-40 px-3 py-2 outline-none",
-        },
+        }),
         handlePaste: (_view, event) => {
           const files = imageFiles(event.clipboardData?.files);
           if (files.length === 0) return false;
@@ -144,6 +165,7 @@ export function RichTextEditor({
       onUpdate: ({ editor: current }) => {
         const doc = parseRichText(current.getJSON());
         if (doc) changeRef.current?.(doc);
+        else invalidRef.current?.();
       },
       onBlur: () => blurRef.current?.(),
     },
@@ -154,6 +176,15 @@ export function RichTextEditor({
     editorRef.current = editor;
   }, [editor]);
 
+  const invalid = aria["aria-invalid"];
+  const describedBy = aria["aria-describedby"];
+  const label = aria["aria-label"] ?? t("editorLabel");
+  useEffect(() => {
+    // Re-evaluates the `attributes` function when the field state changes.
+    ariaRef.current = { invalid, describedBy, label };
+    if (editor && !editor.isDestroyed) editor.view.setProps({});
+  }, [editor, invalid, describedBy, label]);
+
   useEffect(() => {
     editor?.setEditable(!disabled);
   }, [editor, disabled]);
@@ -161,11 +192,11 @@ export function RichTextEditor({
   return (
     <div
       data-slot="rich-text-editor"
-      aria-invalid={aria["aria-invalid"] || undefined}
+      data-invalid={invalid || undefined}
       className={cn(
         "overflow-hidden rounded-md border border-input bg-background shadow-xs",
         "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+        "data-[invalid=true]:border-destructive data-[invalid=true]:ring-destructive/20",
         disabled && "opacity-60",
         className,
       )}

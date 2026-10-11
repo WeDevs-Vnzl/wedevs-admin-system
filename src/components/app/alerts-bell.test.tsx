@@ -57,7 +57,13 @@ describe("AlertsBell", () => {
       "/documents/doc_1",
     );
     expect(listAlertsAction).toHaveBeenCalledWith({ limit: 20 });
-    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeEnabled();
+    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeDisabled();
+    // the panel is labelled by its visible title
+    const panel = screen.getByRole("dialog");
+    expect(panel).toHaveAccessibleName(enShell.alerts.title);
+    expect(
+      screen.getByRole("button", { name: "Dismiss: Expired document · Propuesta · Propuesta" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps the empty state when there are no alerts and disables 'mark all read'", async () => {
@@ -90,6 +96,8 @@ describe("AlertsBell", () => {
     expect(ALERTS_BADGE_CLASSES).toContain("dark:text-background");
     expect(ALERTS_BADGE_CLASSES).not.toContain("text-[10px]");
     renderBell(3);
-    expect(document.querySelector('[data-slot="alerts-badge"]')?.className).toBe(ALERTS_BADGE_CLASSES);
+    expect(document.querySelector('[data-slot="alerts-badge"]')?.className).toBe(
+      ALERTS_BADGE_CLASSES,
+    );
   });
 });

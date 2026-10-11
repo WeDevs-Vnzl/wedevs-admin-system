@@ -2437,12 +2437,12 @@ Depends on: 2.1–2.8 (merged). Same fix wave as 2.9 and 2.10 (no shared file). 
 
 Files: `src/features/activity/components/{activity-diff,activity-detail-sheet}.tsx` (+ tests); `src/i18n/messages/{es,en}/activity.json` (add-only `fields.*`); `src/components/ui/rich-text/{rich-text-editor.tsx,rich-text-toolbar.tsx,extensions.ts}` (+ test); `src/components/app/alerts-bell.tsx` (+ test); `src/features/alerts/components/{alert-list,alert-item}.tsx` (+ test); `src/i18n/messages/{es,en}/alerts.json` (add-only). No other file.
 
-- [ ] **CR-B4.** `activity.fields.*` covers every field the W2 services diff (ES and EN: `taxId`, `country`, `fullName`, `position`, `isPrimary`, `tagIds`, `technologyIds`, `pinned`, `nameEn`, `slug`, `category`, `iconSlug`, `color`, `active`, `technology`, and any other the services log); the technology `category` value is labelled from `enums.TechCategory`; a test fails on an unlabelled field.
-- [ ] **CR-m1.** `isAllowedRichTextUri` uses the validator's link rule; an unparsable document (bad `mailto:`, over `RICH_TEXT_MAX_BYTES`) reports an invalid state (e.g. `onChange(null)` or `onInvalid`) instead of silently keeping the last valid value. Tests (`mailto:x`, oversize document).
-- [ ] **CR-m2/m3.** `aria-invalid` and the `Field` `aria-describedby` go on the `role="textbox"` element; the toolbar follows the toolbar keyboard pattern (roving focus, e.g. the Radix Toolbar primitive from `radix-ui`) or drops `role="toolbar"`. Keyboard component test.
-- [ ] **CR-m4.** Bell: "Marcar leídas" stays disabled until H1-B5; the popover is labelled by its title (`aria-labelledby`); focus moves to the next alert or the list after dismiss or snooze; dismiss/snooze labels include the alert subject.
-- [ ] **CR-nit.** `ActivityDetailSheet` keeps the last entry while it closes (no cut animation).
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] **CR-B4.** `activity.fields.*` covers every field the W2 services diff (ES and EN: `taxId`, `country`, `fullName`, `position`, `isPrimary`, `tagIds`, `technologyIds`, `pinned`, `nameEn`, `slug`, `category`, `iconSlug`, `color`, `active`, `technology`, and any other the services log); the technology `category` value is labelled from `enums.TechCategory`; a test fails on an unlabelled field.
+- [x] **CR-m1.** `isAllowedRichTextUri` uses the validator's link rule; an unparsable document (bad `mailto:`, over `RICH_TEXT_MAX_BYTES`) reports an invalid state (e.g. `onChange(null)` or `onInvalid`) instead of silently keeping the last valid value. Tests (`mailto:x`, oversize document).
+- [x] **CR-m2/m3.** `aria-invalid` and the `Field` `aria-describedby` go on the `role="textbox"` element; the toolbar follows the toolbar keyboard pattern (roving focus, e.g. the Radix Toolbar primitive from `radix-ui`) or drops `role="toolbar"`. Keyboard component test.
+- [x] **CR-m4.** Bell: "Marcar leídas" stays disabled until H1-B5; the popover is labelled by its title (`aria-labelledby`); focus moves to the next alert or the list after dismiss or snooze; dismiss/snooze labels include the alert subject.
+- [x] **CR-nit.** `ActivityDetailSheet` keeps the last entry while it closes (no cut animation).
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 2 close
 
