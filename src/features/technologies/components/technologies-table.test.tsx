@@ -5,12 +5,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import enCatalogs from "@/i18n/messages/en/catalogs.json";
 import enEnums from "@/i18n/messages/en/enums.json";
 import enCommon from "@/i18n/messages/en/common.json";
+import enPatterns from "@/i18n/messages/en/patterns.json";
 import enTable from "@/i18n/messages/en/table.json";
 import type { TechnologyListRowDTO } from "@/lib/validators/technologies";
-import {
-  deleteTechnologyAction,
-  setTechnologyActiveAction,
-} from "@/features/technologies/actions";
+import { deleteTechnologyAction, setTechnologyActiveAction } from "@/features/technologies/actions";
 import { TechnologiesTable } from "./technologies-table";
 
 const mocks = vi.hoisted(() => ({ refresh: vi.fn(), toast: { success: vi.fn(), error: vi.fn() } }));
@@ -38,16 +36,52 @@ vi.mock("@/components/ui/data-table", async (importOriginal) => {
 });
 
 const rows: TechnologyListRowDTO[] = [
-  { id: "tec_next_js", name: "Next.js", nameEn: null, slug: "next-js", category: "FRONTEND", iconSlug: "nextdotjs", color: null, active: true, usageCount: 2 },
-  { id: "tec_rust", name: "Rust", nameEn: "Rust (lang)", slug: "rust", category: "LENGUAJE", iconSlug: null, color: "#dea584", active: false, usageCount: 0 },
-  { id: "tec_legacy", name: "Legacy", nameEn: null, slug: "legacy", category: "OTRO", iconSlug: null, color: null, active: true, usageCount: 3 },
+  {
+    id: "tec_next_js",
+    name: "Next.js",
+    nameEn: null,
+    slug: "next-js",
+    category: "FRONTEND",
+    iconSlug: "nextdotjs",
+    color: null,
+    active: true,
+    usageCount: 2,
+  },
+  {
+    id: "tec_rust",
+    name: "Rust",
+    nameEn: "Rust (lang)",
+    slug: "rust",
+    category: "LENGUAJE",
+    iconSlug: null,
+    color: "#dea584",
+    active: false,
+    usageCount: 0,
+  },
+  {
+    id: "tec_legacy",
+    name: "Legacy",
+    nameEn: null,
+    slug: "legacy",
+    category: "OTRO",
+    iconSlug: null,
+    color: null,
+    active: true,
+    usageCount: 3,
+  },
 ];
 
 function renderTable() {
   return render(
     <NextIntlClientProvider
       locale="en"
-      messages={{ catalogs: enCatalogs, enums: enEnums, common: enCommon, table: enTable }}
+      messages={{
+        catalogs: enCatalogs,
+        enums: enEnums,
+        common: enCommon,
+        table: enTable,
+        patterns: enPatterns,
+      }}
     >
       <TechnologiesTable rows={rows} total={rows.length} icons={{}} />
     </NextIntlClientProvider>,
@@ -64,7 +98,10 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.mocked(setTechnologyActiveAction).mockResolvedValue({ ok: true, data: {} } as never);
-  vi.mocked(deleteTechnologyAction).mockResolvedValue({ ok: true, data: { id: "tec_rust" } } as never);
+  vi.mocked(deleteTechnologyAction).mockResolvedValue({
+    ok: true,
+    data: { id: "tec_rust" },
+  } as never);
 });
 
 afterEach(() => {

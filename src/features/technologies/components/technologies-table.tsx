@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCsvExport } from "@/features/export/use-csv-export";
+import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -27,7 +28,11 @@ import { Switch } from "@/components/ui/switch";
 import { isLocale, type Locale } from "@/i18n/config";
 import { TECH_CATEGORY_VALUES } from "@/lib/validators/enums";
 import type { TechnologyListRowDTO } from "@/lib/validators/technologies";
-import { deleteTechnologyAction, exportTechnologiesCsvAction, setTechnologyActiveAction } from "../actions";
+import {
+  deleteTechnologyAction,
+  exportTechnologiesCsvAction,
+  setTechnologyActiveAction,
+} from "../actions";
 import { technologyLabel } from "../label";
 import type { ResolvedIcon } from "./tech-stack-icons";
 import { TechnologyFormDialog } from "./technology-form-dialog";
@@ -44,7 +49,15 @@ type FormTarget = { mode: "create" } | { mode: "edit"; technology: TechnologyLis
 const helper = createDataTableColumnHelper<TechnologyListRowDTO>();
 
 /** The brand glyph, or a colour dot. Plain props only: the icons arrive resolved from the server. */
-function IconGlyph({ icon, color, name }: { icon: ResolvedIcon | null; color: string | null; name: string }) {
+function IconGlyph({
+  icon,
+  color,
+  name,
+}: {
+  icon: ResolvedIcon | null;
+  color: string | null;
+  name: string;
+}) {
   const fill = color ?? (icon ? `#${icon.hex}` : undefined);
   if (icon) {
     return (
@@ -141,7 +154,7 @@ export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps
         cell: ({ row }) => (
           <div className="min-w-0">
             <div className="font-medium">{technologyLabel(row.original, locale)}</div>
-            <div className="text-muted-foreground font-mono text-xs">{row.original.slug}</div>
+            <div className="font-mono text-xs text-muted-foreground">{row.original.slug}</div>
           </div>
         ),
         meta: { label: t("table.columns.name"), sortable: true, pinned: true },
@@ -212,7 +225,10 @@ export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps
         id: "category",
         kind: "options" as const,
         label: t("table.facets.category"),
-        options: TECH_CATEGORY_VALUES.map((value) => ({ value, label: tEnums(`TechCategory.${value}`) })),
+        options: TECH_CATEGORY_VALUES.map((value) => ({
+          value,
+          label: tEnums(`TechCategory.${value}`),
+        })),
       },
       {
         id: "active",
@@ -269,44 +285,40 @@ export function TechnologiesTable({ rows, total, icons }: TechnologiesTableProps
         }}
       />
 
-      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <ConfirmDialog
+        variant="delete"
+        open={deleteTarget !== null && deleteMode === "delete"}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        description={deleteName ? t("delete.description", { name: deleteName }) : undefined}
+        pending={pending}
+        onConfirm={confirmDelete}
+      />
+
+      {/* The in-use lock is a notice, not a confirmation: it offers deactivation instead. */}
+      <AlertDialog
+        open={deleteTarget !== null && deleteMode === "inUse"}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {deleteMode === "inUse" ? t("delete.inUseTitle") : t("delete.title")}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t("delete.inUseTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteMode === "inUse"
-                ? t("delete.inUseDescription", { name: deleteName })
-                : t("delete.description", { name: deleteName })}
+              {t("delete.inUseDescription", { name: deleteName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>{t("delete.cancel")}</AlertDialogCancel>
-            {deleteMode === "inUse" ? (
-              <AlertDialogAction
-                disabled={pending}
-                onClick={(event) => {
-                  event.preventDefault();
-                  if (!deleteTarget) return;
-                  setActive(deleteTarget, false);
-                  setDeleteTarget(null);
-                }}
-              >
-                {t("delete.deactivate")}
-              </AlertDialogAction>
-            ) : (
-              <AlertDialogAction
-                variant="destructive"
-                disabled={pending}
-                onClick={(event) => {
-                  event.preventDefault();
-                  confirmDelete();
-                }}
-              >
-                {t("delete.action")}
-              </AlertDialogAction>
-            )}
+            <AlertDialogAction
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!deleteTarget) return;
+                setActive(deleteTarget, false);
+                setDeleteTarget(null);
+              }}
+            >
+              {t("delete.deactivate")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

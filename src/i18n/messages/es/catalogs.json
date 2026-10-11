@@ -66,9 +66,7 @@
       "create": "Crear"
     },
     "delete": {
-      "title": "¿Eliminar tecnología?",
       "description": "«{name}» se eliminará del catálogo.",
-      "action": "Eliminar",
       "cancel": "Cancelar",
       "inUseTitle": "Tecnología en uso",
       "inUseDescription": "Hay proyectos que usan «{name}», así que no se puede eliminar. Desactívala para que deje de ofrecerse; los proyectos existentes conservan su stack.",
@@ -84,7 +82,8 @@
     "picker": {
       "placeholder": "Seleccionar tecnologías",
       "search": "Buscar tecnología",
-      "empty": "Sin resultados"
+      "empty": "Sin resultados",
+      "inactive": "Inactiva"
     },
     "errors": {
       "nameTaken": "Ya existe una tecnología con ese nombre",
