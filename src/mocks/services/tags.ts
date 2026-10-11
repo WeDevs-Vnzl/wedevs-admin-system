@@ -2,10 +2,23 @@
 // Tag rows hold ids only; the records carry `tagIds` (PD-3) and the usage count is derived here from the
 // non-archived records. Replaced by `src/server/services/tags.service.ts` in Hito 2 (C9).
 import type { Paginated } from "@/lib/validators/common";
-import type { TagChipDTO, TagFilter, TagIdInput, TagListRowDTO } from "@/lib/validators/tags";
+import { can, type PermissionResource } from "@/server/auth/permissions";
+import type {
+  AssignTagsInput,
+  CreateTagInput,
+  TagChipDTO,
+  TagDetailDTO,
+  TagFilter,
+  TagIdInput,
+  TagListRowDTO,
+  TaggableEntityType,
+  UnassignTagInput,
+  UpdateTagInput,
+} from "@/lib/validators/tags";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
 import type { TagRow } from "../fixtures/catalogs";
+import { nextMockId } from "../ids";
 import type { MockStore } from "../store";
 import { listRows, type ListSpec } from "./list";
 
@@ -74,4 +87,120 @@ export async function getTag(ctx: MockServiceContext, input: TagIdInput): Promis
   const tag = ctx.db.tags.find((row) => row.id === input.id);
   if (!tag) throw new ServiceError("NOT_FOUND");
   return tagListRow(ctx.db, tag);
+}
+
+// ───────────────────────────── Writes (PRD §12 `tags`) ─────────────────────────────
+
+/** Resource of the `can()` matrix that governs tagging each taggable entity type (PRD §7.5). */
+const TAG_RESOURCE: Record<TaggableEntityType, PermissionResource> = {
+  CLIENT: "client",
+  CONTACT: "contact",
+  PROJECT: "project",
+  DOCUMENT: "document",
+  NOTE: "note",
+  INVOICE: "invoice",
+  PAYMENT: "payment",
+  EXPENSE: "expense",
+};
+
+/** Entity types whose rows exist in the mock store today; finance types arrive with H1-B3. */
+const TAGGABLE_ROWS: Partial<Record<TaggableEntityType, (db: MockStore) => Taggable[]>> = {
+  CLIENT: (db) => db.clients,
+  CONTACT: (db) => db.contacts,
+  PROJECT: (db) => db.projects,
+  DOCUMENT: (db) => db.documents,
+  NOTE: (db) => db.notes,
+};
+
+interface TaggedRecord extends Taggable {
+  tagIds: string[];
+}
+
+function sameName(a: string, b: string): boolean {
+  return a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
+}
+
+/** `CONFLICT` on the tag already using the name (case-insensitive), ignoring `exceptId` (a rename of itself). */
+function assertUniqueName(db: MockStore, name: string, exceptId?: string): void {
+  const taken = db.tags.find((tag) => tag.id !== exceptId && sameName(tag.name, name));
+  if (taken) {
+    throw new ServiceError("CONFLICT", {
+      fieldErrors: { name: ["tags.errors.nameTaken"] },
+      entity: { type: "TAG", id: taken.id, label: taken.name },
+    });
+  }
+}
+
+function findTag(db: MockStore, id: string): TagRow {
+  const tag = db.tags.find((row) => row.id === id);
+  if (!tag) throw new ServiceError("NOT_FOUND");
+  return tag;
+}
+
+/** `createTag`: the name is unique, case-insensitively. Permission is the adapter's (several resources may create). */
+export async function createTag(
+  ctx: MockServiceContext,
+  input: CreateTagInput,
+): Promise<TagDetailDTO> {
+  assertUniqueName(ctx.db, input.name);
+  const row: TagRow = {
+    id: nextMockId(ctx.db.idCounters, "tag", (id) => ctx.db.tags.some((tag) => tag.id === id)),
+    name: input.name.trim(),
+    color: input.color,
+    createdAt: ctx.now.toISOString(),
+  };
+  ctx.db.tags.push(row);
+  return tagListRow(ctx.db, row);
+}
+
+/** `updateTag`: rename and/or recolour; a rename keeps the name unique. */
+export async function updateTag(
+  ctx: MockServiceContext,
+  input: UpdateTagInput,
+): Promise<TagDetailDTO> {
+  const tag = findTag(ctx.db, input.id);
+  if (input.name !== undefined) assertUniqueName(ctx.db, input.name, tag.id);
+  if (input.name !== undefined) tag.name = input.name.trim();
+  if (input.color !== undefined) tag.color = input.color;
+  return tagListRow(ctx.db, tag);
+}
+
+/** The record of a taggable entity: `FORBIDDEN` without `update` on its resource, `NOT_FOUND` when absent or archived. */
+function taggedRecord(
+  ctx: MockServiceContext,
+  entityType: TaggableEntityType,
+  entityId: string,
+): TaggedRecord {
+  if (!can(ctx.user, "update", TAG_RESOURCE[entityType])) throw new ServiceError("FORBIDDEN");
+  const rows = TAGGABLE_ROWS[entityType];
+  const record = rows?.(ctx.db).find((row) => row.id === entityId);
+  if (!record || record.archivedAt) throw new ServiceError("NOT_FOUND");
+  return record as TaggedRecord;
+}
+
+function chipsOf(db: MockStore, tagIds: readonly string[]): TagChipDTO[] {
+  return db.tags
+    .filter((tag) => tagIds.includes(tag.id))
+    .map((tag) => ({ id: tag.id, name: tag.name, color: tag.color }));
+}
+
+/** `assignTags`: adds tags to one entity (already assigned ones are ignored). Returns the entity's chips. */
+export async function assignTags(
+  ctx: MockServiceContext,
+  input: AssignTagsInput,
+): Promise<TagChipDTO[]> {
+  const record = taggedRecord(ctx, input.entityType, input.entityId);
+  for (const tagId of input.tagIds) findTag(ctx.db, tagId);
+  record.tagIds = [...new Set([...(record.tagIds ?? []), ...input.tagIds])];
+  return chipsOf(ctx.db, record.tagIds);
+}
+
+/** `unassignTag`: removes one tag from one entity. Returns the entity's remaining chips. */
+export async function unassignTag(
+  ctx: MockServiceContext,
+  input: UnassignTagInput,
+): Promise<TagChipDTO[]> {
+  const record = taggedRecord(ctx, input.entityType, input.entityId);
+  record.tagIds = (record.tagIds ?? []).filter((id) => id !== input.tagId);
+  return chipsOf(ctx.db, record.tagIds);
 }
