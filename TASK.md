@@ -2804,7 +2804,7 @@ the archive dialog is shared there), `src/app/(app)/projects/list/page.tsx`, `sr
       header; m7 stale-response guard in tables; N1 stray blank line `client-form.tsx:263`; N2 plural
       `archiveNeedsConfirm` for bulk; N3 one shared archive-with-lock dialog. m4 archived records editable →
       H1-FX/H1-B5.
-- [ ] **User confirms the Tester may run.**
+- [x] **User confirms the Tester may run.** Confirmed 2026-10-11 ("procede").
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage`, `i18n:check` (ES/EN parity), build.
   - E2E (`tests/e2e/h1-b2-*.spec.ts`, written by the Tester), local only over mocks, three phases per
