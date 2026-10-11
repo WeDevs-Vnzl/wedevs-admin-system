@@ -1,6 +1,7 @@
 // MOCK — tag catalog reads of Hito 1 (PRD §7.5, §12 `tags`). `fn(ctx, input)`, framework-free (C11).
 // Tag rows hold ids only; the records carry `tagIds` (PD-3) and the usage count is derived here from the
 // non-archived records. Replaced by `src/server/services/tags.service.ts` in Hito 2 (C9).
+import { diffFields } from "@/lib/activity-diff";
 import type { Paginated } from "@/lib/validators/common";
 import { can, type PermissionResource } from "@/server/auth/permissions";
 import type {
@@ -152,6 +153,14 @@ export async function createTag(
     createdAt: ctx.now.toISOString(),
   };
   ctx.db.tags.push(row);
+  await logActivity(mockTx(ctx), {
+    actorType: "USER",
+    actorId: ctx.user.id,
+    action: "CREATE",
+    entityType: "TAG",
+    entityId: row.id,
+    entityLabel: row.name,
+  });
   return tagListRow(ctx.db, row);
 }
 
@@ -162,8 +171,21 @@ export async function updateTag(
 ): Promise<TagDetailDTO> {
   const tag = findTag(ctx.db, input.id);
   if (input.name !== undefined) assertUniqueName(ctx.db, input.name, tag.id);
+  const before = { name: tag.name, color: tag.color };
   if (input.name !== undefined) tag.name = input.name.trim();
   if (input.color !== undefined) tag.color = input.color;
+  const changes = diffFields(before, tag, { fields: ["name", "color"] });
+  if (changes) {
+    await logActivity(mockTx(ctx), {
+      actorType: "USER",
+      actorId: ctx.user.id,
+      action: "UPDATE",
+      entityType: "TAG",
+      entityId: tag.id,
+      entityLabel: tag.name,
+      changes,
+    });
+  }
   return tagListRow(ctx.db, tag);
 }
 

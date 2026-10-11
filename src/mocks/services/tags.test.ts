@@ -270,12 +270,35 @@ describe("tag activity (LINK / UNLINK on the tagged entity, PRD §8.14)", () => 
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(activitySince(db, from)).toHaveLength(0);
   });
+});
 
-  it("writes no entry for createTag or updateTag: tag catalogue edits are not logged as SETTINGS_CHANGE", async () => {
-    const { ctx, db } = makeTestContext("OWNER");
-    const from = db.activity.length;
-    const created = await createTag(ctx, { name: "Sin registro", color: "#123456" });
-    await updateTag(ctx, { id: created.id, color: "#abcdef" });
-    expect(activitySince(db, from)).toHaveLength(0);
+describe("tag activity (F7, C12)", () => {
+  it("createTag logs CREATE on entity type TAG", async () => {
+    const { ctx, db } = makeTestContext();
+    const created = await createTag(ctx, { name: "Nueva etiqueta", color: "#123456" });
+    expect(db.activity.at(-1)).toMatchObject({
+      action: "CREATE",
+      entityType: "TAG",
+      entityId: created.id,
+      entityLabel: "Nueva etiqueta",
+      actorId: ctx.user.id,
+    });
+  });
+
+  it("updateTag logs UPDATE with the name and colour diff, and nothing when unchanged", async () => {
+    const { ctx, db } = makeTestContext();
+    const tag = db.tags[0]!;
+    const { name, color } = tag;
+    await updateTag(ctx, { id: tag.id, name: "Renombrada", color: "#abcdef" });
+    expect(db.activity.at(-1)).toMatchObject({
+      action: "UPDATE",
+      entityType: "TAG",
+      entityId: tag.id,
+      entityLabel: "Renombrada",
+      changes: { name: [name, "Renombrada"], color: [color, "#abcdef"] },
+    });
+    const count = db.activity.length;
+    await updateTag(ctx, { id: tag.id, name: "Renombrada", color: "#abcdef" });
+    expect(db.activity).toHaveLength(count);
   });
 });

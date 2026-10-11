@@ -272,10 +272,7 @@ export async function createDocument(
     throw new ServiceError("VALIDATION", { fieldErrors: zodFieldErrors(parsed.error) });
   const data = parsed.data;
 
-  for (const target of data.links) {
-    if (!resolveEntityRef(db, target.entityType, target.entityId))
-      throw new ServiceError("NOT_FOUND");
-  }
+  for (const target of data.links) requireLinkable(db, target);
 
   const nowIso = ctx.now.toISOString();
   const id = nextMockId(db.idCounters, "doc", (taken) =>
@@ -322,10 +319,30 @@ export async function createDocument(
       entityType: "DOCUMENT",
       entityId: id,
       entityLabel: row.title,
+      metadata: { entityType: target.entityType, entityId: target.entityId },
     });
   }
   deriveMockStore(db);
   return toDetail(db, row);
+}
+
+/** A record a document may link: it must exist and not be archived (C14/C19), both answer `NOT_FOUND`. */
+function requireLinkable(
+  db: MockStore,
+  target: LinkDocumentInput["target"],
+): void {
+  if (!resolveEntityRef(db, target.entityType, target.entityId)) {
+    throw new ServiceError("NOT_FOUND");
+  }
+  const collections: Partial<Record<string, readonly { id: string; archivedAt?: string | null }[]>> = {
+    CLIENT: db.clients,
+    CONTACT: db.contacts,
+    PROJECT: db.projects,
+    DOCUMENT: db.documents,
+    NOTE: db.notes,
+  };
+  const row = collections[target.entityType]?.find((item) => item.id === target.entityId);
+  if (row?.archivedAt) throw new ServiceError("NOT_FOUND");
 }
 
 function linkRow(
@@ -414,8 +431,7 @@ export async function linkDocument(
   const db = ctx.db;
   const doc = activeDocument(db, input.documentId);
   const target = input.target;
-  if (!resolveEntityRef(db, target.entityType, target.entityId))
-    throw new ServiceError("NOT_FOUND");
+  requireLinkable(db, target);
   const exists = linkRows(db, doc.id).some(
     (link) => link.entityType === target.entityType && link.entityId === target.entityId,
   );
@@ -428,6 +444,7 @@ export async function linkDocument(
       entityType: "DOCUMENT",
       entityId: doc.id,
       entityLabel: doc.title,
+      metadata: { entityType: target.entityType, entityId: target.entityId },
     });
     deriveMockStore(db);
   }
@@ -459,6 +476,7 @@ export async function unlinkDocument(
       entityType: "DOCUMENT",
       entityId: doc.id,
       entityLabel: doc.title,
+      metadata: { entityType: target.entityType, entityId: target.entityId },
     });
     deriveMockStore(db);
   }

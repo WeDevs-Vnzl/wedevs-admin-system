@@ -5,7 +5,7 @@
 // appends its activity entries through `logActivity` (C12 shape). `getProjectFinancials` belongs to H1-B3
 // and is not exported yet. Replaced by `src/server/services/projects.service.ts` in Hito 2 (C9).
 import { diffFields } from "@/lib/activity-diff";
-import { todayInCaracas, type DateOnly } from "@/lib/dates";
+import { todayInCaracas } from "@/lib/dates";
 import { compareMoney, subMoney, sumMoney, toUsd } from "@/lib/money";
 import { can } from "@/server/auth/permissions";
 import { VALIDATION_MESSAGES, type FieldErrors, type Paginated } from "@/lib/validators/common";
@@ -87,40 +87,48 @@ function invalid(field: string, key: string): ServiceError {
   return new ServiceError("VALIDATION", { fieldErrors: { [field]: [key] } });
 }
 
-const sortedIds = (ids: readonly string[]): string[] => [...ids].sort();
+/** Names of the catalog rows behind `ids`, sorted and joined: the readable snapshot the diff logs (C1). */
+function sortedNames(names: readonly string[]): string {
+  return [...names].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" })).join(", ");
+}
+
+/** `fileId` of every `image` node of a rich-text document (C4: images are uploaded files). */
+function imageFileIds(node: unknown, found: Set<string> = new Set()): Set<string> {
+  if (typeof node !== "object" || node === null) return found;
+  const { type, attrs, content } = node as {
+    type?: unknown;
+    attrs?: { fileId?: unknown };
+    content?: unknown;
+  };
+  if (type === "image" && typeof attrs?.fileId === "string") found.add(attrs.fileId);
+  if (Array.isArray(content)) for (const child of content) imageFileIds(child, found);
+  return found;
+}
+
+/** Every image of the description must be a `READY` file (C14/C23): unknown → `NOT_FOUND`, not ready → `VALIDATION`. */
+function assertDescriptionImagesReady(db: MockStore, description: unknown): void {
+  for (const id of imageFileIds(description)) {
+    const file = db.files.find((item) => item.id === id);
+    if (!file) throw new ServiceError("NOT_FOUND");
+    if (file.status !== "READY") throw invalid("description", VALIDATION_MESSAGES.invalidOption);
+  }
+}
 
 // ───────────────────────────── Financial headline (PD-4) ─────────────────────────────
 
-/** Latest USD rate of `currency` on or before `today`; `null` when there is none. */
-function latestRate(db: MockStore, currency: string, today: DateOnly): string | null {
-  let best: { date: string; usdRate: string } | null = null;
-  for (const rate of db.exchangeRates) {
-    if (rate.currency !== currency || rate.date > today) continue;
-    if (!best || rate.date > best.date) best = rate;
-  }
-  return best?.usdRate ?? null;
-}
-
 /**
- * USD headline of a project from the finance collections (empty until H1-B3, so `"0.00"`): contracted =
- * plan contract amounts (non-USD at the latest rate), invoiced = the project's lines on issued invoices at
- * the invoice rate, collected = confirmed payment allocations on those invoices, to invoice = the rest of
- * the contract. H1-B3 may replace this with `src/lib/finance`.
+ * H1-B2 PLACEHOLDER: USD headline of a project from the finance collections (empty until H1-B3, so
+ * `"0.00"`). Contracted = the USD plans' contract amounts; a plan in another currency is NOT converted
+ * here (C16: never with today's rate, and a plan stores no rate snapshot), so it adds nothing yet.
+ * Invoiced = the project's lines on issued invoices at the invoice rate, collected = confirmed payment
+ * allocations on those invoices, to invoice = the rest of the contract. H1-B3 replaces this function with
+ * the `src/lib/finance` summary of PRD §8.4.4.
  */
-function projectHeadline(
-  db: MockStore,
-  projectId: string,
-  today: DateOnly,
-): ProjectFinancialHeadlineDTO {
+function projectHeadline(db: MockStore, projectId: string): ProjectFinancialHeadlineDTO {
   const contracted: string[] = [];
   for (const plan of db.billingPlans) {
     if (plan.projectId !== projectId || plan.contractAmount === null) continue;
-    if (plan.currency === "USD") {
-      contracted.push(plan.contractAmount);
-      continue;
-    }
-    const rate = latestRate(db, plan.currency, today);
-    if (rate) contracted.push(toUsd(plan.contractAmount, rate));
+    if (plan.currency === "USD") contracted.push(plan.contractAmount);
   }
 
   const invoiced: string[] = [];
@@ -188,7 +196,7 @@ function hasBillingPlan(db: MockStore, projectId: string): boolean {
 }
 
 function toListRow(ctx: MockServiceContext, row: ProjectRow): ProjectListRowDTO {
-  const { db, now } = ctx;
+  const { db } = ctx;
   return {
     id: row.id,
     code: row.code,
@@ -205,7 +213,7 @@ function toListRow(ctx: MockServiceContext, row: ProjectRow): ProjectListRowDTO 
     stack: compact(row.technologyIds.map((id) => technologyChip(db, id))),
     tags: compact(row.tagIds.map((id) => tagChip(db, id))),
     archivedAt: row.archivedAt,
-    ...projectHeadline(db, row.id, todayInCaracas(now)),
+    ...projectHeadline(db, row.id),
   };
 }
 
@@ -378,6 +386,7 @@ export async function createProject(
   assertTechnologies(db, input.technologyIds);
   assertTags(db, input.tagIds);
   assertLinkUrls(input.links);
+  assertDescriptionImagesReady(db, input.description);
 
   const now = ctx.now.toISOString();
   const code = nextMockCode(db.sequences, "PRY");
@@ -432,13 +441,15 @@ export async function createProject(
   return toDetail(ctx, row);
 }
 
-/** The editable fields of a row as the `UPDATE` diff sees them (id lists sorted). */
-function diffView(row: ProjectRow): Record<string, unknown> {
+/** The editable fields of a row as the `UPDATE` diff sees them (technologies and tags as sorted names, C1). */
+function diffView(db: MockStore, row: ProjectRow): Record<string, unknown> {
+  const names = (ids: readonly string[], catalog: readonly { id: string; name: string }[]) =>
+    sortedNames(ids.map((id) => catalog.find((item) => item.id === id)?.name ?? id));
   return {
     ...row,
     description: row.description ? JSON.stringify(row.description) : null,
-    technologyIds: sortedIds(row.technologyIds),
-    tagIds: sortedIds(row.tagIds),
+    technologyIds: names(row.technologyIds, db.technologies),
+    tagIds: names(row.tagIds, db.tags),
   };
 }
 
@@ -455,6 +466,7 @@ export async function updateProject(
   );
   assertTechnologies(db, input.technologyIds, row.technologyIds);
   assertTags(db, input.tagIds);
+  assertDescriptionImagesReady(db, input.description);
   // A project already in progress or delivered keeps the date that status was entered with.
   if (row.status === "EN_CURSO" && !input.startDate) {
     throw invalid("startDate", VALIDATION_MESSAGES.required);
@@ -463,7 +475,7 @@ export async function updateProject(
     throw invalid("endDate", VALIDATION_MESSAGES.required);
   }
 
-  const before = diffView(row);
+  const before = diffView(db, row);
   const previousClients = row.clients.map((client) => ({ ...client }));
   row.name = input.name;
   row.summary = input.summary;
@@ -479,7 +491,7 @@ export async function updateProject(
   }));
   touch(row, ctx);
 
-  const changes = diffFields(before, diffView(row), {
+  const changes = diffFields(before, diffView(db, row), {
     fields: UPDATE_DIFF_FIELDS,
     longText: ["description"],
   });
@@ -513,9 +525,9 @@ export async function setProjectTechnologies(
 ): Promise<ProjectDetailDTO> {
   const row = findLiveProject(ctx.db, input.projectId);
   assertTechnologies(ctx.db, input.technologyIds, row.technologyIds);
-  const before = diffView(row);
+  const before = diffView(ctx.db, row);
   row.technologyIds = [...input.technologyIds];
-  const changes = diffFields(before, diffView(row), { fields: ["technologyIds"] });
+  const changes = diffFields(before, diffView(ctx.db, row), { fields: ["technologyIds"] });
   if (changes) {
     touch(row, ctx);
     await logProject(mockTx(ctx), ctx.user.id, "UPDATE", row, { changes });
@@ -542,7 +554,7 @@ export async function upsertProjectLinks(
       .filter((link) => link.group === group)
       .reduce((max, link) => Math.max(max, link.order), -1);
 
-  input.links.forEach((entry, index) => {
+  input.links.forEach((entry) => {
     if (entry.id === undefined) {
       links.push({
         id: nextMockId(
@@ -560,9 +572,7 @@ export async function upsertProjectLinks(
       return;
     }
     const current = links.find((link) => link.id === entry.id);
-    if (!current) {
-      throw new ServiceError("NOT_FOUND", { fieldErrors: { [`links.${index}.id`]: [entry.id] } });
-    }
+    if (!current) throw new ServiceError("NOT_FOUND");
     const moved = current.group !== entry.group;
     current.label = entry.label;
     current.url = entry.url;
@@ -796,8 +806,6 @@ export async function archiveProjects(
 
 // ───────────────────────────── Reads ─────────────────────────────
 
-const money = (value: string): number => Number(value);
-
 const projectSpec: ListSpec<ProjectListRowDTO> = {
   searchText: (row) => [row.code, row.name, ...row.clients.map((item) => item.client.label)],
   sorters: {
@@ -806,10 +814,10 @@ const projectSpec: ListSpec<ProjectListRowDTO> = {
     status: (row) => PROJECT_STATUS_VALUES.indexOf(row.status),
     startDate: (row) => row.startDate,
     targetEndDate: (row) => row.targetEndDate,
-    contractedValueUsd: (row) => money(row.contractedValueUsd),
-    invoicedUsd: (row) => money(row.invoicedUsd),
-    collectedUsd: (row) => money(row.collectedUsd),
-    toInvoiceUsd: (row) => money(row.toInvoiceUsd),
+    contractedValueUsd: (row) => row.contractedValueUsd,
+    invoicedUsd: (row) => row.invoicedUsd,
+    collectedUsd: (row) => row.collectedUsd,
+    toInvoiceUsd: (row) => row.toInvoiceUsd,
   },
   defaultSort: "code:desc",
 };
@@ -856,7 +864,10 @@ export async function getProject(
   ctx: MockServiceContext,
   input: ProjectIdInput,
 ): Promise<ProjectDetailDTO> {
-  return toDetail(ctx, findProject(ctx.db, input.id));
+  const row = findProject(ctx.db, input.id);
+  // An archived project is readable only by roles that may restore (C19), like `getClient`.
+  if (row.archivedAt && !can(ctx.user, "restore", "trash")) throw new ServiceError("NOT_FOUND");
+  return toDetail(ctx, row);
 }
 
 /** `/projects` overview (PRD §8.3): archived projects never count. */

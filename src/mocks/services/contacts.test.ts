@@ -262,3 +262,27 @@ describe("searchContacts", () => {
     expect(await searchContacts(ctx, { q: "quintero", clientId: "cli_zafiro_labs" })).toEqual([]);
   });
 });
+
+describe("tag diff (CR-B4, C1)", () => {
+  it("logs sorted tag names joined with ', ', never ids", async () => {
+    const { ctx, db } = makeTestContext();
+    const created = await createContact(ctx, contactInput(KAIROS));
+    const tags = db.tags.slice(0, 2);
+    await updateContact(
+      ctx,
+      updateContactInputSchema.parse({
+        id: created.id,
+        fullName: created.fullName,
+        email: created.email ?? undefined,
+        tagIds: tags.map((t) => t.id).reverse(),
+      }),
+    );
+    const changes = db.activity.at(-1)!.changes as Record<string, [string, string]>;
+    const expected = tags
+      .map((t) => t.name)
+      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .join(", ");
+    expect(changes.tagIds).toEqual(["", expected]);
+    expect(JSON.stringify(changes)).not.toMatch(/tag_/);
+  });
+});

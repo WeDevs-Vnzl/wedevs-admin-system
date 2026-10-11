@@ -40,7 +40,7 @@ import { nextMockCode, nextMockId } from "../ids";
 import type { ClientRow, MockStore } from "../store";
 import { deriveMockStore } from "../store";
 import { logActivity, mockTx } from "./activity";
-import { sortContacts, toContactDTO } from "./contacts";
+import { sortContacts, tagNames, toContactDTO } from "./contacts";
 import { listRows, type ListSpec } from "./list";
 
 const CLIENT_DIFF_FIELDS = [
@@ -344,7 +344,7 @@ export async function updateClient(
   assertTaxIdFree(db, input.taxId, input.country, "clients.errors.duplicateTaxId", row.id);
   assertTagsExist(db, input.tagIds);
 
-  const before = { ...row, tagIds: [...row.tagIds].sort() };
+  const before = { ...row, tagIds: tagNames(db, row.tagIds) };
   row.kind = input.kind;
   row.tradeName = input.tradeName;
   row.legalName = input.legalName ?? input.tradeName;
@@ -357,7 +357,7 @@ export async function updateClient(
   row.tagIds = [...input.tagIds];
   const changes = diffFields(
     before,
-    { ...row, tagIds: [...row.tagIds].sort() },
+    { ...row, tagIds: tagNames(db, row.tagIds) },
     {
       fields: CLIENT_DIFF_FIELDS,
       longText: CLIENT_LONG_TEXT_FIELDS,

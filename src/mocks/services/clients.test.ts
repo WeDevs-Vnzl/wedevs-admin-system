@@ -680,3 +680,32 @@ describe("searchClients", () => {
     expect((await searchClients(ctx, { q: "veredas" })).length).toBe(0);
   });
 });
+
+describe("tag diff (CR-B4, C1)", () => {
+  it("logs sorted tag names joined with ', ', never ids", async () => {
+    const { ctx, db } = makeTestContext();
+    const created = await createClient(ctx, clientInput());
+    const tags = db.tags.slice(0, 2);
+    await updateClient(
+      ctx,
+      updateClientInputSchema.parse({
+        id: created.id,
+        kind: "EMPRESA",
+        tradeName: created.tradeName,
+        legalName: created.legalName,
+        taxId: created.taxId,
+        country: created.country,
+        address: created.address,
+        phone: created.phone,
+        tagIds: tags.map((t) => t.id).reverse(),
+      }),
+    );
+    const changes = db.activity.at(-1)!.changes as Record<string, [string, string]>;
+    const expected = tags
+      .map((t) => t.name)
+      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .join(", ");
+    expect(changes.tagIds).toEqual(["", expected]);
+    expect(JSON.stringify(changes)).not.toMatch(/tag_/);
+  });
+});

@@ -1,7 +1,10 @@
 // MOCK — tests for the note services.
 import { describe, expect, it } from "vitest";
 import { noteDisplayTitle } from "@/lib/rich-text";
-import { noteFilterSchema, type RichTextDoc } from "@/lib/validators/notes";
+import { noteFilterSchema, type NotesService, type RichTextDoc } from "@/lib/validators/notes";
+import type { MockServiceContext } from "../ctx";
+import * as notesService from "./notes";
+import { VALIDATION_MESSAGES } from "@/lib/validators/common";
 import { resolveEntityRef } from "../entity-refs";
 import { makeTestContext } from "../test-helpers";
 import {
@@ -307,5 +310,147 @@ describe("getNote", () => {
     expect(note.tags.map((tag) => tag.id)).toEqual(["tag_prioritario"]);
     expect(note.links).toHaveLength(2);
     await expect(getNote(ctx, { id: "note_nope" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+// ───────────────────────────── Wave 2 fix round (package 2.9) ─────────────────────────────
+
+const imageDoc = (fileId: string): RichTextDoc => ({
+  type: "doc",
+  content: [
+    { type: "paragraph", content: [{ type: "text", text: "Con imagen" }] },
+    { type: "image", attrs: { fileId, src: `/api/files/${fileId}/download` } },
+  ],
+});
+const newNote = (over: Record<string, unknown> = {}) => ({
+  title: "Nota",
+  content: doc("texto"),
+  links: [KAIROS],
+  tagIds: [],
+  pinned: false,
+  attachmentFileIds: [],
+  ...over,
+});
+
+describe("type contract (F12)", () => {
+  it("satisfies NotesService over the mock context", () => {
+    const service = notesService satisfies NotesService<MockServiceContext>;
+    expect(typeof service.createNote).toBe("function");
+  });
+});
+
+describe("getNote on an archived note (F6, C19)", () => {
+  it.each([
+    ["OWNER", true],
+    ["ADMIN", true],
+    ["MEMBER", false],
+    ["VIEWER", false],
+  ] as const)("%s reads it: %s", async (role, allowed) => {
+    const { ctx, db } = makeTestContext(role);
+    const note = db.notes[0]!;
+    note.archivedAt = "2026-10-01T00:00:00.000Z";
+    const read = getNote(ctx, { id: note.id });
+    if (allowed) await expect(read).resolves.toMatchObject({ id: note.id });
+    else await expect(read).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("attachment errors (F9)", () => {
+  it("reports a not-ready attachment with the shared invalidOption key", async () => {
+    const { ctx, db } = makeTestContext();
+    db.files.push({ ...db.files[0]!, id: "fil_pending", status: "PENDING" });
+    await expect(
+      createNote(ctx, newNote({ attachmentFileIds: ["fil_pending"] })),
+    ).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { attachmentFileIds: [VALIDATION_MESSAGES.invalidOption] },
+    });
+  });
+});
+
+describe("archived targets (CR-B1, C14/C19)", () => {
+  const archive = (db: ReturnType<typeof makeTestContext>["db"], type: string, id: string) => {
+    const collection = {
+      CLIENT: db.clients,
+      CONTACT: db.contacts,
+      PROJECT: db.projects,
+      DOCUMENT: db.documents,
+    }[type as "CLIENT"] as { id: string; archivedAt: string | null }[];
+    collection.find((row) => row.id === id)!.archivedAt = "2026-10-01T00:00:00.000Z";
+  };
+  const cases = (db: ReturnType<typeof makeTestContext>["db"]) =>
+    [
+      ["CLIENT", "cli_kairos"],
+      ["CONTACT", db.contacts[0]!.id],
+      ["PROJECT", "pry_kairos_web"],
+      ["DOCUMENT", db.documents[0]!.id],
+    ] as const;
+
+  it.each(["CLIENT", "CONTACT", "PROJECT", "DOCUMENT"] as const)(
+    "createNote and linkNote refuse an archived %s with NOT_FOUND",
+    async (type) => {
+      const { ctx, db } = makeTestContext();
+      const [, id] = cases(db).find(([t]) => t === type)!;
+      const own = await createNote(ctx, newNote());
+      archive(db, type, id);
+      const target = { entityType: type, entityId: id } as const;
+      const count = db.notes.length;
+      await expect(createNote(ctx, newNote({ links: [target] }))).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+      expect(db.notes).toHaveLength(count);
+      await expect(linkNote(ctx, { noteId: own.id, target })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    },
+  );
+});
+
+describe("rich-text images (CR-B2, C14/C23)", () => {
+  it("adds READY images to the attachments and refuses unknown or not-ready ones", async () => {
+    const { ctx, db } = makeTestContext();
+    const ready = db.files.find((file) => file.status === "READY")!;
+    const created = await createNote(ctx, newNote({ content: imageDoc(ready.id) }));
+    expect(created.attachments.map((file) => file.id)).toEqual([ready.id]);
+
+    await expect(
+      createNote(ctx, newNote({ content: imageDoc("fil_missing") })),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    db.files.push({ ...ready, id: "fil_pending", status: "PENDING" });
+    await expect(
+      createNote(ctx, newNote({ content: imageDoc("fil_pending") })),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+
+    const plain = await createNote(ctx, newNote());
+    const update = { id: plain.id, title: "Nota", tagIds: [] };
+    await expect(
+      updateNote(ctx, { ...update, content: imageDoc("fil_pending") }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(
+      updateNote(ctx, { ...update, content: imageDoc("fil_missing") }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    const updated = await updateNote(ctx, { ...update, content: imageDoc(ready.id) });
+    expect(updated.attachments.map((file) => file.id)).toEqual([ready.id]);
+  });
+});
+
+describe("tag diff (CR-B4, C1)", () => {
+  it("logs sorted tag names joined with ', ', never ids", async () => {
+    const { ctx, db } = makeTestContext();
+    const note = await createNote(ctx, newNote());
+    const tags = db.tags.slice(0, 2);
+    await updateNote(ctx, {
+      id: note.id,
+      title: "Nota",
+      content: doc("texto"),
+      tagIds: tags.map((t) => t.id).reverse(),
+    });
+    const changes = db.activity.at(-1)!.changes as Record<string, [string, string]>;
+    const expected = tags
+      .map((t) => t.name)
+      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .join(", ");
+    expect(changes.tagIds).toEqual(["", expected]);
+    expect(JSON.stringify(changes)).not.toMatch(/tag_/);
   });
 });
