@@ -14,7 +14,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 running |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 awaiting approval |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
@@ -1969,12 +1969,30 @@ Files: `src/features/export/use-csv-export.ts` (+ `use-csv-export.test.tsx`); `s
       after `click()` → defer it; r3 `DocumentLinkRow` hand-declares `id`/`createdAt` instead of
       `Pick<DocumentLinkDTO, …>` (C8). Nits: `/reports/[report]` slugs now crumb as "Detalle"; `diffFields`
       compares arrays as ordered JSON.)*
-- [ ] **User confirms the Tester may run.**
-- [ ] **Tester scope:** `vitest run --coverage` (report `mocks/`, `lib/activity-diff.ts`,
+- [x] **User confirms the Tester may run.** *(2026-10-10: "procede con los test".)*
+- [x] **Tester scope:** `vitest run --coverage` (report `mocks/`, `lib/activity-diff.ts`,
       `mocks/services/export.ts`, `features/export/**`), `i18n:check`, build, lint, typecheck. No E2E (no
-      new route). No server, no container.
-- [ ] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
-- [ ] **Summary** written by the Orchestrator.
+      new route). No server, no container. *(2026-10-10, Tester (Orca worker, haiku), HEAD 1592a3b, no
+      commits: PASS. 128 files; 1931 pass + 1 expected fail with `--testTimeout=20000`; default runs hit
+      1–2 known jsdom timeouts (phone-input, country-combobox), which pass alone (27 + 1 expected fail).
+      money.ts 100/100, rates.ts 97.43/96.42. Targets: `lib/activity-diff.ts` 100, `mocks/services/export.ts`
+      96.29 stmts, `features/export/**` 100; `entity-routes`, `finance-tab-slot`, `breadcrumb-label` 100.
+      Informational below 90: `mocks/entity-refs.ts` 83.56, `mocks/store.ts` 89.65, `mocks/test-helpers.ts`
+      77.77, `mocks/services/technologies.ts` 89.47. Dataset: exact counts 65/96/26/41/11/13/161 (+17
+      document links), the 3 fixture ids exist, zero FK violations. i18n parity (32 namespaces), build,
+      lint, typecheck PASS.)*
+- [x] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
+      *(Developers: 1.1 test-only fixes for the populated files store (approved); 1.3 did not install
+      `attachment` (decided by the Planner, owned by 2.3). Planner: none blocking; m1 → 2.3, m2 → 2.4/2.5/2.6,
+      m3 accepted. Code Reviewer: r1 → 2.3 spec; r2, r3 fixed in 1.4; nits (`/reports/[report]` crumbs as
+      "Detalle" → H1-B5; `diffFields` ordered arrays → callers sort ids). Tester: known jsdom timeouts in
+      phone-input/country-combobox (→ H1-FX); coverage report needs `reportOnFailure` when a flake fails;
+      `mocks/entity-refs.ts` funcs 61.53 (→ 2.3 moves rich-text helpers to `lib/rich-text`).)*
+- [x] **Summary** written by the Orchestrator. *(Wave 1 delivered the commercial dataset and normalized
+      store rows, the mock seams (entity refs, activity/tags/technologies services, `diffFields`), the
+      CSV export seam and per-module export convention, `ActionError.entity`, strict image attributes,
+      breadcrumb labels, `entityHref`, the finance-tab slot and the `alert`/`item` registry items. Four
+      packages (1.1–1.4), merged into `batch/h1-b2-commercial-core` at 1592a3b; gate green.)*
 
 🛑 **MANDATORY STOP** — wave 2 does not start without the user's explicit approval.
 
