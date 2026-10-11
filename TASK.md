@@ -2808,6 +2808,43 @@ test next to the existing static/structure tests (+ tests everywhere touched).
       smoke on :3105: `cli_kairos` and `pry_titan_app` `?tab=notes` render, three lists 25 rows, clean log. Guard
       allow-lists 4 kit barrel re-exports (read-only kit; all consumers are client modules) → H1-FX.)*
 
+#### Package 3.8 — Wave 3 Tester fixes: D1–D5
+
+Package 3.8 → Agent: wedevs-developer · sonnet — Reason: route-segment streaming semantics (Next 16 `loading.tsx`
+vs `notFound()`), a Tiptap editor lifecycle bug in the kit and pointer hit-testing inside a sheet; all need care
+and tests beyond jsdom.
+
+Depends on: 3.7 merged (eaa1598) and Tester phase C re-run merged (d2d0696). Approved by the user 2026-10-11
+("aprobado"), including a **kit exception limited to `src/components/ui/rich-text/rich-text-view.tsx`** (+ its test).
+
+Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `loading.tsx` only, plus the project
+`new` / `edit` pages for D4); `src/components/ui/rich-text/rich-text-view.tsx` (+ test);
+`src/features/documents/components/attach-document-sheet.tsx` (+ test); `src/features/projects/components/project-form*`
+(D4, if the heading belongs there); `src/features/contacts/components/contact-form-dialog.tsx`,
+`src/features/clients/components/use-opener-focus*` (D5, only if no kit change is needed);
+`tests/e2e/h1-b2-w3-*.spec.ts` (remove the matching `test.fail` markers only).
+
+- [ ] **D1 (major).** Unknown client and project ids (`/clients/cli_no_existe`, `/projects/pry_no_existe`) render
+      the in-shell 404 but answer HTTP 200: `clients/loading.tsx` and `projects/loading.tsx` (the overview
+      skeletons) also wrap `[id]`, so the response streams before `notFound()` (Next docs `not-found.md`,
+      `streaming.md`). Scope each skeleton to the overview only (e.g. a route group `(overview)/` holding
+      `page.tsx` + `loading.tsx`), keep URLs unchanged; `/notes/[id]` already answers 404 and is the reference.
+- [ ] **D2 (major, kit exception).** ES → EN on `/projects/pry_kairos_web` crashes ("Cannot read properties of
+      null (reading 'commands')"): `rich-text-view.tsx:46` calls `editor.commands.setContent` on an editor
+      destroyed/re-created when the locale-dependent `extensions` memo changes. Guard as `rich-text-editor.tsx:185`
+      does (`!editor || editor.isDestroyed`) and add a regression test.
+- [ ] **D3 (major).** *Documentos* → "Adjuntar documento" → "Vincular existente": the results listbox opens under
+      the sheet footer, so a pointer click never selects a result (keyboard works). Fix in the feature (layout,
+      stacking or scroll area of the sheet). If it can only be fixed in the kit, stop and escalate.
+- [ ] **D4 (minor, a11y).** The project form pages (`/projects/new`, `/projects/[id]/edit`) have no `<h1>` in
+      `<main>`; match the client form pages.
+- [ ] **D5 (minor, a11y WCAG 2.4.3).** Escape on the contact dialog (*Contactos* → "Nuevo contacto") leaves focus
+      on `<body>`; return it to the opener. Feature-only fix; if it needs the kit, leave the `test.fail` and
+      report it (stays in H1-FX with `ConfirmDialog` focus / `useOpenerFocus`).
+- [ ] Remove the `test.fail` markers of the fixed defects (no other E2E change). Gate. Orchestrator smoke under
+      `next start`: unknown ids → 404, overview skeletons still stream, ES ↔ EN on a project detail, clean log.
+      Tester phase C re-run of the affected specs. Commit messages without any Claude attribution.
+
 #### Wave 3 close
 
 - [x] **Integration checklist:** 3.1–3.6 merged (3.3 d027bb1, 3.1 1b5255d, 3.2 934b99e, 3.4 766b0ed, 3.5 8bb188a,
