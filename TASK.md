@@ -2444,6 +2444,33 @@ Files: `src/features/activity/components/{activity-diff,activity-detail-sheet}.t
 - [x] **CR-nit.** `ActivityDetailSheet` keeps the last entry while it closes (no cut animation).
 - [x] Gate. Commit messages without any Claude attribution.
 
+#### Package 2.12 — Wave 2 Tester fixes: activity sheet focus, technologies search (T1, T2)
+
+Package 2.12 → Agent: wedevs-developer · sonnet — Reason: focus management across a Radix Sheet and a client/server
+data-refresh path; both need judgement about React 19 / Next 16 behaviour, not a mechanical edit.
+
+Use the shadcn MCP.
+
+Depends on: 2.1–2.11 and the Tester spec (ac43e63) merged. Approved by the user 2026-10-10 ("todo en orden, procede").
+
+Files: `src/features/activity/components/{activity-feed,activity-item,activity-detail-sheet}.tsx` (+ tests);
+`src/features/technologies/components/technologies-table.tsx` (+ test); `src/app/(app)/settings/technologies/page.tsx`
+(+ test) only if the fix needs it; `src/features/tags/components/tags-table.tsx` (+ test) only if T2 reproduces there;
+`tests/e2e/h1-b2-w2.spec.ts` (remove the two `test.fail()` marks and their defect comments only). No other file;
+`src/components/ui/**` stays read-only (the shallow `useTableUrlState` is the kit's contract).
+
+- [ ] **T1.** Closing the activity detail sheet (Escape, the close button or the overlay) returns focus to the
+      "Ver detalle de …" trigger that opened it, also after "load more" re-renders the list. Component test asserts
+      `document.activeElement` is the trigger after Escape.
+- [ ] **T2.** Typing in the `/settings/technologies` search (and changing sort, page, page size, the archived toggle or
+      a facet) updates the rows and the total to the filtered set for the URL query; reloading the URL shows the same
+      result. Server-resolved icons still render for the new rows. Component test proves the rows follow the query.
+- [ ] **T2 (tags).** `tags-table.tsx` checked for the same defect; fixed with the same approach if it reproduces, or
+      stated as unaffected (with the reason) in worker_done.
+- [ ] E2E: the two `test.fail()` marks removed from `tests/e2e/h1-b2-w2.spec.ts` (the Orchestrator re-runs the spec in
+      phases B and C; the developer runs no browser).
+- [ ] Gate. Commit messages without any Claude attribution.
+
 #### Wave 2 close
 
 - [x] **Integration checklist:** 2.1–2.8 merged; no Claude attribution; worktrees removed; lockfile
