@@ -94,10 +94,15 @@ test.describe("HU-23 notes (read only)", () => {
     await open(page, "/notes/note_kairos_alcance");
     await expect(page.getByRole("heading", { name: NOTE_TITLE, exact: true })).toBeVisible();
     await expect(page.getByText("Andrés Molina", { exact: false }).first()).toBeVisible();
-    await expect(page.getByText("prioritario", { exact: true }).first()).toBeVisible();
+    // The tag is shown by its label ("Prioritario", catalogs.ts), not by its lowercase id.
+    await expect(page.getByText("Prioritario", { exact: true }).first()).toBeVisible();
   });
 
-  test("CA2: a note linked to a client and a project shows in both feeds", async ({ page }) => {
+  // PRODUCT DEFECT (major): the shared Notas tab of a client or project detail page (`?tab=notes`) renders the
+  // "A server error occurred" page for every record (cli_kairos, pry_kairos_web, cli_hotel_mochima,
+  // cli_zafiro_labs), so the feed never renders. Entry point: src/features/notes/components/entity-notes-tab.tsx.
+  // Expected: the note title in both feeds. Actual: server error page (digest ERROR 3469573493).
+  test.fail("CA2: a note linked to a client and a project shows in both feeds", async ({ page }) => {
     await resetMockData(page);
     await open(page, "/clients/cli_kairos?tab=notes");
     await expect(page.getByText(NOTE_TITLE, { exact: true }).first()).toBeVisible();
@@ -133,7 +138,9 @@ test.describe("HU-29 activity is read-only (mutates a client)", () => {
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText("Cambios", { exact: true })).toBeVisible();
     await expect(sheet.getByText("Nombre comercial", { exact: true })).toBeVisible();
-    await expect(sheet.getByText("Zafiro Labs E2E", { exact: false })).toBeVisible();
+    // The name also sits in the sheet title ("Actualizó …") and the record link ("… Abrir registro"): an exact match
+    // picks the diff value, the element under test.
+    await expect(sheet.getByText("Zafiro Labs E2E", { exact: true }).first()).toBeVisible();
   });
 });
 

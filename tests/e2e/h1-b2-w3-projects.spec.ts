@@ -79,6 +79,7 @@ test.describe("HU-05 create project (mutates projects)", () => {
     const name = "Proyecto E2E dos clientes";
     await open(page, "/projects/new");
     await page.getByLabel("Nombre", { exact: true }).fill(name);
+    await page.getByLabel("Resumen", { exact: true }).fill("Resumen del proyecto E2E de dos clientes");
 
     const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
     await clients.fill("Kairos");
@@ -96,7 +97,8 @@ test.describe("HU-05 create project (mutates projects)", () => {
     // CA3: listed in each linked client's Proyectos tab.
     for (const clientId of ["cli_kairos", "cli_hotel_mochima"]) {
       await open(page, `/clients/${clientId}?tab=projects`);
-      await expect(page.getByText(name, { exact: true })).toBeVisible();
+      // The name sits inside the project cell next to its code, so match it by substring (not exact text).
+      await expect(page.getByText(name)).toBeVisible();
     }
   });
 });
@@ -142,7 +144,8 @@ test.describe("HU-07 project links (mutates link order)", () => {
 
   test("CA1: several REPOSITORIO links are listed in their group", async ({ page }) => {
     await open(page, "/projects/pry_kairos_web?tab=links");
-    await expect(page.getByText("Repositorio", { exact: true }).first()).toBeVisible();
+    // The group heading is the trigger of a collapsible: its name is "Repositorio" plus the count, so match the button.
+    await expect(page.getByRole("button", { name: /^Repositorio/ }).first()).toBeVisible();
     expect(await linkHandles(page).count()).toBeGreaterThanOrEqual(2);
   });
 

@@ -49,7 +49,10 @@ async function open(page: Page, path: string) {
   await page.waitForLoadState("networkidle");
 }
 
-/** Fills and submits the client form (`/clients/new`). `country` is the ISO code of the country option. */
+/**
+ * Fills and submits the client form (`/clients/new`). `country` is the country name as the picker shows it. The
+ * option's accessible name is "flag, name, dial code" (multi-line), so it is matched by substring, not exactly.
+ */
 async function fillClientForm(
   page: Page,
   data: { kind?: "Persona" | "Empresa"; tradeName: string; legalName?: string; taxId: string; country?: string },
@@ -64,8 +67,12 @@ async function fillClientForm(
   await page.getByLabel("Identificador fiscal", { exact: true }).fill(data.taxId);
   if (data.country) {
     await page.getByRole("combobox", { name: "País", exact: true }).click();
-    await page.getByRole("option", { name: data.country, exact: true }).click();
+    await page.getByRole("option", { name: data.country }).click();
   }
+  // Address and phone are required by the schema (E.164 phone); the phone input defaults to VE, so a "+57" entry
+  // switches it to the number's own country.
+  await page.getByLabel("Dirección", { exact: true }).fill("Calle E2E 1");
+  await page.locator("#client-phone").fill("+57 300 123 4567");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
 }
 
@@ -121,6 +128,9 @@ test.describe("HU-03 create client (mutates clients)", () => {
     ).toBeVisible();
     await expect(page.getByLabel("Identificador fiscal", { exact: true })).toHaveAttribute("aria-invalid", "true");
 
+    // The form is dirty, so the in-app link asks for confirmation first (use-unsaved-changes.ts). Playwright
+    // dismisses dialogs by default and would cancel the navigation, so accept the confirm.
+    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("link", { name: "Abrir CLI-0001", exact: true }).click();
     await expect(page).toHaveURL(/\/clients\/cli_kairos$/);
   });
