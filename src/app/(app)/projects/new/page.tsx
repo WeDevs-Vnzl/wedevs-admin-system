@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ProjectForm } from "@/features/projects/components/project-form";
 import { listActiveTechnologies } from "@/features/technologies/queries";
 import { getClient } from "@/features/clients/queries";
-import { canManageTags } from "@/features/tags/queries";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import type { EntityRef } from "@/lib/validators/common";
 import { requireSessionUser } from "@/server/auth/session";
 import { can } from "@/server/auth/permissions";
@@ -38,7 +38,7 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
   const [initialClient, technologies, canCreateTags] = await Promise.all([
     clientPrefill(params.clientId),
     listActiveTechnologies(),
-    canManageTags(),
+    canCreateTagsInline(),
   ]);
 
   return (
