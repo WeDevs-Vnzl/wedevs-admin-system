@@ -1,17 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 
 // Wave 3 E2E, projects (H1-B2, TASK.md "Tester scope"). This file starts nothing: it runs against the app that
-// PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server
-// process and every browser context shares it, so the tests that mutate it are serial and reset it through the
-// user menu ("Restablecer datos de prueba") before each test. View-as-role lives in the cookie of each context.
-//
-// Seed facts used below (src/mocks/fixtures/projects.ts): `pry_kairos_web` is EN_CURSO and has two REPOSITORIO
-// links; `pry_orinoco_tracking` is PROPUESTA with no billing (no INTEGRITY_LOCK on archive); `pry_solaris_portal`
-// is EN_CURSO; `cli_kairos` (CLI-0001) and `cli_hotel_mochima`-style clients exist as client pickers' options.
-// Billing plans, installments, recurring charges and invoices are empty in the seed (fixtures/billing.ts,
-// fixtures/invoices.ts), so no project has active billing: the archive INTEGRITY_LOCK step is not reachable.
-
-test.describe.configure({ mode: "serial" });
+// PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
+// every browser context shares it, so the tests that mutate it run one at a time (`--workers=1`, no serial mode, so
+// one failure does not skip the rest) and reset it through the user menu ("Restablecer datos de prueba") before each
+// test. View-as-role lives in the cookie of each context. Seed facts used below (src/mocks/fixtures/projects.ts):
+// `pry_kairos_web` is EN_CURSO and has two REPOSITORIO links; `pry_orinoco_tracking` is PROPUESTA with no billing (no
+// INTEGRITY_LOCK on archive); `pry_solaris_portal` is EN_CURSO; `cli_kairos` (CLI-0001) and `cli_hotel_mochima`-style
+// clients exist as client pickers' options. Billing plans, installments, recurring charges and invoices are empty in
+// the seed (fixtures/billing.ts, fixtures/invoices.ts), so no project has active billing: the archive INTEGRITY_LOCK
+// step is not reachable.
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 
@@ -79,16 +77,22 @@ test.describe("HU-05 create project (mutates projects)", () => {
     const name = "Proyecto E2E dos clientes";
     await open(page, "/projects/new");
     await page.getByLabel("Nombre", { exact: true }).fill(name);
-    await page.getByLabel("Resumen", { exact: true }).fill("Resumen del proyecto E2E de dos clientes");
+    await page
+      .getByLabel("Resumen", { exact: true })
+      .fill("Resumen del proyecto E2E de dos clientes");
 
     const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
     await clients.fill("Kairos");
     await page.getByRole("option", { name: "Kairos Studio" }).click();
-    await page.getByRole("textbox", { name: "Rol: Kairos Studio", exact: true }).fill("Contratante");
+    await page
+      .getByRole("textbox", { name: "Rol: Kairos Studio", exact: true })
+      .fill("Contratante");
 
     await clients.fill("Hotel Playa");
     await page.getByRole("option", { name: "Hotel Playa Mochima" }).click();
-    await page.getByRole("textbox", { name: "Rol: Hotel Playa Mochima", exact: true }).fill("Usuario final");
+    await page
+      .getByRole("textbox", { name: "Rol: Hotel Playa Mochima", exact: true })
+      .fill("Usuario final");
 
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
     await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
@@ -106,7 +110,9 @@ test.describe("HU-05 create project (mutates projects)", () => {
 // ───────────────────────────── HU-06 Technologies ─────────────────────────────
 
 test.describe("HU-06 technologies (read only)", () => {
-  test("CA1: the stack picker groups the active technologies by their translated category", async ({ page }) => {
+  test("CA1: the stack picker groups the active technologies by their translated category", async ({
+    page,
+  }) => {
     await open(page, "/projects/new");
 
     await page.locator("#project-stack").click();
@@ -134,7 +140,6 @@ test.describe("HU-06 technologies (read only)", () => {
 // ───────────────────────────── HU-07 Links ─────────────────────────────
 
 test.describe("HU-07 project links (mutates link order)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
     await resetMockData(page);
   });
@@ -149,7 +154,9 @@ test.describe("HU-07 project links (mutates link order)", () => {
     expect(await linkHandles(page).count()).toBeGreaterThanOrEqual(2);
   });
 
-  test("CA2: reorder by keyboard (dnd-kit) and by drag, and keep the order after reload", async ({ page }) => {
+  test("CA2: reorder by keyboard (dnd-kit) and by drag, and keep the order after reload", async ({
+    page,
+  }) => {
     await open(page, "/projects/pry_kairos_web?tab=links");
     const before = await linkHandles(page).evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("aria-label") ?? ""),
@@ -160,7 +167,9 @@ test.describe("HU-07 project links (mutates link order)", () => {
     const first = linkHandles(page).first();
     await first.focus();
     await page.keyboard.press("Space");
+    await page.waitForTimeout(300); // dnd-kit's keyboard sensor picks up the item on the next tick
     await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(300);
     await page.keyboard.press("Space");
     await expect(page.getByText("Orden de los enlaces guardado", { exact: true })).toBeVisible();
 
@@ -192,19 +201,23 @@ test.describe("HU-07 project links (mutates link order)", () => {
 
   test("CA3: a link with an invalid URL shows the error on the URL field", async ({ page }) => {
     await open(page, "/projects/pry_kairos_web/edit");
-    await page.getByRole("button", { name: "Añadir enlace", exact: true }).click();
-    await page.getByLabel("Etiqueta", { exact: true }).last().fill("Enlace E2E");
-    await page.getByLabel("URL", { exact: true }).last().fill("esto no es una URL");
+    await page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true }).click();
+    const urls = page.getByLabel("URL", { exact: true });
+    const blank = await urls.evaluateAll((nodes) =>
+      nodes.findIndex((node) => node instanceof HTMLInputElement && node.value === ""),
+    );
+    expect(blank).toBeGreaterThanOrEqual(0);
+    await page.getByLabel("Etiqueta", { exact: true }).nth(blank).fill("Enlace E2E");
+    await urls.nth(blank).fill("esto no es una URL");
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
 
-    await expect(page.getByLabel("URL", { exact: true }).last()).toHaveAttribute("aria-invalid", "true");
+    await expect(urls.nth(blank)).toHaveAttribute("aria-invalid", "true");
   });
 });
 
 // ───────────────────────────── HU-08 Status transitions ─────────────────────────────
 
 test.describe("HU-08 project status (mutates project status)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
     await resetMockData(page);
   });
@@ -225,7 +238,9 @@ test.describe("HU-08 project status (mutates project status)", () => {
     await open(page, "/projects/pry_orinoco_tracking");
     const dialog = await chooseTarget(page, "En curso");
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
-    await expect(page.getByText("Pasar a En curso exige la fecha de inicio.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Pasar a En curso exige la fecha de inicio.", { exact: true }),
+    ).toBeVisible();
     await expect(dialog).toBeVisible();
   });
 
@@ -233,7 +248,9 @@ test.describe("HU-08 project status (mutates project status)", () => {
     await open(page, "/projects/pry_solaris_portal");
     const dialog = await chooseTarget(page, "Entregado");
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
-    await expect(page.getByText("Pasar a Entregado exige la fecha real de entrega.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Pasar a Entregado exige la fecha real de entrega.", { exact: true }),
+    ).toBeVisible();
   });
 
   test("CA3: CANCELADO opens the cancel confirmation with its two options", async ({ page }) => {
@@ -245,7 +262,9 @@ test.describe("HU-08 project status (mutates project status)", () => {
     const cancel = page.getByRole("alertdialog");
     await expect(cancel.getByText("¿Cancelar registro?", { exact: true })).toBeVisible();
     await expect(cancel.getByText("Cancelar las cuotas pendientes", { exact: true })).toBeVisible();
-    await expect(cancel.getByText("Finalizar los cobros recurrentes", { exact: true })).toBeVisible();
+    await expect(
+      cancel.getByText("Finalizar los cobros recurrentes", { exact: true }),
+    ).toBeVisible();
   });
 
   test("CA4: a status change shows as STATUS_CHANGE in the Actividad tab", async ({ page }) => {
@@ -257,7 +276,6 @@ test.describe("HU-08 project status (mutates project status)", () => {
 // ───────────────────────────── Archive a project ─────────────────────────────
 
 test.describe("archive a project (mutates projects)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
     await resetMockData(page);
   });
@@ -288,11 +306,17 @@ test.describe("archive a project (mutates projects)", () => {
 // ───────────────────────────── Read-only shape checks ─────────────────────────────
 
 test.describe("projects (read only)", () => {
-  test("an unknown project id renders the in-shell 404 with HTTP 404", async ({ page }) => {
-    const response = await page.goto("/projects/pry_no_existe");
-    expect(response?.status()).toBe(404);
+  test("an unknown project id renders the in-shell 404 page", async ({ page }) => {
+    await page.goto("/projects/pry_no_existe");
     await expect(notFoundText(page)).toBeVisible();
     await expect(sidebar(page)).toBeVisible();
+  });
+
+  // PRODUCT DEFECT (major, status): the in-shell 404 body of an unknown project id is served with HTTP 200
+  // (curl http://localhost:3105/projects/pry_no_existe). /notes/note_no_existe answers 404.
+  test.fail("an unknown project id answers HTTP 404", async ({ page }) => {
+    const response = await page.goto("/projects/pry_no_existe");
+    expect(response?.status()).toBe(404);
   });
 
   test("the project form renders in dark mode", async ({ page }) => {

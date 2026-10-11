@@ -3,18 +3,18 @@ import { expect, test, type Page } from "@playwright/test";
 // Wave 3 E2E, notes, roles, navigation, accessibility and responsive (H1-B2, TASK.md "Tester scope"). This file
 // starts nothing: it runs against the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock
 // store is one in-memory object per server process and every browser context shares it, so the tests that
-// mutate it are serial and reset it through the user menu ("Restablecer datos de prueba") before each test.
+// mutate it run one at a time (`--workers=1`, no serial mode, so one failure does not skip the rest) and reset
+// it through the user menu ("Restablecer datos de prueba") before each test.
 // View-as-role lives in the cookie of each context, so a role never leaks into another test.
 //
 // Seed facts used below: `note_kairos_alcance` ("Alcance acordado con Kairos", author usr_andres_molina) is
 // linked to `cli_kairos` and `pry_kairos_web` at once (HU-23 CA2); `cli_kairos` has active projects and contacts;
 // `pry_kairos_web` has the dates and money the locale test reformats.
 
-test.describe.configure({ mode: "serial" });
-
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const NOTE_TITLE = "Alcance acordado con Kairos";
 const RAW_KEY = /^[a-z]+(\.[A-Za-z0-9]+)+$/;
+const NO_MAIN_H1 = new Set(["/projects/new", "/projects/pry_kairos_web/edit"]);
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
@@ -98,22 +98,18 @@ test.describe("HU-23 notes (read only)", () => {
     await expect(page.getByText("Prioritario", { exact: true }).first()).toBeVisible();
   });
 
-  // PRODUCT DEFECT (major): the shared Notas tab of a client or project detail page (`?tab=notes`) renders the
-  // "A server error occurred" page for every record (cli_kairos, pry_kairos_web, cli_hotel_mochima,
-  // cli_zafiro_labs), so the feed never renders. Entry point: src/features/notes/components/entity-notes-tab.tsx.
-  // Expected: the note title in both feeds. Actual: server error page (digest ERROR 3469573493).
-  test.fail("CA2: a note linked to a client and a project shows in both feeds", async ({ page }) => {
+  // The Notas tab of a client and of a project render the feed again (3.7 fixed the RSC boundary, T1).
+  test("CA2: a note linked to a client and a project shows in both feeds", async ({ page }) => {
     await resetMockData(page);
     await open(page, "/clients/cli_kairos?tab=notes");
-    await expect(page.getByText(NOTE_TITLE, { exact: true }).first()).toBeVisible();
+    await expect(page.locator("main").getByText(NOTE_TITLE).first()).toBeVisible();
 
     await open(page, "/projects/pry_kairos_web?tab=notes");
-    await expect(page.getByText(NOTE_TITLE, { exact: true }).first()).toBeVisible();
+    await expect(page.locator("main").getByText(NOTE_TITLE).first()).toBeVisible();
   });
 });
 
 test.describe("HU-29 activity is read-only (mutates a client)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
     await resetMockData(page);
   });
@@ -132,9 +128,14 @@ test.describe("HU-29 activity is read-only (mutates a client)", () => {
     await open(page, "/clients/cli_zafiro_labs?tab=activity");
     const feed = page.locator("main");
     await expect(feed.getByText(/^Actualizó /).first()).toBeVisible();
-    await expect(feed.getByRole("button", { name: /^(Editar|Eliminar|Edit|Delete)/ })).toHaveCount(0);
+    await expect(feed.getByRole("button", { name: /^(Editar|Eliminar|Edit|Delete)/ })).toHaveCount(
+      0,
+    );
 
-    await feed.getByRole("button", { name: /^Ver detalle de/ }).first().click();
+    await feed
+      .getByRole("button", { name: /^Ver detalle de/ })
+      .first()
+      .click();
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText("Cambios", { exact: true })).toBeVisible();
     await expect(sheet.getByText("Nombre comercial", { exact: true })).toBeVisible();
@@ -160,25 +161,37 @@ test.describe("roles (View as role)", () => {
     const more = page.getByRole("button", { name: "Más acciones", exact: true });
     if ((await more.count()) > 0) {
       await more.click();
-      await expect(page.getByRole("menuitem", { name: "Archivar cliente", exact: true })).toHaveCount(0);
+      await expect(
+        page.getByRole("menuitem", { name: "Archivar cliente", exact: true }),
+      ).toHaveCount(0);
     }
   });
 
-  test("Miembro sees no finance tabs on a client and no money columns on the lists", async ({ page }) => {
+  test("Miembro sees no finance tabs on a client and no money columns on the lists", async ({
+    page,
+  }) => {
     await viewAsRole(page, "Miembro");
     await open(page, "/clients/cli_kairos");
     await expect(page.getByRole("tab", { name: /^Facturas/ })).toHaveCount(0);
     await expect(page.getByRole("tab", { name: /^Pagos/ })).toHaveCount(0);
 
     await open(page, "/clients/list");
-    await expect(page.getByRole("columnheader", { name: "Total facturado (USD)", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("columnheader", { name: "Saldo por cobrar (USD)", exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("columnheader", { name: "Total facturado (USD)", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("columnheader", { name: "Saldo por cobrar (USD)", exact: true }),
+    ).toHaveCount(0);
 
     await open(page, "/projects/list");
-    await expect(page.getByRole("columnheader", { name: "Valor contratado (USD)", exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("columnheader", { name: "Valor contratado (USD)", exact: true }),
+    ).toHaveCount(0);
   });
 
-  test("Miembro archives only own notes: the archive control is missing on at least one note", async ({ page }) => {
+  test("Miembro archives only own notes: the archive control is missing on at least one note", async ({
+    page,
+  }) => {
     await viewAsRole(page, "Miembro");
     await open(page, "/notes");
     const rows = page.getByRole("row").filter({ has: page.getByRole("cell") });
@@ -188,7 +201,9 @@ test.describe("roles (View as role)", () => {
     expect(await archiveControls.count()).toBeLessThan(rowCount);
   });
 
-  test("Lector sees no write action on the clients, projects and notes screens", async ({ page }) => {
+  test("Lector sees no write action on the clients, projects and notes screens", async ({
+    page,
+  }) => {
     await viewAsRole(page, "Lector");
     await open(page, "/clients/list");
     await expect(page.getByRole("link", { name: "Nuevo cliente", exact: true })).toHaveCount(0);
@@ -228,8 +243,8 @@ const H1_B2_ROUTES = [
 ];
 
 test.describe("navigation sweep (read only)", () => {
-  test("every H1-B2 route renders in the shell with a translated heading", async ({ page }) => {
-    for (const path of H1_B2_ROUTES) {
+  for (const path of H1_B2_ROUTES) {
+    const check = async (page: Page) => {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       await expect(sidebar(page), path).toBeVisible();
@@ -240,15 +255,46 @@ test.describe("navigation sweep (read only)", () => {
       const text = (await heading.innerText()).trim();
       expect(text.length, `${path} has a heading`).toBeGreaterThan(0);
       expect(RAW_KEY.test(text), `${path} shows a raw key: ${text}`).toBe(false);
+    };
+
+    if (NO_MAIN_H1.has(path)) {
+      // PRODUCT DEFECT (minor, a11y): the project form pages have no <h1> in <main> (checked after the network is idle).
+      test.fail(`renders ${path} in the shell with a translated heading`, async ({ page }) => {
+        await check(page);
+      });
+    } else {
+      test(`renders ${path} in the shell with a translated heading`, async ({ page }) => {
+        await check(page);
+      });
+    }
+  }
+
+  test("unknown ids and the graph route render the in-shell 404 page", async ({ page }) => {
+    for (const path of [
+      "/clients/cli_no_existe",
+      "/projects/pry_no_existe",
+      "/notes/note_no_existe",
+      "/clients/cli_kairos/graph",
+    ]) {
+      await page.goto(path);
+      await expect(notFoundText(page), path).toBeVisible();
+      await expect(sidebar(page), path).toBeVisible();
     }
   });
 
-  test("unknown ids and the graph route render the in-shell 404 with HTTP 404", async ({ page }) => {
-    for (const path of ["/clients/cli_no_existe", "/projects/pry_no_existe", "/notes/note_no_existe", "/clients/cli_kairos/graph"]) {
+  test("the notes, graph and unknown note routes answer HTTP 404", async ({ page }) => {
+    for (const path of ["/notes/note_no_existe", "/clients/cli_kairos/graph"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
-      await expect(notFoundText(page), path).toBeVisible();
-      await expect(sidebar(page), path).toBeVisible();
+    }
+  });
+
+  // PRODUCT DEFECT (major, status): the in-shell 404 body of an unknown client or project id is served with HTTP 200
+  // (same defect as the clients and projects files).
+  test.fail("unknown client and project ids answer HTTP 404", async ({ page }) => {
+    for (const path of ["/clients/cli_no_existe", "/projects/pry_no_existe"]) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
     }
   });
 });
@@ -271,31 +317,38 @@ test.describe("accessibility (read only)", () => {
     await expect(page.getByRole("combobox", { name: "Clientes", exact: true })).toBeFocused();
   });
 
-  test("Escape closes the contact dialog and returns focus to its opener", async ({ page }) => {
-    await open(page, "/clients/cli_zafiro_labs?tab=contacts");
-    const trigger = page.getByRole("button", { name: "Nuevo contacto", exact: true });
-    await trigger.focus();
-    await page.keyboard.press("Enter");
-    await expect(page.getByRole("dialog", { name: "Nuevo contacto", exact: true })).toBeVisible();
+  // PRODUCT DEFECT (minor, a11y WCAG 2.4.3): after Escape the contact dialog closes but focus lands on <body>, not on
+  // the "Nuevo contacto" button that opened it (checked in the browser: document.activeElement is BODY).
+  test.fail(
+    "Escape closes the contact dialog and returns focus to its opener",
+    async ({ page }) => {
+      await open(page, "/clients/cli_zafiro_labs?tab=contacts");
+      const trigger = page.getByRole("button", { name: "Nuevo contacto", exact: true });
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("dialog", { name: "Nuevo contacto", exact: true })).toBeVisible();
 
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog", { name: "Nuevo contacto", exact: true })).toBeHidden();
-    await expect(trigger).toBeFocused();
-  });
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog", { name: "Nuevo contacto", exact: true })).toBeHidden();
+      await expect(trigger).toBeFocused();
+    },
+  );
 
   test("arrow keys move between the detail tabs and select the focused tab", async ({ page }) => {
     await open(page, "/clients/cli_kairos");
     const summary = page.getByRole("tab", { name: "Resumen", exact: true });
     await summary.focus();
     await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("tab", { name: /^Contactos/ })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: /^Contactos/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 });
 
 // ───────────────────────────── ES ↔ EN on a detail page (HU-30 CA1) ─────────────────────────────
 
 test.describe("locale on a detail page (mutates mock preferences)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
     await resetMockData(page);
   });
@@ -303,23 +356,36 @@ test.describe("locale on a detail page (mutates mock preferences)", () => {
     await resetMockData(page);
   });
 
-  test("switching ES to EN reformats the dates and money of a project detail", async ({ page }) => {
-    await open(page, "/projects/pry_kairos_web");
-    const before = await page.locator("main").innerText();
+  // PRODUCT DEFECT (major, crash): switching the language on a project detail page replaces the page with the error
+  // boundary ("This page couldn't load") and logs "Cannot read properties of null (reading 'commands')". Other
+  // routes switch fine. Likely origin: src/components/ui/rich-text/rich-text-view.tsx:46 (`editor.commands`
+  // read after `useEditor` is re-created when the `extensions` memo changes with the locale).
+  test.fail(
+    "switching ES to EN reformats the dates and money of a project detail",
+    async ({ page }) => {
+      await open(page, "/projects/pry_kairos_web");
+      const before = await page.locator("main").innerText();
 
-    await page.getByRole("button", { name: "Idioma", exact: true }).click();
-    await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Idioma", exact: true }).click();
+      await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
+      await expect(page.getByRole("button", { name: /^Search\b/ })).toBeVisible();
 
-    const after = await page.locator("main").innerText();
-    // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
-    expect(after).not.toBe(before);
-  });
+      const after = await page.locator("main").innerText();
+      // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
+      expect(after).not.toBe(before);
+    },
+  );
 });
 
 // ───────────────────────────── Responsive: no horizontal page scroll ─────────────────────────────
 
-const RESPONSIVE_ROUTES = ["/clients/list", "/clients/cli_kairos", "/projects/list", "/projects/pry_kairos_web", "/notes"];
+const RESPONSIVE_ROUTES = [
+  "/clients/list",
+  "/clients/cli_kairos",
+  "/projects/list",
+  "/projects/pry_kairos_web",
+  "/notes",
+];
 
 async function expectNoHorizontalScroll(page: Page, path: string) {
   await open(page, path);
@@ -341,7 +407,9 @@ test.describe("responsive desktop", () => {
 test.describe("responsive tablet 820×1180", () => {
   test.use({ viewport: { width: 820, height: 1180 } });
 
-  test("the main lists and detail pages fit the tablet width without horizontal page scroll", async ({ page }) => {
+  test("the main lists and detail pages fit the tablet width without horizontal page scroll", async ({
+    page,
+  }) => {
     for (const path of RESPONSIVE_ROUTES) {
       await expectNoHorizontalScroll(page, path);
     }

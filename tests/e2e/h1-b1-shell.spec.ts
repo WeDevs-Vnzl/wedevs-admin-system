@@ -68,18 +68,27 @@ test.describe("routing and sign-in", () => {
     await page.goto("/dashboard");
     await expect(mainNav(page)).toBeVisible();
 
+    // "Clientes", "Proyectos", "Notas" and "Actividad" exist since H1-B2; the links below are still in-shell not-found.
+    for (const [label, url] of [
+      ["Clientes", /\/clients$/],
+      ["Proyectos", /\/projects$/],
+      ["Notas", /\/notes$/],
+      ["Actividad", /\/activity$/],
+    ] as const) {
+      await sidebar(page).getByRole("link", { name: label, exact: true }).click();
+      await expect(page).toHaveURL(url);
+      await expect(page.getByText("Página no encontrada", { exact: true })).toHaveCount(0);
+      await expect(mainNav(page)).toBeVisible();
+    }
+
     const notFoundLinks = [
-      "Clientes",
-      "Proyectos",
       "Facturas",
       "Pagos",
       "Gastos",
       "Cuentas",
       "Documentos",
-      "Notas",
       "Grafo",
       "Reportes",
-      "Actividad",
     ];
     for (const label of notFoundLinks) {
       await sidebar(page).getByRole("link", { name: label, exact: true }).click();
@@ -100,7 +109,8 @@ test.describe("routing and sign-in", () => {
   test("unknown routes return the in-shell not-found with HTTP 404; the other routes stay unaffected", async ({
     page,
   }) => {
-    for (const path of ["/clients", "/settings/preferences/x"]) {
+    // `/clients/cli_kairos/graph` is H1-B5; `/clients` itself is a page since H1-B2.
+    for (const path of ["/clients/cli_kairos/graph", "/settings/preferences/x"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
       await expect(page.getByText("Página no encontrada", { exact: true })).toBeVisible();
