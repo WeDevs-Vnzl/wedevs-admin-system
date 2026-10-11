@@ -2749,6 +2749,35 @@ helper + test); `src/app/(app)/projects/new/page.tsx`, `src/app/(app)/projects/[
       failed.
 - [x] Gate. Commit messages without any Claude attribution.
 
+#### Package 3.6 — Wave 3 review fixes, round 2: server-safe table URL state, client archive lock (CR re-check (a), b, 3–5)
+
+Package 3.6 → Agent: wedevs-developer · sonnet — Reason: a kit split across the client/server boundary (RSC
+pages call the URL-state helpers) plus the `INTEGRITY_LOCK` confirm round-trip shared by two features.
+
+Use the shadcn MCP.
+
+Depends on: 3.4 + 3.5 merged (8bb188a). Approved by the user 2026-10-11 ("procede"), **including a kit exception**
+limited to `src/components/ui/data-table/{table-url-state.ts,use-table-url-state.ts,index.ts}` (+ tests).
+
+Files: `src/components/ui/data-table/table-url-state.ts` (new), `use-table-url-state.ts`, `index.ts`;
+`src/features/clients/components/**`, `src/features/projects/components/**`, `src/components/patterns/**` (only if
+the archive dialog is shared there), `src/app/(app)/projects/list/page.tsx`, `src/features/projects/detail-tabs.ts`;
+`src/features/tags/{grants.ts (new),queries.ts,actions.ts}`; `src/i18n/messages/{es,en}/{clients,projects,patterns}.json`
+(+ tests everywhere touched).
+
+- [ ] **SSR blocker.** `tableUrlParsers`, `TableUrlState`, `guardPageSize`, `listQueryToUrlState`,
+      `urlStateToListQuery`, `patchToUrlState` move to a server-safe `table-url-state.ts` (no `"use client"`, parsers
+      from `nuqs/server`); `use-table-url-state.ts` keeps the hook and re-exports them; RSC pages import from the
+      server-safe module. `/clients/list`, `/projects/list` and `/notes` render rows under `next start`.
+- [ ] **(a)** Client archive sends without `confirm` first; on `INTEGRITY_LOCK` shows the lock message and re-sends
+      with `confirm: true` (same flow as `ProjectArchiveDialog`, ideally one shared dialog). Test.
+- [ ] **(b)** Projects bulk tag `canCreate` comes from `canCreateTagsInline()` via the list page and `ProjectsTable`.
+- [ ] **3.** One exported grants constant shared by `createTagAction` and `canCreateTagsInline()`.
+- [ ] **4.** Unused `parseProjectDetailTab` / `projectDetailTabHref` removed.
+- [ ] **5.** Project link label `Input` gets a `FieldError` id + `aria-describedby`; stray blank line in
+      `client-form.tsx` removed.
+- [ ] Gate. Commit messages without any Claude attribution.
+
 #### Wave 3 close
 
 - [ ] **Integration checklist:** 3.1, 3.2, 3.3 merged; no Claude attribution; worktrees removed; lockfile
