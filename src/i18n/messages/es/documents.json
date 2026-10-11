@@ -1,4 +1,65 @@
 {
+  "tab": {
+    "title": "Documentos",
+    "all": "Todos",
+    "attach": "Adjuntar documento",
+    "empty": "Este registro no tiene documentos vinculados.",
+    "noVersion": "Sin versión",
+    "versionLabel": "v{number}",
+    "columns": {
+      "code": "Código",
+      "title": "Título",
+      "type": "Tipo",
+      "status": "Estado",
+      "version": "Versión",
+      "updated": "Actualizado",
+      "actions": "Acciones"
+    },
+    "unlink": {
+      "trigger": "Desvincular",
+      "title": "¿Desvincular documento?",
+      "description": "El documento dejará de aparecer en este registro. Seguirá disponible en Documentos y en sus otros vínculos.",
+      "confirm": "Desvincular",
+      "cancel": "Cancelar",
+      "done": "Documento desvinculado",
+      "failed": "No se pudo desvincular el documento"
+    }
+  },
+  "sheet": {
+    "title": "Adjuntar documento",
+    "description": "Sube un archivo nuevo o vincula un documento que ya existe.",
+    "modes": {
+      "upload": "Subir archivo",
+      "link": "Vincular existente"
+    },
+    "fields": {
+      "title": "Título",
+      "type": "Tipo de documento",
+      "summary": "Resumen",
+      "effectiveDate": "Fecha de vigencia",
+      "signedAt": "Fecha de firma",
+      "expiresAt": "Fecha de vencimiento",
+      "file": "Archivo",
+      "document": "Documento"
+    },
+    "placeholders": {
+      "title": "Ej. Contrato marco 2026",
+      "type": "Elige un tipo",
+      "date": "Elige una fecha",
+      "document": "Busca por código o título"
+    },
+    "fileRequired": "Adjunta un archivo para continuar",
+    "submit": {
+      "upload": "Subir y adjuntar",
+      "link": "Vincular documento"
+    },
+    "cancel": "Cancelar",
+    "uploaded": "Documento adjuntado",
+    "linked": "Documento vinculado",
+    "createFailed": "No se pudo crear el documento",
+    "versionFailed": "El documento se creó, pero el archivo no se pudo subir. Súbelo desde el documento.",
+    "linkFailed": "No se pudo vincular el documento"
+  },
   "validation": {
     "signedAtNotAllowed": "Este tipo de documento no requiere firma, así que no admite fecha de firma",
     "expiresAtNotAllowed": "Este tipo de documento no vence, así que no admite fecha de vencimiento",

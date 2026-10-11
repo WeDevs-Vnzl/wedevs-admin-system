@@ -2360,25 +2360,25 @@ Files: new `src/mocks/services/documents.ts` (+ test); new `src/features/documen
 (+ tests); new `src/features/documents/components/{entity-documents-tab,attach-document-sheet,document-row-actions}.tsx`
 (+ tests); `src/i18n/messages/{es,en}/documents.json` (keep `validation`). No other file.
 
-- [ ] Minimal service with PRD §12 names (H1-B4 extends this file): `listDocuments` (by linked entity
+- [x] Minimal service with PRD §12 names (H1-B4 extends this file): `listDocuments` (by linked entity
       through the `clientId` / `projectId` facets of `documentFilterSchema` — the contract has no generic
       entity pair; a tab for another type → stop and report; category/type facets; archived left out;
       rows `DocumentRow` / `DocumentVersionRow` / `DocumentLinkRow` assembled into DTOs), `createDocument` (`ARCHIVO` format only here; type rules
       through `createDocumentInputSchemaFor`; `DOC-####`; `CREATE`, `UPLOAD`, `LINK`), `linkDocument`,
       `unlinkDocument` (`UNLINK`; other links untouched, HU-20 CA2). No `searchDocuments` service (not a
       `DocumentsService` name, C9): `searchDocumentsAction` reads `listDocuments` with `q`.
-- [ ] Adapters: `{ create, document }`, link/unlink `{ update, document }` (Member CRU),
+- [x] Adapters: `{ create, document }`, link/unlink `{ update, document }` (Member CRU),
       `searchDocumentsAction` (`{ read, document }`).
-- [ ] `EntityDocumentsTab({ entity })` per wireframe 4.6: category chips with counts (from
+- [x] `EntityDocumentsTab({ entity })` per wireframe 4.6: category chips with counts (from
       `listDocumentCategories()`, no input; file chips follow the 2.3 attachment composition, see "Wave 1
       facts"), table (code, title,
       type, status badge, version, updated), "Adjuntar documento" `sheet` with two modes — upload a new
       file (`Uploader`, 25 MB general context; type grouped by category; title; dates per the type rules)
       or link an existing document (`AsyncCombobox`); unlink through `ConfirmDialog`; Viewer read-only.
       Document links go to `/documents/[id]` (in-shell 404 until H1-B4, declared).
-- [ ] Tests: list by entity, attach new and link existing, unlink keeps other links, permission per role,
+- [x] Tests: list by entity, attach new and link existing, unlink keeps other links, permission per role,
       oversize and disallowed files refused by the uploader context, ES and EN.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 2 close
 
