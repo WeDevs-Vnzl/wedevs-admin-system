@@ -2780,17 +2780,30 @@ the archive dialog is shared there), `src/app/(app)/projects/list/page.tsx`, `sr
 
 #### Wave 3 close
 
-- [ ] **Integration checklist:** 3.1, 3.2, 3.3 merged; no Claude attribution; worktrees removed; lockfile
-      unchanged; lint, typecheck, test, `i18n:check`, build pass.
-- [ ] **Planner coherence review:** H1-B2 routes = PRD §11 and `coverage-matrix.md` §4; detail tabs = PRD
-      §8.2/§8.3 lists (finance tabs as slots, Grafo as the header toggle); screens read only through
-      `queries.ts` and mutate only through `actions.ts` (C7); the shared kit and patterns are used, not
-      re-implemented; forms use the same schemas as the actions; `?tab=` values stable for the E2E; every
-      page has a translated title; namespaces in both languages.
-- [ ] **Code review:** C1, C2, C3, C4 (description and notes rendering), C5, C6, C7, C8, C9, C10, C15
-      (no number math on money in screens), C16 shape, C19 shape (archive/restore dialogs, "Mostrar
-      archivados" only Owner/Admin), C20, C25; accessibility of forms (labels, errors linked to fields),
-      tabs (keyboard, `?tab=`), dialogs (focus trap and return), the links reorder (keyboard).
+- [x] **Integration checklist:** 3.1–3.6 merged (3.3 d027bb1, 3.1 1b5255d, 3.2 934b99e, 3.4 766b0ed, 3.5 8bb188a,
+      3.6 72adac7); no Claude attribution; worktrees removed; lockfile unchanged; lint, typecheck, test (201 files,
+      2513 passed + 1 expected fail), `i18n:check` (32 namespaces), build pass. Approved exceptions:
+      `listClientsAction` / `listProjectsAction` in `actions.ts` (T2 reload pattern); 3.2 new helper files
+      `src/features/projects/{link-rows,load-project,table-filter}.ts`; 3.4 `detail-tabs.ts`; 3.6 kit exception
+      (`data-table/table-url-state.ts`). 3.6 merge took `TASK.md` from the base (the worker's edit duplicated
+      ~2000 lines). **Lesson:** jsdom does not enforce the client/server boundary — a `"use client"` kit helper
+      called from RSC pages broke `/clients/list`, `/projects/list` (error boundary) and `/notes` (500) while
+      the gate was green; the Orchestrator now smoke-checks list pages under `next start` and reads the server
+      log (a 200 is not enough). After 3.6: three lists render 25 rows, clean log.
+- [x] **Planner coherence review:** NEEDS FIX → 3.4/3.5. F1 project `?tab=` English values; F2 client
+      *Proyectos* "+ Nuevo" gated; F3 URL-state loader pattern for projects and notes; F4 one inline tag grant;
+      F5 edit breadcrumb; F6 note edit update schema; F10 3.2 Tests box (keyboard reorder → E2E HU-07 CA2).
+      Deferred: F7 title concat, F9 client projects tab page size → H1-FX; F8 archived projects restore →
+      H1-B5. Rulings: author facet → H1-B5; CONTACT prefill, `DateField` clear → H1-FX; DOCUMENT prefill →
+      H1-B4; money in the RSC payload for non-finance roles → H2-B3.
+- [x] **Code review:** first pass BLOCKED (B1 notes CSV column id; B2 projects archive bypassed the
+      `INTEGRITY_LOCK`; B3 dnd instructions not i18n) → 3.4/3.5. Re-check BLOCKED on (a) clients archive also
+      bypassed the lock (since 3.1) + the SSR blocker → 3.6. Final re-check (72adac7): READY FOR TESTING.
+      Deferred to H1-FX: kit `aria-describedby` forwarding (`PhoneInput`, `DateField`, `AsyncCombobox`); kit
+      `ConfirmDialog` focus return and moving `useOpenerFocus` out of clients; m6 raw ISO dates in the project
+      header; m7 stale-response guard in tables; N1 stray blank line `client-form.tsx:263`; N2 plural
+      `archiveNeedsConfirm` for bulk; N3 one shared archive-with-lock dialog. m4 archived records editable →
+      H1-FX/H1-B5.
 - [ ] **User confirms the Tester may run.**
 - [ ] **Tester scope:**
   - Unit: `vitest run --coverage`, `i18n:check` (ES/EN parity), build.
