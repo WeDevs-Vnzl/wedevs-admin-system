@@ -2844,6 +2844,15 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 - [x] Remove the `test.fail` markers of the fixed defects (no other E2E change). Gate. Orchestrator smoke under
       `next start`: unknown ids → 404, overview skeletons still stream, ES ↔ EN on a project detail, clean log.
       Tester phase C re-run of the affected specs. Commit messages without any Claude attribution.
+      *(2026-10-11: merged 763a0ce; gate green — test 202 files, 2516 passed + 1 expected fail after re-running the
+      known jsdom 5 s flakes in `country-combobox` and `phone-input`; i18n 32 namespaces; build OK (stale
+      `.next/types` cleared after the route-group move). Smoke on :3105: `/clients/cli_no_existe`,
+      `/projects/pry_no_existe`, `/notes/note_no_existe` → 404; overviews, lists (25 rows), details, `?tab=notes`,
+      `?tab=documents`, `/projects/new` and `/edit` (with `<h1>`) → 200, no digest, clean log. Notes → H1-FX:
+      `/clients/list` and `/projects/list` no longer stream a skeleton; the D3 fix injects a global
+      `[data-slot="combobox-content"] { pointer-events: auto }` style from the feature — the kit `AsyncCombobox`
+      should handle being inside a modal sheet itself; `useOpenerFocus` is shared, so the layout-effect change
+      reaches every dialog that uses it.)*
 
 #### Wave 3 close
 
