@@ -2380,18 +2380,57 @@ Files: new `src/mocks/services/documents.ts` (+ test); new `src/features/documen
       oversize and disallowed files refused by the uploader context, ES and EN.
 - [x] Gate. Commit messages without any Claude attribution.
 
+#### Package 2.9 — Wave 2 coherence fixes: services, grants, server-only icons (Planner F3, F6–F10, F12)
+
+Package 2.9 → Agent: wedevs-developer · sonnet — Reason: removes a C15 breach in the projects mock service, sets one C19 read rule across three services, tightens a DT-71 grant and adds a server-only module; service-level changes H2-B3 reproduces.
+
+Depends on: 2.1–2.8 (merged). Runs after the Wave 2 Code Review (its findings on these files join this package), before the Tester.
+
+Files: `src/mocks/services/{projects,notes,tags}.ts` (+ tests); `src/mocks/services/{documents,alerts}.test.ts` (type tests only);
+new `src/features/technologies/icons.ts` (+ test); `src/features/technologies/components/tech-stack-icons.tsx`;
+`src/features/technologies/actions.ts` (+ `actions.test.ts`); `src/app/(app)/settings/technologies/page.tsx`. No other file.
+
+- [ ] **F3 (C15).** `projects.ts`: delete `money()`; money sorters return the stored USD decimal string (the `listRows` numeric collation orders non-negative 2-decimal strings correctly, as `clients.ts` does). Test: `"10.00"` sorts after `"9.00"` both directions.
+- [ ] **F6 (C19 shape).** `getProject` and `getNote` answer `NOT_FOUND` for an archived record unless `can(ctx.user, "restore", "trash")`, the same rule as `getClient`. Tests per role.
+- [ ] **F7 (C12 shape).** `createTag` logs `CREATE` and `updateTag` logs `UPDATE` (with `diffFields` over `name`, `color`) on entity type `TAG` through `mockTx` + `logActivity`. Tests.
+- [ ] **F8.** Move `resolveTechnologyIcon` and `ResolvedIcon` to new `src/features/technologies/icons.ts` starting with `import "server-only"`; `tech-stack-icons.tsx`, `actions.ts` and the settings page import from it. `resolveTechnologyIconAction` permission becomes `{ action: "read", resource: "settings" }`. Test: Member → `FORBIDDEN`.
+- [ ] **F9.** `notes.ts:116` field error uses `VALIDATION_MESSAGES.invalidOption`.
+- [ ] **F10.** `projects.ts:564` unknown link id → `ServiceError("NOT_FOUND")` without the id as a message.
+- [ ] **F12.** Type tests: projects `satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">`; notes `satisfies NotesService<MockServiceContext>`; alerts `satisfies AlertsService<MockServiceContext>`; documents `satisfies Pick<DocumentsService<MockServiceContext>, "listDocuments" | "createDocument" | "uploadVersion" | "linkDocument" | "unlinkDocument">`.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 2.10 — Wave 2 coherence fixes: ConfirmDialog, entity-tab props, documents search, technology picker (Planner F1, F2, F4, F5)
+
+Package 2.10 → Agent: wedevs-developer · haiku — Reason: extends a UI pattern backward-compatibly and adapts components and one read action over existing contracts; no service, money or validator change.
+
+Use the shadcn MCP.
+
+Depends on: 2.1–2.8 (merged). Same fix wave as 2.9 (no shared file). Runs after the Wave 2 Code Review, before the Tester.
+
+Files: `src/components/patterns/confirm-dialog.tsx` (+ test); `src/i18n/messages/{es,en}/patterns.json` (add-only, block `confirm`);
+`src/features/technologies/components/{technologies-table,technology-picker}.tsx` (+ tests);
+`src/features/documents/{actions,queries}.ts` (+ tests); `src/features/documents/components/{entity-documents-tab,attach-document-sheet,document-row-actions}.tsx` (+ tests);
+`src/i18n/messages/{es,en}/{catalogs,documents}.json` (only to delete keys this package leaves unused, both languages, and add-only key `technologies.picker.inactive`). No other file.
+
+- [ ] **F2.** `ConfirmDialog`: add variants `delete` and `unlink` (`patterns.confirm.variants.{delete,unlink}.{title,description,action}`, ES and EN); optional `description?: string` (already translated; replaces the variant description, e.g. record name or the client cascade warning); optional `options?: { id: string; label: string }[]` rendered as checkboxes, returned as `ConfirmResult.options: Record<string, boolean>`. `extraCheckboxLabel` / `extraChecked` keep working unchanged (`notes-feed.tsx` untouched). Tests: two options returned, description override, reset on reopen.
+- [ ] Switch the technology **delete** confirmation (`technologies-table.tsx`) and the document **unlink** confirmation (`document-row-actions.tsx`) to `ConfirmDialog` (`delete` / `unlink`, `description` with the name). The in-use lock notice with "Desactivar" stays an `AlertDialog` composition (a lock notice, not a confirmation).
+- [ ] **F1.** `EntityDocumentsTab({ entity }: { entity: EntityRef })`; inside, only `CLIENT` / `PROJECT` are served (any other type renders nothing). `listEntityDocuments` and `AttachDocumentSheet` accept `EntityRef` the same way; `DocumentsTabEntity` is removed or becomes internal.
+- [ ] **F4.** `searchDocumentsAction`: input `{ q }` (trimmed, ≤ 200), returns `EntityRef[]` (≤ 20, `{ id, code, label: title, type: "DOCUMENT" }`) built from `listDocuments`; the attach sheet maps `EntityRef` → `AsyncComboboxOption` (`value: id, label, description: code`). Grant unchanged `{ read, document }`.
+- [ ] **F5.** `TechnologyPicker` gains `selected?: readonly TechnologyChipDTO[]` (the record's current stack): a selected id not among the active `technologies` renders as a removable chip marked inactive (`catalogs.technologies.picker.inactive`, ES and EN) and is never offered for a new selection. Tests.
+- [ ] Gate. Commit messages without any Claude attribution.
+
 #### Wave 2 close
 
 - [x] **Integration checklist:** 2.1–2.8 merged; no Claude attribution; worktrees removed; lockfile
       unchanged; lint, typecheck, test, `i18n:check`, build pass. *(2026-10-10: merges e752971 (2.7), aeae46f (2.1), 4ae7838 (2.2), 3d9f977 (2.8), 99af613 (2.4), 4ce9384 (2.6), 13a58a6 (2.3), 3445623 (2.5 incl. fix round r1: LINK/UNLINK activity and `actions.test.ts`, missing in the first delivery). HEAD 3445623: 179 files, 2355 tests + 1 expected fail; lint, typecheck, i18n:check (32 namespaces), build pass; lockfile and package.json unchanged; no Claude attribution.)*
-- [ ] **Planner coherence review:** every mock service exports the PRD §12 names and contract signatures
+- [x] **Planner coherence review:** every mock service exports the PRD §12 names and contract signatures
       (C9); no W2 service imports another W2 service; actions use real grants except the DT-71 cases
       listed above; export actions use the 1.2 factory with sources matching `columns.ts`; search actions
       return `EntityRef` options the kit's `AsyncCombobox` accepts; `EntityNotesTab`,
       `EntityDocumentsTab` and `EntityActivityTab` share one prop shape (`entity: EntityRef`); `TagPicker`
       and `TechnologyPicker` emit the id lists the client and project inputs expect; alert rules match
       §7.9; `/settings/tags` and `/settings/technologies` override the `[section]` placeholder and enforce
-      access; namespaces in both languages.
+      access; namespaces in both languages. *(2026-10-10, Planner: READY FOR CODE REVIEW. Pass: C9 names/signatures, no W2 service imports another, grants (DT-71 cases only), export sources = `columns.ts`, alert rules = §7.9, settings pages override `[section]` and enforce access, i18n parity. Findings: F1 entity-tab prop shapes differ and F2 `ConfirmDialog` lacks `delete`/`unlink`/`description`/`options` (W3 blockers) → 2.10; F3 projects money sorted with `Number()` (C15) → 2.9; F4 `searchDocumentsAction` shape → 2.10; F5 inactive technologies invisible in the picker → 2.10; F6 archived project/note readable by every role → 2.9; F7 tag create/update without activity → 2.9; F8 icon resolver without `server-only` and `"authenticated"` → 2.9; F9, F10 error keys → 2.9; F11 CSV money columns for every reader → H2-B3 (W3 screen rule); F12 type tests → 2.9; nits F13–F15 accepted or deferred. The other reported deviations accepted. W3 facts and H2 obligations recorded.)*
 - [ ] **Code review:** C1, C2, C3 (no hand-written registry equivalents; editor and timeline are
       compositions), **C4** (editor, viewer, paste, links, images), C5, C6, C7, C8, C9, C10 (incl. DT-71 and
       the alert-dismissal interpretation), C11 (no `new Date()` in services), C12 shape (activity entries),
@@ -2437,6 +2476,20 @@ slots, archive/restore, CSV export and per-page titles.
 3.3 keeps its exported props (`entity: EntityRef`) and behaviour, so the imports stay valid after the
 merge.
 
+**Wave 2 facts every W3 package builds on (Planner coherence review, 2026-10-10; assumes 2.9 and 2.10 merged):**
+
+- Roles in pages: read the user with `requireSessionUser()` (`src/server/auth/session.ts`) and gate with `can()` / `canSeeFinancials()` (`src/server/auth/permissions.ts`); client components receive booleans as props (R13). Existing helpers: `canReadActivity()`, `getDocumentPermissions()`, `getNotesViewer()`.
+- Cross-entity tabs: `<EntityNotesTab entity={ref} />`, `<EntityDocumentsTab entity={ref} />`, `<EntityActivityTab entity={ref} />`, `ref: EntityRef` = `{ type, id, code, label }` built from the detail DTO; all three are async server components. Render the *Actividad* tab trigger only when `canReadActivity()`. `EntityDocumentsTab` serves `CLIENT` and `PROJECT` only.
+- Search actions: `searchClientsAction({ q })`, `searchContactsAction({ q, clientId? })`, `searchProjectsAction({ q })`, `searchDocumentsAction({ q })` → `ActionResult<EntityRef[]>` (≤ 20, archived excluded). `AsyncCombobox` takes `AsyncComboboxOption`: map `{ value: ref.id, label: ref.label, description: ref.code }`. Project clients with roles: `AsyncCombobox multiple` + `secondaryInput` (role) → `clients: { clientId: o.value, role: o.secondary || undefined }[]`.
+- `TagPicker` is controlled with `TagChipDTO[]`: initialise from `dto.tags`, submit `tagIds = value.map((t) => t.id)`; `canCreate` is computed on the server and passed as a prop. Bulk tag = one `assignTagsAction({ entityType, entityId, tagIds })` per selected row (no bulk contract); a role that cannot update the entity gets `FORBIDDEN` from the service.
+- `TechnologyPicker`: `value` = technology ids, `technologies = listActiveTechnologies()`, `selected = project.stack` (shows inactive ones already on the project). `TechStackIcons` is a server component: render it from RSC only, never inside a client component.
+- `RichTextEditor`: pass `uploadAdapter` from `@/features/files/upload-adapter` (without it pasted images are not uploaded); `RichTextView content={doc}`.
+- Export: `useCsvExport(<module>CsvAction, "<ENTITY>")`. Facet ids and kinds must equal the sources': clients `status`, `kind`, `country`, `tagId` (async), `created` (dateRange → `createdFrom`/`createdTo`); projects `status`, `clientId` (async), `technologyId`, `tagId`, `delivery` (→ `deliveryFrom`/`deliveryTo`), `withoutBillingPlan`; notes `authorId` (async), `tagId` (async), `linkedEntityType`, `createdAt` (→ `createdFrom`/`createdTo`). Column ids = `CLIENT_COLUMN_IDS` / `PROJECT_COLUMN_IDS` / `NOTE_COLUMN_IDS`; any other column (select, actions) sets `meta.exportable: false`. Without `canSeeFinancials` the USD columns are not rendered at all (so they are never exported; server-side redaction is H2-B3, C13).
+- Archive: `archiveClientsAction` / `archiveProjectsAction` are all-or-none; one locked row → `INTEGRITY_LOCK` and nothing archived; re-send with `confirm: true`. The client cascade warning goes in `ConfirmDialog`'s `description`. `restoreClientAction` may answer `CONFLICT` with `error.entity`.
+- Projects: `upsertProjectLinksAction` appends new links at the end of their group (input `order` ignored for new links); order changes go through `reorderProjectLinksAction({ projectId, group, orderedLinkIds })`. `setProjectStatusAction` returns `{ project, hints }`; hints render from `projects.hints.<HINT>`. `CANCELADO` uses `ConfirmDialog` with `options` `[cancelPendingInstallments, finishRecurringCharges]` and sends `confirm: true`.
+- Detail reads: `getClient`, `getProject` and `getNote` answer `NOT_FOUND` for an archived record unless the user may restore (trash); the page calls `notFound()`.
+- 3.3: switch `NoteCard`'s hand-drawn tag badges to `TagChips` (`src/features/tags/components/tag-chips.tsx`).
+
 #### Package 3.1 — Clients and contacts screens
 
 Package 3.1 → Agent: wedevs-developer · haiku — Reason: screens composed of the existing kit, patterns and the W2 queries/actions; the rules live in the 2.1 service.
@@ -2444,7 +2497,7 @@ Package 3.1 → Agent: wedevs-developer · haiku — Reason: screens composed of
 Use the shadcn MCP.
 
 Depends on: 1.2 (`useCsvExport`), 1.3 (breadcrumb label, `FinanceTabSlot`, `entityHref`), 2.1, 2.2
-(projects of a client), 2.3, 2.4, 2.5 (`TagPicker`), 2.7 (`AlertList`), 2.8.
+(projects of a client), 2.3, 2.4, 2.5 (`TagPicker`), 2.7 (`AlertList`), 2.8, 2.9, 2.10.
 
 Files: new `src/app/(app)/clients/{page,loading}.tsx`, `clients/list/page.tsx`, `clients/new/page.tsx`,
 `clients/[id]/page.tsx`, `clients/[id]/edit/page.tsx`; new `src/features/clients/components/**` and
@@ -2455,8 +2508,8 @@ Files: new `src/app/(app)/clients/{page,loading}.tsx`, `clients/list/page.tsx`, 
       due soon, unallocated credit — finance roles); quick action "Nuevo cliente".
 - [ ] `/clients/list`: `DataTable` with `clients/columns.ts`; facets status, kind, country, tag, created
       range; search; sort; column preferences (`table:clients:columns`); "Mostrar archivados"
-      (Owner/Admin); bulk tag (`TagPicker` + `assignTagsAction`), bulk archive (`ConfirmDialog` with the
-      cascade warning, `confirm` flag), export (`useCsvExport(exportClientsCsvAction)`); financial columns
+      (Owner/Admin); bulk tag (`TagPicker` + `assignTagsAction`), bulk archive (`ConfirmDialog` variant `archive` with the
+      cascade warning as `description`, `confirm` flag), export (`useCsvExport(exportClientsCsvAction)`); financial columns
       hidden without `canSeeFinancials`; empty state with CTA.
 - [ ] `/clients/new` and `/clients/[id]/edit` (`FormPage`, RHF + `zodResolver` with the create/update
       schemas): kind; legal name required for `EMPRESA` (HU-03 CA1); tax id with the VE hint;
@@ -2484,7 +2537,7 @@ Package 3.2 → Agent: wedevs-developer · haiku — Reason: screens over the ki
 Use the shadcn MCP.
 
 Depends on: 1.2, 1.3, 2.1 (client search), 2.2, 2.3 (`RichTextEditor`/`View`, `EntityNotesTab`), 2.4,
-2.5, 2.6 (`TechnologyPicker`, `TechStackIcons`), 2.7, 2.8.
+2.5, 2.6 (`TechnologyPicker`, `TechStackIcons`), 2.7, 2.8, 2.9, 2.10.
 
 Files: new `src/app/(app)/projects/{page,loading}.tsx`, `projects/list/page.tsx`, `projects/new/page.tsx`,
 `projects/[id]/page.tsx`, `projects/[id]/edit/page.tsx`; new `src/features/projects/components/**`
@@ -2509,7 +2562,7 @@ Files: new `src/app/(app)/projects/{page,loading}.tsx`, `projects/list/page.tsx`
       finance roles); tabs: Resumen (`RichTextView`, clients, dates, stack), Enlaces, Cobro / Facturas /
       Gastos (`FinanceTabSlot`, finance roles), Documentos, Notas, Actividad.
 - [ ] Transition dialog (HU-08): targets from `PROJECT_STATUS_TRANSITIONS`; start date required for
-      `EN_CURSO`, end date for `ENTREGADO`; `CANCELADO` through `ConfirmDialog` with the two options
+      `EN_CURSO`, end date for `ENTREGADO`; `CANCELADO` through `ConfirmDialog` with `options`
       (cancel pending installments, end recurring charges, CA3); returned hints shown as non-blocking
       warnings.
 - [ ] Member: edit allowed, no create or archive; Viewer read-only. `generateMetadata` titles (R15).
@@ -2523,7 +2576,7 @@ Package 3.3 → Agent: wedevs-developer · haiku — Reason: a table, a form pag
 
 Use the shadcn MCP.
 
-Depends on: 1.2, 1.3, 2.1 (client/contact search), 2.2 (project search), 2.3, 2.5, 2.8 (document search).
+Depends on: 1.2, 1.3, 2.1 (client/contact search), 2.2 (project search), 2.3, 2.5, 2.8 (document search), 2.9, 2.10.
 
 Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/page.tsx`;
 `src/features/notes/components/**` (edit `note-composer.tsx`; new `notes-table.tsx`,
@@ -2722,6 +2775,7 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
   when the block opens: sonnet for services with transactional side effects or integrity locks (archive
   cascades, restore conflicts, sequences), haiku for pure catalog CRUD.
 - Deploy-preview checklist: HU-03–HU-08, HU-23, HU-29 on real data.
+- From H1-B2 W2 review: `clients.service` / `contacts.service` export `searchClients` / `searchContacts` (or the actions switch to `listClients` / `listContacts`); `deleteTechnology` deletes the `ProjectTechnology` rows of archived projects in the same transaction (PRD §10 relation is Restrict); CSV export and list DTOs drop USD fields for roles without `canSeeFinancials` (C13); `archiveNoteAction` revalidates the linked records' paths.
 
 ### H2-B4 — Finance real
 
@@ -2753,6 +2807,7 @@ module's mock files in the same package (C9); close with the **Hito 2 deploy gat
   `cleanup-files`, `scripts/recompute-all.ts`; removal of aggregate mocks. Jobs and recompute: sonnet.
 - Deploy-preview checklist: HU-10 CA4, HU-12 CA4, HU-19 CA2–CA3 (job run triggered by the user),
   HU-24–HU-28, HU-31.
+- From H1-B2 W2 review: `listAlerts` is called through `listAlertsInputSchema`; payment age counts from the payment's business `date`.
 
 ### H2-B7 — Hardening and launch (no data migration, DT-75)
 
