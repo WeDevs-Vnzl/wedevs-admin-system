@@ -177,6 +177,7 @@ export function NotesFeed({ initial, entity, viewer }: NotesFeedProps) {
           open={composer.open}
           onOpenChange={(open) => setComposer((current) => ({ ...current, open }))}
           links={[entity]}
+          canCreateTags={canCreate}
           {...(composer.note ? { note: composer.note } : {})}
           onSaved={() => void reload()}
         />

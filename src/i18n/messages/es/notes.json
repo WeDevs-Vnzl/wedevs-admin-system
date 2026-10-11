@@ -1,4 +1,9 @@
 {
+  "page": {
+    "title": "Notas",
+    "description": "Notas de clientes, contactos, proyectos y documentos.",
+    "newNote": "Nueva nota"
+  },
   "columns": {
     "title": "Título",
     "excerpt": "Contenido",
@@ -9,6 +14,36 @@
     "pinned": "Fijada",
     "createdAt": "Creada",
     "updatedAt": "Actualizada"
+  },
+  "table": {
+    "search": "Buscar notas…",
+    "actions": "Acciones",
+    "archive": "Archivar {title}",
+    "bulkTag": "Añadir etiquetas",
+    "bulkTagged": "Etiquetas añadidas a {count, plural, one {# nota} other {# notas}}",
+    "bulkTagFailed": "No se pudieron etiquetar algunas notas.",
+    "facets": {
+      "author": "Autor",
+      "tag": "Etiqueta",
+      "linkedEntityType": "Vinculada a",
+      "createdAt": "Creada"
+    },
+    "empty": {
+      "title": "Ninguna nota coincide con estos filtros",
+      "description": "Cambia los filtros o la búsqueda para ver otras notas."
+    }
+  },
+  "linkPicker": {
+    "type": "Tipo de registro",
+    "record": "Registro",
+    "search": "Buscar…",
+    "empty": "Sin vínculos",
+    "remove": "Quitar {label}"
+  },
+  "detail": {
+    "back": "Todas las notas",
+    "linksTitle": "Vinculada a",
+    "readOnly": "Puedes leer esta nota, pero no editarla."
   },
   "errors": {
     "alreadyLinked": "La nota ya está vinculada a este registro.",
@@ -48,8 +83,10 @@
     "titleLabel": "Título",
     "titlePlaceholder": "Opcional: si lo dejas vacío se usan las primeras palabras",
     "contentLabel": "Contenido",
+    "contentInvalid": "El contenido no es válido o es demasiado largo para guardarse.",
     "attachmentsLabel": "Adjuntos",
     "pinnedLabel": "Fijar al inicio de la lista",
+    "tagsLabel": "Etiquetas",
     "linksLabel": "Vinculada a",
     "noLinks": "Sin vínculos",
     "submit": "Guardar nota",
@@ -63,6 +100,8 @@
     "pinned": "Nota fijada",
     "unpinned": "Nota desfijada",
     "archived": "Nota archivada",
+    "linkAdded": "Vínculo añadido",
+    "linkRemoved": "Vínculo quitado",
     "error": "No se pudo completar la acción"
   },
   "tab": {

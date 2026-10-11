@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RichTextView } from "@/components/ui/rich-text";
 import { getNoteAction } from "@/features/notes/actions";
+import { TagChips } from "@/features/tags/components/tag-chips";
 import { entityHref } from "@/lib/entity-routes";
 import type { NoteDetailDTO, NoteListRowDTO } from "@/lib/validators/notes";
 import { can, type PermissionSubject } from "@/server/auth/permissions";
@@ -158,16 +159,7 @@ export function NoteCard({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        {note.tags.map((tag) => (
-          <Badge key={tag.id} variant="outline" className="gap-1.5 font-normal">
-            <span
-              aria-hidden
-              className="size-2 rounded-full"
-              style={{ backgroundColor: tag.color }}
-            />
-            {tag.name}
-          </Badge>
-        ))}
+        <TagChips tags={note.tags} />
         {links.map((link) => {
           const href = entityHref(link);
           return href ? (
