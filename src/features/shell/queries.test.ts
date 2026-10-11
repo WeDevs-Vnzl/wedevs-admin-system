@@ -24,14 +24,15 @@ afterEach(() => {
 });
 
 describe("getShellData", () => {
-  it("returns the user, the latest VES rate with its date, and no alerts yet", async () => {
+  it("returns the user, the latest VES rate with its date, and the alert count", async () => {
     clock("2026-10-09T15:00:00.000Z"); // Friday, a business day with a rate
     const data = await getShellData();
     expect(data.user.name).toBe("Andrés Molina");
     expect(data.vesRate).toMatchObject({ date: "2026-10-09", source: "BCV" });
     expect(data.vesRate?.usdRate).toMatch(/^755\.16/);
     expect(data.vesRateMissing).toBe(false);
-    expect(data.alertCount).toBe(0);
+    // The dataset has the expiring NDA and the expired proposal; the finance collections are empty.
+    expect(data.alertCount).toBe(2);
   });
 
   it("flags a business day that has no rate yet and shows the previous one", async () => {
@@ -65,6 +66,22 @@ describe("getShellData", () => {
     const data = await getShellData();
     expect(data.vesRate).toBeNull();
     expect(data.vesRateMissing).toBe(true);
+  });
+
+  it("counts only what the role may see and drops dismissed alerts", async () => {
+    clock("2026-10-09T15:00:00.000Z");
+    getMockStore().exchangeRates.length = 0;
+    expect((await getShellData()).alertCount).toBe(3); // + the missing rate (Owner reads settings)
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    expect((await getShellData()).alertCount).toBe(2); // documents only
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER", { id: "usr_a" }));
+    getMockStore().alertDismissals.push({
+      userId: "usr_a",
+      alertKey: "DOCUMENT_EXPIRED:doc_propuesta_orinoco",
+      dismissedUntil: null,
+      active: false,
+    });
+    expect((await getShellData()).alertCount).toBe(2);
   });
 
   it("throws when nobody is signed in (the layout redirects to sign-in)", async () => {

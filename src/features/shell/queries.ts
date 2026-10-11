@@ -1,6 +1,7 @@
 import "server-only";
 import { isBusinessDay, todayInCaracas, type DateOnly } from "@/lib/dates";
 import type { RateSource } from "@/lib/validators/enums";
+import { listAlerts } from "@/mocks/services/alerts";
 import { getRateFor } from "@/mocks/services/catalogs";
 import type { SessionUser } from "@/server/auth/types";
 import { getServiceContext } from "@/server/context";
@@ -22,7 +23,7 @@ export interface ShellData {
   vesRate: ShellVesRate | null;
   /** True when a business day has no VES rate yet (or there is none at all): the chip shows a warning. */
   vesRateMissing: boolean;
-  /** Bell counter. `0` until the alerts arrive in H1-B2. */
+  /** Bell counter: the current user's active alerts (after dismissals, snoozes and role filtering). */
   alertCount: number;
 }
 
@@ -35,6 +36,6 @@ export async function getShellData(): Promise<ShellData> {
     vesRate: rate ? { date: rate.effectiveDate, usdRate: rate.usdRate, source: rate.source } : null,
     // A weekend has no rate by design; only a business day without one is a gap.
     vesRateMissing: rate === null || (rate.isFallback && isBusinessDay(today)),
-    alertCount: 0,
+    alertCount: (await listAlerts(ctx, { limit: 1 })).total,
   };
 }

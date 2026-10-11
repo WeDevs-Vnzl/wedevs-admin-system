@@ -2323,7 +2323,7 @@ Files: new `src/mocks/services/alerts.ts` (+ test); new `src/features/alerts/{qu
 `alerts-bell.test.tsx`); `src/i18n/messages/{es,en}/alerts.json`; `src/i18n/messages/{es,en}/shell.json`
 (block `alerts`, add-only). No other file.
 
-- [ ] `listAlerts` (`AlertsService`): the nine rules of PRD §7.9 over the store with "today" =
+- [x] `listAlerts` (`AlertsService`): the nine rules of PRD §7.9 over the store with "today" =
       `todayInCaracas(ctx.now)`: invoice overdue; invoice due within 7 days with balance > 0; installment
       `PENDIENTE` due in ≤ 7 days or past; document expiring within its `alertDaysBefore` (default 30);
       document `VENCIDO`; recurring expense `PENDIENTE` due in ≤ 5 days or past; payment
@@ -2332,21 +2332,21 @@ Files: new `src/mocks/services/alerts.ts` (+ test); new `src/features/alerts/{qu
       `buildAlertKey`. Dismissed (`dismissedUntil = null`) and snoozed (`> now`) alerts of the current user
       are left out. Types filtered by role: finance types only when `canSeeFinancials(user)`, document
       types when `can(read, document)`, the missing rate when `can(read, settings)`.
-- [ ] `dismissAlert`, `snoozeAlert` (1–90 days), `restoreAlert` on `alertDismissals` for `ctx.user.id`.
-- [ ] Adapters: dismiss/snooze/restore and `listAlertsAction` with `"authenticated"` (the caller's own
+- [x] `dismissAlert`, `snoozeAlert` (1–90 days), `restoreAlert` on `alertDismissals` for `ctx.user.id`.
+- [x] Adapters: dismiss/snooze/restore and `listAlertsAction` with `"authenticated"` (the caller's own
       alert state and a role-filtered read; DT-71 interpretation, the Code Reviewer confirms).
-- [ ] `features/shell/queries.ts`: `alertCount` = `listAlerts(ctx, { limit: 1 }).total`.
-- [ ] `AlertList` (icon per type, title and context from i18n with ICU days, `MoneyText`/`DateText`, link
+- [x] `features/shell/queries.ts`: `alertCount` = `listAlerts(ctx, { limit: 1 }).total`.
+- [x] `AlertList` (icon per type, title and context from i18n with ICU days, `MoneyText`/`DateText`, link
       through `entityHref`, dismiss, snooze menu 1/3/7 days, undo toast through `restoreAlert`); compact
       variant for the bell, full variant for overviews (props: `types`, `limit`).
-- [ ] **PD-5** `AlertsBell`: when opened, the panel loads the list through `listAlertsAction`; empty state
+- [x] **PD-5** `AlertsBell`: when opened, the panel loads the list through `listAlertsAction`; empty state
       kept when there is none; "Marcar leídas" unchanged (H1-B5).
-- [ ] **R16** counter badge readable in both themes (≥ 4.5:1 at its size) without editing
+- [x] **R16** counter badge readable in both themes (≥ 4.5:1 at its size) without editing
       `globals.css`; if a token change is unavoidable, stop and report. State the measured ratios.
-- [ ] Tests: each rule at its boundary (day 7 vs 8, 2 vs 3 days, 15 vs 16, balance `0.00` vs `0.01`,
+- [x] Tests: each rule at its boundary (day 7 vs 8, 2 vs 3 days, 15 vs 16, balance `0.00` vs `0.01`,
       weekend without a rate), dismiss/snooze/restore per user, role filtering, shell count, bell panel
       load, badge classes.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.8 — *Documentos* tab: minimal documents service and the attach sheet
 
