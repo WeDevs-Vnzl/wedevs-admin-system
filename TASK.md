@@ -2652,8 +2652,10 @@ Files: new `src/app/(app)/projects/{page,loading}.tsx`, `projects/list/page.tsx`
       (cancel pending installments, end recurring charges, CA3); returned hints shown as non-blocking
       warnings.
 - [x] Member: edit allowed, no create or archive; Viewer read-only. `generateMetadata` titles (R15).
-- [ ] Tests: client role input and ≥ 1 rule, summary counter, link URL error, keyboard reorder,
-      transition dialog per target, role gating.
+- [x] Tests: client role input and ≥ 1 rule, summary counter, link URL error, keyboard reorder,
+      transition dialog per target, role gating. *(Keyboard reorder through the dnd-kit sensor is not
+      exercised in jsdom — arrow buttons and the pure reorder helper are unit-tested; the sensor path is
+      covered by the Tester E2E HU-07 CA2. Planner W3 F10.)*
 - [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 3.3 — Notes module and tags in the composer
@@ -2683,6 +2685,67 @@ Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/pag
 - [x] Tests: filters, link picker prefill, tags on create, last-link guard message, Member archive own
       only.
 - [x] Gate. Commit messages without any Claude attribution.
+
+#### Package 3.4 — Wave 3 review fixes: projects (CR B2, B3; Planner F1, F3; m1–m3)
+
+Package 3.4 → Agent: wedevs-developer · sonnet — Reason: the archive confirm round-trip on `INTEGRITY_LOCK`,
+dnd-kit accessibility and the shared URL-state loader need judgement, not a mechanical edit.
+
+Use the shadcn MCP.
+
+Depends on: 3.1–3.3 merged (934b99e). Approved by the user 2026-10-11 ("procede"). Runs in parallel with 3.5
+(disjoint files).
+
+Files: `src/features/projects/components/**` (+ tests); `src/features/projects/table-filter.ts` (+ test) and a
+new `src/features/projects/detail-tabs.ts` (+ test);
+`src/app/(app)/projects/list/page.tsx`, `src/app/(app)/projects/[id]/page.tsx`; `src/i18n/messages/{es,en}/projects.json`.
+Not `projects/new` or `projects/[id]/edit` pages (3.5).
+
+- [ ] **B2.** Project archive (bulk and detail header) sends without `confirm` first; on `INTEGRITY_LOCK` the
+      dialog shows `projects.errors.archiveNeedsConfirm` and a second confirmation re-sends with
+      `confirm: true`. Tests for both entry points.
+- [ ] **B3.** dnd-kit `screenReaderInstructions` (and announcements) of the links editor come from i18n
+      keys, es+en. Test.
+- [ ] **F1.** `?tab=` values in English through an exported `PROJECT_DETAIL_TAB_VALUES` (`summary`, `links`,
+      `billing`, `invoices`, `expenses`, `documents`, `notes`, `activity`); unknown value → `summary`.
+- [ ] **F3.** `/projects/list` reads its URL state with the same loader/pattern as `/clients/list`
+      (`?archived`, `q` cap, one bad part does not reset the whole query).
+- [ ] **m3.** `/projects/list` "Mostrar archivados" (`showArchivedToggle`, `includeArchived`) for
+      `can(restore, trash)` only (C19).
+- [ ] **m1.** Focus returns to the opener after `ProjectTransitionDialog`, `ProjectCancelDialog` and the
+      project bulk dialogs close (reuse the `useOpenerFocus` approach). Test.
+- [ ] **m2.** `aria-describedby` from each field to its `FieldError` id in `project-form` and
+      `project-status-dialogs`.
+- [ ] Gate. Commit messages without any Claude attribution.
+
+#### Package 3.5 — Wave 3 review fixes: clients, notes, tag grants (CR B1; Planner F2–F6; m1, m2, nits)
+
+Package 3.5 → Agent: wedevs-developer · haiku — Reason: localized edits with known targets (a column id, a
+schema swap, a prop gate, a shared grant helper).
+
+Use the shadcn MCP.
+
+Depends on: 3.1–3.3 merged (934b99e). Approved by the user 2026-10-11 ("procede"). Runs in parallel with 3.4.
+
+Files: `src/features/notes/components/**`, `src/app/(app)/notes/**`; `src/features/clients/components/**`,
+`src/features/contacts/components/**`, `src/app/(app)/clients/**`; `src/features/tags/queries.ts` (one new
+helper + test); `src/app/(app)/projects/new/page.tsx`, `src/app/(app)/projects/[id]/edit/page.tsx`;
+`src/i18n/messages/{es,en}/{notes,clients,contacts}.json` (+ tests everywhere touched).
+
+- [ ] **B1.** Notes table attachment column id = `"attachments"` (`NOTE_COLUMN_IDS`); CSV export succeeds. Test.
+- [ ] **F4.** One server helper `canCreateTagsInline()` in `tags/queries.ts` mirroring the `createTagAction`
+      grants (any of create settings, update client, update project, create note, create document); used by
+      the clients pages, the notes pages and `projects/new` + `projects/[id]/edit`. Test per role.
+- [ ] **F5.** `projects/[id]/edit` renders `BreadcrumbLabel` with the project label.
+- [ ] **F2.** The client *Proyectos* tab shows "+ Nuevo" only when `can(create, project)`.
+- [ ] **F3.** `/notes` reads its URL state with the `/clients/list` loader pattern.
+- [ ] **F6.** Note edit validates with the update schema; clearing the title is sent (not dropped). Test.
+- [ ] **m1.** Focus returns to the opener after the notes archive `ConfirmDialog` (table row and detail).
+- [ ] **m2.** `aria-describedby` from each field to its `FieldError` id in `client-form` and
+      `contact-form-dialog`.
+- [ ] Nits: "Cambiar estado" hidden on archived clients; note edit shows no success toast when attach or pin
+      failed.
+- [ ] Gate. Commit messages without any Claude attribution.
 
 #### Wave 3 close
 
