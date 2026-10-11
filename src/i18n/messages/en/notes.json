@@ -1,1 +1,72 @@
-{}
+{
+  "columns": {
+    "title": "Title",
+    "excerpt": "Content",
+    "author": "Author",
+    "links": "Linked to",
+    "tags": "Tags",
+    "attachments": "Attachments",
+    "pinned": "Pinned",
+    "createdAt": "Created",
+    "updatedAt": "Updated"
+  },
+  "errors": {
+    "alreadyLinked": "The note is already linked to this record.",
+    "lastLink": "A note must stay linked to at least one record."
+  },
+  "untitled": "Untitled note",
+  "feed": {
+    "label": "Notes",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "loadFailed": "Could not load the notes.",
+    "emptyTitle": "No notes yet",
+    "emptyDescription": "Notes you write about this record will show up here.",
+    "emptyDescriptionReadOnly": "There are no notes about this record yet."
+  },
+  "card": {
+    "pinned": "Pinned",
+    "expand": "Show more",
+    "collapse": "Show less",
+    "loadingContent": "Loading content…",
+    "loadContentFailed": "Could not load the note.",
+    "actions": "Note actions",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "edit": "Edit",
+    "archive": "Archive",
+    "attachmentCount": "{count, plural, one {# attachment} other {# attachments}}"
+  },
+  "attachments": {
+    "label": "Attachments",
+    "size": "{name} · {size}"
+  },
+  "composer": {
+    "createTitle": "New note",
+    "editTitle": "Edit note",
+    "description": "Write a note and link it to records.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Optional: when empty, the first words are used",
+    "contentLabel": "Content",
+    "attachmentsLabel": "Attachments",
+    "pinnedLabel": "Pin to the top of the list",
+    "linksLabel": "Linked to",
+    "noLinks": "No links",
+    "submit": "Save note",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "unsaved": "You have unsaved changes. Leave anyway?"
+  },
+  "toast": {
+    "created": "Note created",
+    "updated": "Note updated",
+    "pinned": "Note pinned",
+    "unpinned": "Note unpinned",
+    "archived": "Note archived",
+    "error": "The action could not be completed"
+  },
+  "tab": {
+    "title": "Notes",
+    "newNote": "New note"
+  }
+}

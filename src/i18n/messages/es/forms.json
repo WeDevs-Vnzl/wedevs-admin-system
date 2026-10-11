@@ -51,5 +51,40 @@
     "uploading": "Subiendo {name}",
     "done": "Listo",
     "failed": "No se pudo subir el archivo"
+  },
+  "richText": {
+    "placeholder": "Escribe aquí…",
+    "editorLabel": "Contenido",
+    "viewLabel": "Contenido de la nota",
+    "invalid": "El contenido no se puede mostrar.",
+    "imagePlaceholder": "Imagen adjunta: {name}",
+    "imageUnnamed": "sin nombre",
+    "uploadRejected": "{name}: archivo no permitido o demasiado grande.",
+    "uploadFailed": "No se pudo subir {name}.",
+    "toolbar": {
+      "label": "Formato de texto",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "strike": "Tachado",
+      "code": "Código en línea",
+      "heading1": "Título 1",
+      "heading2": "Título 2",
+      "heading3": "Título 3",
+      "bulletList": "Lista con viñetas",
+      "orderedList": "Lista numerada",
+      "taskList": "Lista de tareas",
+      "blockquote": "Cita",
+      "codeBlock": "Bloque de código",
+      "horizontalRule": "Línea divisoria",
+      "table": "Insertar tabla",
+      "link": "Enlace",
+      "linkUrl": "Dirección del enlace",
+      "linkPlaceholder": "https://…",
+      "linkInvalid": "Usa una dirección http, https o mailto.",
+      "linkApply": "Aplicar",
+      "unlink": "Quitar enlace",
+      "undo": "Deshacer",
+      "redo": "Rehacer"
+    }
   }
 }

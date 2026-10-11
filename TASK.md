@@ -2156,7 +2156,7 @@ viewer, extension allowlist, + tests); `src/mocks/services/notes.ts` (+ test);
 (+ tests); `src/i18n/messages/{es,en}/notes.json`; `src/i18n/messages/{es,en}/forms.json` (add-only
 block `richText`). No other file.
 
-- [ ] `lib/rich-text.ts` (pure): `richTextToPlainText(doc)`, `richTextExcerpt(doc, max)`,
+- [x] `lib/rich-text.ts` (pure): `richTextToPlainText(doc)`, `richTextExcerpt(doc, max)`,
       `noteDisplayTitle(title, doc)` (first words when there is no title, PRD §8.10). Canonical copies (lib
       never imports `@/mocks`): `richTextToPlainText` keeps the semantics of the mock copy in
       `src/mocks/entity-refs.ts` (text nodes, blocks joined by one space) and `noteDisplayTitle` uses the
@@ -2166,7 +2166,7 @@ block `richText`). No other file.
       `getJSON()` emits `null` for unset attributes. The custom Image extension declares only
       `fileId`/`alt`/`src` and strips null attributes before saving; add a round-trip test editor JSON →
       `richTextDocSchema`. Changing the validator is out of scope (stop and report if unavoidable).
-- [ ] `RichTextEditor`: Tiptap with exactly the extensions that produce `RICH_TEXT_NODE_TYPES` and
+- [x] `RichTextEditor`: Tiptap with exactly the extensions that produce `RICH_TEXT_NODE_TYPES` and
       `RICH_TEXT_MARK_TYPES` (StarterKit configured, task list, table, link limited to `http`, `https`,
       `mailto`, image limited to `fileId`/`alt`, placeholder); `immediatelyRender: false` (no hydration
       mismatch); toolbar composed of registry `toggle`/`toggle-group`/`button-group`/`separator`/
@@ -2174,10 +2174,10 @@ block `richText`). No other file.
       through the existing `UploadAdapter` (`features/files/upload-adapter.ts`) and insert an `image`
       node with `fileId`; the value is checked with `richTextDocSchema` before submit. Reused by the
       project description in W3.
-- [ ] `RichTextView`: read-only Tiptap renderer with the same allowlist; images render as an attachment
+- [x] `RichTextView`: read-only Tiptap renderer with the same allowlist; images render as an attachment
       placeholder (file name; no URL in Hito 1); links get `rel="noopener noreferrer nofollow"` and
       open in a new tab. No `dangerouslySetInnerHTML` (C4).
-- [ ] Mock `NotesService`: `createNote` (author = `ctx.user`; every link target resolved with
+- [x] Mock `NotesService`: `createNote` (author = `ctx.user`; every link target resolved with
       `resolveEntityRef`, unknown → `NOT_FOUND`; attachments must be `READY` files; `CREATE` + `LINK`),
       `updateNote` (author immutable; content diff recorded as `"changed"`), `pinNote`, `linkNote`,
       `unlinkNote` (the last link is refused), `attachFile` (`UPLOAD`), `archiveNote` (`DELETE`),
@@ -2186,19 +2186,19 @@ block `richText`). No other file.
       `attachmentFileIds`) assembled into DTOs; activity through `mockTx` + `logActivity`; the `updateNote`
       diff through `diffFields(…, { longText: ["content"] })`; `exportNotesCsvAction` with
       `namespace: "notes"`.
-- [ ] Adapters: create/update/pin/link/unlink/attach `{ create | update, note }`; archive
+- [x] Adapters: create/update/pin/link/unlink/attach `{ create | update, note }`; archive
       `{ delete, note }` with `ownerOf` = the author (Member deletes only own notes, PRD §4.3);
       `listNotesAction` (`{ read, note }`, "Cargar más"); `exportNotesCsvAction` (`{ read, note }`).
-- [ ] Components: `NotesFeed` and `NoteCard` (avatar, author · date with `DateText`, pin, title,
+- [x] Components: `NotesFeed` and `NoteCard` (avatar, author · date with `DateText`, pin, title,
       expandable preview through `RichTextView`, tag chips, attachment chips (composition of installed `item`/`badge`/`button`; 2.3
       owns the attachment decision, see "Wave 1 facts"), actions filtered by
       `can()`); `NoteComposer` in a `sheet` (title, editor, attachments through the `Uploader`, pinned,
       links prefilled; **no tag picker in W2** — 3.3 adds it); `EntityNotesTab({ entity })` ("+ Nueva
       nota" pre-linked, feed, empty state). Viewer sees no write action.
-- [ ] Tests: C4 — pasting `<script>`, `<iframe>`, `<img onerror>`, a `javascript:` link and a `data:` image
+- [x] Tests: C4 — pasting `<script>`, `<iframe>`, `<img onerror>`, a `javascript:` link and a `data:` image
       leaves none of them in the editor or viewer DOM, and the schema rejects the raw JSON; feed order;
       Member archive own vs other's note through the adapter; title and excerpt derivation; ES and EN.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.4 — Activity: `listActivity`, timeline, `/activity` and the *Actividad* tab
 
