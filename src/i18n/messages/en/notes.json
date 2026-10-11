@@ -1,4 +1,9 @@
 {
+  "page": {
+    "title": "Notes",
+    "description": "Notes across clients, contacts, projects and documents.",
+    "newNote": "New note"
+  },
   "columns": {
     "title": "Title",
     "excerpt": "Content",
@@ -9,6 +14,36 @@
     "pinned": "Pinned",
     "createdAt": "Created",
     "updatedAt": "Updated"
+  },
+  "table": {
+    "search": "Search notes…",
+    "actions": "Actions",
+    "archive": "Archive {title}",
+    "bulkTag": "Add tags",
+    "bulkTagged": "Tags added to {count, plural, one {# note} other {# notes}}",
+    "bulkTagFailed": "Some notes could not be tagged.",
+    "facets": {
+      "author": "Author",
+      "tag": "Tag",
+      "linkedEntityType": "Linked to",
+      "createdAt": "Created"
+    },
+    "empty": {
+      "title": "No notes match these filters",
+      "description": "Change the filters or the search to see other notes."
+    }
+  },
+  "linkPicker": {
+    "type": "Record type",
+    "record": "Record",
+    "search": "Search…",
+    "empty": "No links",
+    "remove": "Remove {label}"
+  },
+  "detail": {
+    "back": "All notes",
+    "linksTitle": "Linked to",
+    "readOnly": "You can read this note but not edit it."
   },
   "errors": {
     "alreadyLinked": "The note is already linked to this record.",
@@ -48,8 +83,10 @@
     "titleLabel": "Title",
     "titlePlaceholder": "Optional: when empty, the first words are used",
     "contentLabel": "Content",
+    "contentInvalid": "The content is not valid or is too long to save.",
     "attachmentsLabel": "Attachments",
     "pinnedLabel": "Pin to the top of the list",
+    "tagsLabel": "Tags",
     "linksLabel": "Linked to",
     "noLinks": "No links",
     "submit": "Save note",
@@ -63,6 +100,8 @@
     "pinned": "Note pinned",
     "unpinned": "Note unpinned",
     "archived": "Note archived",
+    "linkAdded": "Link added",
+    "linkRemoved": "Link removed",
     "error": "The action could not be completed"
   },
   "tab": {

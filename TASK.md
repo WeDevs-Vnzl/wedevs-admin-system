@@ -2668,21 +2668,21 @@ Files: new `src/app/(app)/notes/page.tsx`, `notes/new/page.tsx`, `notes/[id]/pag
 `src/features/notes/components/**` (edit `note-composer.tsx`; new `notes-table.tsx`,
 `note-link-picker.tsx`, `note-detail.tsx`; + tests); `src/i18n/messages/{es,en}/notes.json`.
 
-- [ ] `/notes`: global table (title or derived title, excerpt, author, linked entity chips through
+- [x] `/notes`: global table (title or derived title, excerpt, author, linked entity chips through
       `entityHref`, tags, attachment count, pinned, created/updated); facets author, tag, linked entity
       type, created range; search; export (`exportNotesCsvAction`); bulk tag; per-row archive with the
       own-notes rule.
-- [ ] `/notes/new`: the composer as a full page with `NoteLinkPicker` (type CLIENT / CONTACT / PROJECT /
+- [x] `/notes/new`: the composer as a full page with `NoteLinkPicker` (type CLIENT / CONTACT / PROJECT /
       DOCUMENT + `AsyncCombobox` over the W2 search actions; H1-B3 adds INVOICE / PAYMENT / EXPENSE),
       prefill from `?entityType=&entityId=`, tags.
-- [ ] `/notes/[id]`: detail and edit (title, content, tags, links add/remove with the last-link guard,
+- [x] `/notes/[id]`: detail and edit (title, content, tags, links add/remove with the last-link guard,
       pin, attachments, archive with the own-notes rule).
-- [ ] `NoteComposer` gains `TagPicker` (create and edit); `EntityNotesTab` props and behaviour unchanged.
-- [ ] `NoteComposer` wires the editor's `onInvalid` (an invalid or oversize document blocks saving with an error) and `aria-describedby` to an `id` on its `FieldError` (W2 re-review minor).
-- [ ] `generateMetadata` titles (R15).
-- [ ] Tests: filters, link picker prefill, tags on create, last-link guard message, Member archive own
+- [x] `NoteComposer` gains `TagPicker` (create and edit); `EntityNotesTab` props and behaviour unchanged.
+- [x] `NoteComposer` wires the editor's `onInvalid` (an invalid or oversize document blocks saving with an error) and `aria-describedby` to an `id` on its `FieldError` (W2 re-review minor).
+- [x] `generateMetadata` titles (R15).
+- [x] Tests: filters, link picker prefill, tags on create, last-link guard message, Member archive own
       only.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Wave 3 close
 

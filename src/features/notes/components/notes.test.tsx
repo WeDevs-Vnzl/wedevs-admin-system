@@ -17,6 +17,11 @@ const nav = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("@/features/notes/actions", () => actions);
 vi.mock("@/features/notes/queries", () => queries);
 vi.mock("@/features/files/upload-adapter", () => ({ uploadAdapter: {} }));
+vi.mock("@/features/tags/actions", () => ({ listTagsAction: vi.fn(), assignTagsAction: vi.fn() }));
+vi.mock("@/features/clients/actions", () => ({ searchClientsAction: vi.fn() }));
+vi.mock("@/features/contacts/actions", () => ({ searchContactsAction: vi.fn() }));
+vi.mock("@/features/projects/actions", () => ({ searchProjectsAction: vi.fn() }));
+vi.mock("@/features/documents/actions", () => ({ searchDocumentsAction: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: nav.refresh }) }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -30,6 +35,10 @@ import esForms from "@/i18n/messages/es/forms.json";
 import esNotes from "@/i18n/messages/es/notes.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
 import esValidation from "@/i18n/messages/es/validation.json";
+import enEnums from "@/i18n/messages/en/enums.json";
+import esEnums from "@/i18n/messages/es/enums.json";
+import enTags from "@/i18n/messages/en/tags.json";
+import esTags from "@/i18n/messages/es/tags.json";
 import { paginated } from "@/lib/validators/common";
 import type { NoteDetailDTO, NoteListRowDTO } from "@/lib/validators/notes";
 import { EntityNotesTab } from "./entity-notes-tab";
@@ -40,16 +49,20 @@ import { NotesFeed } from "./notes-feed";
 const messages = {
   es: {
     common: esCommon,
+    enums: esEnums,
     forms: esForms,
     notes: esNotes,
     patterns: esPatterns,
+    tags: esTags,
     validation: esValidation,
   },
   en: {
     common: enCommon,
+    enums: enEnums,
     forms: enForms,
     notes: enNotes,
     patterns: enPatterns,
+    tags: enTags,
     validation: enValidation,
   },
 };
