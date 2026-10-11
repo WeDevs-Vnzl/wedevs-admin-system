@@ -105,6 +105,13 @@ export const archiveProjectsAction = defineAction({
   handler: (ctx, data) => projects.archiveProjects(ctx, data),
 });
 
+/** Reference read behind the projects table: reloads its rows when the query changes (same filter as the list). */
+export const listProjectsAction = defineAction({
+  permission: { action: "read", resource: "project" },
+  input: projectFilterSchema,
+  handler: (ctx, data) => projects.listProjects(ctx, data),
+});
+
 /** Async project combobox (note links, document links…): at most 20 `EntityRef` options matching `q`. */
 export const searchProjectsAction = defineAction({
   permission: { action: "read", resource: "project" },
