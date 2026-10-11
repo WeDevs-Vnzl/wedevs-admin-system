@@ -1,1 +1,27 @@
-{}
+{
+  "columns": {
+    "code": "Code",
+    "tradeName": "Trade name",
+    "kind": "Type",
+    "country": "Country",
+    "status": "Status",
+    "projectCount": "Projects",
+    "totalInvoicedUsd": "Total invoiced (USD)",
+    "receivableUsd": "Receivable (USD)",
+    "tags": "Tags",
+    "lastActivityAt": "Last activity"
+  },
+  "errors": {
+    "duplicateTaxId": "An active client with this tax ID and country already exists",
+    "restoreTaxIdConflict": "Cannot restore: another active client already uses this tax ID and country",
+    "archiveNeedsConfirm": "This client has active projects or open invoices. Confirm to archive it together with its contacts"
+  },
+  "toast": {
+    "created": "Client created",
+    "updated": "Client updated",
+    "statusChanged": "Client status updated",
+    "archived": "Client archived",
+    "archivedMany": "{count, plural, one {# client archived} other {# clients archived}}",
+    "restored": "Client restored"
+  }
+}
