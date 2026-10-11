@@ -75,6 +75,13 @@ export const searchClientsAction = defineAction({
   handler: (ctx, data) => clients.searchClients(ctx, { q: data.q, limit: 20 }),
 });
 
+/** The clients table reloads its rows through this read when the URL query changes (same grant as the table). */
+export const listClientsAction = defineAction({
+  permission: { action: "read", resource: "client" },
+  input: clientFilterSchema,
+  handler: (ctx, data) => clients.listClients(ctx, data),
+});
+
 const exportSource: ExportSource<ClientListRowDTO, ClientFilter, ServiceContext> = {
   entity: "CLIENT",
   facets: CLIENT_FACETS,
