@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import enActivity from "@/i18n/messages/en/activity.json";
@@ -145,6 +146,23 @@ describe("ActivityFeed", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cargar más" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo cargar más actividad");
     expect(screen.getByText("Kairos Studio")).toBeInTheDocument();
+  });
+
+  it("returns focus to the opener when the detail sheet closes with Escape, also after load more", async () => {
+    actions.listActivityAction.mockResolvedValue({
+      ok: true,
+      data: page([entry({ id: "act_0002", entityLabel: "Otra" })], { page: 2, pageCount: 2 }),
+    });
+    wrap(<ActivityFeed initial={page([entry()], { pageCount: 2 })} filter={{}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Cargar más" }));
+    await screen.findByText("Otra");
+
+    const trigger = screen.getAllByRole("button", { name: /^Ver detalle de/ })[0]!;
+    await userEvent.click(trigger);
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(trigger).toHaveFocus();
   });
 
   it("renders the empty state when nothing matches", () => {

@@ -267,11 +267,7 @@ test.describe("technologies access (view as role)", () => {
 });
 
 test.describe("technologies search (read only)", () => {
-  // Product defect (src/components/ui/data-table/use-table-url-state.ts, useQueryStates in shallow mode): typing in
-  // the search updates `?q=` but the server page is not re-rendered, so the rows stay the same. Expected: the rows
-  // shrink to the matches, or the server refetches with `q`.
   test("typing in the search filters the rows, not only the URL", async ({ page }) => {
-    test.fail();
     await page.goto("/settings/technologies");
     await page.waitForLoadState("networkidle");
     const rows = page.locator("table tbody tr");
@@ -304,12 +300,9 @@ test.describe("activity", () => {
     await expect(page).not.toHaveURL(/action=|entityType=/);
   });
 
-  // Product defect (src/features/activity/components/activity-detail-sheet.tsx and activity-feed.tsx): after Escape
-  // focus lands on document.body instead of the "Ver detalle de" trigger. Expected: focus returns to the trigger.
   test("the detail sheet traps focus, closes with Escape and returns focus to its trigger", async ({
     page,
   }) => {
-    test.fail();
     await page.goto("/activity");
     await page.waitForLoadState("networkidle");
 

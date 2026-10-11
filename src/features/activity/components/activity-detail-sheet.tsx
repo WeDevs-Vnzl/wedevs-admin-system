@@ -50,10 +50,13 @@ export function ActivityDetailSheet({
   entry: entryProp,
   open,
   onOpenChange,
+  onCloseAutoFocus,
 }: {
   entry: ActivityListRowDTO | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Where focus goes when the sheet closes; the opener is not a Radix trigger, so the parent restores it. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const locale = useLocale();
   const t = useTranslations("activity");
@@ -71,7 +74,7 @@ export function ActivityDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto" onCloseAutoFocus={onCloseAutoFocus}>
         <SheetHeader>
           <SheetTitle>{t(`summary.${entry.action}`, { entity: entry.entityLabel })}</SheetTitle>
           <SheetDescription>

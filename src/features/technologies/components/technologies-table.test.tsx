@@ -8,16 +8,26 @@ import enCommon from "@/i18n/messages/en/common.json";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import enTable from "@/i18n/messages/en/table.json";
 import type { TechnologyListRowDTO } from "@/lib/validators/technologies";
-import { deleteTechnologyAction, setTechnologyActiveAction } from "@/features/technologies/actions";
+import {
+  deleteTechnologyAction,
+  listTechnologiesAction,
+  resolveTechnologyIconAction,
+  setTechnologyActiveAction,
+} from "@/features/technologies/actions";
 import { TechnologiesTable } from "./technologies-table";
 
-const mocks = vi.hoisted(() => ({ refresh: vi.fn(), toast: { success: vi.fn(), error: vi.fn() } }));
+const mocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  toast: { success: vi.fn(), error: vi.fn() },
+  query: { page: 1, pageSize: 25, includeArchived: false, filters: {} } as Record<string, unknown>,
+}));
 
 vi.mock("@/features/technologies/actions", () => ({
   createTechnologyAction: vi.fn(),
   updateTechnologyAction: vi.fn(),
   setTechnologyActiveAction: vi.fn(),
   deleteTechnologyAction: vi.fn(),
+  listTechnologiesAction: vi.fn(),
   resolveTechnologyIconAction: vi.fn(),
   exportTechnologiesCsvAction: vi.fn(),
 }));
@@ -29,7 +39,7 @@ vi.mock("@/components/ui/data-table", async (importOriginal) => {
   return {
     ...original,
     useTableUrlState: () => ({
-      query: { page: 1, pageSize: 25, includeArchived: false, filters: {} },
+      query: mocks.query,
       setQuery: vi.fn(),
     }),
   };
@@ -71,8 +81,8 @@ const rows: TechnologyListRowDTO[] = [
   },
 ];
 
-function renderTable() {
-  return render(
+function tree() {
+  return (
     <NextIntlClientProvider
       locale="en"
       messages={{
@@ -84,8 +94,12 @@ function renderTable() {
       }}
     >
       <TechnologiesTable rows={rows} total={rows.length} icons={{}} />
-    </NextIntlClientProvider>,
+    </NextIntlClientProvider>
   );
+}
+
+function renderTable() {
+  return render(tree());
 }
 
 beforeAll(() => {
@@ -97,6 +111,10 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  vi.mocked(listTechnologiesAction).mockResolvedValue({
+    ok: true,
+    data: { items: rows, total: rows.length, page: 1, pageSize: 25, pageCount: 1 },
+  } as never);
   vi.mocked(setTechnologyActiveAction).mockResolvedValue({ ok: true, data: {} } as never);
   vi.mocked(deleteTechnologyAction).mockResolvedValue({
     ok: true,
@@ -105,6 +123,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  mocks.query = { page: 1, pageSize: 25, includeArchived: false, filters: {} };
   vi.clearAllMocks();
 });
 
@@ -144,5 +163,38 @@ describe("TechnologiesTable", () => {
     const dialog = await screen.findByRole("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(deleteTechnologyAction).toHaveBeenCalledWith({ id: "tec_rust" }));
+  });
+
+  it("follows the URL query: the rows, the total and the server-resolved icons come from the filtered set", async () => {
+    const rust = rows[1]!;
+    const next = { ...rows[0]!, id: "tec_next_2", name: "Nextra", iconSlug: "react" };
+    vi.mocked(listTechnologiesAction).mockResolvedValue({
+      ok: true,
+      data: { items: [next, rust], total: 2, page: 1, pageSize: 25, pageCount: 1 },
+    } as never);
+    vi.mocked(resolveTechnologyIconAction).mockResolvedValue({
+      ok: true,
+      data: { path: "M0 0h1v1z", hex: "000000", title: "Next.js" },
+    } as never);
+    const view = renderTable();
+    expect(listTechnologiesAction).not.toHaveBeenCalled();
+    expect(screen.getByText("Legacy")).toBeInTheDocument();
+
+    mocks.query = {
+      page: 1,
+      pageSize: 25,
+      includeArchived: false,
+      q: "ne",
+      filters: { category: ["FRONTEND"], active: ["true"] },
+    };
+    view.rerender(tree());
+
+    expect(await screen.findByText("Nextra")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Legacy")).toBeNull());
+    expect(listTechnologiesAction).toHaveBeenCalledWith(
+      expect.objectContaining({ q: "ne", category: ["FRONTEND"], active: "true" }),
+    );
+    expect(resolveTechnologyIconAction).toHaveBeenCalledWith({ slug: "react" });
+    expect(screen.getByRole("img", { name: "Nextra" }).tagName.toLowerCase()).toBe("svg");
   });
 });
