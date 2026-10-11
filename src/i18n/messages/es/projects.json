@@ -1,1 +1,40 @@
-{}
+{
+  "errors": {
+    "clientNotFound": "Alguno de los clientes no existe o está archivado",
+    "technologyUnknown": "Alguna de las tecnologías no existe en el catálogo",
+    "technologyInactive": "Alguna de las tecnologías está inactiva y no se puede agregar al stack",
+    "tagUnknown": "Alguna de las etiquetas no existe",
+    "invalidTransition": "El proyecto no puede pasar a ese estado desde su estado actual",
+    "archiveNeedsConfirm": "El proyecto tiene cobros o facturas activos. Confirma para archivarlo."
+  },
+  "hints": {
+    "NO_BILLING_PLAN": "El proyecto está en curso sin un esquema de cobro. Defínelo para poder facturar.",
+    "SUGGEST_RECURRING_CHARGE": "El proyecto pasó a mantenimiento sin un cobro recurrente activo. Considera crear uno."
+  },
+  "columns": {
+    "code": "Código",
+    "name": "Nombre",
+    "clients": "Clientes",
+    "status": "Estado",
+    "startDate": "Inicio",
+    "targetEndDate": "Entrega estimada",
+    "stack": "Stack",
+    "contractedValueUsd": "Valor contratado (USD)",
+    "invoicedUsd": "Facturado (USD)",
+    "collectedUsd": "Cobrado (USD)",
+    "toInvoiceUsd": "Por facturar (USD)",
+    "tags": "Etiquetas"
+  },
+  "toast": {
+    "created": "Proyecto {code} creado",
+    "updated": "Proyecto actualizado",
+    "statusChanged": "Estado del proyecto actualizado",
+    "clientsUpdated": "Clientes del proyecto actualizados",
+    "technologiesUpdated": "Stack del proyecto actualizado",
+    "linksSaved": "Enlaces guardados",
+    "linksReordered": "Orden de los enlaces guardado",
+    "linkRemoved": "Enlace eliminado",
+    "archived": "Proyecto archivado",
+    "archivedMany": "{count, plural, one {# proyecto archivado} other {# proyectos archivados}}"
+  }
+}

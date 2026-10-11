@@ -2116,7 +2116,7 @@ Depends on: 1.1, 1.2.
 Files: `src/mocks/services/projects.ts` (+ test); `src/features/projects/{queries,actions,columns}.ts`
 (+ tests); `src/i18n/messages/{es,en}/projects.json`. No UI file.
 
-- [ ] `ProjectsService` names (C9) except `getProjectFinancials` (H1-B3; not exported in H1-B2):
+- [x] `ProjectsService` names (C9) except `getProjectFinancials` (H1-B3; not exported in H1-B2):
       - `createProject`: ≥ 1 client (HU-05 CA1), `PRY-####`, `PROPUESTA` by default; stack only active
         technology ids (unknown or inactive → `VALIDATION` on the field, HU-06 CA1); links; `CREATE` and
         `LINK` entries.
@@ -2130,16 +2130,16 @@ Files: `src/mocks/services/projects.ts` (+ test); `src/features/projects/{querie
       - `archiveProject` / `archiveProjects` (`DELETE`), `listProjects` (every `projectFilterSchema`
         filter incl. `technologyId`, HU-06 CA2), `getProject`, `getProjectsOverview`. PD-4 financial
         headline from the finance collections (`"0.00"` now).
-- [ ] Adapters: `{ create, project }`, `{ update, project }` (Member RU), `{ delete, project }`;
+- [x] Adapters: `{ create, project }`, `{ update, project }` (Member RU), `{ delete, project }`;
       `searchProjectsAction` (`{ read, project }`); `exportProjectsCsvAction` (`{ read, project }`,
       `namespace: "projects"`, source = `listProjects` + `projectFilterSchema` + `projects/columns.ts`;
       `technologyId` is a facet).
-- [ ] `projects/columns.ts`: column ids of PRD §8.3 "Tabla", label keys, money flags.
-- [ ] i18n `projects` (ES and EN): errors, hints, column labels, toast keys.
-- [ ] Tests: allowed and refused transitions, required dates, hints, cancel options, reorder per group,
+- [x] `projects/columns.ts`: column ids of PRD §8.3 "Tabla", label keys, money flags.
+- [x] i18n `projects` (ES and EN): errors, hints, column labels, toast keys.
+- [x] Tests: allowed and refused transitions, required dates, hints, cancel options, reorder per group,
       inactive technology refused, technology filter, client links with roles, activity entries; adapters:
       Member update allowed, Member create/archive `FORBIDDEN`, Viewer update `FORBIDDEN`.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 2.3 — Rich-text kit, notes service and the *Notas* tab
 
