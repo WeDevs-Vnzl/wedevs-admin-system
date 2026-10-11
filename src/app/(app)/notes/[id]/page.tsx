@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { NoteDetail } from "@/features/notes/components/note-detail";
 import { getNote, getNotesViewer } from "@/features/notes/queries";
+import { canCreateTagsInline } from "@/features/tags/queries";
 import { noteDisplayTitle } from "@/lib/rich-text";
 import { ServiceError } from "@/server/context";
 import { can } from "@/server/auth/permissions";
@@ -36,7 +37,11 @@ export default async function NoteDetailPage({ params }: NotePageProps) {
   const note = await loadNote(id);
   if (!note) notFound();
 
-  const [viewer, t] = await Promise.all([getNotesViewer(), getTranslations("notes")]);
+  const [viewer, canCreateTags, t] = await Promise.all([
+    getNotesViewer(),
+    canCreateTagsInline(),
+    getTranslations("notes"),
+  ]);
   const title = noteDisplayTitle(note.title, note.content) || t("untitled");
 
   return (
@@ -46,7 +51,7 @@ export default async function NoteDetailPage({ params }: NotePageProps) {
         note={note}
         canUpdate={can(viewer, "update", "note")}
         canArchive={can(viewer, "delete", "note", { ownerId: note.author.id })}
-        canCreateTags={can(viewer, "create", "note")}
+        canCreateTags={canCreateTags}
       />
     </>
   );

@@ -32,6 +32,7 @@ import { uploadAdapter } from "@/features/files/upload-adapter";
 import { TagPicker } from "@/features/tags/components/tag-picker";
 import {
   createNoteInputSchema,
+  updateNoteInputSchema,
   type CreateNoteFormValues,
   type NoteDetailDTO,
   type RichTextDoc,
@@ -51,6 +52,14 @@ type LinkMode = "badges" | "picker" | "none";
 
 const toTarget = (link: NoteLinkRef) => ({ entityType: link.type, entityId: link.id });
 
+/** An edit validates with the update schema: the note's id is the route's, so it is not a form field. */
+const editNoteFormSchema = updateNoteInputSchema.omit({ id: true });
+
+/** The form of both modes: an edit has no links to submit (the detail page manages them). */
+type NoteFormValues = Omit<CreateNoteFormValues, "links"> & {
+  links?: CreateNoteFormValues["links"];
+};
+
 interface NoteFormOptions {
   note?: NoteDetailDTO;
   initialLinks?: readonly NoteLinkRef[];
@@ -58,7 +67,7 @@ interface NoteFormOptions {
 }
 
 interface NoteFormModel {
-  form: UseFormReturn<CreateNoteFormValues>;
+  form: UseFormReturn<NoteFormValues>;
   tags: TagChipDTO[];
   changeTags: (next: TagChipDTO[]) => void;
   links: NoteLinkRef[];
@@ -66,7 +75,7 @@ interface NoteFormModel {
   removeLink: (link: NoteLinkRef) => void;
   contentChanged: () => void;
   contentRejected: () => void;
-  submit: (values: CreateNoteFormValues) => Promise<void>;
+  submit: (values: NoteFormValues) => Promise<void>;
 }
 
 /**
@@ -85,8 +94,8 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
   // The editor's last accepted value is stale once it reports a refused one: saving stays blocked until it changes.
   const contentRejected = useRef(false);
 
-  const form = useForm<CreateNoteFormValues>({
-    resolver: zodResolver(createNoteInputSchema),
+  const form = useForm<NoteFormValues>({
+    resolver: zodResolver(editing ? editNoteFormSchema : createNoteInputSchema),
     defaultValues: {
       title: note?.title ?? "",
       content: note?.content ?? EMPTY_RICH_TEXT,
@@ -128,45 +137,69 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
     form.setError("content", { type: "custom", message: CONTENT_INVALID_KEY });
   }
 
-  async function submit(values: CreateNoteFormValues) {
+  /**
+   * Saves an edit: the update, then the uploader's new files and the pin. A step that fails shows its error and
+   * no success toast; the note still reports what was saved, so the screen shows the stored state.
+   */
+  async function saveEdit(current: NoteDetailDTO, tagIds: string[]) {
+    // The edit schema strips the pin and the files, and reads a cleared title as unset: both come from the raw form.
+    const raw = form.getValues();
+    const updated = await updateNoteAction({
+      id: current.id,
+      title: raw.title?.trim() || null,
+      content: raw.content,
+      tagIds,
+    });
+    if (!updated.ok) {
+      toast.error(tToast("error"));
+      return;
+    }
+    let saved = updated.data;
+    let failed = false;
+    // New files of the uploader are attached to the existing note one by one.
+    for (const fileId of raw.attachmentFileIds ?? []) {
+      const attached = await attachFileAction({ noteId: current.id, fileId });
+      if (attached.ok) saved = attached.data;
+      else {
+        failed = true;
+        toast.error(tToast("error"));
+      }
+    }
+    if (raw.pinned !== undefined && raw.pinned !== current.pinned) {
+      const pinned = await pinNoteAction({ id: current.id, pinned: raw.pinned });
+      if (pinned.ok) saved = pinned.data;
+      else {
+        failed = true;
+        toast.error(tToast("error"));
+      }
+    }
+    if (!failed) toast.success(tToast("updated"));
+    onSaved?.(saved);
+  }
+
+  async function submit(values: NoteFormValues) {
     if (contentRejected.current) {
       form.setError("content", { type: "custom", message: CONTENT_INVALID_KEY });
       return;
     }
-    const title = values.title?.trim() ? values.title.trim() : undefined;
     const tagIds = tags.map((tag) => tag.id);
-    const result = note
-      ? await updateNoteAction({
-          id: note.id,
-          ...(title ? { title } : {}),
-          content: values.content,
-          tagIds,
-        })
-      : await createNoteAction({
-          ...values,
-          ...(title ? { title } : { title: undefined }),
-          tagIds,
-        });
+    if (note) {
+      await saveEdit(note, tagIds);
+      return;
+    }
+    const title = values.title?.trim() ? values.title.trim() : undefined;
+    const result = await createNoteAction({
+      ...values,
+      links: links.map(toTarget),
+      ...(title ? { title } : { title: undefined }),
+      tagIds,
+    });
     if (!result.ok) {
       toast.error(tToast("error"));
       return;
     }
-    let saved = result.data;
-    if (note) {
-      // New files of the uploader are attached to the existing note one by one.
-      for (const fileId of values.attachmentFileIds ?? []) {
-        const attached = await attachFileAction({ noteId: note.id, fileId });
-        if (attached.ok) saved = attached.data;
-        else toast.error(tToast("error"));
-      }
-      if (values.pinned !== undefined && values.pinned !== note.pinned) {
-        const pinned = await pinNoteAction({ id: note.id, pinned: values.pinned });
-        if (pinned.ok) saved = pinned.data;
-        else toast.error(tToast("error"));
-      }
-    }
-    toast.success(editing ? tToast("updated") : tToast("created"));
-    onSaved?.(saved);
+    toast.success(tToast("created"));
+    onSaved?.(result.data);
   }
 
   return {

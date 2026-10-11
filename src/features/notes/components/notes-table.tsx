@@ -17,6 +17,7 @@ import {
   type FacetConfig,
   type FacetOption,
 } from "@/components/ui/data-table";
+import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { useCsvExport } from "@/features/export/use-csv-export";
 import {
   archiveNoteAction,
@@ -125,6 +126,7 @@ export function NotesTable({
   const [loading, setLoading] = useState(false);
   const [archiving, setArchiving] = useState<NoteListRowDTO | null>(null);
   const [pending, setPending] = useState(false);
+  useOpenerFocus(archiving !== null);
 
   // The first render already shows the server page for this URL; later query changes read through the action.
   const queryKey = JSON.stringify(query);
@@ -229,6 +231,8 @@ export function NotesTable({
         meta: { label: t("columns.tags") },
       }),
       helper.accessor("attachmentCount", {
+        // The id is the export column id (NOTE_COLUMN_IDS): the CSV export reads `attachments`.
+        id: "attachments",
         header: t("columns.attachments"),
         cell: ({ getValue }) =>
           getValue() > 0 ? (

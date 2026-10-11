@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 
 const actions = vi.hoisted(() => ({
   attachFileAction: vi.fn(),
@@ -64,6 +65,7 @@ import enPatterns from "@/i18n/messages/en/patterns.json";
 import enValidation from "@/i18n/messages/en/validation.json";
 import enEnums from "@/i18n/messages/en/enums.json";
 import enTags from "@/i18n/messages/en/tags.json";
+import type { NoteDetailDTO } from "@/lib/validators/notes";
 import type { NoteLinkRef } from "./note-link-picker";
 import { NoteComposerPage } from "./note-composer";
 
@@ -137,5 +139,65 @@ describe("NoteComposerPage", () => {
       await screen.findByText("The content is not valid or is too long to save."),
     ).toBeInTheDocument();
     expect(actions.createNoteAction).not.toHaveBeenCalled();
+  });
+
+});
+
+const kickoff: NoteDetailDTO = {
+  id: "not_kickoff",
+  title: "Kickoff",
+  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Acta" }] }] },
+  contentText: "Acta",
+  author: { id: "usr_andres_molina", name: "Andrés Molina", imageUrl: null },
+  pinned: false,
+  tags: [],
+  links: [{ id: "cli_kairos", label: "Kairos Studio", type: "CLIENT", code: "CLI-0001" }],
+  attachments: [],
+  createdAt: "2026-09-01T15:00:00.000Z",
+  updatedAt: "2026-09-01T15:00:00.000Z",
+  archivedAt: null,
+};
+
+describe("NoteComposerPage edit", () => {
+  beforeEach(() => {
+    actions.updateNoteAction.mockResolvedValue({ ok: true, data: kickoff });
+    actions.pinNoteAction.mockResolvedValue({ ok: true, data: { ...kickoff, pinned: true } });
+  });
+
+  it("sends a cleared title as null, so the note loses its title (F6)", async () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <NoteComposerPage note={kickoff} canCreateTags />
+      </NextIntlClientProvider>,
+    );
+    await userEvent.clear(screen.getByRole("textbox", { name: "Title" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save note" }));
+
+    await waitFor(() =>
+      expect(actions.updateNoteAction).toHaveBeenCalledWith({
+        id: "not_kickoff",
+        title: null,
+        content: kickoff.content,
+        tagIds: [],
+      }),
+    );
+    expect(toast.success).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the error and no success toast when the pin fails (nit)", async () => {
+    actions.pinNoteAction.mockResolvedValue({ ok: false, error: { code: "INTERNAL" } });
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <NoteComposerPage note={kickoff} canCreateTags />
+      </NextIntlClientProvider>,
+    );
+    await userEvent.click(screen.getByRole("switch"));
+    await userEvent.click(screen.getByRole("button", { name: "Save note" }));
+
+    await waitFor(() =>
+      expect(actions.pinNoteAction).toHaveBeenCalledWith({ id: "not_kickoff", pinned: true }),
+    );
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });
