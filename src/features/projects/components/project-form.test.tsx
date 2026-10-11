@@ -112,6 +112,11 @@ function renderCreate() {
 }
 
 describe("ProjectForm (create)", () => {
+  it("has an h1 with the page title", () => {
+    renderCreate();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+  });
+
   it("requires at least one client before saving (HU-05 CA1)", async () => {
     const user = userEvent.setup();
     renderCreate();

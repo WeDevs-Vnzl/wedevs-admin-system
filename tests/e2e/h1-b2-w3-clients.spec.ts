@@ -419,10 +419,8 @@ test.describe("client Documentos tab (mutates document links)", () => {
     await expect(linkedRows).toHaveCount(before - 1);
   });
 
-  // PRODUCT DEFECT (major, pointer): the "Vincular existente" listbox opens under the sheet footer. At the option's
-  // centre the hit target is the sheet's footer button row, so a pointer click never selects a search result
-  // (the keyboard path above does). Expected: the option takes the click.
-  test.fail(
+  // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
+  test(
     "a search result of the Vincular existente tab takes a pointer click",
     async ({ page }) => {
       await open(page, "/clients/cli_zafiro_labs?tab=documents");
@@ -444,9 +442,7 @@ test.describe("clients (read only)", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  // PRODUCT DEFECT (major, status): the in-shell 404 body of an unknown client id is served with HTTP 200 (curl
-  // http://localhost:3105/clients/cli_no_existe). /notes/note_no_existe and /clients/cli_kairos/graph answer 404.
-  test.fail("an unknown client id answers HTTP 404", async ({ page }) => {
+  test("an unknown client id answers HTTP 404", async ({ page }) => {
     const unknown = await page.goto("/clients/cli_no_existe");
     expect(unknown?.status()).toBe(404);
   });

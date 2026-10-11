@@ -111,7 +111,10 @@ export function AttachDocumentSheet({ entity, categories }: AttachDocumentSheetP
           {t("tab.attach")}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent
+        className="w-full overflow-y-auto sm:max-w-lg"
+        onInteractOutside={keepOpenOnComboboxPopup}
+      >
         <SheetHeader>
           <SheetTitle>{t("sheet.title")}</SheetTitle>
           <SheetDescription>{t("sheet.description")}</SheetDescription>
@@ -137,6 +140,15 @@ export function AttachDocumentSheet({ entity, categories }: AttachDocumentSheetP
       </SheetContent>
     </Sheet>
   );
+}
+
+/**
+ * The combobox popup lives in its own portal, outside the sheet. Radix reads a press on it as an outside
+ * interaction and would close the sheet before the option takes the click.
+ */
+function keepOpenOnComboboxPopup(event: { detail: { originalEvent: Event }; preventDefault: () => void }) {
+  const target = event.detail.originalEvent.target;
+  if (target instanceof Element && target.closest('[data-slot="combobox-content"]')) event.preventDefault();
 }
 
 // ───────────────────────────── Upload mode ─────────────────────────────
@@ -412,6 +424,9 @@ function LinkDocumentForm({ target, onDone }: LinkDocumentFormProps) {
         submit();
       }}
     >
+      {/* The modal sheet sets `pointer-events: none` on <body>; the combobox popup is portaled there too, so a
+          click would fall through to the sheet behind it. */}
+      <style>{`[data-slot="combobox-content"] { pointer-events: auto; }`}</style>
       <Field>
         <FieldLabel htmlFor="attach-existing">{t("fields.document")}</FieldLabel>
         <AsyncCombobox
