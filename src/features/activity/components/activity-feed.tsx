@@ -2,7 +2,7 @@
 
 import { History } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_TIME_ZONE, formatDate, toDateOnly, type DateOnly } from "@/lib/dates";
@@ -46,6 +46,8 @@ export function ActivityFeed({
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [selected, setSelected] = useState<ActivityListRowDTO | null>(null);
+  // The sheet opens programmatically (no Radix trigger), so the opener is remembered to give focus back.
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   async function loadMore() {
     setLoading(true);
@@ -83,7 +85,13 @@ export function ActivityFeed({
             <ol className="flex flex-col gap-2">
               {group.items.map((entry) => (
                 <li key={entry.id}>
-                  <ActivityItem entry={entry} onOpen={setSelected} />
+                  <ActivityItem
+                    entry={entry}
+                    onOpen={(opened, trigger) => {
+                      triggerRef.current = trigger;
+                      setSelected(opened);
+                    }}
+                  />
                 </li>
               ))}
             </ol>
@@ -109,6 +117,12 @@ export function ActivityFeed({
         open={selected !== null}
         onOpenChange={(open) => {
           if (!open) setSelected(null);
+        }}
+        onCloseAutoFocus={(event) => {
+          const trigger = triggerRef.current;
+          if (!trigger?.isConnected) return;
+          event.preventDefault();
+          trigger.focus();
         }}
       />
     </div>

@@ -43,7 +43,7 @@ export function ActivityItem({
   onOpen,
 }: {
   entry: ActivityListRowDTO;
-  onOpen: (entry: ActivityListRowDTO) => void;
+  onOpen: (entry: ActivityListRowDTO, trigger: HTMLElement) => void;
 }) {
   const locale = useLocale();
   const t = useTranslations("activity");
@@ -103,7 +103,7 @@ export function ActivityItem({
           variant="ghost"
           size="icon-sm"
           aria-label={t("feed.viewDetail", { action: actionLabel })}
-          onClick={() => onOpen(entry)}
+          onClick={(event) => onOpen(entry, event.currentTarget)}
         >
           <ChevronRight aria-hidden />
         </Button>
