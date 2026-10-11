@@ -2629,32 +2629,32 @@ Files: new `src/app/(app)/projects/{page,loading}.tsx`, `projects/list/page.tsx`
 `projects/[id]/page.tsx`, `projects/[id]/edit/page.tsx`; new `src/features/projects/components/**`
 (+ tests); `src/i18n/messages/{es,en}/projects.json`.
 
-- [ ] `/projects` overview: projects by status (registry `chart`), upcoming deliveries, without billing
+- [x] `/projects` overview: projects by status (registry `chart`), upcoming deliveries, without billing
       plan, top technologies, highest to invoice (finance roles), `AlertList` (installments to invoice —
       finance roles).
-- [ ] `/projects/list`: columns of `projects/columns.ts` (stack as icons); facets status, client (async),
+- [x] `/projects/list`: columns of `projects/columns.ts` (stack as icons); facets status, client (async),
       technology (HU-06 CA2), tag, delivery range, without billing plan; bulk tag/archive; export.
-- [ ] `/projects/new` (`?clientId=` prefill) and `/projects/[id]/edit`: name; clients (`AsyncCombobox`
+- [x] `/projects/new` (`?clientId=` prefill) and `/projects/[id]/edit`: name; clients (`AsyncCombobox`
       multi with a per-client role input, ≥ 1, HU-05 CA1–CA2); summary ≤ 280 with a counter; description
       (`RichTextEditor`); dates; stack (`TechnologyPicker`); links editor; tags; unsaved-changes guard.
       Status is not edited here (transition dialog).
-- [ ] Links editor (HU-07): collapsible cards per `ProjectLinkGroup`; add/edit/remove rows (label, URL with
+- [x] Links editor (HU-07): collapsible cards per `ProjectLinkGroup`; add/edit/remove rows (label, URL with
       the field error on invalid URLs, CA3); drag reorder within a group with `@dnd-kit` sortable,
       keyboard sensor and i18n announcements (CA2, persisted through `reorderProjectLinksAction` on the
       detail page); favicon from `https://<host>/favicon.ico` with the group icon as fallback (no
       third-party favicon service); open in a new tab; copy URL with a toast.
-- [ ] `/projects/[id]`: header (code, name, status, tags, Detalle | Grafo, Editar, "Cambiar estado", More:
+- [x] `/projects/[id]`: header (code, name, status, tags, Detalle | Grafo, Editar, "Cambiar estado", More:
       archive); `BreadcrumbLabel`; side panel (clients with roles, dates, stack, financial headline for
       finance roles); tabs: Resumen (`RichTextView`, clients, dates, stack), Enlaces, Cobro / Facturas /
       Gastos (`FinanceTabSlot`, finance roles), Documentos, Notas, Actividad.
-- [ ] Transition dialog (HU-08): targets from `PROJECT_STATUS_TRANSITIONS`; start date required for
+- [x] Transition dialog (HU-08): targets from `PROJECT_STATUS_TRANSITIONS`; start date required for
       `EN_CURSO`, end date for `ENTREGADO`; `CANCELADO` through `ConfirmDialog` with `options`
       (cancel pending installments, end recurring charges, CA3); returned hints shown as non-blocking
       warnings.
-- [ ] Member: edit allowed, no create or archive; Viewer read-only. `generateMetadata` titles (R15).
+- [x] Member: edit allowed, no create or archive; Viewer read-only. `generateMetadata` titles (R15).
 - [ ] Tests: client role input and ≥ 1 rule, summary counter, link URL error, keyboard reorder,
       transition dialog per target, role gating.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
 
 #### Package 3.3 — Notes module and tags in the composer
 

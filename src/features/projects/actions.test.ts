@@ -17,6 +17,7 @@ import {
   archiveProjectsAction,
   createProjectAction,
   exportProjectsCsvAction,
+  listProjectsAction,
   removeProjectLinkAction,
   reorderProjectLinksAction,
   searchProjectsAction,
@@ -287,5 +288,25 @@ describe("exportProjectsCsvAction", () => {
     });
     session.getMockSessionUser.mockResolvedValue(null);
     expect(await exportProjectsCsvAction(payload())).toMatchObject({ ok: false });
+  });
+});
+
+describe("listProjectsAction", () => {
+  it("returns the filtered page for any role that can read projects", async () => {
+    as("VIEWER");
+    const result = await listProjectsAction({ page: 1, pageSize: 25, q: "tamanaco" });
+    expect(result).toMatchObject({ ok: true });
+    if (result.ok) {
+      expect(result.data.items.length).toBeGreaterThan(0);
+      expect(result.data.items.every((row) => row.name.toLowerCase().includes("tamanaco"))).toBe(true);
+    }
+  });
+
+  it("refuses an unauthenticated caller with UNAUTHENTICATED", async () => {
+    session.getMockSessionUser.mockResolvedValue(null);
+    expect(await listProjectsAction({ page: 1, pageSize: 25 })).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED" },
+    });
   });
 });
