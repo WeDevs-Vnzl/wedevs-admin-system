@@ -17,6 +17,7 @@ import {
   archiveClientsAction,
   createClientAction,
   exportClientsCsvAction,
+  listClientsAction,
   restoreClientAction,
   searchClientsAction,
   setClientStatusAction,
@@ -211,6 +212,32 @@ describe("searchClientsAction", () => {
   it("requires a session", async () => {
     session.getMockSessionUser.mockResolvedValue(null);
     expect(await searchClientsAction({})).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED" },
+    });
+  });
+});
+
+describe("listClientsAction", () => {
+  it("returns the filtered page to any role that can read clients (filter passthrough)", async () => {
+    for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
+      signInAs(role);
+      const result = await listClientsAction({ q: "kairos", page: 1, pageSize: 25, filters: {} });
+      expect(result).toMatchObject({
+        ok: true,
+        data: { total: 1, items: [{ id: "cli_kairos", tradeName: "Kairos Studio" }] },
+      });
+    }
+  });
+
+  it("rejects a bad filter with VALIDATION and a missing session with UNAUTHENTICATED", async () => {
+    signInAs("ADMIN");
+    expect(await listClientsAction({ page: 0, pageSize: 25, filters: {} })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
+    });
+    session.getMockSessionUser.mockResolvedValue(null);
+    expect(await listClientsAction({ page: 1, pageSize: 25, filters: {} })).toMatchObject({
       ok: false,
       error: { code: "UNAUTHENTICATED" },
     });

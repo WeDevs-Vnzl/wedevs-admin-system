@@ -20,8 +20,139 @@
     "created": "Cliente creado",
     "updated": "Cliente actualizado",
     "statusChanged": "Estado del cliente actualizado",
-    "archived": "Cliente archivado",
     "archivedMany": "{count, plural, one {# cliente archivado} other {# clientes archivados}}",
-    "restored": "Cliente restaurado"
+    "restored": "Cliente restaurado",
+    "tagged": "{count, plural, one {# cliente etiquetado} other {# clientes etiquetados}}"
+  },
+  "page": {
+    "title": "Clientes",
+    "description": "Clientes, sus contactos y sus proyectos",
+    "listTitle": "Tabla de clientes",
+    "newTitle": "Nuevo cliente",
+    "editTitle": "Editar {name}",
+    "detailTitle": "{code} · {name}",
+    "newAction": "Nuevo cliente"
+  },
+  "overview": {
+    "topRevenue": "Top 5 por ingresos cobrados (últimos 12 meses)",
+    "overdue": "Clientes con saldo vencido",
+    "recent": "Creados recientemente",
+    "alerts": "Alertas de cobro",
+    "collected": "Cobrado 12 meses (USD)",
+    "overdueUsd": "Vencido (USD)"
+  },
+  "facets": {
+    "status": "Estado",
+    "kind": "Tipo",
+    "country": "País",
+    "tag": "Etiqueta",
+    "created": "Creado"
+  },
+  "search": {
+    "placeholder": "Buscar por nombre, código o identificador fiscal…"
+  },
+  "empty": {
+    "title": "Aún no hay clientes",
+    "description": "Registra el primer cliente para empezar a vincular proyectos y facturas.",
+    "action": "Nuevo cliente"
+  },
+  "bulk": {
+    "tag": "Etiquetar",
+    "archive": "Archivar",
+    "tagTitle": "{count, plural, one {Etiquetar # cliente} other {Etiquetar # clientes}}",
+    "tagDescription": "Las etiquetas se añaden a los clientes seleccionados.",
+    "tagSubmit": "Aplicar etiquetas",
+    "tagLabel": "Etiquetas"
+  },
+  "archive": {
+    "cascade": "Sus contactos también se archivarán. Los proyectos y las facturas del cliente no cambian.",
+    "cascadeMany": "Los contactos de estos clientes también se archivarán. Los proyectos y las facturas no cambian."
+  },
+  "form": {
+    "createTitle": "Nuevo cliente",
+    "editTitle": "Editar cliente",
+    "description": "Datos fiscales y de contacto del cliente.",
+    "fields": {
+      "kind": "Tipo",
+      "tradeName": "Nombre comercial",
+      "legalName": "Razón social",
+      "legalNameHint": "Obligatoria para empresas.",
+      "taxId": "Identificador fiscal",
+      "taxIdHintVe": "RIF: V, E, J, G o P, 8 dígitos y dígito verificador (por ejemplo, J-12345678-9).",
+      "taxIdHint": "Identificador fiscal del país (NIT, EIN, Tax ID…).",
+      "country": "País",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "email": "Email",
+      "website": "Sitio web",
+      "status": "Estado",
+      "tags": "Etiquetas"
+    },
+    "conflictOpen": "Abrir {code}",
+    "kindOptions": "Tipo de cliente",
+    "statusOptions": "Estado del cliente"
+  },
+  "detail": {
+    "tabs": {
+      "summary": "Resumen",
+      "contacts": "Contactos",
+      "projects": "Proyectos",
+      "invoices": "Facturas",
+      "payments": "Pagos",
+      "documents": "Documentos",
+      "notes": "Notas",
+      "activity": "Actividad"
+    },
+    "actions": {
+      "edit": "Editar",
+      "changeStatus": "Cambiar estado",
+      "archive": "Archivar cliente"
+    },
+    "statusDialog": {
+      "title": "Cambiar estado",
+      "description": "El cambio de estado es manual.",
+      "label": "Nuevo estado",
+      "submit": "Cambiar estado"
+    },
+    "avatarLabel": "Iniciales de {name}",
+    "keyData": {
+      "title": "Datos clave",
+      "kind": "Tipo",
+      "legalName": "Razón social",
+      "taxId": "Identificador fiscal",
+      "country": "País",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "email": "Email",
+      "website": "Sitio web",
+      "activatedAt": "Activo desde",
+      "none": "—"
+    },
+    "summary": {
+      "contacts": "Contactos destacados",
+      "noContacts": "Sin contactos todavía",
+      "metrics": "Métricas",
+      "projectsHint": "Proyectos no archivados del cliente",
+      "primaryBadge": "Principal"
+    },
+    "metrics": {
+      "totalInvoiced": "Total facturado",
+      "totalCollected": "Total cobrado",
+      "receivable": "Saldo por cobrar",
+      "overdue": "Vencido",
+      "creditBalance": "Saldo a favor",
+      "projects": "Proyectos"
+    },
+    "projects": {
+      "title": "Proyectos del cliente",
+      "headers": {
+        "code": "Código",
+        "name": "Proyecto",
+        "status": "Estado",
+        "targetEndDate": "Entrega prevista"
+      },
+      "openProject": "Ver proyecto {code}"
+    },
+    "restoreConflictAction": "Abrir el cliente existente"
   }
 }

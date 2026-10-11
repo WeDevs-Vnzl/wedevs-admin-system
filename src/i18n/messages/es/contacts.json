@@ -4,5 +4,42 @@
     "updated": "Contacto actualizado",
     "primaryChanged": "Contacto principal actualizado",
     "archived": "Contacto archivado"
+  },
+  "tab": {
+    "readOnly": "Solo lectura: tu rol puede consultar los contactos, pero no modificarlos."
+  },
+  "columns": {
+    "fullName": "Nombre",
+    "position": "Cargo",
+    "email": "Email",
+    "phone": "Teléfono",
+    "primary": "Principal",
+    "tags": "Etiquetas",
+    "actions": "Acciones"
+  },
+  "actions": {
+    "new": "Nuevo contacto",
+    "edit": "Editar {name}",
+    "setPrimary": "Marcar como principal",
+    "archive": "Archivar {name}",
+    "primary": "Principal"
+  },
+  "empty": {
+    "title": "Sin contactos todavía",
+    "description": "Añade al menos una persona con email o teléfono."
+  },
+  "form": {
+    "createTitle": "Nuevo contacto",
+    "editTitle": "Editar contacto",
+    "description": "Un contacto necesita nombre y al menos un email o teléfono.",
+    "fields": {
+      "fullName": "Nombre completo",
+      "position": "Cargo",
+      "email": "Email",
+      "phone": "Teléfono",
+      "isPrimary": "Contacto principal",
+      "isPrimaryHint": "Al marcarlo, el contacto principal anterior deja de serlo.",
+      "tags": "Etiquetas"
+    }
   }
 }

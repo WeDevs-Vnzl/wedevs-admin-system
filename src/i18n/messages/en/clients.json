@@ -2,7 +2,7 @@
   "columns": {
     "code": "Code",
     "tradeName": "Trade name",
-    "kind": "Type",
+    "kind": "Kind",
     "country": "Country",
     "status": "Status",
     "projectCount": "Projects",
@@ -20,8 +20,139 @@
     "created": "Client created",
     "updated": "Client updated",
     "statusChanged": "Client status updated",
-    "archived": "Client archived",
     "archivedMany": "{count, plural, one {# client archived} other {# clients archived}}",
-    "restored": "Client restored"
+    "restored": "Client restored",
+    "tagged": "{count, plural, one {# client tagged} other {# clients tagged}}"
+  },
+  "page": {
+    "title": "Clients",
+    "description": "Clients, their contacts and their projects",
+    "listTitle": "Clients table",
+    "newTitle": "New client",
+    "editTitle": "Edit {name}",
+    "detailTitle": "{code} · {name}",
+    "newAction": "New client"
+  },
+  "overview": {
+    "topRevenue": "Top 5 by collected revenue (last 12 months)",
+    "overdue": "Clients with overdue balance",
+    "recent": "Recently created",
+    "alerts": "Collection alerts",
+    "collected": "Collected 12 months (USD)",
+    "overdueUsd": "Overdue (USD)"
+  },
+  "facets": {
+    "status": "Status",
+    "kind": "Kind",
+    "country": "Country",
+    "tag": "Tag",
+    "created": "Created"
+  },
+  "search": {
+    "placeholder": "Search by name, code or tax ID…"
+  },
+  "empty": {
+    "title": "No clients yet",
+    "description": "Add the first client to start linking projects and invoices.",
+    "action": "New client"
+  },
+  "bulk": {
+    "tag": "Tag",
+    "archive": "Archive",
+    "tagTitle": "{count, plural, one {Tag # client} other {Tag # clients}}",
+    "tagDescription": "The tags are added to the selected clients.",
+    "tagSubmit": "Apply tags",
+    "tagLabel": "Tags"
+  },
+  "archive": {
+    "cascade": "Its contacts will be archived too. The client's projects and invoices do not change.",
+    "cascadeMany": "The contacts of these clients will be archived too. Projects and invoices do not change."
+  },
+  "form": {
+    "createTitle": "New client",
+    "editTitle": "Edit client",
+    "description": "Tax and contact details of the client.",
+    "fields": {
+      "kind": "Kind",
+      "tradeName": "Trade name",
+      "legalName": "Legal name",
+      "legalNameHint": "Required for companies.",
+      "taxId": "Tax ID",
+      "taxIdHintVe": "Venezuelan RIF: V, E, J, G or P, 8 digits and a check digit (for example, J-12345678-9).",
+      "taxIdHint": "Tax identifier of the country (NIT, EIN, Tax ID…).",
+      "country": "Country",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "status": "Status",
+      "tags": "Tags"
+    },
+    "conflictOpen": "Open {code}",
+    "kindOptions": "Client kind",
+    "statusOptions": "Client status"
+  },
+  "detail": {
+    "tabs": {
+      "summary": "Summary",
+      "contacts": "Contacts",
+      "projects": "Projects",
+      "invoices": "Invoices",
+      "payments": "Payments",
+      "documents": "Documents",
+      "notes": "Notes",
+      "activity": "Activity"
+    },
+    "actions": {
+      "edit": "Edit",
+      "changeStatus": "Change status",
+      "archive": "Archive client"
+    },
+    "statusDialog": {
+      "title": "Change status",
+      "description": "The status change is manual.",
+      "label": "New status",
+      "submit": "Change status"
+    },
+    "avatarLabel": "Initials of {name}",
+    "keyData": {
+      "title": "Key data",
+      "kind": "Kind",
+      "legalName": "Legal name",
+      "taxId": "Tax ID",
+      "country": "Country",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "activatedAt": "Active since",
+      "none": "—"
+    },
+    "summary": {
+      "contacts": "Highlighted contacts",
+      "noContacts": "No contacts yet",
+      "metrics": "Metrics",
+      "projectsHint": "Non-archived projects of the client",
+      "primaryBadge": "Primary"
+    },
+    "metrics": {
+      "totalInvoiced": "Total invoiced",
+      "totalCollected": "Total collected",
+      "receivable": "Receivable",
+      "overdue": "Overdue",
+      "creditBalance": "Credit balance",
+      "projects": "Projects"
+    },
+    "projects": {
+      "title": "Client projects",
+      "headers": {
+        "code": "Code",
+        "name": "Project",
+        "status": "Status",
+        "targetEndDate": "Target end"
+      },
+      "openProject": "Open project {code}"
+    },
+    "restoreConflictAction": "Open the existing client"
   }
 }

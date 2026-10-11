@@ -2589,20 +2589,20 @@ Files: new `src/app/(app)/clients/{page,loading}.tsx`, `clients/list/page.tsx`, 
 `clients/[id]/page.tsx`, `clients/[id]/edit/page.tsx`; new `src/features/clients/components/**` and
 `src/features/contacts/components/**` (+ tests); `src/i18n/messages/{es,en}/{clients,contacts}.json`.
 
-- [ ] `/clients` overview (`OverviewLayout`, `OverviewTableToggle`): count by status; top 5 by revenue and
+- [x] `/clients` overview (`OverviewLayout`, `OverviewTableToggle`): count by status; top 5 by revenue and
       clients with overdue balance (finance roles only); recently created; `AlertList` (invoice overdue,
       due soon, unallocated credit — finance roles); quick action "Nuevo cliente".
-- [ ] `/clients/list`: `DataTable` with `clients/columns.ts`; facets status, kind, country, tag, created
+- [x] `/clients/list`: `DataTable` with `clients/columns.ts`; facets status, kind, country, tag, created
       range; search; sort; column preferences (`table:clients:columns`); "Mostrar archivados"
       (Owner/Admin); bulk tag (`TagPicker` + `assignTagsAction`), bulk archive (`ConfirmDialog` variant `archive` with the
       cascade warning as `description`, `confirm` flag), export (`useCsvExport(exportClientsCsvAction)`); financial columns
       hidden without `canSeeFinancials`; empty state with CTA.
-- [ ] `/clients/new` and `/clients/[id]/edit` (`FormPage`, RHF + `zodResolver` with the create/update
+- [x] `/clients/new` and `/clients/[id]/edit` (`FormPage`, RHF + `zodResolver` with the create/update
       schemas): kind; legal name required for `EMPRESA` (HU-03 CA1); tax id with the VE hint;
       `CountryCombobox`; `PhoneInput`; address; email; website; status; `TagPicker`; unsaved-changes guard.
       On `CONFLICT` the tax-id field shows the error with a link to `entityHref(error.entity)` (HU-03
       CA3); on success a toast and the detail page.
-- [ ] `/clients/[id]`: `DetailHeader` (initials, code chip, name, status, tags, meta, Detalle | Grafo,
+- [x] `/clients/[id]`: `DetailHeader` (initials, code chip, name, status, tags, meta, Detalle | Grafo,
       Editar, More: change status, archive with the cascade confirmation, restore when archived with
       `ArchivedBanner`); `BreadcrumbLabel`; side panel with key data and `FinancialSummaryCard` (finance
       roles); `DetailTabs` (`?tab=`, counts): Resumen (data, highlighted contacts, metrics), Contactos
@@ -2611,10 +2611,10 @@ Files: new `src/app/(app)/clients/{page,loading}.tsx`, `clients/list/page.tsx`, 
       HU-05 CA3), Facturas and Pagos (`FinanceTabSlot`, finance roles), Documentos
       (`EntityDocumentsTab`), Notas (`EntityNotesTab`), Actividad (`EntityActivityTab` when
       `can(read, activity)`). Unknown id, or archived for non-admins → `notFound()`.
-- [ ] `generateMetadata` titles on every page (R15). Strings only from i18n (C1).
-- [ ] Tests: `EMPRESA` legal-name rule, `CONFLICT` link rendering, tabs per role, contact primary toggle,
+- [x] `generateMetadata` titles on every page (R15). Strings only from i18n (C1).
+- [x] Tests: `EMPRESA` legal-name rule, `CONFLICT` link rendering, tabs per role, contact primary toggle,
       archive dialog sends `confirm`.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution. *(2026-10-11, wedevs-developer 3.1: lint, typecheck, test (185 files, 2429 tests + 1 expected fail), i18n:check (32 namespaces) and build pass; lockfile and package.json unchanged; one approved exception: `listClientsAction` added to `clients/actions.ts` with its test, by the coordinator decision.)*
 
 #### Package 3.2 — Projects screens
 
