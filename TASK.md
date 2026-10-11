@@ -2802,8 +2802,11 @@ test next to the existing static/structure tests (+ tests everywhere touched).
       from a module **with** `"use client"`, each imported binding must be a component (PascalCase) or a type-only
       import; any other value fails naming the file and binding. Passes on the fixed tree and fails if T1 is
       reintroduced (show it in the report).
-- [ ] Gate. Orchestrator smoke: `next start`, `?tab=notes` on a client and a project detail render the feed, server
-      log clean. Commit messages without any Claude attribution.
+- [x] Gate. Orchestrator smoke: `next start`, `?tab=notes` on a client and a project detail render the feed, server
+      log clean. Commit messages without any Claude attribution. *(2026-10-11: merged eaa1598; gate green — test 202
+      files, 2514 passed + 1 expected fail after re-running the known jsdom 5 s flake in `phone-input.test.tsx`;
+      smoke on :3105: `cli_kairos` and `pry_titan_app` `?tab=notes` render, three lists 25 rows, clean log. Guard
+      allow-lists 4 kit barrel re-exports (read-only kit; all consumers are client modules) → H1-FX.)*
 
 #### Wave 3 close
 
