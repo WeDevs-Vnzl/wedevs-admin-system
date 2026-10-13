@@ -1,6 +1,6 @@
 # Safeguards against runaway processes
 
-Referenced from `orca-workflow.md` § "Batch cycle". These rules are a preventive policy, mandatory because this project combines persistent processes with browser-based testing. The persistent processes are:
+Referenced from `docs/orca-workflow.md` § "Batch cycle". These rules are a preventive policy, mandatory because this project combines persistent processes with browser-based testing. The persistent processes are:
 
 - the **Postgres container** (`podman run … postgres:17`) used for migrations, service tests and the E2E database;
 - an optional **S3-compatible container** (e.g. MinIO) used to exercise `StorageProvider`;

@@ -1,10 +1,10 @@
-# TASK.md — WeDevs Core
+# docs/TASK.md — WeDevs Core
 
 Source of truth for batches, waves, packages and progress. Written by `wedevs-planner`; each agent
-ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
-`.rules/ADE/safeguards.md`, `orca-workflow.md`. Operational rules: `.rules/stack.md`,
-`.rules/conventions.md` (invariants `C1`–`C26`), `.rules/data-rules.md`,
-`.rules/frontend-patterns.md`, `.rules/decisions.md`, `.rules/coverage-matrix.md`.
+ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md`,
+`docs/rules/ADE/safeguards.md`, `docs/orca-workflow.md`. Operational rules: `docs/rules/stack.md`,
+`docs/rules/conventions.md` (invariants `C1`–`C26`), `docs/rules/data-rules.md`,
+`docs/rules/frontend-patterns.md`, `docs/rules/decisions.md`, `docs/rules/coverage-matrix.md`.
 
 ---
 
@@ -25,17 +25,17 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 
 ## Batch 0 — Rules (delivered)
 
-- **Objective:** write the operational rules from the PRD and the `TASK.md` skeleton. No code, no
+- **Objective:** write the operational rules from the PRD and the `docs/TASK.md` skeleton. No code, no
   Developers, no Tester.
 - **Type:** rules. **Run:** `run_53d4419610e4`. **Base branch:** `batch/0-rules`.
 - **Deliverables:**
-  - [x] `.rules/stack.md`
-  - [x] `.rules/conventions.md`
-  - [x] `.rules/data-rules.md`
-  - [x] `.rules/frontend-patterns.md`
-  - [x] `.rules/decisions.md` (DU-01, DU-02, DT-01…DT-52, P1/P3/P4/P6/P7 open, drift log D1–D12)
-  - [x] `.rules/coverage-matrix.md`
-  - [x] `TASK.md` skeleton
+  - [x] `docs/rules/stack.md`
+  - [x] `docs/rules/conventions.md`
+  - [x] `docs/rules/data-rules.md`
+  - [x] `docs/rules/frontend-patterns.md`
+  - [x] `docs/rules/decisions.md` (DU-01, DU-02, DT-01…DT-52, P1/P3/P4/P6/P7 open, drift log D1–D12)
+  - [x] `docs/rules/coverage-matrix.md`
+  - [x] `docs/TASK.md` skeleton
   - [x] Revision 1: user decisions on DT-31…DT-42, OP-01…OP-06, P2, P5, P8, P9 and the drift items applied
 - [ ] **User approval of the rules** (required before H1-B1 opens — `phase-gates.md` rule 3).
 
@@ -45,7 +45,7 @@ ticks **only its own** checkboxes. Process rules: `.rules/ADE/phase-gates.md`,
 
 ## Phase rules (apply to every batch below)
 
-Adapted from `.rules/ADE/phase-gates.md` and `.rules/ADE/safeguards.md`; those files win on conflict.
+Adapted from `docs/rules/ADE/phase-gates.md` and `docs/rules/ADE/safeguards.md`; those files win on conflict.
 
 1. **No worker coexistence across phases.** Planner done and released → Developers; all Developers done
    and released → Planner coherence review → Code Reviewer; Code Reviewer done and released → Tester.
@@ -56,7 +56,7 @@ Adapted from `.rules/ADE/phase-gates.md` and `.rules/ADE/safeguards.md`; those f
    owner per wave. Needing a file outside the list → stop and report, never improvise.
 3. **Explicit human approval between waves**, repeated at the foot of every wave. Approval is never
    implicit; silence is not approval.
-4. **`TASK.md` is the source of truth for progress.** Each agent checks off its own checkboxes; the
+4. **`docs/TASK.md` is the source of truth for progress.** Each agent checks off its own checkboxes; the
    Orchestrator confirms against them, not only against side-channel reports.
 5. **Problem reporting at every wave close** — silence is not "no news". Every Developer, the Code
    Reviewer and the Tester report problems explicitly (or state "none").
@@ -76,7 +76,7 @@ Adapted from `.rules/ADE/phase-gates.md` and `.rules/ADE/safeguards.md`; those f
 11. **No Claude attribution** in any commit, PR or file (C6). The Orchestrator checks commits before
     integrating (`git log --format=%B <base>..<branch> | grep -i claude`).
 12. **UI packages:** every UI package spec carries the line "Use the shadcn MCP" (DU-02, C3).
-13. **Open decisions block:** a batch that depends on an OPEN item of `.rules/decisions.md` does not
+13. **Open decisions block:** a batch that depends on an OPEN item of `docs/rules/decisions.md` does not
     open until the user decides it.
 
 ---
@@ -131,7 +131,7 @@ Agents never deploy or touch Netlify, Neon, Clerk, the bucket, DNS, Sentry or se
   §7.3 (tables kit), §7.4 (form controls), §7.6 (Cmd+K shell), §7.8 (i18n, theme), §4.3 (permission
   matrix as pure code), §9.1–§9.2 (money and rate libraries), §8.15 (preferences), §10.2 enums + approved
   deltas (as contracts), §12 signatures (as contracts), §14 (i18n parity, quality tooling).
-- **Decided stack:** `.rules/stack.md` (Next.js 16 with `proxy.ts` naming, `@prisma/adapter-pg` later in
+- **Decided stack:** `docs/rules/stack.md` (Next.js 16 with `proxy.ts` naming, `@prisma/adapter-pg` later in
   Hito 2, pdf.js viewer).
 - **Binding invariants:** C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 (shape), C11 (shape), C15, C16
   (shape), C17 (shape, contracts only), C22 (shape, contracts only), C23 (shape: uploader), C25.
@@ -176,11 +176,11 @@ pdf.js (worker) if the chosen setup requires a static copy.
 
 - [x] Create the Next.js 16 App Router project at the repo root (TypeScript `strict` +
       `noUncheckedIndexedAccess`, `src/` dir, alias `@/*`), without touching process files
-      (`PRD-WeDevs-Core.md`, `resources/`, `.rules/`, `orca-workflow.md`, `.claude/`, `README.md`,
+      (`docs/PRD-WeDevs-Core.md`, `resources/`, `docs/rules/`, `docs/orca-workflow.md`, `.claude/`, `README.md`,
       `.mcp.json`, `.gitignore`, `graphify-out/`). No `proxy.ts` in Hito 1 (DT-33).
 - [x] Pin exact versions (`.npmrc` `save-exact=true`); Node LTS 24.x in `.nvmrc`; `packageManager` pnpm
       10.x; latest stable Next.js 16.x supported by Netlify's Next.js runtime (verify and report).
-- [x] Install every dependency marked "H1-B1" in `.rules/stack.md` (application stack, supporting
+- [x] Install every dependency marked "H1-B1" in `docs/rules/stack.md` (application stack, supporting
       libraries incl. **pdf.js** (`pdfjs-dist`, optionally `react-pdf`), tooling), plus `server-only`.
       Before choosing a supporting library, check with the shadcn MCP whether a registry item covers it.
 - [x] Add `shadcn` as an exact-pinned devDependency; run `pnpm exec shadcn init` (CSS variables, Tailwind
@@ -253,7 +253,7 @@ pdf.js (worker) if the chosen setup requires a static copy.
 - Tester: PASS. Non-blocking: pnpm ignored build scripts (`@parcel/watcher`, `@swc/core`, `esbuild`,
   `unrs-resolver`); the jsdom Vitest project has no tests yet. Process slips: extra build runs, a scratch
   file in `/tmp` (deleted), an existence-only `ls` of `.env.local` (contents not read).
-- Pending drift notes for `.rules/decisions.md` (needs a rules revision by the user): TanStack v9; `field`
+- Pending drift notes for `docs/rules/decisions.md` (needs a rules revision by the user): TanStack v9; `field`
   + RHF `Controller` instead of `form`; npm `cn` in registry files vs `@/lib/utils` in hand-written code;
   radix-vega + `@base-ui/react` (spec 3.4 must name the `AsyncCombobox` base); ESLint 9.39.5; C1 gap;
   per-file Vitest thresholds from H1-B3; Next 16.4.0 on Netlify unconfirmed until the first preview;
@@ -917,7 +917,7 @@ Files: `src/mocks/store.ts`, `src/mocks/ctx.ts`, `src/mocks/ids.ts`, `src/mocks/
 
 #### Package 4.2 — CI workflow (no database yet)
 
-Package 4.2 → Agent: wedevs-developer · sonnet — Reason: CI workflows are critical by routing (`orca-workflow.md`).
+Package 4.2 → Agent: wedevs-developer · sonnet — Reason: CI workflows are critical by routing (`docs/orca-workflow.md`).
 
 Files: `.github/workflows/ci.yml`.
 
@@ -1652,7 +1652,7 @@ below.
   (`listActivity`; mock `logActivity`), `settings` technology CRUD, `export` (`exportCsv` mock seam),
   alerts (§7.9); and a minimal `documents` service (`listDocuments`, `createDocument` for files,
   `linkDocument`, `unlinkDocument`) that serves only the *Documentos* tab.
-- **Decided stack:** `.rules/stack.md`. Every needed dependency is already installed (DT-38): Tiptap
+- **Decided stack:** `docs/rules/stack.md`. Every needed dependency is already installed (DT-38): Tiptap
   3.31.4, `@dnd-kit/*`, `simple-icons`, `diff`, `nuqs`, `cmdk`. **No package in this batch changes the
   lockfile.** Registry items not yet installed (`alert`, `item`, optionally `attachment`) are added only
   by package 1.3; their dependencies (`cn`, `radix-ui`) are already installed. Registry check with the
@@ -2861,7 +2861,7 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
       2513 passed + 1 expected fail), `i18n:check` (32 namespaces), build pass. Approved exceptions:
       `listClientsAction` / `listProjectsAction` in `actions.ts` (T2 reload pattern); 3.2 new helper files
       `src/features/projects/{link-rows,load-project,table-filter}.ts`; 3.4 `detail-tabs.ts`; 3.6 kit exception
-      (`data-table/table-url-state.ts`). 3.6 merge took `TASK.md` from the base (the worker's edit duplicated
+      (`data-table/table-url-state.ts`). 3.6 merge took `docs/TASK.md` from the base (the worker's edit duplicated
       ~2000 lines). **Lesson:** jsdom does not enforce the client/server boundary — a `"use client"` kit helper
       called from RSC pages broke `/clients/list`, `/projects/list` (error boundary) and `/notes` (500) while
       the gate was green; the Orchestrator now smoke-checks list pages under `next start` and reads the server
@@ -2919,7 +2919,7 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
     820×1180 without horizontal page scroll; dark-mode contrast spot-check.
   - Manual pass (embedded browser): clients and projects golden path in both themes and languages.
 - [x] **Problem report** (Developers, Planner, Code Reviewer, Tester — "none" stated explicitly).
-      *(Developers: 3.6 merge duplicated ~2000 lines of `TASK.md` (base taken); the jsdom 5 s timeout flakes
+      *(Developers: 3.6 merge duplicated ~2000 lines of `docs/TASK.md` (base taken); the jsdom 5 s timeout flakes
       (`phone-input`, `country-combobox`) recurred in the gates and passed on re-run (→ H1-FX); 3.8 D5 fix
       (`useOpenerFocus` in a layout effect) did not work in the browser — the contact dialog likely mounts already
       open, so the opener is never recorded (inferred) → H1-FX with the kit `ConfirmDialog` focus item. Planner:

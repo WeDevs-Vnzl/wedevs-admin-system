@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 
-// Wave 3 E2E, clients (H1-B2, TASK.md "Tester scope"). This file starts nothing: it runs against the app that
+// Wave 3 E2E, clients (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
 // every browser context shares it, so the tests that mutate it run one at a time (`--workers=1`, no serial mode, so
 // one failure does not skip the rest) and reset it through the user menu ("Restablecer datos de prueba") before each

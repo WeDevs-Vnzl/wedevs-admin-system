@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Wave 5 shell E2E (H1-B1, TASK.md "Tester scope"). This file starts nothing: it runs against the app that
+// Wave 5 shell E2E (H1-B1, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The app serves in-memory MOCK data from one process, so
 // the tests that change mock state (preferences, locale, theme) run serially and restore it with the user
 // menu's "Restablecer datos de prueba" after each test. View-as-role lives in the cookie of each context.

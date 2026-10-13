@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 
-// Wave 2 E2E (H1-B2, TASK.md "Tester scope"). This file starts nothing: it runs against the app that
+// Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server
 // process and every browser context shares it, so run this file with `--workers=1`: the locale and theme tests
 // of h1-b1-shell.spec.ts change the same store. Tests that mutate mock state are serial and restore it through

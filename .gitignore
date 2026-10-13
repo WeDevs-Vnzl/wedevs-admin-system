@@ -24,3 +24,6 @@ blob-report/
 # OS / editor
 .DS_Store
 *.log
+# Local AI runtime state
+.atl/
+.codegraph/

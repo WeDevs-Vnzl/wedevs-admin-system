@@ -97,7 +97,7 @@ Portal access keys (P5) are hashed with Node's built-in `crypto.scrypt` — no e
 - The shadcn MCP (`.mcp.json`, tool `mcp__shadcn`) is consulted before adding or composing a
   component (invariant **C3**).
 - `.mcp.json` (user-owned) is pinned to the same `shadcn` version once the scaffold pins it (OP-05;
-  task in `TASK.md` H1-B1 close).
+  task in `docs/TASK.md` H1-B1 close).
 
 ## Environments (PRD §6.5, OP-02)
 
@@ -124,7 +124,7 @@ pool (max a few connections) against the pooled `DATABASE_URL`; migrations use `
 
 - Next.js runs through Netlify's Next.js runtime (OpenNext adapter, selected automatically). The scaffold
   verifies Next.js 16 support and records it in its report.
-- `netlify.toml` is root config (shared file). Its build command in Hito 1 is the plain `pnpm build`.
+- `netlify.toml` is root config (shared file) with `base = "fe"`. Its build command in Hito 1 is the plain `pnpm build`.
   The `prisma migrate deploy` step is added in H2-B1 (OP-02); agents never run it.
 - Portal rate limiting uses Netlify's rate-limit rules (OP-03); agents may write code-based rule config
   in the repo if the user's plan supports it; the user enables and verifies it.

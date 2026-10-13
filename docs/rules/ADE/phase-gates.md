@@ -1,8 +1,8 @@
 # Phase control and human approval (mandatory)
 
-Referenced from `orca-workflow.md` § "Batch cycle". These are standing
+Referenced from `docs/orca-workflow.md` § "Batch cycle". These are standing
 process rules for this project, not a response to a prior incident. They
-take priority over any other section of `orca-workflow.md` if they
+take priority over any other section of `docs/orca-workflow.md` if they
 conflict.
 
 1. **No worker coexistence across phases.** The Planner must finish
@@ -28,7 +28,7 @@ conflict.
    presents it to the user. **The Orchestrator never creates Developer or
    Tester workers without the user explicitly approving the plan first.**
    Batch 0 (rules) also needs the user's explicit approval of the
-   `.rules/*` files before any phase batch opens.
+   `docs/rules/*` files before any phase batch opens.
 4. **The Tester requires a separate explicit confirmation.** Even with the
    Planner's coherence review green and the Code Reviewer reporting
    `READY FOR TESTING`, the Tester is not dispatched until the user
@@ -71,9 +71,9 @@ conflict.
 10. **One owner per shared file per wave.** Only one package per wave may
     change dependencies (`package.json` + lockfile), only one may change
     `prisma/schema.prisma`, and only one may change each shared file
-    listed in `orca-workflow.md` § "Repo topology" (i18n messages, the
+    listed in `docs/orca-workflow.md` § "Repo topology" (i18n messages, the
     `(app)` layout, `proxy.ts`, shared validators). The Planner
-    declares that owner in `TASK.md`.
+    declares that owner in `docs/TASK.md`.
 11. **Secrets belong to the human.** Real credentials (`CLERK_*`,
     `CLERK_WEBHOOK_SECRET`, `STORAGE_*`, `SHARE_IP_SALT`, `SENTRY_DSN`,
     Neon URLs) are placed by the user in `.env.local` or in CI/Netlify

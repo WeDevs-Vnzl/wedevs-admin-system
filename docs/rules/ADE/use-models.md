@@ -1,6 +1,6 @@
 # Model usage per agent (Orca)
 
-Actual syntax to set **model** and **effort/reasoning** when launching each agent from the terminal. Complements `orca-workflow.md` § "Roles and models" (which model belongs to which role): this is the *how* to pass it to the CLI.
+Actual syntax to set **model** and **effort/reasoning** when launching each agent from the terminal. Complements `docs/orca-workflow.md` § "Roles and models" (which model belongs to which role): this is the *how* to pass it to the CLI.
 
 In this project every role is a Claude Code agent defined in `.claude/agents/wedevs-*.md`. Its frontmatter `model` is the default, and the Planner's per-package line (`phase-gates.md` rule 8) is what the Orchestrator actually passes with `--model`/`--effort`.
 

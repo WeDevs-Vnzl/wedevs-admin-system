@@ -233,14 +233,14 @@ bucket domains allowlisted; `worker-src 'self'` for the pdf.js and graph workers
 ### Delivery gates
 
 **C25 [H1] — Shared files have one owner per wave.** A package only touches the files listed for it in
-`TASK.md`. Root `package.json`/lockfile, `prisma/`, the i18n namespace index, `(app)` layout, sidebar,
+`docs/TASK.md`. Root `package.json`/lockfile, `prisma/`, the i18n namespace index, `(app)` layout, sidebar,
 topbar, `proxy.ts`, `src/server/context.ts`, `src/server/actions/define-action.ts`,
 `src/server/actions/define-public-action.ts` and validators consumed by several modules are changed only
 by their declared owner (`phase-gates.md` rule 10).
 
 **C26 [H2] — Each Hito 2 block is verified on a deploy preview before the next one opens.** No agent
 deploys, pushes without approval, merges to `main`, or touches Netlify, Neon (including the CI testing
-database), Clerk, the bucket, DNS, Sentry or secrets. See `TASK.md` § "Hito 2 deploy gate".
+database), Clerk, the bucket, DNS, Sentry or secrets. See `docs/TASK.md` § "Hito 2 deploy gate".
 (`phase-gates.md` rules 5, 9, 11.)
 
 ### Quick reference: invariant × milestone
@@ -359,7 +359,7 @@ tree (DT-34, DT-36).
   (`vitest run`), never watch mode.
 - Coverage ≥ 90 % on `src/lib/money.ts`, `src/lib/rates.ts`, `src/lib/finance/**` (from Hito 1) and on
   the invoice, payment, account and billing services (Hito 2). (PRD §14.)
-- Playwright E2E per user story under `tests/e2e/`, assigned in `TASK.md`. Critical stories: HU 03, 09,
+- Playwright E2E per user story under `tests/e2e/`, assigned in `docs/TASK.md`. Critical stories: HU 03, 09,
   11, 13, 18, 22, 24 (PRD §14). Agents run E2E **only locally** (`next start` with mocks in Hito 1; local
   podman Postgres in Hito 2). CI runs the same suite against the user's Neon testing database (OP-02).
 

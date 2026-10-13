@@ -8,7 +8,7 @@ to `conventions.md`.
 
 ## 0. shadcn MCP rule (DU-02, invariant C3)
 
-Every UI package — and every UI package spec in `TASK.md` carries the line **"Use the shadcn MCP"**:
+Every UI package — and every UI package spec in `docs/TASK.md` carries the line **"Use the shadcn MCP"**:
 
 1. Before adding or composing a component, query the shadcn MCP (`mcp__shadcn`) for the registry item
    and its usage example (e.g. `sidebar`, `data-table` example, `command`, `chart`, `calendar`,

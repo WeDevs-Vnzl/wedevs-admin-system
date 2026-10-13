@@ -2,9 +2,9 @@
 
 Este archivo resume el proyecto y enlaza a las fuentes de verdad. No las sustituye:
 
-- [`PRD-WeDevs-Core.md`](PRD-WeDevs-Core.md): producto, arquitectura, reglas de negocio y alcance. Es la fuente de verdad (el orden de entrega lo sustituye DU-01: dos hitos, ver `.rules/decisions.md`).
-- [`orca-workflow.md`](orca-workflow.md): cómo trabajan los agentes de Orca.
-- `TASK.md`: lotes, olas, tareas y avance. *(lo crea el planner en el lote 0)*
+- [`docs/PRD-WeDevs-Core.md`](docs/PRD-WeDevs-Core.md): producto, arquitectura, reglas de negocio y alcance. Es la fuente de verdad (el orden de entrega lo sustituye DU-01: dos hitos, ver `docs/rules/decisions.md`).
+- [`docs/orca-workflow.md`](docs/orca-workflow.md): cómo trabajan los agentes de Orca.
+- `docs/TASK.md`: lotes, olas, tareas y avance. *(lo crea el planner en el lote 0)*
 
 ## Qué es
 
@@ -14,13 +14,14 @@ El sistema interno de WeDevs para clientes, proyectos, facturas, pagos, cuentas,
 
 | Ruta | Qué es |
 |---|---|
-| `PRD-WeDevs-Core.md` | PRD (español) |
-| `resources/wireframes/`, `resources/example/` | Referencia visual: wireframes y maquetas HTML |
-| `orca-workflow.md` | Topología, roles y modelos, tipos de lote, ciclo, herramientas locales |
-| `.rules/ADE/` | Reglas de proceso: fases y aprobaciones, salvaguardas, modelos |
-| `.rules/*.md` | Reglas operativas derivadas del PRD *(las escribe el planner en el lote 0)* |
+| `docs/PRD-WeDevs-Core.md` | PRD (español) |
+| `resources/wireframes/` | Wireframes originales |
+| `resources/example/` | Maquetas HTML de referencia |
+| `docs/orca-workflow.md` | Topología, roles y modelos, tipos de lote, ciclo, herramientas locales |
+| `docs/rules/ADE/` | Reglas de proceso: fases y aprobaciones, salvaguardas, modelos |
+| `docs/rules/*.md` | Reglas operativas derivadas del PRD *(las escribe el planner en el lote 0)* |
 | `.claude/agents/wedevs-*.md` | La flota: project-manager, planner, developer, code-reviewer, tester |
-| `src/`, `prisma/`, `netlify/` | La aplicación *(a partir del lote H1-B1)* |
+| `fe/` | La aplicación Next.js (`src/`, `tests/`, `scripts/`, configs). Los comandos `pnpm` se ejecutan dentro de `fe/` |
 
 ## Estado
 

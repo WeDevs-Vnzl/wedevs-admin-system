@@ -34,7 +34,7 @@ The MVP scope of PRD §3.1 does **not** change; only the delivery **order** of P
 Every agent doing UI work consults the shadcn MCP (`.mcp.json`, tool `mcp__shadcn`) before adding or
 composing shadcn components; components are installed with the shadcn CLI at a pinned version, never
 hand-copied; a component the registry provides is never hand-written. Invariant **C3**;
-`frontend-patterns.md` §0. Every UI package spec in `TASK.md` contains "Use the shadcn MCP". The Code
+`frontend-patterns.md` §0. Every UI package spec in `docs/TASK.md` contains "Use the shadcn MCP". The Code
 Reviewer verifies it.
 
 ---
@@ -106,7 +106,7 @@ Reviewer verifies it.
 | DT-46 | OP-02 | **CI end-to-end tests run against a Neon *testing* database** owned and configured by the user; the GitHub Actions job reaches it only through the user's secret `E2E_DATABASE_URL`. **Boundary:** agents author the workflow YAML but never read, print or set that secret, never connect to that database, and never run E2E against it; agents run E2E only locally (podman Postgres in Hito 2, `next start` with mocks in Hito 1). Service tests in CI use a `postgres:17` service container inside the job (no secret). The E2E job serializes runs (single concurrency group) because the database is shared, resets it with `prisma migrate reset --force` at the start of the job, and is skipped when the secret is absent. `prisma migrate deploy` for previews/production runs in the Netlify build configured by the user (PRD §14). |
 | DT-47 | OP-03 | **Portal rate limiting = Netlify rate limiting** on `/s/*` and `/api/s/*` (60 req/min per IP). No Postgres fallback and no Redis unless it proves insufficient later (would be a new decision). The access-key attempt lockout of DT-45 is a separate control based on `ShareAccessLog`. |
 | DT-48 | OP-04 | **Wireframe elements:** the sign-in page's live counters are **removed**; "Verificación SAT / IRS OK" and "Respaldo diario" are omitted; the topbar BCV rate chip is kept. |
-| DT-49 | OP-05 | **Pin shadcn in `.mcp.json`** to the exact version the scaffold pins. `.mcp.json` is user-owned; the Orchestrator raises it with the user at the H1-B1 wave 1 close (task in `TASK.md`, IOU-04). Until then developers use `pnpm exec shadcn`. |
+| DT-49 | OP-05 | **Pin shadcn in `.mcp.json`** to the exact version the scaffold pins. `.mcp.json` is user-owned; the Orchestrator raises it with the user at the H1-B1 wave 1 close (task in `docs/TASK.md`, IOU-04). Until then developers use `pnpm exec shadcn`. |
 | DT-50 | OP-06 | **PDF viewer = pdf.js** (`pdfjs-dist`, optionally via `react-pdf`) with the custom toolbar of wireframe 4.8 (page x/y, zoom, download, fullscreen); shared `PdfViewer` kit component; worker served from the app origin (CSP `worker-src 'self'`). Installed in H1-B1. |
 | DT-51 | P9 | **Brand identity = the wireframes** (`resources/wireframes`, `resources/example`): logo, monochrome palette, Inter. No separate brand manual. |
 | DT-52 | P8 | **No domain for now.** `APP_URL` is a placeholder (the Netlify URL in deployed environments); share URLs and Clerk/CSP origins derive from it. Choosing a domain later is configuration only (user, before launch). |
@@ -149,7 +149,7 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51; P3 → DT-73; 
   `.mcp.json` pin with the user (DT-49).
 - **IOU-05** (H2-B2): Clerk sign-in styled to wireframe 4.1 through `appearance`; if impossible, the user
   chooses between Clerk Elements and the stock look.
-- **IOU-06** (user, outside agents): update `orca-workflow.md` and `.claude/agents/*` to DU-01
+- **IOU-06** (user, outside agents): update `docs/orca-workflow.md` and `.claude/agents/*` to DU-01
   terminology and `proxy.ts` (the Orchestrator handles it per the user's instruction).
 
 ## 8. PRD drift log (user-approved amendments; the PRD text is the user's to update)
@@ -173,7 +173,7 @@ Resolved: P2 → DT-44; P5 → DT-45; P8 → DT-52; P9 → DT-51; P3 → DT-73; 
 
 ## 9. H1-B1 wave 1 findings (rules revision requested by the user)
 
-Context: `TASK.md` "Wave 1 problem report". Statuses as noted; OPEN items here do not block any batch
+Context: `docs/TASK.md` "Wave 1 problem report". Statuses as noted; OPEN items here do not block any batch
 unless their row says so.
 
 | Id | Status | Decision / finding |
@@ -216,7 +216,7 @@ unless their row says so.
 
 ## 12. H1-B2 plan decisions (user, 2026-10-10)
 
-The user approved the H1-B2 plan, including the Planner decisions PD-1…PD-6 (TASK.md, H1-B2 header).
+The user approved the H1-B2 plan, including the Planner decisions PD-1…PD-6 (docs/TASK.md, H1-B2 header).
 
 | Id | Status | Decision |
 |---|---|---|
