@@ -12,7 +12,10 @@ export async function loadProjectOr404(id: string): Promise<ProjectDetailDTO> {
   try {
     return await getProject(id);
   } catch (error) {
-    if (error instanceof ServiceError && (error.code === "NOT_FOUND" || error.code === "VALIDATION")) {
+    if (
+      error instanceof ServiceError &&
+      (error.code === "NOT_FOUND" || error.code === "VALIDATION")
+    ) {
       notFound();
     }
     if (error instanceof Error && error.name === "ZodError") notFound();

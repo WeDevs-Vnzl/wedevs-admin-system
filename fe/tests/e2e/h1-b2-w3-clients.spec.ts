@@ -420,17 +420,14 @@ test.describe("client Documentos tab (mutates document links)", () => {
   });
 
   // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
-  test(
-    "a search result of the Vincular existente tab takes a pointer click",
-    async ({ page }) => {
-      await open(page, "/clients/cli_zafiro_labs?tab=documents");
-      await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
-      const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
-      await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
-      await sheet.getByPlaceholder("Busca por código o título").fill("minuta");
-      await page.getByRole("option").first().click({ timeout: 5000 });
-    },
-  );
+  test("a search result of the Vincular existente tab takes a pointer click", async ({ page }) => {
+    await open(page, "/clients/cli_zafiro_labs?tab=documents");
+    await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
+    await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
+    await sheet.getByPlaceholder("Busca por código o título").fill("minuta");
+    await page.getByRole("option").first().click({ timeout: 5000 });
+  });
 });
 
 // ───────────────────────────── Shape checks that need no mutation ─────────────────────────────

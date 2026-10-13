@@ -18,11 +18,7 @@ const mocks = vi.hoisted(() => ({ pathname: "/dashboard" }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
 
-function renderAt(
-  pathname: string,
-  locale: "es" | "en" = "es",
-  registration?: React.ReactNode,
-) {
+function renderAt(pathname: string, locale: "es" | "en" = "es", registration?: React.ReactNode) {
   mocks.pathname = pathname;
   const messages =
     locale === "es"
@@ -73,12 +69,10 @@ describe("AppBreadcrumbs", () => {
   });
 
   it("does not use a label registered for another segment", () => {
-    renderAt(
-      "/clients/cli_123",
-      "es",
-      <BreadcrumbLabel segment="cli_999" label="Otro" />,
-    );
-    expect(screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" })).toBeInTheDocument();
+    renderAt("/clients/cli_123", "es", <BreadcrumbLabel segment="cli_999" label="Otro" />);
+    expect(
+      screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Otro")).not.toBeInTheDocument();
   });
 

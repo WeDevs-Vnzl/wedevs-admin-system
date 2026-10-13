@@ -6,6 +6,8 @@ import { lookupRateAction } from "./actions";
  * `null` (no rate on or before the date, or a refused/invalid lookup) tells the input the user types the rate.
  */
 export const lookupRate: RateLookup = async (date, currency) => {
-  const result = await lookupRateAction({ date, currency } as Parameters<typeof lookupRateAction>[0]);
+  const result = await lookupRateAction({ date, currency } as Parameters<
+    typeof lookupRateAction
+  >[0]);
   return result.ok ? result.data : null;
 };

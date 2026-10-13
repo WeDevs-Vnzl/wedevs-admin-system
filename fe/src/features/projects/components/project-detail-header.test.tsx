@@ -70,7 +70,10 @@ describe("ProjectDetailHeader role gating", () => {
 
   it("Member can edit and change status but gets no archive action", () => {
     renderHeader({ canEdit: true, canArchive: false });
-    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/projects/pry_kairos_web/edit");
+    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute(
+      "href",
+      "/projects/pry_kairos_web/edit",
+    );
     expect(screen.getByRole("button", { name: "Change status" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
   });
@@ -111,9 +114,14 @@ describe("ProjectDetailHeader archive (B2)", () => {
     expect(await screen.findByText(enProjects.errors.archiveNeedsConfirm)).toBeInTheDocument();
     expect(archiveProjectAction).toHaveBeenCalledWith({ id: "pry_kairos_web", confirm: false });
 
-    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }),
+    );
     await waitFor(() =>
-      expect(archiveProjectAction).toHaveBeenLastCalledWith({ id: "pry_kairos_web", confirm: true }),
+      expect(archiveProjectAction).toHaveBeenLastCalledWith({
+        id: "pry_kairos_web",
+        confirm: true,
+      }),
     );
   });
 

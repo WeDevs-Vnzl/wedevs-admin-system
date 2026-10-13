@@ -63,7 +63,13 @@ export default async function ProjectsOverviewPage() {
         <PageHeader
           title={tPage("title")}
           description={tPage("description")}
-          views={<OverviewTableToggle current="overview" overviewHref="/projects" tableHref="/projects/list" />}
+          views={
+            <OverviewTableToggle
+              current="overview"
+              overviewHref="/projects"
+              tableHref="/projects/list"
+            />
+          }
           actions={
             <>
               {canCreate ? (
@@ -80,7 +86,11 @@ export default async function ProjectsOverviewPage() {
       }
       kpis={
         <>
-          <StatCard label={t("kpiByStatus")} value={total} hint={t("projectCount", { count: total })} />
+          <StatCard
+            label={t("kpiByStatus")}
+            value={total}
+            hint={t("projectCount", { count: total })}
+          />
           <StatCard label={tStatus("EN_CURSO")} value={inProgress} />
           <StatCard label={tStatus("PROPUESTA")} value={overview.countByStatus.PROPUESTA ?? 0} />
           <StatCard label={tStatus("ENTREGADO")} value={overview.countByStatus.ENTREGADO ?? 0} />
@@ -99,14 +109,16 @@ export default async function ProjectsOverviewPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <SectionCard title={t("upcomingTitle")}>
               {overview.upcomingDeliveries.length === 0 ? (
-                <p className="text-muted-foreground text-sm">{t("upcomingEmpty")}</p>
+                <p className="text-sm text-muted-foreground">{t("upcomingEmpty")}</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {overview.upcomingDeliveries.map((row) => (
                     <li key={row.id} className="flex items-center justify-between gap-3">
                       <ProjectLink row={row} />
                       <span className="text-muted-foreground tabular-nums">
-                        {row.targetEndDate ? formatDate(row.targetEndDate, locale) : tDetail("notSet")}
+                        {row.targetEndDate
+                          ? formatDate(row.targetEndDate, locale)
+                          : tDetail("notSet")}
                       </span>
                     </li>
                   ))}
@@ -116,7 +128,7 @@ export default async function ProjectsOverviewPage() {
 
             <SectionCard title={t("noPlanTitle")}>
               {overview.withoutBillingPlan.length === 0 ? (
-                <p className="text-muted-foreground text-sm">{t("noPlanEmpty")}</p>
+                <p className="text-sm text-muted-foreground">{t("noPlanEmpty")}</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {overview.withoutBillingPlan.map((row) => (
@@ -132,7 +144,7 @@ export default async function ProjectsOverviewPage() {
           {showFinancials ? (
             <SectionCard title={t("toInvoiceTitle")}>
               {overview.highestToInvoice.length === 0 ? (
-                <p className="text-muted-foreground text-sm">{t("toInvoiceEmpty")}</p>
+                <p className="text-sm text-muted-foreground">{t("toInvoiceEmpty")}</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {overview.highestToInvoice.map((row) => (
@@ -151,7 +163,7 @@ export default async function ProjectsOverviewPage() {
         <>
           <SectionCard title={t("topTechTitle")}>
             {overview.topTechnologies.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t("topTechEmpty")}</p>
+              <p className="text-sm text-muted-foreground">{t("topTechEmpty")}</p>
             ) : (
               <ul className="space-y-2 text-sm">
                 {overview.topTechnologies.map(({ technology, projectCount }) => (

@@ -7,7 +7,10 @@ import { MoneyText } from "./money-text";
 
 function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       {ui}
     </NextIntlClientProvider>,
   );
@@ -16,7 +19,11 @@ function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
 describe("MoneyText", () => {
   it("formats a decimal string with two places in the ES locale (decimal comma)", () => {
     wrap(<MoneyText amount="1234.5" currency="USD" />);
-    expect(screen.getByText(/1234,50/)).toHaveClass("tabular-nums", "text-right", "whitespace-nowrap");
+    expect(screen.getByText(/1234,50/)).toHaveClass(
+      "tabular-nums",
+      "text-right",
+      "whitespace-nowrap",
+    );
   });
 
   it("formats the same amount with the grouping and decimal point of the EN locale", () => {

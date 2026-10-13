@@ -69,7 +69,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           {project.description ? (
             <RichTextView content={project.description} />
           ) : (
-            <p className="text-muted-foreground text-sm">{tDetail("noDescription")}</p>
+            <p className="text-sm text-muted-foreground">{tDetail("noDescription")}</p>
           )}
         </div>
       ),
@@ -79,22 +79,38 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       label: tTabs("links"),
       count: project.links.length,
       content: (
-        <ProjectLinksPanel
-          projectId={project.id}
-          links={project.links}
-          canReorder={canEdit}
-        />
+        <ProjectLinksPanel projectId={project.id} links={project.links} canReorder={canEdit} />
       ),
     },
     ...(showFinancials
       ? [
-          { value: "billing" satisfies ProjectDetailTab, label: tTabs("billing"), content: <FinanceTabSlot kind="billing" /> },
-          { value: "invoices" satisfies ProjectDetailTab, label: tTabs("invoices"), content: <FinanceTabSlot kind="invoices" /> },
-          { value: "expenses" satisfies ProjectDetailTab, label: tTabs("expenses"), content: <FinanceTabSlot kind="expenses" /> },
+          {
+            value: "billing" satisfies ProjectDetailTab,
+            label: tTabs("billing"),
+            content: <FinanceTabSlot kind="billing" />,
+          },
+          {
+            value: "invoices" satisfies ProjectDetailTab,
+            label: tTabs("invoices"),
+            content: <FinanceTabSlot kind="invoices" />,
+          },
+          {
+            value: "expenses" satisfies ProjectDetailTab,
+            label: tTabs("expenses"),
+            content: <FinanceTabSlot kind="expenses" />,
+          },
         ]
       : []),
-    { value: "documents" satisfies ProjectDetailTab, label: tTabs("documents"), content: <EntityDocumentsTab entity={ref} /> },
-    { value: "notes" satisfies ProjectDetailTab, label: tTabs("notes"), content: <EntityNotesTab entity={ref} /> },
+    {
+      value: "documents" satisfies ProjectDetailTab,
+      label: tTabs("documents"),
+      content: <EntityDocumentsTab entity={ref} />,
+    },
+    {
+      value: "notes" satisfies ProjectDetailTab,
+      label: tTabs("notes"),
+      content: <EntityNotesTab entity={ref} />,
+    },
     ...(showActivity
       ? [
           {

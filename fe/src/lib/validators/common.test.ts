@@ -304,7 +304,10 @@ describe("shared form and list primitives (M4)", () => {
   });
 
   it("withSortFields documented path: derive from the base object, then wrap", () => {
-    const base = listQuerySchema.extend({ status: z.string().optional(), note: z.string().optional() });
+    const base = listQuerySchema.extend({
+      status: z.string().optional(),
+      note: z.string().optional(),
+    });
     const picked = withSortFields(base.pick({ page: true, sort: true, status: true }), ["name"]);
     expect(picked.safeParse({ sort: "name:asc", status: "A" }).success).toBe(true);
     expect(picked.safeParse({ sort: "other:asc" }).success).toBe(false);

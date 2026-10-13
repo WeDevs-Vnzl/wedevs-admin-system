@@ -300,8 +300,16 @@ describe("payment DTOs", () => {
     });
     expect(filters.status).toEqual(["PENDIENTE_VERIFICACION"]);
     expect(filters.hasUnallocated).toBe(true);
-    const multi = paymentFiltersSchema.parse({ clientId: ["c1", "c2"], accountId: "a1", methodId: ["m1", "m2"] });
-    expect(multi).toMatchObject({ clientId: ["c1", "c2"], accountId: ["a1"], methodId: ["m1", "m2"] });
+    const multi = paymentFiltersSchema.parse({
+      clientId: ["c1", "c2"],
+      accountId: "a1",
+      methodId: ["m1", "m2"],
+    });
+    expect(multi).toMatchObject({
+      clientId: ["c1", "c2"],
+      accountId: ["a1"],
+      methodId: ["m1", "m2"],
+    });
     const overview = {
       collectedByMonth: [{ period: "2026-09", value: "1200.00" }],
       byMethod: [{ key: "ZELLE", label: "Zelle", value: "900.00" }],

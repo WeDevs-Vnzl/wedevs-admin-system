@@ -82,7 +82,8 @@ const technologyExportSource = {
     { id: "active", kind: "options" },
   ],
   filterSchema: technologyFilterSchema,
-  list: (ctx: ServiceContext, filter: TechnologyFilter) => technologies.listTechnologies(ctx, filter),
+  list: (ctx: ServiceContext, filter: TechnologyFilter) =>
+    technologies.listTechnologies(ctx, filter),
   columns: technologyExportColumns,
 } satisfies ExportSource<TechnologyListRowDTO, TechnologyFilter, ServiceContext>;
 

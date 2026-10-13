@@ -136,7 +136,7 @@ export function ProjectLinksEditor({
   );
 
   const groups = LINK_GROUPS.filter((group) => editable || groupRows(rows, group).length > 0);
-  if (groups.length === 0) return <p className="text-muted-foreground text-sm">{t("empty")}</p>;
+  if (groups.length === 0) return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
 
   function update(next: ProjectLinkRow[]) {
     onChange?.(next);
@@ -229,9 +229,9 @@ export function ProjectLinksEditor({
           >
             <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium">
               <span className="flex items-center gap-2">
-                <GroupIcon className="text-muted-foreground size-4" aria-hidden />
+                <GroupIcon className="size-4 text-muted-foreground" aria-hidden />
                 {groupName}
-                <span className="text-muted-foreground text-xs tabular-nums">{items.length}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{items.length}</span>
               </span>
               {isOpen ? (
                 <ChevronUp className="size-4" aria-hidden />
@@ -265,7 +265,9 @@ export function ProjectLinksEditor({
                         fallbackIcon={GroupIcon}
                         iconFailed={Boolean(iconFailed[row.key])}
                         errors={editable ? rowErrors(row) : {}}
-                        onIconError={() => setIconFailed((current) => ({ ...current, [row.key]: true }))}
+                        onIconError={() =>
+                          setIconFailed((current) => ({ ...current, [row.key]: true }))
+                        }
                         onPatch={(values) => patch(row.key, values)}
                         onMoveUp={() => move(row.key, -1)}
                         onMoveDown={() => move(row.key, 1)}
@@ -279,7 +281,7 @@ export function ProjectLinksEditor({
                 </SortableContext>
               </DndContext>
               {items.length === 0 ? (
-                <p className="text-muted-foreground text-sm">{t("groupEmpty")}</p>
+                <p className="text-sm text-muted-foreground">{t("groupEmpty")}</p>
               ) : null}
               {editable && interactive ? (
                 <Button
@@ -340,8 +342,15 @@ function SortableLinkRow({
   tRoot,
 }: SortableLinkRowProps) {
   const t = useTranslations("projects.links");
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id: row.key, disabled: !reorderable });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: row.key, disabled: !reorderable });
   const icon = faviconUrl(row.url);
   const label = row.label || row.url;
   const urlError =
@@ -355,7 +364,10 @@ function SortableLinkRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("bg-card flex flex-col gap-3 rounded-xl border p-3", isDragging && "opacity-80 shadow-md")}
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border bg-card p-3",
+        isDragging && "opacity-80 shadow-md",
+      )}
     >
       <div className="flex flex-wrap items-center gap-2">
         {reorderable ? (
@@ -385,11 +397,9 @@ function SortableLinkRow({
             onError={onIconError}
           />
         ) : (
-          <FallbackIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
+          <FallbackIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         )}
-        {editable ? null : (
-          <span className="min-w-0 truncate text-sm font-medium">{label}</span>
-        )}
+        {editable ? null : <span className="min-w-0 truncate text-sm font-medium">{label}</span>}
         <div className="ms-auto flex items-center gap-1">
           {reorderable ? (
             <>

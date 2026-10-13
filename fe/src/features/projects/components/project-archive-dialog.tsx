@@ -61,7 +61,9 @@ export function ProjectArchiveDialog({
       toast.error(tErrors(result.error.code));
       return;
     }
-    toast.success(ids.length === 1 ? t("toast.archived") : t("toast.bulkArchived", { count: ids.length }));
+    toast.success(
+      ids.length === 1 ? t("toast.archived") : t("toast.bulkArchived", { count: ids.length }),
+    );
     onOpenChange(false);
     onArchived();
   }

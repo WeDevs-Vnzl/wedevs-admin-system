@@ -146,9 +146,13 @@ export function AttachDocumentSheet({ entity, categories }: AttachDocumentSheetP
  * The combobox popup lives in its own portal, outside the sheet. Radix reads a press on it as an outside
  * interaction and would close the sheet before the option takes the click.
  */
-function keepOpenOnComboboxPopup(event: { detail: { originalEvent: Event }; preventDefault: () => void }) {
+function keepOpenOnComboboxPopup(event: {
+  detail: { originalEvent: Event };
+  preventDefault: () => void;
+}) {
   const target = event.detail.originalEvent.target;
-  if (target instanceof Element && target.closest('[data-slot="combobox-content"]')) event.preventDefault();
+  if (target instanceof Element && target.closest('[data-slot="combobox-content"]'))
+    event.preventDefault();
 }
 
 // ───────────────────────────── Upload mode ─────────────────────────────

@@ -53,7 +53,10 @@ export function technologyFilterFromParams(params: RawSearchParams): TechnologyF
 
 /** Settings → Tecnologías table: the rows of one page, with their usage counts. */
 export async function listTechnologies(filter: TechnologyFilterInput = {}) {
-  return technologies.listTechnologies(await getServiceContext(), technologyFilterSchema.parse(filter));
+  return technologies.listTechnologies(
+    await getServiceContext(),
+    technologyFilterSchema.parse(filter),
+  );
 }
 
 /** One technology with its usage count; `NOT_FOUND` when it does not exist. */

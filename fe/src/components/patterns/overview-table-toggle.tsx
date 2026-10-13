@@ -12,16 +12,15 @@ type OverviewTableToggleProps = {
 };
 
 // Segmented "Resumen | Tabla" control switching between /<module> and /<module>/list (wireframe 4.4).
-export function OverviewTableToggle({ current, overviewHref, tableHref }: OverviewTableToggleProps) {
+export function OverviewTableToggle({
+  current,
+  overviewHref,
+  tableHref,
+}: OverviewTableToggleProps) {
   const t = useTranslations("patterns.overviewToggle");
 
   return (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      value={current}
-      aria-label={t("label")}
-    >
+    <ToggleGroup type="single" variant="outline" value={current} aria-label={t("label")}>
       <ToggleGroupItem value="overview" asChild>
         <Link href={overviewHref} aria-current={current === "overview" ? "page" : undefined}>
           <ChartColumn />

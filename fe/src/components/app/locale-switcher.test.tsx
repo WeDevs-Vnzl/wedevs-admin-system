@@ -15,10 +15,7 @@ vi.mock("sonner", () => ({ toast: mocks.toast }));
 
 function renderSwitcher() {
   return render(
-    <NextIntlClientProvider
-      locale="es"
-      messages={{ shell: esShell, common: esCommon }}
-    >
+    <NextIntlClientProvider locale="es" messages={{ shell: esShell, common: esCommon }}>
       <LocaleSwitcher />
     </NextIntlClientProvider>,
   );

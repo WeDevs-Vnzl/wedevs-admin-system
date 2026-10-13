@@ -26,7 +26,11 @@ function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) walk(full, out);
-    else if (/\.tsx?$/.test(entry) && !/\.(test|spec)\.tsx?$/.test(entry) && !entry.endsWith(".d.ts"))
+    else if (
+      /\.tsx?$/.test(entry) &&
+      !/\.(test|spec)\.tsx?$/.test(entry) &&
+      !entry.endsWith(".d.ts")
+    )
       out.push(full);
   }
   return out;
@@ -46,7 +50,13 @@ function resolveModule(from: string, specifier: string): string | null {
 }
 
 function parse(file: string) {
-  return ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  return ts.createSourceFile(
+    file,
+    readFileSync(file, "utf8"),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
 }
 
 function isClientModule(sf: ts.SourceFile): boolean {
@@ -74,7 +84,8 @@ function valueImports(sf: ts.SourceFile): Crossing[] {
       const nb = clause.namedBindings;
       if (nb && ts.isNamespaceImport(nb)) bindings.push(nb.name.text);
       else if (nb)
-        for (const el of nb.elements) if (!el.isTypeOnly) bindings.push((el.propertyName ?? el.name).text);
+        for (const el of nb.elements)
+          if (!el.isTypeOnly) bindings.push((el.propertyName ?? el.name).text);
       found.push({ specifier: stmt.moduleSpecifier.text, bindings });
     } else if (
       ts.isExportDeclaration(stmt) &&
@@ -86,7 +97,9 @@ function valueImports(sf: ts.SourceFile): Crossing[] {
       const ec = stmt.exportClause;
       if (!ec) bindings.push("*");
       else if (ts.isNamespaceExport(ec)) bindings.push(ec.name.text);
-      else for (const el of ec.elements) if (!el.isTypeOnly) bindings.push((el.propertyName ?? el.name).text);
+      else
+        for (const el of ec.elements)
+          if (!el.isTypeOnly) bindings.push((el.propertyName ?? el.name).text);
       found.push({ specifier: stmt.moduleSpecifier.text, bindings });
     }
   }
@@ -107,7 +120,9 @@ function findViolations(files: string[]): string[] {
         if (isComponentName(binding)) continue;
         const rel = relative(SRC, file);
         if (ALLOW_LIST.includes(`${rel}:${binding}`)) continue;
-        violations.push(`${rel}: imports value "${binding}" from client module ${relative(SRC, target)}`);
+        violations.push(
+          `${rel}: imports value "${binding}" from client module ${relative(SRC, target)}`,
+        );
       }
     }
   }
@@ -115,7 +130,7 @@ function findViolations(files: string[]): string[] {
 }
 
 describe("RSC boundary", () => {
-  it("no server module imports a non-component value from a \"use client\" module", () => {
+  it('no server module imports a non-component value from a "use client" module', () => {
     expect(findViolations(walk(SRC))).toEqual([]);
   });
 });

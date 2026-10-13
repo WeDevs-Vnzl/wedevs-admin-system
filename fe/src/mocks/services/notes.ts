@@ -107,7 +107,9 @@ function findNote(db: MockStore, id: string, options: { archived?: boolean } = {
 
 /** Whether the target record is archived (`resolveEntityRef` still resolves archived rows). */
 function isArchivedTarget(db: MockStore, target: NoteLinkTarget): boolean {
-  const collections: Partial<Record<string, readonly { id: string; archivedAt?: string | null }[]>> = {
+  const collections: Partial<
+    Record<string, readonly { id: string; archivedAt?: string | null }[]>
+  > = {
     CLIENT: db.clients,
     CONTACT: db.contacts,
     PROJECT: db.projects,

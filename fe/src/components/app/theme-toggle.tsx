@@ -31,7 +31,9 @@ export function ThemeToggle() {
     const result = await setPreferenceAction({ key: "theme", value: parsed.data });
     if (!result.ok) {
       const code = result.error.code;
-      toast.error(tCommon.has(`errors.${code}`) ? tCommon(`errors.${code}`) : tCommon("errors.INTERNAL"));
+      toast.error(
+        tCommon.has(`errors.${code}`) ? tCommon(`errors.${code}`) : tCommon("errors.INTERNAL"),
+      );
     }
   }
 

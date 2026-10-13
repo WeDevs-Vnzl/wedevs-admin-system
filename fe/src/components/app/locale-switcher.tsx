@@ -38,7 +38,9 @@ export function LocaleSwitcher() {
       const result = await setPreferenceAction({ key: "locale", value });
       if (!result.ok) {
         const code = result.error.code;
-        toast.error(tCommon.has(`errors.${code}`) ? tCommon(`errors.${code}`) : tCommon("errors.INTERNAL"));
+        toast.error(
+          tCommon.has(`errors.${code}`) ? tCommon(`errors.${code}`) : tCommon("errors.INTERNAL"),
+        );
       }
     });
   }

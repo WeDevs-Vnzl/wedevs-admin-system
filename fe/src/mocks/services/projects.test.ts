@@ -869,14 +869,19 @@ describe("money sorters (F3, C15)", () => {
     const { ctx, db } = makeTestContext();
     const [a, b, c] = db.projects.filter((row) => !row.archivedAt);
     const bill = (projectId: string, contractAmount: string) =>
-      db.billingPlans.push({ id: `bpl_${projectId}`, projectId, currency: "USD", contractAmount } as never);
+      db.billingPlans.push({
+        id: `bpl_${projectId}`,
+        projectId,
+        currency: "USD",
+        contractAmount,
+      } as never);
     bill(a!.id, "9.00");
     bill(b!.id, "10.00");
     bill(c!.id, "100.00");
     const ids = [a!.id, b!.id, c!.id];
     const sorted = async (sort: string) =>
-      (await svc.listProjects(ctx, filter({ sort })))
-        .items.filter((row) => ids.includes(row.id))
+      (await svc.listProjects(ctx, filter({ sort }))).items
+        .filter((row) => ids.includes(row.id))
         .map((row) => row.contractedValueUsd);
     expect(await sorted("contractedValueUsd:asc")).toEqual(["9.00", "10.00", "100.00"]);
     expect(await sorted("contractedValueUsd:desc")).toEqual(["100.00", "10.00", "9.00"]);
@@ -904,7 +909,9 @@ describe("unknown link id (F10)", () => {
     const error = await svc
       .upsertProjectLinks(ctx, {
         projectId: "pry_kairos_web",
-        links: [{ id: "plk_nope", group: "OTRO", label: "x", url: "https://x.example.com", order: 0 }],
+        links: [
+          { id: "plk_nope", group: "OTRO", label: "x", url: "https://x.example.com", order: 0 },
+        ],
       })
       .catch((e: unknown) => e as { code: string; message: string; fieldErrors?: unknown });
     expect(error).toMatchObject({ code: "NOT_FOUND" });
@@ -939,7 +946,10 @@ describe("rich-text images (CR-B2, C14/C23)", () => {
     db.files.push(pending);
     await expect(
       svc.createProject(ctx, newProject({ description: imageDoc(pending.id) })),
-    ).rejects.toMatchObject({ code: "VALIDATION", fieldErrors: { description: expect.any(Array) } });
+    ).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { description: expect.any(Array) },
+    });
 
     await expect(
       svc.updateProject(ctx, withDescription(created.id, imageDoc(pending.id)) as never),

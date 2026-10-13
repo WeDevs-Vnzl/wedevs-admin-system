@@ -13,17 +13,23 @@ describe("OverviewLayout", () => {
       />,
     );
 
-    const order = Array.from(container.querySelectorAll("h1, span, p")).map((node) => node.textContent);
+    const order = Array.from(container.querySelectorAll("h1, span, p")).map(
+      (node) => node.textContent,
+    );
     expect(order).toEqual(["Clientes", "KPI", "Recientes", "Alertas"]);
   });
 
   it("renders the aside landmark only when an aside is given", () => {
-    const { container, unmount } = render(<OverviewLayout header={<h1>Clientes</h1>} main={<p>Main</p>} />);
+    const { container, unmount } = render(
+      <OverviewLayout header={<h1>Clientes</h1>} main={<p>Main</p>} />,
+    );
     expect(container.querySelector("aside")).toBeNull();
     expect(screen.getByText("Main")).toBeInTheDocument();
     unmount();
 
-    const withAside = render(<OverviewLayout header={<h1>Clientes</h1>} main={<p>Main</p>} aside={<p>Side</p>} />);
+    const withAside = render(
+      <OverviewLayout header={<h1>Clientes</h1>} main={<p>Main</p>} aside={<p>Side</p>} />,
+    );
     expect(withAside.container.querySelector("aside")).toHaveTextContent("Side");
   });
 
@@ -36,6 +42,8 @@ describe("OverviewLayout", () => {
     const { container } = render(
       <OverviewLayout header={<h1>Clientes</h1>} kpis={<span>KPI</span>} main={<p>Main</p>} />,
     );
-    expect(container.querySelector(".sm\\:grid-cols-2.xl\\:grid-cols-4")).toContainElement(screen.getByText("KPI"));
+    expect(container.querySelector(".sm\\:grid-cols-2.xl\\:grid-cols-4")).toContainElement(
+      screen.getByText("KPI"),
+    );
   });
 });

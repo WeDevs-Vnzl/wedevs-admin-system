@@ -9,7 +9,10 @@ import { EmptyState } from "./empty-state";
 
 function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       {ui}
     </NextIntlClientProvider>,
   );
@@ -26,7 +29,10 @@ describe("EmptyState", () => {
   it("hides the icon from assistive tech and renders it inside the media slot", () => {
     const { container } = wrap(<EmptyState icon={Users} title="Sin clientes" />);
 
-    expect(container.querySelector("[data-slot=empty-icon] svg")).toHaveAttribute("aria-hidden", "true");
+    expect(container.querySelector("[data-slot=empty-icon] svg")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 
   it("omits the description and the content wrapper when they are not given", () => {
@@ -38,13 +44,7 @@ describe("EmptyState", () => {
   });
 
   it("renders the CTA as the action, reachable by its accessible name", () => {
-    wrap(
-      <EmptyState
-        icon={Plus}
-        title="Sin clientes"
-        action={<Button>Nuevo cliente</Button>}
-      />,
-    );
+    wrap(<EmptyState icon={Plus} title="Sin clientes" action={<Button>Nuevo cliente</Button>} />);
 
     expect(screen.getByRole("button", { name: "Nuevo cliente" })).toBeInTheDocument();
   });

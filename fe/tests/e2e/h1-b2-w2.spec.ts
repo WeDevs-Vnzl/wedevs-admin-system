@@ -274,7 +274,10 @@ test.describe("technologies search (read only)", () => {
     const before = await rows.count();
     expect(before).toBeGreaterThan(0);
 
-    await page.getByPlaceholder(/Buscar/).first().fill("zzz-no-match-xyz");
+    await page
+      .getByPlaceholder(/Buscar/)
+      .first()
+      .fill("zzz-no-match-xyz");
     await expect(page).toHaveURL(/q=zzz-no-match-xyz/);
     await expect.poll(() => rows.count()).toBeLessThan(before);
   });

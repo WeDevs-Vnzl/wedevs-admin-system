@@ -30,7 +30,9 @@ export function BreadcrumbLabelProvider({ children }: { children: React.ReactNod
   }, []);
 
   const value = useMemo(() => ({ labels, register }), [labels, register]);
-  return <BreadcrumbLabelContext.Provider value={value}>{children}</BreadcrumbLabelContext.Provider>;
+  return (
+    <BreadcrumbLabelContext.Provider value={value}>{children}</BreadcrumbLabelContext.Provider>
+  );
 }
 
 export function useBreadcrumbLabels(): BreadcrumbLabels {

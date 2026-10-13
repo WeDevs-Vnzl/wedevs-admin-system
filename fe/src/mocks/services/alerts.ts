@@ -65,11 +65,7 @@ function visibleTypes(ctx: MockServiceContext): Set<AlertType> {
   return allowed;
 }
 
-function refOf(
-  ctx: MockServiceContext,
-  type: EntityRef["type"],
-  id: string,
-): EntityRef | null {
+function refOf(ctx: MockServiceContext, type: EntityRef["type"], id: string): EntityRef | null {
   return resolveEntityRef(ctx.db, type, id);
 }
 
@@ -162,7 +158,8 @@ function computeAlerts(ctx: MockServiceContext, types: ReadonlySet<AlertType>): 
 
   if (types.has("RECURRING_EXPENSE_PENDING")) {
     for (const expense of db.expenses) {
-      if (!expense.recurring || expense.status !== "PENDIENTE" || expense.dueDate === null) continue;
+      if (!expense.recurring || expense.status !== "PENDIENTE" || expense.dueDate === null)
+        continue;
       const days = daysBetween(today, expense.dueDate);
       if (days > RECURRING_EXPENSE_DUE_DAYS) continue;
       push("RECURRING_EXPENSE_PENDING", expense.id, {
@@ -210,7 +207,13 @@ function computeAlerts(ctx: MockServiceContext, types: ReadonlySet<AlertType>): 
     isBusinessDay(today) &&
     !db.exchangeRates.some((rate) => rate.currency === "VES" && rate.date === today)
   ) {
-    push("MISSING_RATE", `VES:${today}`, { entity: null, date: today, days: 0, amount: null, context: null });
+    push("MISSING_RATE", `VES:${today}`, {
+      entity: null,
+      date: today,
+      days: 0,
+      amount: null,
+      context: null,
+    });
   }
 
   return out;
@@ -228,7 +231,9 @@ function hiddenKeys(ctx: MockServiceContext): Set<string> {
   return hidden;
 }
 
-const TYPE_ORDER = new Map<AlertType, number>(ALERT_TYPE_VALUES.map((type, index) => [type, index]));
+const TYPE_ORDER = new Map<AlertType, number>(
+  ALERT_TYPE_VALUES.map((type, index) => [type, index]),
+);
 
 /** `ListAlertsInput` with `types` optional, so `{ limit: 1 }` (the shell counter) is a valid call. */
 type ListAlertsArgs = Pick<ListAlertsInput, "limit"> & { types?: ListAlertsInput["types"] };

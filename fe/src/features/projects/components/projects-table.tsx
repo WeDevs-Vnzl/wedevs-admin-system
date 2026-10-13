@@ -88,12 +88,18 @@ function StackGlyphs({
             className="inline-flex size-6 items-center justify-center rounded-md"
           >
             {icon ? (
-              <svg viewBox="0 0 24 24" className="size-4" fill={color} aria-hidden focusable="false">
+              <svg
+                viewBox="0 0 24 24"
+                className="size-4"
+                fill={color}
+                aria-hidden
+                focusable="false"
+              >
                 <path d={icon.path} />
               </svg>
             ) : (
               <span
-                className="bg-muted-foreground size-2.5 rounded-full"
+                className="size-2.5 rounded-full bg-muted-foreground"
                 style={color ? { backgroundColor: color } : undefined}
                 aria-hidden
               />
@@ -190,7 +196,13 @@ export function ProjectsTable({
         kind: "options",
         options: tags.map((tag) => ({ value: tag.id, label: tag.name })),
       },
-      { id: "delivery", label: tList("filters.delivery"), kind: "dateRange", fromKey: "deliveryFrom", toKey: "deliveryTo" },
+      {
+        id: "delivery",
+        label: tList("filters.delivery"),
+        kind: "dateRange",
+        fromKey: "deliveryFrom",
+        toKey: "deliveryTo",
+      },
       {
         id: "withoutBillingPlan",
         label: tList("filters.withoutBillingPlan"),
@@ -207,9 +219,7 @@ export function ProjectsTable({
         header: label,
         size: 240,
         meta: { label, sortable: true, exportable: true, align: "end" },
-        cell: ({ row }) => (
-          <MoneyText amount={row.original[id]} currency="USD" />
-        ),
+        cell: ({ row }) => <MoneyText amount={row.original[id]} currency="USD" />,
       });
 
     const base: DataTableColumnDef<ProjectListRowDTO>[] = [
@@ -253,13 +263,15 @@ export function ProjectsTable({
         header: t("columns.startDate"),
         size: 130,
         meta: { label: t("columns.startDate"), sortable: true },
-        cell: ({ row }) => (row.original.startDate ? formatDate(row.original.startDate, locale) : "—"),
+        cell: ({ row }) =>
+          row.original.startDate ? formatDate(row.original.startDate, locale) : "—",
       }),
       helper.accessor("targetEndDate", {
         header: t("columns.targetEndDate"),
         size: 190,
         meta: { label: t("columns.targetEndDate"), sortable: true },
-        cell: ({ row }) => (row.original.targetEndDate ? formatDate(row.original.targetEndDate, locale) : "—"),
+        cell: ({ row }) =>
+          row.original.targetEndDate ? formatDate(row.original.targetEndDate, locale) : "—",
       }),
       helper.display({
         id: "stack",

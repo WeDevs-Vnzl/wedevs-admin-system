@@ -11,9 +11,30 @@ import {
 } from "./link-rows";
 
 const rows: ProjectLinkRow[] = [
-  { key: "a", id: "lnk_a", group: "REPOSITORIO", label: "Front", url: "https://github.com/a", order: 0 },
-  { key: "b", id: "lnk_b", group: "REPOSITORIO", label: "Back", url: "https://github.com/b", order: 1 },
-  { key: "c", id: "lnk_c", group: "REPOSITORIO", label: "Infra", url: "https://github.com/c", order: 2 },
+  {
+    key: "a",
+    id: "lnk_a",
+    group: "REPOSITORIO",
+    label: "Front",
+    url: "https://github.com/a",
+    order: 0,
+  },
+  {
+    key: "b",
+    id: "lnk_b",
+    group: "REPOSITORIO",
+    label: "Back",
+    url: "https://github.com/b",
+    order: 1,
+  },
+  {
+    key: "c",
+    id: "lnk_c",
+    group: "REPOSITORIO",
+    label: "Infra",
+    url: "https://github.com/c",
+    order: 2,
+  },
   { key: "d", id: "lnk_d", group: "DISENO", label: "Figma", url: "https://figma.com/d", order: 0 },
 ];
 

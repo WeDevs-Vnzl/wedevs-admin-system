@@ -8,7 +8,12 @@ import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { uploadAdapter } from "./upload-adapter";
 
-const pdf = { name: "contrato.pdf", mime: "application/pdf", size: 2048, context: "general" } as const;
+const pdf = {
+  name: "contrato.pdf",
+  mime: "application/pdf",
+  size: 2048,
+  context: "general",
+} as const;
 
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
@@ -31,15 +36,25 @@ describe("uploadAdapter (UploadAdapter over the file actions)", () => {
 
     const confirmed = await uploadAdapter.confirmUpload(requested.data.fileId);
     expect(confirmed).toMatchObject({ ok: true, data: { id: "fil_0001", status: "READY" } });
-    expect(getMockStore().files.find((file) => file.id === "fil_0001")).toMatchObject({ status: "READY" });
+    expect(getMockStore().files.find((file) => file.id === "fil_0001")).toMatchObject({
+      status: "READY",
+    });
   });
 
   it("put works without options", async () => {
-    await expect(uploadAdapter.put({ fileId: "fil_x", url: null }, new Blob([]))).resolves.toBeUndefined();
+    await expect(
+      uploadAdapter.put({ fileId: "fil_x", url: null }, new Blob([])),
+    ).resolves.toBeUndefined();
   });
 
   it("passes action errors through: invalid file → VALIDATION, Viewer → FORBIDDEN, unknown id → NOT_FOUND", async () => {
-    expect(await uploadAdapter.requestUpload({ ...pdf, name: "a.exe", mime: "application/x-msdownload" })).toMatchObject({
+    expect(
+      await uploadAdapter.requestUpload({
+        ...pdf,
+        name: "a.exe",
+        mime: "application/x-msdownload",
+      }),
+    ).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
     });

@@ -50,7 +50,9 @@ describe("ThemeToggle", () => {
     renderToggle();
 
     await user.click(screen.getByRole("button", { name: enShell.themeToggle.label }));
-    await user.click(await screen.findByRole("menuitemradio", { name: enShell.themeToggle.system }));
+    await user.click(
+      await screen.findByRole("menuitemradio", { name: enShell.themeToggle.system }),
+    );
 
     expect(mocks.setTheme).toHaveBeenCalledWith("system");
     await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(enCommon.errors.INTERNAL));

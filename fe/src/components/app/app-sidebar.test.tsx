@@ -125,7 +125,9 @@ describe("AppSidebar", () => {
     const user = userEvent.setup();
     renderSidebar("MEMBER");
     expect(screen.getByText("Test User")).toBeInTheDocument();
-    expect(screen.getByText(`${enShell.userMenu.role}: ${enEnums.UserRole.MEMBER}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${enShell.userMenu.role}: ${enEnums.UserRole.MEMBER}`),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: enAuth.signOut }));
     expect(mocks.push).toHaveBeenCalledWith("/sign-in");
@@ -133,7 +135,10 @@ describe("AppSidebar", () => {
 
   it("names the collapsed brand link so it is reachable by name (R3)", () => {
     renderSidebar("OWNER", { defaultOpen: false });
-    expect(screen.getByRole("link", { name: enCommon.app.name })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("link", { name: enCommon.app.name })).toHaveAttribute(
+      "href",
+      "/dashboard",
+    );
   });
 
   it("gives the sidebar rail translated labels (m4, R2)", () => {

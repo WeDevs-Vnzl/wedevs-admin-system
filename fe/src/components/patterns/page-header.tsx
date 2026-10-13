@@ -24,7 +24,7 @@ export function PageHeader({ title, description, count, views, actions }: PageHe
             </Badge>
           )}
         </div>
-        {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {views || actions ? (
         <div className="flex flex-wrap items-center gap-2">

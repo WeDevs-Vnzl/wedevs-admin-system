@@ -35,7 +35,13 @@ beforeEach(() => {
 function renderBulk(onDone = vi.fn()) {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <ProjectsBulkActions ids={["pry_1", "pry_2"]} canTag canArchive canCreateTags onDone={onDone} />
+      <ProjectsBulkActions
+        ids={["pry_1", "pry_2"]}
+        canTag
+        canArchive
+        canCreateTags
+        onDone={onDone}
+      />
     </NextIntlClientProvider>,
   );
   return { onDone };
@@ -58,9 +64,14 @@ describe("ProjectsBulkActions", () => {
     expect(archiveProjectsAction).toHaveBeenCalledWith({ ids: ["pry_1", "pry_2"], confirm: false });
     expect(onDone).not.toHaveBeenCalled();
 
-    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }));
+    await userEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Archive" }),
+    );
     await waitFor(() =>
-      expect(archiveProjectsAction).toHaveBeenLastCalledWith({ ids: ["pry_1", "pry_2"], confirm: true }),
+      expect(archiveProjectsAction).toHaveBeenLastCalledWith({
+        ids: ["pry_1", "pry_2"],
+        confirm: true,
+      }),
     );
     await waitFor(() => expect(onDone).toHaveBeenCalled());
   });

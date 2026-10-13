@@ -13,7 +13,11 @@ function renderChip(props: { canManage: boolean; missing?: boolean; rate?: Shell
   return render(
     <NextIntlClientProvider locale="en" messages={{ shell: enShell }}>
       <TooltipProvider>
-        <RateChip rate={props.rate === undefined ? rate : props.rate} missing={props.missing ?? false} canManage={props.canManage} />
+        <RateChip
+          rate={props.rate === undefined ? rate : props.rate}
+          missing={props.missing ?? false}
+          canManage={props.canManage}
+        />
       </TooltipProvider>
     </NextIntlClientProvider>,
   );

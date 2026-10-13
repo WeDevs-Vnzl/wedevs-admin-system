@@ -8,7 +8,10 @@ import { ArchivedBanner } from "./archived-banner";
 
 function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       {ui}
     </NextIntlClientProvider>,
   );

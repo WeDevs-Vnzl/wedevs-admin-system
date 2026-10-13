@@ -349,21 +349,18 @@ test.describe("locale on a detail page (mutates mock preferences)", () => {
     await resetMockData(page);
   });
 
-  test(
-    "switching ES to EN reformats the dates and money of a project detail",
-    async ({ page }) => {
-      await open(page, "/projects/pry_kairos_web");
-      const before = await page.locator("main").innerText();
+  test("switching ES to EN reformats the dates and money of a project detail", async ({ page }) => {
+    await open(page, "/projects/pry_kairos_web");
+    const before = await page.locator("main").innerText();
 
-      await page.getByRole("button", { name: "Idioma", exact: true }).click();
-      await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
-      await expect(page.getByRole("button", { name: /^Search\b/ })).toBeVisible();
+    await page.getByRole("button", { name: "Idioma", exact: true }).click();
+    await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
+    await expect(page.getByRole("button", { name: /^Search\b/ })).toBeVisible();
 
-      const after = await page.locator("main").innerText();
-      // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
-      expect(after).not.toBe(before);
-    },
-  );
+    const after = await page.locator("main").innerText();
+    // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
+    expect(after).not.toBe(before);
+  });
 });
 
 // ───────────────────────────── Responsive: no horizontal page scroll ─────────────────────────────

@@ -14,7 +14,14 @@ describe("technologyFilterFromParams", () => {
         q: "ne",
         filters: JSON.stringify({ category: ["IA"], active: "true" }),
       }),
-    ).toMatchObject({ page: 2, pageSize: 50, sort: "name:desc", q: "ne", category: ["IA"], active: true });
+    ).toMatchObject({
+      page: 2,
+      pageSize: 50,
+      sort: "name:desc",
+      q: "ne",
+      category: ["IA"],
+      active: true,
+    });
   });
 
   it("falls back to the first page with no filters for an empty URL", () => {

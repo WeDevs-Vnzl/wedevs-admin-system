@@ -7,7 +7,11 @@ import enCommon from "@/i18n/messages/en/common.json";
 import enEnums from "@/i18n/messages/en/enums.json";
 import enValidation from "@/i18n/messages/en/validation.json";
 import type { TechnologyListRowDTO } from "@/lib/validators/technologies";
-import { createTechnologyAction, resolveTechnologyIconAction, updateTechnologyAction } from "@/features/technologies/actions";
+import {
+  createTechnologyAction,
+  resolveTechnologyIconAction,
+  updateTechnologyAction,
+} from "@/features/technologies/actions";
 import { TechnologyFormDialog } from "./technology-form-dialog";
 
 const mocks = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -23,15 +27,30 @@ vi.mock("@/features/technologies/actions", () => ({
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 
 const nextJs: TechnologyListRowDTO = {
-  id: "tec_next_js", name: "Next.js", nameEn: null, slug: "next-js", category: "FRONTEND",
-  iconSlug: "nextdotjs", color: null, active: true, usageCount: 2,
+  id: "tec_next_js",
+  name: "Next.js",
+  nameEn: null,
+  slug: "next-js",
+  category: "FRONTEND",
+  iconSlug: "nextdotjs",
+  color: null,
+  active: true,
+  usageCount: 2,
 };
 
-function renderDialog(target: Parameters<typeof TechnologyFormDialog>[0]["target"], onSaved = vi.fn()) {
+function renderDialog(
+  target: Parameters<typeof TechnologyFormDialog>[0]["target"],
+  onSaved = vi.fn(),
+) {
   return render(
     <NextIntlClientProvider
       locale="en"
-      messages={{ catalogs: enCatalogs, enums: enEnums, common: enCommon, validation: enValidation }}
+      messages={{
+        catalogs: enCatalogs,
+        enums: enEnums,
+        common: enCommon,
+        validation: enValidation,
+      }}
     >
       <TechnologyFormDialog target={target} onOpenChange={vi.fn()} onSaved={onSaved} />
     </NextIntlClientProvider>,
@@ -83,7 +102,9 @@ describe("TechnologyFormDialog", () => {
 
     await userEvent.type(screen.getByLabelText("Name"), "next.js");
     await userEvent.click(screen.getByRole("button", { name: "Create" }));
-    expect(await screen.findByText("A technology with that name already exists")).toBeInTheDocument();
+    expect(
+      await screen.findByText("A technology with that name already exists"),
+    ).toBeInTheDocument();
     expect(onSaved).not.toHaveBeenCalled();
   });
 

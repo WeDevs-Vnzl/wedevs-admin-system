@@ -5,7 +5,7 @@ export function EntityCodeChip({ code, className }: { code: string; className?: 
   return (
     <span
       className={cn(
-        "bg-muted text-muted-foreground inline-flex items-center rounded-md px-2 py-0.5 font-mono text-xs",
+        "inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground",
         className,
       )}
     >

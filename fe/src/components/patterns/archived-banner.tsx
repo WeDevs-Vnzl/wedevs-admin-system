@@ -16,10 +16,10 @@ export function ArchivedBanner({ onRestore, pending = false }: ArchivedBannerPro
   return (
     <div
       role="status"
-      className="border-border bg-muted/60 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex items-start gap-3">
-        <Archive className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+        <Archive className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
         <div className="space-y-0.5 text-sm">
           <p className="font-medium">{t("title")}</p>
           <p className="text-muted-foreground">{t("description")}</p>

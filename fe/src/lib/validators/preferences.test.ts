@@ -120,7 +120,8 @@ describe("UserPreferencesDTO", () => {
 describe("column width range", () => {
   it("is 80–1200 px and the schema accepts exactly that range", () => {
     expect([MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH]).toEqual([80, 1200]);
-    const parse = (width: number) => tableColumnsPreferenceSchema.safeParse({ widths: { code: width } }).success;
+    const parse = (width: number) =>
+      tableColumnsPreferenceSchema.safeParse({ widths: { code: width } }).success;
     expect(parse(MIN_COLUMN_WIDTH)).toBe(true);
     expect(parse(MAX_COLUMN_WIDTH)).toBe(true);
     expect(parse(MIN_COLUMN_WIDTH - 1)).toBe(false);

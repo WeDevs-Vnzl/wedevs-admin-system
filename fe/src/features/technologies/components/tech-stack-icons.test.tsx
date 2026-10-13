@@ -8,8 +8,24 @@ import { TechStackIcons } from "./tech-stack-icons";
 
 describe("TechStackIcons", () => {
   const technologies = [
-    { id: "tec_next_js", name: "Next.js", nameEn: null, slug: "next-js", category: "FRONTEND" as const, iconSlug: "nextdotjs", color: null },
-    { id: "tec_rust", name: "Rust", nameEn: "Rust (lang)", slug: "rust", category: "LENGUAJE" as const, iconSlug: null, color: "#dea584" },
+    {
+      id: "tec_next_js",
+      name: "Next.js",
+      nameEn: null,
+      slug: "next-js",
+      category: "FRONTEND" as const,
+      iconSlug: "nextdotjs",
+      color: null,
+    },
+    {
+      id: "tec_rust",
+      name: "Rust",
+      nameEn: "Rust (lang)",
+      slug: "rust",
+      category: "LENGUAJE" as const,
+      iconSlug: null,
+      color: "#dea584",
+    },
   ];
 
   it("renders each technology's icon named by its English label in English", () => {

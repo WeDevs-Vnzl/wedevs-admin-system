@@ -74,7 +74,7 @@ export function DetailHeader({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           {icon ? (
-            <div className="bg-muted flex size-12 shrink-0 items-center justify-center rounded-2xl">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted">
               {icon}
             </div>
           ) : null}
@@ -85,7 +85,7 @@ export function DetailHeader({
             </div>
             <h1 className="truncate text-2xl font-semibold tracking-tight">{name}</h1>
             {tags ? <div className="flex flex-wrap gap-1">{tags}</div> : null}
-            {meta ? <div className="text-muted-foreground text-sm">{meta}</div> : null}
+            {meta ? <div className="text-sm text-muted-foreground">{meta}</div> : null}
           </div>
         </div>
 

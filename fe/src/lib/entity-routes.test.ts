@@ -36,9 +36,9 @@ describe("entityHref", () => {
   it("covers every EntityType exactly once", () => {
     const routed = ENTITY_TYPE_VALUES.filter((type) => entityHref({ type, id: "x" }) !== null);
     expect(routed).toHaveLength(10);
-    expect(ENTITY_TYPE_VALUES.filter((type) => entityHref({ type, id: "x" }) === null)).toHaveLength(
-      ENTITY_TYPE_VALUES.length - 10,
-    );
+    expect(
+      ENTITY_TYPE_VALUES.filter((type) => entityHref({ type, id: "x" }) === null),
+    ).toHaveLength(ENTITY_TYPE_VALUES.length - 10);
   });
 
   it("encodes the id so it stays one path segment", () => {

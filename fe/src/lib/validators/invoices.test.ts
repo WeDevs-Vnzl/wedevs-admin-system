@@ -521,7 +521,11 @@ describe("invoice filters", () => {
       projectId: ["p1", "p2"],
       tagId: ["t1", "t2"],
     });
-    expect(many).toMatchObject({ clientId: ["c1", "c2"], projectId: ["p1", "p2"], tagId: ["t1", "t2"] });
+    expect(many).toMatchObject({
+      clientId: ["c1", "c2"],
+      projectId: ["p1", "p2"],
+      tagId: ["t1", "t2"],
+    });
     expect(invoiceFiltersSchema.safeParse({ clientId: ["c1", "bad id"] }).success).toBe(false);
   });
 });

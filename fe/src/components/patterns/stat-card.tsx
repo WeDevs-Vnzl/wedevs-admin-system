@@ -15,11 +15,11 @@ export function StatCard({ label, value, icon: Icon, hint }: StatCardProps) {
     <Card className="rounded-2xl">
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <p className="text-muted-foreground text-sm">{label}</p>
+          <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-xl font-semibold tabular-nums">{value}</p>
-          {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
         </div>
-        {Icon ? <Icon className="text-muted-foreground size-5 shrink-0" aria-hidden /> : null}
+        {Icon ? <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden /> : null}
       </CardContent>
     </Card>
   );

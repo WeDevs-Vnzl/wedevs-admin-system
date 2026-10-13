@@ -120,18 +120,25 @@ describe("listAlerts rules", () => {
     expect(doc).toBeDefined();
     doc!.alertDaysBefore = 30;
     doc!.expiresAt = addDays(FIXED_TODAY, 30);
-    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(true);
+    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(
+      true,
+    );
     doc!.expiresAt = addDays(FIXED_TODAY, 31);
-    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(false);
+    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(
+      false,
+    );
     doc!.alertDaysBefore = 45;
-    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(true);
+    expect((await only(h, "DOCUMENT_EXPIRING")).items.some((i) => i.entity?.id === doc!.id)).toBe(
+      true,
+    );
   });
 
   it("document expired: status VENCIDO, archived ones left out", async () => {
     const h = makeTestContext("OWNER");
     const before = (await only(h, "DOCUMENT_EXPIRED")).total;
     expect(before).toBeGreaterThan(0);
-    for (const d of h.db.documents) if (d.status === "VENCIDO") d.archivedAt = "2026-10-01T00:00:00.000Z";
+    for (const d of h.db.documents)
+      if (d.status === "VENCIDO") d.archivedAt = "2026-10-01T00:00:00.000Z";
     expect((await only(h, "DOCUMENT_EXPIRED")).total).toBe(0);
   });
 
@@ -210,7 +217,10 @@ describe("listAlerts rules", () => {
 describe("listAlerts filtering", () => {
   it("total is not capped by limit; byType counts", async () => {
     const h = makeTestContext("OWNER");
-    h.db.invoices.push(invoice("a", -1, { status: "VENCIDA" }), invoice("b", -2, { status: "VENCIDA" }));
+    h.db.invoices.push(
+      invoice("a", -1, { status: "VENCIDA" }),
+      invoice("b", -2, { status: "VENCIDA" }),
+    );
     const all = await listAlerts(h.ctx, { limit: 50 });
     const capped = await listAlerts(h.ctx, { limit: 1 });
     expect(capped.total).toBe(all.total);

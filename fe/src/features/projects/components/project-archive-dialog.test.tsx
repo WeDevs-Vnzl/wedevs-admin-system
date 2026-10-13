@@ -19,7 +19,10 @@ vi.mock("@/features/projects/actions", () => ({
 
 const messages = { common: enCommon, patterns: enPatterns, projects: enProjects };
 
-const LOCK = { ok: false, error: { code: "INTEGRITY_LOCK", message: "projects.errors.archiveNeedsConfirm" } };
+const LOCK = {
+  ok: false,
+  error: { code: "INTEGRITY_LOCK", message: "projects.errors.archiveNeedsConfirm" },
+};
 
 function Harness({ ids, onArchived }: { ids: string[]; onArchived: () => void }) {
   const [open, setOpen] = useState(false);
@@ -56,7 +59,9 @@ describe("ProjectArchiveDialog (B2)", () => {
     await openDialog();
     await userEvent.click(screen.getByRole("button", { name: "Archive" }));
 
-    await waitFor(() => expect(archiveProjectAction).toHaveBeenCalledWith({ id: "pry_1", confirm: false }));
+    await waitFor(() =>
+      expect(archiveProjectAction).toHaveBeenCalledWith({ id: "pry_1", confirm: false }),
+    );
     expect(onArchived).toHaveBeenCalled();
     expect(mocks.toast.success).toHaveBeenCalledWith("Project archived");
   });
@@ -77,7 +82,9 @@ describe("ProjectArchiveDialog (B2)", () => {
     expect(mocks.toast.error).not.toHaveBeenCalled();
 
     await userEvent.click(screen.getByRole("button", { name: "Archive" }));
-    await waitFor(() => expect(archiveProjectAction).toHaveBeenLastCalledWith({ id: "pry_1", confirm: true }));
+    await waitFor(() =>
+      expect(archiveProjectAction).toHaveBeenLastCalledWith({ id: "pry_1", confirm: true }),
+    );
     await waitFor(() => expect(onArchived).toHaveBeenCalled());
   });
 

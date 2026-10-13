@@ -298,7 +298,9 @@ describe("listProjectsAction", () => {
     expect(result).toMatchObject({ ok: true });
     if (result.ok) {
       expect(result.data.items.length).toBeGreaterThan(0);
-      expect(result.data.items.every((row) => row.name.toLowerCase().includes("tamanaco"))).toBe(true);
+      expect(result.data.items.every((row) => row.name.toLowerCase().includes("tamanaco"))).toBe(
+        true,
+      );
     }
   });
 

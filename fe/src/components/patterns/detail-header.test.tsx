@@ -27,7 +27,10 @@ const base = {
 
 function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       {ui}
     </NextIntlClientProvider>,
   );
@@ -88,7 +91,9 @@ describe("DetailHeader", () => {
     wrap(<DetailHeader {...base} actions={<button type="button">Editar</button>} />);
 
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: esPatterns.detailHeader.more })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: esPatterns.detailHeader.more }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens the More menu from its icon button and lists the menu items", async () => {

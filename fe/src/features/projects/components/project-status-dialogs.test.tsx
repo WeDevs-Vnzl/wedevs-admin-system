@@ -72,7 +72,9 @@ describe("ProjectTransitionDialog (HU-08)", () => {
     renderTransition("PROPUESTA");
     // The first target of PROPUESTA is EN_CURSO, so the start date field is shown and required.
     await user.click(screen.getByRole("button", { name: "Change status" }));
-    expect(await screen.findByText("Moving to In progress requires the start date.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Moving to In progress requires the start date."),
+    ).toBeInTheDocument();
     expect(actions.setProjectStatusAction).not.toHaveBeenCalled();
   });
 
@@ -81,7 +83,9 @@ describe("ProjectTransitionDialog (HU-08)", () => {
     renderTransition("EN_CURSO", vi.fn(), "2026-07-01");
     await pickTarget(user, "Delivered");
     await user.click(screen.getByRole("button", { name: "Change status" }));
-    expect(await screen.findByText("Moving to Delivered requires the actual delivery date.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Moving to Delivered requires the actual delivery date."),
+    ).toBeInTheDocument();
     expect(actions.setProjectStatusAction).not.toHaveBeenCalled();
   });
 
@@ -124,7 +128,9 @@ describe("ProjectCancelDialog (HU-08 CA3)", () => {
     );
     await user.click(screen.getByRole("checkbox", { name: "Cancel pending installments" }));
     const dialog = screen.getByRole("alertdialog");
-    await user.click(within(dialog).getByRole("button", { name: enPatterns.confirm.variants.cancel.action }));
+    await user.click(
+      within(dialog).getByRole("button", { name: enPatterns.confirm.variants.cancel.action }),
+    );
     await waitFor(() =>
       expect(actions.setProjectStatusAction).toHaveBeenCalledWith({
         id: "pry_kairos_web",
@@ -149,7 +155,12 @@ describe("focus return (m1)", () => {
           <ProjectTransitionDialog
             open={open}
             onOpenChange={setOpen}
-            project={{ id: "pry_kairos_web", status: "EN_CURSO", startDate: "2026-07-01", endDate: null }}
+            project={{
+              id: "pry_kairos_web",
+              status: "EN_CURSO",
+              startDate: "2026-07-01",
+              endDate: null,
+            }}
             onRequestCancel={vi.fn()}
           />
         ) : (

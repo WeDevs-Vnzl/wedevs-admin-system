@@ -31,7 +31,7 @@ export function DetailTabs({ tabs, defaultTab, paramName = "tab" }: DetailTabsPr
           <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
             {tab.label}
             {tab.count === undefined ? null : (
-              <span className="bg-muted text-muted-foreground rounded-full px-1.5 text-xs tabular-nums">
+              <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground tabular-nums">
                 {tab.count}
               </span>
             )}

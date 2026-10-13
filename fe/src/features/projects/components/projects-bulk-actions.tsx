@@ -34,7 +34,13 @@ interface ProjectsBulkActionsProps {
  * `assignTagsAction` per project (there is no bulk contract); archiving is all-or-none (`INTEGRITY_LOCK`
  * when one project has active billing).
  */
-export function ProjectsBulkActions({ ids, canTag, canArchive, canCreateTags, onDone }: ProjectsBulkActionsProps) {
+export function ProjectsBulkActions({
+  ids,
+  canTag,
+  canArchive,
+  canCreateTags,
+  onDone,
+}: ProjectsBulkActionsProps) {
   const t = useTranslations("projects.list.bulk");
   const tRoot = useTranslations();
   const tToast = useTranslations("projects.toast");
@@ -80,14 +86,23 @@ export function ProjectsBulkActions({ ids, canTag, canArchive, canCreateTags, on
             <DialogTitle>{t("tagTitle")}</DialogTitle>
             <DialogDescription>{t("tagDescription")}</DialogDescription>
           </DialogHeader>
-          <TagPicker value={tags} onChange={setTags} canCreate={canCreateTags} aria-label={t("tag")} />
+          <TagPicker
+            value={tags}
+            onChange={setTags}
+            canCreate={canCreateTags}
+            aria-label={t("tag")}
+          />
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 {tRoot("projects.form.cancel")}
               </Button>
             </DialogClose>
-            <Button type="button" disabled={saving || tags.length === 0} onClick={() => void applyTags()}>
+            <Button
+              type="button"
+              disabled={saving || tags.length === 0}
+              onClick={() => void applyTags()}
+            >
               {t("tagSave")}
             </Button>
           </DialogFooter>

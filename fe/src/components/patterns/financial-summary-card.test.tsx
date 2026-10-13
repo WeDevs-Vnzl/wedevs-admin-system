@@ -7,7 +7,10 @@ import { FinancialSummaryCard } from "./financial-summary-card";
 
 function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ patterns: locale === "es" ? esPatterns : enPatterns }}
+    >
       {ui}
     </NextIntlClientProvider>,
   );
@@ -57,12 +60,16 @@ describe("FinancialSummaryCard", () => {
   });
 
   it("uses the danger tone on a flagged total", () => {
-    wrap(<FinancialSummaryCard rows={[]} total={{ label: "Saldo", value: "-15.00", danger: true }} />);
+    wrap(
+      <FinancialSummaryCard rows={[]} total={{ label: "Saldo", value: "-15.00", danger: true }} />,
+    );
     expect(screen.getByText("-15.00")).toHaveClass("text-red-400");
   });
 
   it("renders no separator when there is no total", () => {
-    const { container } = wrap(<FinancialSummaryCard rows={[{ label: "Facturado", value: "1.00" }]} />);
+    const { container } = wrap(
+      <FinancialSummaryCard rows={[{ label: "Facturado", value: "1.00" }]} />,
+    );
     expect(container.querySelector(".border-t")).toBeNull();
   });
 });

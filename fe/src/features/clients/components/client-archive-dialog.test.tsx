@@ -42,7 +42,10 @@ function Harness() {
   );
 }
 
-const LOCK = { ok: false, error: { code: "INTEGRITY_LOCK", message: "clients.errors.archiveNeedsConfirm" } };
+const LOCK = {
+  ok: false,
+  error: { code: "INTEGRITY_LOCK", message: "clients.errors.archiveNeedsConfirm" },
+};
 
 beforeEach(() => {
   vi.clearAllMocks();

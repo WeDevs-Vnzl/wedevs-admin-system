@@ -91,7 +91,12 @@ describe("createTechnology", () => {
   it("derives the slug from the name when omitted and logs a SETTINGS_CHANGE", async () => {
     const { ctx, db } = makeTestContext();
     const dto = await createTechnology(ctx, { ...base, name: "Odin Lang", category: "LENGUAJE" });
-    expect(dto).toMatchObject({ name: "Odin Lang", slug: "odin-lang", nameEn: null, usageCount: 0 });
+    expect(dto).toMatchObject({
+      name: "Odin Lang",
+      slug: "odin-lang",
+      nameEn: null,
+      usageCount: 0,
+    });
     expect(db.technologies.some((t) => t.id === dto.id)).toBe(true);
     const entry = db.activity.at(-1)!;
     expect(entry).toMatchObject({

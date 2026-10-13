@@ -10,7 +10,9 @@ describe("PageHeader", () => {
   });
 
   it("shows the description when given and omits its paragraph otherwise", () => {
-    const { container, unmount } = render(<PageHeader title="Clientes" description="Cartera activa" />);
+    const { container, unmount } = render(
+      <PageHeader title="Clientes" description="Cartera activa" />,
+    );
     expect(screen.getByText("Cartera activa").tagName).toBe("P");
     unmount();
 
@@ -56,6 +58,8 @@ describe("PageHeader", () => {
 
   it("renders the right-hand group for a view switch alone", () => {
     render(<PageHeader title="Clientes" views={<nav aria-label="Vista">Resumen</nav>} />);
-    expect(screen.getByRole("navigation", { name: "Vista" }).parentElement).toHaveClass("flex-wrap");
+    expect(screen.getByRole("navigation", { name: "Vista" }).parentElement).toHaveClass(
+      "flex-wrap",
+    );
   });
 });

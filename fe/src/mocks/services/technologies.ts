@@ -115,7 +115,9 @@ export async function createTechnology(
 ): Promise<TechnologyDetailDTO> {
   const slug = input.slug ?? slugOf(input.name);
   if (!SLUG_PATTERN.test(slug)) {
-    throw new ServiceError("VALIDATION", { fieldErrors: { slug: [VALIDATION_MESSAGES.invalidFormat] } });
+    throw new ServiceError("VALIDATION", {
+      fieldErrors: { slug: [VALIDATION_MESSAGES.invalidFormat] },
+    });
   }
   assertUnique(ctx, input.name, slug);
 
@@ -153,7 +155,9 @@ export async function updateTechnology(
   const row = findById(ctx, input.id);
   const slug = input.slug ?? slugOf(input.name);
   if (!SLUG_PATTERN.test(slug)) {
-    throw new ServiceError("VALIDATION", { fieldErrors: { slug: [VALIDATION_MESSAGES.invalidFormat] } });
+    throw new ServiceError("VALIDATION", {
+      fieldErrors: { slug: [VALIDATION_MESSAGES.invalidFormat] },
+    });
   }
   assertUnique(ctx, input.name, slug, row.id);
 
@@ -192,9 +196,13 @@ export async function setTechnologyActive(
 ): Promise<TechnologyDetailDTO> {
   const row = findById(ctx, input.id);
   if (row.active !== input.active) {
-    const changes = diffFields({ active: row.active }, { active: input.active }, {
-      fields: ["active"],
-    });
+    const changes = diffFields(
+      { active: row.active },
+      { active: input.active },
+      {
+        fields: ["active"],
+      },
+    );
     row.active = input.active;
     await logActivity(mockTx(ctx), {
       actorType: "USER",

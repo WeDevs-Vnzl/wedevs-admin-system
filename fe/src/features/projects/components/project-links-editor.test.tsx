@@ -29,9 +29,30 @@ function textOf(key: string): string {
 }
 
 const ROWS: ProjectLinkRow[] = [
-  { key: "lnk_a", id: "lnk_a", group: "REPOSITORIO", label: "Frontend", url: "https://github.com/wedevs/front", order: 0 },
-  { key: "lnk_b", id: "lnk_b", group: "REPOSITORIO", label: "Backend", url: "https://github.com/wedevs/back", order: 1 },
-  { key: "lnk_c", id: "lnk_c", group: "DISENO", label: "Figma", url: "https://www.figma.com/file/x", order: 0 },
+  {
+    key: "lnk_a",
+    id: "lnk_a",
+    group: "REPOSITORIO",
+    label: "Frontend",
+    url: "https://github.com/wedevs/front",
+    order: 0,
+  },
+  {
+    key: "lnk_b",
+    id: "lnk_b",
+    group: "REPOSITORIO",
+    label: "Backend",
+    url: "https://github.com/wedevs/back",
+    order: 1,
+  },
+  {
+    key: "lnk_c",
+    id: "lnk_c",
+    group: "DISENO",
+    label: "Figma",
+    url: "https://www.figma.com/file/x",
+    order: 0,
+  },
 ];
 
 beforeAll(() => {
@@ -88,7 +109,9 @@ describe("ProjectLinksEditor", () => {
   it("shows the field error on an invalid URL and clears it once the URL is valid (HU-07 CA3)", async () => {
     const user = userEvent.setup();
     renderEditor({
-      initial: [{ key: "new-1", group: "REPOSITORIO", label: "Repo", url: "no es una url", order: 0 }],
+      initial: [
+        { key: "new-1", group: "REPOSITORIO", label: "Repo", url: "no es una url", order: 0 },
+      ],
       editable: true,
       reorderable: true,
     });
@@ -126,7 +149,9 @@ describe("ProjectLinksEditor", () => {
       "lnk_b",
       "lnk_a",
     ]);
-    expect(await screen.findByText("Backend moved to position 1 of 2 in Repository.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Backend moved to position 1 of 2 in Repository."),
+    ).toBeInTheDocument();
   });
 
   it("renders read-only rows for a Viewer: no inputs, no arrows, links open in a new tab", () => {

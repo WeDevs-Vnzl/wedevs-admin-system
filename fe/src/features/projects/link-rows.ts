@@ -30,7 +30,10 @@ export function linkRowsFromDto(links: readonly ProjectLinkDTO[]): ProjectLinkRo
 }
 
 /** The rows of one group, in their order. */
-export function groupRows(rows: readonly ProjectLinkRow[], group: ProjectLinkGroup): ProjectLinkRow[] {
+export function groupRows(
+  rows: readonly ProjectLinkRow[],
+  group: ProjectLinkGroup,
+): ProjectLinkRow[] {
   return rows.filter((row) => row.group === group).sort((a, b) => a.order - b.order);
 }
 
@@ -58,7 +61,11 @@ function replaceGroup(
 }
 
 /** Moves the link one place up (`-1`) or down (`+1`) inside its group; a no-op at the group's edges. */
-export function moveLink(rows: readonly ProjectLinkRow[], key: string, delta: -1 | 1): ProjectLinkRow[] {
+export function moveLink(
+  rows: readonly ProjectLinkRow[],
+  key: string,
+  delta: -1 | 1,
+): ProjectLinkRow[] {
   const row = rows.find((item) => item.key === key);
   if (!row) return [...rows];
   const ordered = groupRows(rows, row.group);
@@ -89,7 +96,11 @@ export function removeLink(rows: readonly ProjectLinkRow[], key: string): Projec
 }
 
 /** Appends a new empty link to a group (the service appends new links at the end of their group too). */
-export function addLink(rows: readonly ProjectLinkRow[], group: ProjectLinkGroup, key: string): ProjectLinkRow[] {
+export function addLink(
+  rows: readonly ProjectLinkRow[],
+  group: ProjectLinkGroup,
+  key: string,
+): ProjectLinkRow[] {
   const order = groupRows(rows, group).length;
   return [...rows, { key, group, label: "", url: "", order }];
 }

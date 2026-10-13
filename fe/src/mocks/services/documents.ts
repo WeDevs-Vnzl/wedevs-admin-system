@@ -327,14 +327,13 @@ export async function createDocument(
 }
 
 /** A record a document may link: it must exist and not be archived (C14/C19), both answer `NOT_FOUND`. */
-function requireLinkable(
-  db: MockStore,
-  target: LinkDocumentInput["target"],
-): void {
+function requireLinkable(db: MockStore, target: LinkDocumentInput["target"]): void {
   if (!resolveEntityRef(db, target.entityType, target.entityId)) {
     throw new ServiceError("NOT_FOUND");
   }
-  const collections: Partial<Record<string, readonly { id: string; archivedAt?: string | null }[]>> = {
+  const collections: Partial<
+    Record<string, readonly { id: string; archivedAt?: string | null }[]>
+  > = {
     CLIENT: db.clients,
     CONTACT: db.contacts,
     PROJECT: db.projects,

@@ -1,8 +1,5 @@
 import "server-only";
-import {
-  listAlertsInputSchema,
-  type ListAlertsInput,
-} from "@/lib/validators/alerts";
+import { listAlertsInputSchema, type ListAlertsInput } from "@/lib/validators/alerts";
 import * as alerts from "@/mocks/services/alerts";
 import { getServiceContext } from "@/server/context";
 

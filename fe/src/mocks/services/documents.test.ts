@@ -392,9 +392,9 @@ describe("archived link targets (CR-B1, C14/C19)", () => {
         code: "NOT_FOUND",
       });
       expect(db.documents).toHaveLength(count);
-      await expect(
-        linkDocument(ctx, { documentId: live.id, target }),
-      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(linkDocument(ctx, { documentId: live.id, target })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
     },
   );
 });

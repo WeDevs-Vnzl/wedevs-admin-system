@@ -69,10 +69,7 @@ export async function ProjectStackCard({ project }: { project: ProjectDetailDTO 
       {project.stack.length === 0 ? (
         <p className="text-muted-foreground">{t("noStack")}</p>
       ) : (
-        <TechStackIcons
-          technologies={project.stack}
-          locale={locale === "en" ? "en" : "es"}
-        />
+        <TechStackIcons technologies={project.stack} locale={locale === "en" ? "en" : "es"} />
       )}
     </SidePanelCard>
   );
@@ -85,9 +82,18 @@ export async function ProjectFinancialCard({ project }: { project: ProjectDetail
     <FinancialSummaryCard
       title={t("financialTitle")}
       rows={[
-        { label: t("financeContracted"), value: <MoneyText amount={project.contractedValueUsd} currency="USD" /> },
-        { label: t("financeInvoiced"), value: <MoneyText amount={project.invoicedUsd} currency="USD" /> },
-        { label: t("financeCollected"), value: <MoneyText amount={project.collectedUsd} currency="USD" /> },
+        {
+          label: t("financeContracted"),
+          value: <MoneyText amount={project.contractedValueUsd} currency="USD" />,
+        },
+        {
+          label: t("financeInvoiced"),
+          value: <MoneyText amount={project.invoicedUsd} currency="USD" />,
+        },
+        {
+          label: t("financeCollected"),
+          value: <MoneyText amount={project.collectedUsd} currency="USD" />,
+        },
       ]}
       total={{
         label: t("financeToInvoice"),

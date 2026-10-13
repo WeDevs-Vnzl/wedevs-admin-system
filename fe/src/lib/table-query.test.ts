@@ -18,7 +18,11 @@ describe("toModuleQuery", () => {
         page: 2,
         sort: "issueDate:desc",
         q: "acme",
-        filters: { status: ["EMITIDA", "PAGADA"], clientId: ["CLI-0001"], date: ["2026-03-01", "2026-03-31"] },
+        filters: {
+          status: ["EMITIDA", "PAGADA"],
+          clientId: ["CLI-0001"],
+          date: ["2026-03-01", "2026-03-31"],
+        },
       }),
       facets,
     );
@@ -57,28 +61,35 @@ describe("toModuleQuery", () => {
       expect(parsed.data.createdTo).toBe("2026-01-31");
     }
 
-    expect(toModuleQuery(query({ filters: { createdAt: ["2026-01-01", "2026-01-31"] } }), [
-      { id: "createdAt", kind: "dateRange" },
-    ])).toMatchObject({ createdAtFrom: "2026-01-01", createdAtTo: "2026-01-31" });
+    expect(
+      toModuleQuery(query({ filters: { createdAt: ["2026-01-01", "2026-01-31"] } }), [
+        { id: "createdAt", kind: "dateRange" },
+      ]),
+    ).toMatchObject({ createdAtFrom: "2026-01-01", createdAtTo: "2026-01-31" });
   });
 
   it("drops empty facets and keeps the base query fields", () => {
-    const flat = toModuleQuery(query({ filters: { status: [] , empty: "" } }), [
+    const flat = toModuleQuery(query({ filters: { status: [], empty: "" } }), [
       { id: "status", kind: "options" },
     ]);
     expect(flat).toEqual({ page: 1, pageSize: 25, includeArchived: false });
   });
 
   it("passes unknown filters through but never overrides the base fields", () => {
-    const flat = toModuleQuery(query({ q: "x", filters: { tagId: "TAG-1", q: "evil", page: "9" } }));
+    const flat = toModuleQuery(
+      query({ q: "x", filters: { tagId: "TAG-1", q: "evil", page: "9" } }),
+    );
     expect(flat).toMatchObject({ tagId: "TAG-1", q: "x", page: 1 });
   });
 
   it("two values of a facet id parse against invoiceFiltersSchema", () => {
-    const flat = toModuleQuery(query({ filters: { clientId: ["CLI-1", "CLI-2"], tagId: "TAG-1" } }), [
-      { id: "clientId", kind: "async" },
-      { id: "tagId", kind: "async" },
-    ]);
+    const flat = toModuleQuery(
+      query({ filters: { clientId: ["CLI-1", "CLI-2"], tagId: "TAG-1" } }),
+      [
+        { id: "clientId", kind: "async" },
+        { id: "tagId", kind: "async" },
+      ],
+    );
     const parsed = invoiceFiltersSchema.safeParse(flat);
     expect(parsed.success).toBe(true);
     if (parsed.success) {

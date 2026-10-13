@@ -26,7 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import { DateField } from "@/components/ui/date-field";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { setProjectStatusAction } from "@/features/projects/actions";
 import type { ProjectStatus } from "@/lib/validators/enums";
@@ -92,12 +98,21 @@ export function ProjectTransitionDialog({
     // The action's schema, with the record id added: the form has no id field of its own.
     resolver: (values, context, options) =>
       validate(
-        { id: project.id, status: values.status, startDate: orUndefined(values.startDate), endDate: orUndefined(values.endDate) },
+        {
+          id: project.id,
+          status: values.status,
+          startDate: orUndefined(values.startDate),
+          endDate: orUndefined(values.endDate),
+        },
         context,
         options as unknown as ResolverOptions<FieldValues>,
       ) as never,
   });
-  const target = useWatch({ control: form.control, name: "status", defaultValue: form.getValues("status") });
+  const target = useWatch({
+    control: form.control,
+    name: "status",
+    defaultValue: form.getValues("status"),
+  });
 
   async function onValid(values: TransitionValues) {
     const result = await setProjectStatusAction({
@@ -147,7 +162,7 @@ export function ProjectTransitionDialog({
           </DialogHeader>
 
           {targets.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t("transition.noTargets")}</p>
+            <p className="text-sm text-muted-foreground">{t("transition.noTargets")}</p>
           ) : (
             <>
               <Controller
@@ -178,14 +193,18 @@ export function ProjectTransitionDialog({
                   name="startDate"
                   render={({ field }) => (
                     <Field data-invalid={startError ? true : undefined}>
-                      <FieldLabel htmlFor="transition-start">{t("transition.startDate")}</FieldLabel>
+                      <FieldLabel htmlFor="transition-start">
+                        {t("transition.startDate")}
+                      </FieldLabel>
                       <DateField
                         id="transition-start"
                         value={field.value}
                         onChange={field.onChange}
                         aria-invalid={startError ? true : undefined}
                       />
-                      {startError ? <FieldError>{t("transition.startDateRequired")}</FieldError> : null}
+                      {startError ? (
+                        <FieldError>{t("transition.startDateRequired")}</FieldError>
+                      ) : null}
                     </Field>
                   )}
                 />

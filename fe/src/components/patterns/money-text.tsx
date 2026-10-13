@@ -19,7 +19,7 @@ export function MoneyText({ amount, currency, className }: MoneyTextProps) {
   return (
     <span
       className={cn(
-        "text-right tabular-nums whitespace-nowrap",
+        "text-right whitespace-nowrap tabular-nums",
         negative && "text-destructive",
         className,
       )}

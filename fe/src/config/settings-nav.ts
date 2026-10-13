@@ -30,18 +30,73 @@ export interface SettingsSection {
 }
 
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
-  { slug: "company", labelKey: "company", icon: Building2, permission: { action: "read", resource: "settings" } },
-  { slug: "users", labelKey: "users", icon: Users, permission: { action: "read", resource: "user" } },
+  {
+    slug: "company",
+    labelKey: "company",
+    icon: Building2,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "users",
+    labelKey: "users",
+    icon: Users,
+    permission: { action: "read", resource: "user" },
+  },
   { slug: "preferences", labelKey: "preferences", icon: SlidersHorizontal, permission: null },
-  { slug: "currencies", labelKey: "currencies", icon: DollarSign, permission: { action: "read", resource: "settings" } },
-  { slug: "rates", labelKey: "rates", icon: ArrowRightLeft, permission: { action: "read", resource: "settings" } },
-  { slug: "fiscal", labelKey: "fiscal", icon: Percent, permission: { action: "read", resource: "settings" } },
-  { slug: "payment-methods", labelKey: "paymentMethods", icon: CreditCard, permission: { action: "read", resource: "settings" } },
-  { slug: "technologies", labelKey: "technologies", icon: Cpu, permission: { action: "read", resource: "settings" } },
-  { slug: "document-types", labelKey: "documentTypes", icon: FileText, permission: { action: "read", resource: "settings" } },
-  { slug: "expense-categories", labelKey: "expenseCategories", icon: FolderTree, permission: { action: "read", resource: "settings" } },
-  { slug: "tags", labelKey: "tags", icon: Tags, permission: { action: "read", resource: "settings" } },
-  { slug: "trash", labelKey: "trash", icon: Trash2, permission: { action: "read", resource: "trash" } },
+  {
+    slug: "currencies",
+    labelKey: "currencies",
+    icon: DollarSign,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "rates",
+    labelKey: "rates",
+    icon: ArrowRightLeft,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "fiscal",
+    labelKey: "fiscal",
+    icon: Percent,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "payment-methods",
+    labelKey: "paymentMethods",
+    icon: CreditCard,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "technologies",
+    labelKey: "technologies",
+    icon: Cpu,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "document-types",
+    labelKey: "documentTypes",
+    icon: FileText,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "expense-categories",
+    labelKey: "expenseCategories",
+    icon: FolderTree,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "tags",
+    labelKey: "tags",
+    icon: Tags,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "trash",
+    labelKey: "trash",
+    icon: Trash2,
+    permission: { action: "read", resource: "trash" },
+  },
 ];
 
 /** Whether a user sees the section. Preferences need only a signed-in user; the rest follow `can()`. */

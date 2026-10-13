@@ -18,7 +18,11 @@ function StackIcon({ tech, locale }: { tech: TechnologyChipDTO; locale: Locale }
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex size-6 items-center justify-center rounded-md" aria-label={name} role="img">
+        <span
+          className="inline-flex size-6 items-center justify-center rounded-md"
+          aria-label={name}
+          role="img"
+        >
           {icon ? (
             <svg viewBox="0 0 24 24" className="size-4" fill={color} aria-hidden focusable="false">
               <path d={icon.path} />

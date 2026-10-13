@@ -23,7 +23,9 @@ export default async function TechnologiesPage({ searchParams }: TechnologiesPag
   const t = await getTranslations("catalogs.technologies");
   const page = await listTechnologies(technologyFilterFromParams(await searchParams));
   // Brand icons are resolved here, on the server; the client table gets plain data (see icons.ts).
-  const icons = Object.fromEntries(page.items.map((row) => [row.id, resolveTechnologyIcon(row.iconSlug)]));
+  const icons = Object.fromEntries(
+    page.items.map((row) => [row.id, resolveTechnologyIcon(row.iconSlug)]),
+  );
 
   return (
     <div className="flex flex-col gap-6">
