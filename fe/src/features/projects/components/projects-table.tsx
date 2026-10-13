@@ -205,7 +205,7 @@ export function ProjectsTable({
     const money = (id: MoneyKey, label: string) =>
       helper.accessor(id, {
         header: label,
-        size: 210,
+        size: 240,
         meta: { label, sortable: true, exportable: true, align: "end" },
         cell: ({ row }) => (
           <MoneyText amount={row.original[id]} currency="USD" />
@@ -257,7 +257,7 @@ export function ProjectsTable({
       }),
       helper.accessor("targetEndDate", {
         header: t("columns.targetEndDate"),
-        size: 170,
+        size: 190,
         meta: { label: t("columns.targetEndDate"), sortable: true },
         cell: ({ row }) => (row.original.targetEndDate ? formatDate(row.original.targetEndDate, locale) : "—"),
       }),

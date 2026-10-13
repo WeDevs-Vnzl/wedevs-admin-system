@@ -144,13 +144,13 @@ export function ClientsTable({
       ? [
           helper.accessor("totalInvoicedUsd", {
             header: t("columns.totalInvoicedUsd"),
-            size: 210,
+            size: 240,
             meta: { label: t("columns.totalInvoicedUsd"), sortable: true, align: "end" },
             cell: ({ row }) => <MoneyText amount={row.original.totalInvoicedUsd} currency="USD" />,
           }),
           helper.accessor("receivableUsd", {
             header: t("columns.receivableUsd"),
-            size: 210,
+            size: 240,
             meta: { label: t("columns.receivableUsd"), sortable: true, align: "end" },
             cell: ({ row }) => <MoneyText amount={row.original.receivableUsd} currency="USD" />,
           }),
