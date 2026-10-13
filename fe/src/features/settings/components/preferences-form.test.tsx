@@ -117,7 +117,9 @@ describe("PreferencesForm", () => {
     await user.click(screen.getByLabelText("Claro"));
     await user.click(saveButton());
 
-    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith("No se pudieron guardar las preferencias"));
+    await waitFor(() =>
+      expect(mocks.toast.error).toHaveBeenCalledWith("No se pudieron guardar las preferencias"),
+    );
     expect(mocks.setTheme).not.toHaveBeenCalled();
     expect(mocks.refresh).not.toHaveBeenCalled();
   });

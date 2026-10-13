@@ -108,6 +108,10 @@ describe("ClientForm", () => {
     expect(within(contact).getByLabelText("Address")).toBeInTheDocument();
     const classification = screen.getByRole("group", { name: "Classification" });
     expect(within(classification).getByTestId("tag-picker")).toBeInTheDocument();
+    // Identity and contact share a row; the classification row takes the full width.
+    expect(identity).not.toHaveClass("md:col-span-2");
+    expect(contact).not.toHaveClass("md:col-span-2");
+    expect(classification).toHaveClass("md:col-span-2");
   });
 
   it("marks only the optional fields as optional", () => {

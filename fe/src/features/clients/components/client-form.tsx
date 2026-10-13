@@ -176,29 +176,30 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
   const backHref = client ? `/clients/${client.id}` : "/clients/list";
 
   return (
-    <FormPage
-      title={client ? t("form.editTitle") : t("form.createTitle")}
-      description={t("form.description")}
-      backHref={backHref}
-      dirty={form.formState.isDirty}
-      footer={
-        <>
-          <Button variant="outline" asChild>
-            <Link href={backHref}>{tActions("cancel")}</Link>
-          </Button>
-          <Button type="submit" form={FORM_ID} disabled={saving}>
-            {tActions("save")}
-          </Button>
-        </>
-      }
-    >
-      <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+    <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)}>
+      <FormPage
+        title={client ? t("form.editTitle") : t("form.createTitle")}
+        description={t("form.description")}
+        backHref={backHref}
+        dirty={form.formState.isDirty}
+        footer={
+          <>
+            <Button variant="outline" asChild>
+              <Link href={backHref}>{tActions("cancel")}</Link>
+            </Button>
+            <Button type="submit" form={FORM_ID} disabled={saving}>
+              {tActions("save")}
+            </Button>
+          </>
+        }
+      >
         <SectionCard
           group
+          span={1}
           title={t("form.sections.identity.title")}
           description={t("form.sections.identity.description")}
         >
-          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+          <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
             <Field data-invalid={errors.kind ? true : undefined}>
               <FieldLabel htmlFor="client-kind">{t("form.fields.kind")}</FieldLabel>
               <Controller
@@ -307,10 +308,11 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
 
         <SectionCard
           group
+          span={1}
           title={t("form.sections.contact.title")}
           description={t("form.sections.contact.description")}
         >
-          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+          <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
             <Field data-invalid={errors.country ? true : undefined}>
               <FieldLabel htmlFor="client-country">{t("form.fields.country")}</FieldLabel>
               <CountryCombobox
@@ -390,7 +392,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 {fieldMessage(errors.website?.message)}
               </FieldError>
             </Field>
-            <Field data-invalid={errors.address ? true : undefined} className="md:col-span-2">
+            <Field data-invalid={errors.address ? true : undefined} className="@lg:col-span-2">
               <FieldLabel htmlFor="client-address">{t("form.fields.address")}</FieldLabel>
               <Textarea
                 id="client-address"
@@ -408,10 +410,11 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
 
         <SectionCard
           group
+          span={2}
           title={t("form.sections.classification.title")}
           description={t("form.sections.classification.description")}
         >
-          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+          <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
             <Field data-invalid={errors.status ? true : undefined}>
               <div className="flex items-center gap-1">
                 <FieldLabel htmlFor="client-status">{t("form.fields.status")}</FieldLabel>
@@ -450,7 +453,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
                 {fieldMessage(errors.status?.message)}
               </FieldError>
             </Field>
-            <Field className="md:col-span-2">
+            <Field className="@lg:col-span-2">
               <FieldLabel htmlFor="client-tags">
                 {t("form.fields.tags")} <OptionalMark />
               </FieldLabel>
@@ -472,7 +475,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
             </Field>
           </div>
         </SectionCard>
-      </form>
-    </FormPage>
+      </FormPage>
+    </form>
   );
 }

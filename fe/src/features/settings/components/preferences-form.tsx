@@ -9,15 +9,15 @@ import { toast } from "sonner";
 import { FormPage } from "@/components/patterns/form-page";
 import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { setPreferenceAction } from "@/features/preferences/actions";
 import { localeCookieName } from "@/i18n/config";
 import {
@@ -69,7 +69,8 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
     const changes: SetPreferenceInput[] = [];
     if (form.getFieldState("locale").isDirty) changes.push({ key: "locale", value: values.locale });
     if (form.getFieldState("theme").isDirty) changes.push({ key: "theme", value: values.theme });
-    if (form.getFieldState("timezone").isDirty) changes.push({ key: "timezone", value: values.timezone });
+    if (form.getFieldState("timezone").isDirty)
+      changes.push({ key: "timezone", value: values.timezone });
 
     for (const change of changes) {
       const result = await setPreferenceAction(change);
@@ -104,7 +105,7 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
           </Button>
         }
       >
-        <SectionCard title={t("preferences.title")}>
+        <SectionCard title={t("preferences.title")} span={2}>
           <Controller
             control={form.control}
             name="locale"
@@ -166,7 +167,9 @@ export function PreferencesForm({ initial, timezones }: PreferencesFormProps) {
             name="timezone"
             render={({ field }) => (
               <Field>
-                <FieldLabel htmlFor="preferences-timezone">{t("preferences.timezone.label")}</FieldLabel>
+                <FieldLabel htmlFor="preferences-timezone">
+                  {t("preferences.timezone.label")}
+                </FieldLabel>
                 <FieldDescription id="preferences-timezone-description">
                   {t("preferences.timezone.description")}
                 </FieldDescription>

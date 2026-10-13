@@ -54,4 +54,22 @@ describe("SectionCard", () => {
     render(<SectionCard title="Identidad">x</SectionCard>);
     expect(screen.queryByRole("group")).toBeNull();
   });
+
+  it("spans both form columns only when asked, and sizes its fields to its own width", () => {
+    const { unmount } = render(
+      <SectionCard title="General" span={2}>
+        <p>Campos</p>
+      </SectionCard>,
+    );
+    expect(screen.getByText("Campos").closest("[data-slot=card]")).toHaveClass("md:col-span-2");
+    expect(screen.getByText("Campos").parentElement).toHaveClass("@container");
+    unmount();
+
+    render(
+      <SectionCard title="Fechas" span={1}>
+        <p>Campos</p>
+      </SectionCard>,
+    );
+    expect(screen.getByText("Campos").closest("[data-slot=card]")).not.toHaveClass("md:col-span-2");
+  });
 });

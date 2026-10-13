@@ -28,7 +28,12 @@ import { TagPicker } from "@/features/tags/components/tag-picker";
 import { TechnologyPicker } from "@/features/technologies/components/technology-picker";
 import { uploadAdapter } from "@/features/files/upload-adapter";
 import { searchClientsAction } from "@/features/clients/actions";
-import { createProjectAction, updateProjectAction, upsertProjectLinksAction, removeProjectLinkAction } from "@/features/projects/actions";
+import {
+  createProjectAction,
+  updateProjectAction,
+  upsertProjectLinksAction,
+  removeProjectLinkAction,
+} from "@/features/projects/actions";
 import type { ActionError, EntityRef } from "@/lib/validators/common";
 import type { RichTextDoc } from "@/lib/validators/notes";
 import type { TechnologyListRowDTO, TechnologyChipDTO } from "@/lib/validators/technologies";
@@ -172,7 +177,14 @@ export function ProjectForm({
     : {
         name: "",
         clients: initialClient
-          ? [{ clientId: initialClient.id, label: initialClient.label, code: initialClient.code ?? "", role: "" }]
+          ? [
+              {
+                clientId: initialClient.id,
+                label: initialClient.label,
+                code: initialClient.code ?? "",
+                role: "",
+              },
+            ]
           : [],
         summary: "",
         description: null,
@@ -189,16 +201,30 @@ export function ProjectForm({
   const form = useForm<ProjectFormValues>({
     defaultValues: defaults,
     resolver: (values, context, options) =>
-      validate(toPayload(values, project?.id), context, options as unknown as ResolverOptions<FieldValues>) as never,
+      validate(
+        toPayload(values, project?.id),
+        context,
+        options as unknown as ResolverOptions<FieldValues>,
+      ) as never,
   });
 
-  const summary = useWatch({ control: form.control, name: "summary", defaultValue: defaults.summary });
-  const linksDirty = JSON.stringify(linksPayload(links)) !== JSON.stringify(linksPayload(initialLinks));
+  const summary = useWatch({
+    control: form.control,
+    name: "summary",
+    defaultValue: defaults.summary,
+  });
+  const linksDirty =
+    JSON.stringify(linksPayload(links)) !== JSON.stringify(linksPayload(initialLinks));
   const dirty = form.formState.isDirty || linksDirty;
   const linksInvalid = links.some(
     (row) =>
-      !projectLinkInputSchema.safeParse({ id: row.id, group: row.group, label: row.label, url: row.url, order: row.order })
-        .success,
+      !projectLinkInputSchema.safeParse({
+        id: row.id,
+        group: row.group,
+        label: row.label,
+        url: row.url,
+        order: row.order,
+      }).success,
   );
 
   function applyError(error: ActionError) {
@@ -206,7 +232,8 @@ export function ProjectForm({
       for (const [key, messages] of Object.entries(error.fieldErrors)) {
         const field = fieldOf(key);
         const message = messages[0];
-        if (field && message) form.setError(field, { message: tRoot(message as never) as unknown as string });
+        if (field && message)
+          form.setError(field, { message: tRoot(message as never) as unknown as string });
       }
       return;
     }
@@ -240,7 +267,10 @@ export function ProjectForm({
     }
 
     if (mode === "create") {
-      const result = await createProjectAction({ ...(payload as CreateProjectInput), links: linksPayload(links) as never });
+      const result = await createProjectAction({
+        ...(payload as CreateProjectInput),
+        links: linksPayload(links) as never,
+      });
       if (!result.ok) return applyError(result.error);
       toast.success(t("toast.created", { code: result.data.code }));
       router.push(`/projects/${result.data.id}`);
@@ -260,7 +290,11 @@ export function ProjectForm({
     router.refresh();
   }
 
-  const clientValues = useWatch({ control: form.control, name: "clients", defaultValue: defaults.clients });
+  const clientValues = useWatch({
+    control: form.control,
+    name: "clients",
+    defaultValue: defaults.clients,
+  });
   const clientOptions: AsyncComboboxOption[] = clientValues.map((client) => ({
     value: client.clientId,
     label: client.label,
@@ -301,6 +335,7 @@ export function ProjectForm({
       >
         <SectionCard
           group
+          span={2}
           title={t("form.sections.general.title")}
           description={t("form.sections.general.description")}
         >
@@ -314,7 +349,9 @@ export function ProjectForm({
               {...form.register("name")}
             />
             {form.formState.errors.name ? (
-              <FieldError id="project-name-error">{tRoot(form.formState.errors.name.message as never)}</FieldError>
+              <FieldError id="project-name-error">
+                {tRoot(form.formState.errors.name.message as never)}
+              </FieldError>
             ) : null}
           </Field>
           <Controller
@@ -333,7 +370,11 @@ export function ProjectForm({
                   aria-invalid={fieldState.error ? true : undefined}
                   loadOptions={loadClients}
                   value={clientOptions}
-                  secondaryInput={{ label: t("form.clientRole"), placeholder: t("form.clientRolePlaceholder"), maxLength: 80 }}
+                  secondaryInput={{
+                    label: t("form.clientRole"),
+                    placeholder: t("form.clientRolePlaceholder"),
+                    maxLength: 80,
+                  }}
                   onChange={(options) =>
                     field.onChange(
                       options.map((option) => ({
@@ -345,8 +386,12 @@ export function ProjectForm({
                     )
                   }
                 />
-                <FieldDescription id="project-clients-hint">{t("form.clientsHelp")}</FieldDescription>
-                {fieldState.error ? <FieldError id="project-clients-error">{t("form.clientsRequired")}</FieldError> : null}
+                <FieldDescription id="project-clients-hint">
+                  {t("form.clientsHelp")}
+                </FieldDescription>
+                {fieldState.error ? (
+                  <FieldError id="project-clients-error">{t("form.clientsRequired")}</FieldError>
+                ) : null}
               </Field>
             )}
           />
@@ -369,7 +414,9 @@ export function ProjectForm({
               {t("form.summaryCounter", { count: summary.length, max: PROJECT_SUMMARY_MAX })}
             </FieldDescription>
             {form.formState.errors.summary ? (
-              <FieldError id="project-summary-error">{tRoot(form.formState.errors.summary.message as never)}</FieldError>
+              <FieldError id="project-summary-error">
+                {tRoot(form.formState.errors.summary.message as never)}
+              </FieldError>
             ) : null}
           </Field>
           <Controller
@@ -389,11 +436,17 @@ export function ProjectForm({
                   aria-describedby={fieldState.error ? "project-description-error" : undefined}
                   onChange={(value) => field.onChange(value)}
                   onInvalid={() =>
-                    form.setError("description", { message: tRoot("forms.richText.invalid" as never) as unknown as string })
+                    form.setError("description", {
+                      message: tRoot("forms.richText.invalid" as never) as unknown as string,
+                    })
                   }
                   onBlur={field.onBlur}
                 />
-                {fieldState.error ? <FieldError id="project-description-error">{tRoot(fieldState.error.message as never)}</FieldError> : null}
+                {fieldState.error ? (
+                  <FieldError id="project-description-error">
+                    {tRoot(fieldState.error.message as never)}
+                  </FieldError>
+                ) : null}
               </Field>
             )}
           />
@@ -401,10 +454,11 @@ export function ProjectForm({
 
         <SectionCard
           group
+          span={1}
           title={t("form.sections.schedule.title")}
           description={t("form.sections.schedule.description")}
         >
-          <div className="grid items-start gap-4 sm:grid-cols-3">
+          <div className="grid items-start gap-4 @md:grid-cols-2">
             <Controller
               control={form.control}
               name="startDate"
@@ -420,7 +474,9 @@ export function ProjectForm({
                     onBlur={field.onBlur}
                     aria-describedby="project-start-date-hint"
                   />
-                  <FieldDescription id="project-start-date-hint">{t("form.startDateHint")}</FieldDescription>
+                  <FieldDescription id="project-start-date-hint">
+                    {t("form.startDateHint")}
+                  </FieldDescription>
                 </Field>
               )}
             />
@@ -432,7 +488,12 @@ export function ProjectForm({
                   <FieldLabel htmlFor="project-target-date">
                     {t("form.targetEndDate")} <OptionalMark />
                   </FieldLabel>
-                  <DateField id="project-target-date" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+                  <DateField
+                    id="project-target-date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
                 </Field>
               )}
             />
@@ -448,6 +509,35 @@ export function ProjectForm({
 
         <SectionCard
           group
+          span={1}
+          title={t("form.sections.classification.title")}
+          description={t("form.sections.classification.description")}
+        >
+          <Field>
+            <FieldLabel htmlFor="project-tags">
+              {t("form.tags")} <OptionalMark />
+            </FieldLabel>
+            <TagPicker
+              id="project-tags"
+              aria-label={t("form.tags")}
+              value={tagChips}
+              canCreate={canCreateTags}
+              onChange={(next) => {
+                setTagChips(next);
+                form.setValue(
+                  "tagIds",
+                  next.map((tag) => tag.id),
+                  { shouldDirty: true },
+                );
+              }}
+            />
+            <FieldDescription>{t("form.tagsHint")}</FieldDescription>
+          </Field>
+        </SectionCard>
+
+        <SectionCard
+          group
+          span={2}
           title={t("form.sections.delivery.title")}
           description={t("form.sections.delivery.description")}
         >
@@ -476,29 +566,6 @@ export function ProjectForm({
             </FieldTitle>
             <FieldDescription>{t("form.linksHint")}</FieldDescription>
             <ProjectLinksEditor rows={links} onChange={setLinks} editable reorderable />
-          </Field>
-        </SectionCard>
-
-        <SectionCard
-          group
-          title={t("form.sections.classification.title")}
-          description={t("form.sections.classification.description")}
-        >
-          <Field>
-            <FieldLabel htmlFor="project-tags">
-              {t("form.tags")} <OptionalMark />
-            </FieldLabel>
-            <TagPicker
-              id="project-tags"
-              aria-label={t("form.tags")}
-              value={tagChips}
-              canCreate={canCreateTags}
-              onChange={(next) => {
-                setTagChips(next);
-                form.setValue("tagIds", next.map((tag) => tag.id), { shouldDirty: true });
-              }}
-            />
-            <FieldDescription>{t("form.tagsHint")}</FieldDescription>
           </Field>
         </SectionCard>
       </FormPage>

@@ -93,7 +93,10 @@ beforeAll(() => {
 
 beforeEach(() => {
   actions.createProjectAction.mockReset();
-  actions.createProjectAction.mockResolvedValue({ ok: true, data: { id: "pry_new", code: "PRY-0007" } });
+  actions.createProjectAction.mockResolvedValue({
+    ok: true,
+    data: { id: "pry_new", code: "PRY-0007" },
+  });
   router.push.mockReset();
   router.refresh.mockReset();
 });
@@ -118,9 +121,11 @@ describe("ProjectForm (create)", () => {
     const general = screen.getByRole("group", { name: "General details" });
     expect(within(general).getByLabelText("Name")).toBeInTheDocument();
     expect(within(general).getByLabelText("Summary")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Schedule" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Stack and links" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Classification" })).toBeInTheDocument();
+    // Wide content (rich text, links) spans both columns; dates and tags share a row.
+    expect(general).toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Schedule" })).not.toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Classification" })).not.toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Stack and links" })).toHaveClass("md:col-span-2");
     // No section repeats the label of a single field as its title.
     expect(screen.queryByText("Name", { selector: "[data-slot=card-title]" })).toBeNull();
   });
@@ -133,15 +138,17 @@ describe("ProjectForm (create)", () => {
       "Description (optional)",
       "Start date (optional)",
       "Target delivery (optional)",
+      "Tags (optional)",
       "Stack (optional)",
       "Links (optional)",
-      "Tags (optional)",
     ]);
     expect(screen.getByLabelText("Summary")).toHaveAccessibleDescription(
       `${enProjects.form.summaryHint} ${enProjects.form.summaryCounter.replace("{count}", "0").replace("{max}", "280")}`,
     );
     expect(screen.getByRole("button", { name: "More about Clients" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Start date/)).toHaveAccessibleDescription(enProjects.form.startDateHint);
+    expect(screen.getByLabelText(/^Start date/)).toHaveAccessibleDescription(
+      enProjects.form.startDateHint,
+    );
   });
 
   it("has an h1 with the page title", () => {
@@ -172,7 +179,9 @@ describe("ProjectForm (create)", () => {
     const summary = screen.getByLabelText("Summary");
     const described = (summary.getAttribute("aria-describedby") ?? "").split(" ");
     expect(described).toContain("project-summary-counter");
-    expect(described.some((id) => document.getElementById(id)?.getAttribute("role") === "alert")).toBe(true);
+    expect(
+      described.some((id) => document.getElementById(id)?.getAttribute("role") === "alert"),
+    ).toBe(true);
   });
 
   it("counts the summary against the 280-character limit (PRD §8.3)", async () => {

@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type SectionCardProps = {
   title: string;
@@ -7,6 +8,9 @@ type SectionCardProps = {
   actions?: ReactNode;
   // Form sections: exposes the card as a group named by its title, so a screen reader announces it with its fields.
   group?: boolean;
+  // Columns taken on the two-column FormPage grid: 2 for wide content (rich text, link lists, multi-field
+  // grids), 1 for compact sections. Unset leaves the card to its parent's layout (detail pages, overviews).
+  span?: 1 | 2;
   children: ReactNode;
 };
 
@@ -16,12 +20,13 @@ export function SectionCard({
   description,
   actions,
   group = false,
+  span,
   children,
 }: SectionCardProps) {
   const titleId = useId();
   return (
     <Card
-      className="rounded-2xl"
+      className={cn("rounded-2xl", span === 2 && "md:col-span-2")}
       role={group ? "group" : undefined}
       aria-labelledby={group ? titleId : undefined}
     >
@@ -34,7 +39,8 @@ export function SectionCard({
         </div>
         {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
       </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
+      {/* A size container: field grids inside adapt to the card's width, whatever its span. */}
+      <CardContent className="@container space-y-4">{children}</CardContent>
     </Card>
   );
 }
