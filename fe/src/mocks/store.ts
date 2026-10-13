@@ -19,6 +19,7 @@ import type { PaymentAllocationDTO, PaymentDetailDTO } from "@/lib/validators/pa
 import type { AccountDTO, MovementDTO, TransferDTO } from "@/lib/validators/accounts";
 import type { ExpenseDetailDTO, RecurringExpenseDTO } from "@/lib/validators/expenses";
 import type { ShareAccessLogRowDTO, ShareLinkDetailDTO } from "@/lib/validators/shares";
+import { deriveFinance } from "./derive-finance";
 import {
   createMockSequences,
   syncMockSequences,
@@ -161,8 +162,9 @@ export interface MockStore {
 /**
  * A pure pass over the store that recomputes derived values (invoice totals, tax lines, `paidAmount`,
  * `balance`, `status`, account balances, installment status…) through `src/lib/finance/*` (data-rules.md
- * §2: "Derived values are computed, not typed in"). Module packages register theirs; hooks run in
- * registration order when the store is built and after every mock mutation (`deriveMockStore`).
+ * §2: "Derived values are computed, not typed in"). The finance pass (`derive-finance.ts`) is built in and
+ * runs first; module packages register theirs, which run after it in registration order when the store is
+ * built and after every mock mutation (`deriveMockStore`).
  */
 export type DeriveHook = (store: MockStore) => void;
 
@@ -191,6 +193,7 @@ export function listDeriveHooks(): string[] {
 
 /** Runs every derive hook over the store. Mock services call it after each mutation. */
 export function deriveMockStore(store: MockStore = getMockStore()): void {
+  deriveFinance(store, todayInCaracas(new Date()));
   for (const hook of globalState().deriveHooks.values()) hook(store);
 }
 
@@ -266,7 +269,8 @@ export function buildMockStore(now: Date = new Date()): MockStore {
   } satisfies MockStore);
 
   deriveSequences(store);
-  deriveMockStore(store);
+  deriveFinance(store, todayInCaracas(now));
+  for (const hook of globalState().deriveHooks.values()) hook(store);
   return store;
 }
 

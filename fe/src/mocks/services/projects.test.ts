@@ -12,6 +12,8 @@ import {
 import type { InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
 import type { MockServiceContext } from "../ctx";
 import { makeTestContext } from "../test-helpers";
+import { makeInvoice, makeLine, ref } from "../finance-test-factories";
+import { deriveMockStore } from "../store";
 import * as svc from "./projects";
 
 const newProject = (overrides: Record<string, unknown> = {}): CreateProjectInput =>
@@ -446,8 +448,19 @@ describe("setProjectStatus", () => {
     const { ctx, db } = makeTestContext();
     const id = "pry_tornillo_tienda";
     seedInstallment(db, "PENDIENTE", "ins_a");
-    seedInstallment(db, "FACTURADA", "ins_b");
+    seedInstallment(db, "PENDIENTE", "ins_b");
+    // ins_b is billed: an open invoice has a line that references it.
+    db.invoices.push(
+      makeInvoice({
+        id: "fac_b",
+        lines: [
+          makeLine({ id: "inl_b", unitPrice: "100", installment: ref("ins_b", "INSTALLMENT") }),
+        ],
+      }),
+    );
     seedCharge(db, id, "ACTIVO");
+    deriveMockStore(db);
+    expect(db.installments.find((i) => i.id === "ins_b")!.status).toBe("FACTURADA");
 
     await expect(
       svc.setProjectStatus(ctx, {

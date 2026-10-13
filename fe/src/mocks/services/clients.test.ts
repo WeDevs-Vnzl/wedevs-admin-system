@@ -10,6 +10,8 @@ import {
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentDetailDTO } from "@/lib/validators/payments";
 import { makeTestContext, FIXED_NOW } from "../test-helpers";
+import { makeAllocation, makeInvoice, makePayment, ref, STAMP } from "../finance-test-factories";
+import { deriveMockStore } from "../store";
 import {
   archiveClient,
   archiveClients,
@@ -301,24 +303,35 @@ describe("archiveClient (C19)", () => {
   it("locks on an open invoice and ignores drafts, voided and paid ones", async () => {
     const { ctx, db } = makeTestContext();
     const client = clientWithContactsOnly(db)!;
-    const invoice = (status: string, isDraft = false) =>
-      ({
-        id: `fac_${status}`,
-        client: { id: client.id },
-        status,
-        isDraft,
-      }) as unknown as InvoiceDetailDTO;
-    db.invoices.push(invoice("BORRADOR", true), invoice("ANULADA"), invoice("PAGADA"));
+    const clientRef = (id: string) => ref(id, "CLIENT");
+    db.invoices.push(
+      makeInvoice({ id: "fac_draft", client: clientRef(client.id), isDraft: true }),
+      makeInvoice({ id: "fac_void", client: clientRef(client.id), voidedAt: STAMP }),
+      makeInvoice({ id: "fac_paid", client: clientRef(client.id) }),
+    );
+    // Pays fac_paid in full (1000 at 16 % + 200 exempt = 1360).
+    db.payments.push(makePayment({ id: "pag_full", amount: "1360.00", igtfAmount: "0.00" }));
+    db.paymentAllocations.push(
+      makeAllocation({
+        id: "alo_full",
+        paymentId: "pag_full",
+        invoice: ref("fac_paid", "INVOICE"),
+        amountPaymentCurrency: "1360.00",
+        amountInvoiceCurrency: "1360.00",
+        amountUsd: "1360.00",
+      }),
+    );
+    deriveMockStore(db);
+    expect(db.invoices.map((row) => row.status)).toEqual(["BORRADOR", "ANULADA", "PAGADA"]);
     await expect(archiveClient(ctx, { id: client.id, confirm: false })).resolves.toBeDefined();
 
     const { ctx: ctx2, db: db2 } = makeTestContext();
     const other = clientWithContactsOnly(db2)!;
-    db2.invoices.push({
-      id: "fac_open",
-      client: { id: other.id },
-      status: "VENCIDA",
-      isDraft: false,
-    } as unknown as InvoiceDetailDTO);
+    db2.invoices.push(
+      makeInvoice({ id: "fac_open", client: clientRef(other.id), dueDate: "2026-10-01" }),
+    );
+    deriveMockStore(db2);
+    expect(db2.invoices[0]!.status).toBe("VENCIDA");
     expect((await rejection(archiveClient(ctx2, { id: other.id, confirm: false }))).code).toBe(
       "INTEGRITY_LOCK",
     );

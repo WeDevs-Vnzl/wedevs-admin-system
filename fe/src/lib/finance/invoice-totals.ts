@@ -61,6 +61,18 @@ function rateKey(rate: MoneyString): string {
   return toDecimal(rate).toString();
 }
 
+/** Per-line C17 amounts: `amount = round(quantity × unitPrice, 2)`, `net = amount − discount`. */
+export function computeLineAmounts(line: InvoiceTotalsLine): {
+  amount: MoneyString;
+  netAmount: MoneyString;
+} {
+  const amount = mulMoney(line.quantity, line.unitPrice);
+  if (compareMoney(line.discount, amount) > 0 || compareMoney(line.discount, "0") < 0) {
+    throw new RangeError("Line discount must be between 0 and the line amount");
+  }
+  return { amount, netAmount: subMoney(amount, line.discount) };
+}
+
 /**
  * Invoice totals with several VAT rates per invoice (C17 formula, DT-44). Throws `RangeError` when a
  * line discount exceeds its amount or an IVA adjustment is out of range or targets a rate with no IVA.
@@ -72,11 +84,7 @@ export function computeInvoiceTotals(input: InvoiceTotalsInput): InvoiceTotals {
   const bases = new Map<string, { ivaRate: MoneyString; nets: MoneyString[] }>();
 
   for (const line of input.lines) {
-    const amount = mulMoney(line.quantity, line.unitPrice);
-    if (compareMoney(line.discount, amount) > 0 || compareMoney(line.discount, "0") < 0) {
-      throw new RangeError("Line discount must be between 0 and the line amount");
-    }
-    const net = subMoney(amount, line.discount);
+    const { amount, netAmount: net } = computeLineAmounts(line);
     amounts.push(amount);
     discounts.push(line.discount);
     if (line.ivaRate === null) {
