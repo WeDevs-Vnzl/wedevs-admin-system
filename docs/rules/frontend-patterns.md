@@ -21,6 +21,19 @@ Every UI package — and every UI package spec in `docs/TASK.md` carries the lin
    strings; mention each edit in the package report.
 5. The Code Reviewer checks for hand-rolled equivalents of registry items.
 
+## 0b. better-ui skill — interface planning guide
+
+The `better-ui` skill (`.claude/skills/better-ui/SKILL.md`, from `jakubkrehel/skills`) is the guide
+for planning interface polish: surfaces (nested radius, shadows vs borders, image outlines), motion
+(transitions, press scale, enter/exit, reduced motion), icons and UI performance.
+
+1. The Planner reads it before writing any UI package spec and states, per package, the applicable
+   principles (e.g. "better-ui: press scale, overlay scroll containment").
+2. It refines, never overrides, §1 (wireframes are the brand) and the shadcn rule in §0: project
+   tokens, density and registry components win where they already define a value.
+3. Its sibling skills (`better-typography`, `better-accessibility`, `better-layout`,
+   `better-colors`) are not installed; §1 and PRD §14 cover those areas.
+
 ## 1. Visual language and brand (P9: the wireframes are the brand)
 
 There is no separate brand manual. The brand identity — app shell, portal and print letterhead — is the
@@ -156,8 +169,11 @@ icons are fixed by PRD §8.12.2 and override this table.
 
 - **Overview/Table toggle**: a segmented control "Resumen | Tabla" switches between `/<module>` and
   `/<module>/list` (wireframe 4.4).
-- **Page header**: title + count badge, subtitle, primary action ("Nuevo cliente") and secondary
-  ("Exportar CSV").
+- **Page header** (`PageHeader`): title + count badge and subtitle on the left; on the right, one group
+  in this order: view switch (`views` slot, e.g. "Resumen | Tabla"), secondary actions, primary action
+  ("Nuevo cliente"). Never place the view switch outside the header.
+- **Form page header** (`FormPage`): a "Volver" back link above a real `<h1>` title and the description;
+  the form body, header and sticky footer share one readable width (`max-w-3xl`).
 - Module-specific routes (PRD §11): `/projects/[id]/billing`; `/expenses/recurring[/new|/[id]]`;
   `/accounts/[id]` (ledger), `/accounts/transfers/new`, `/accounts/movements/new` (accounts have no
   `/list`; the overview is the card grid); `/documents/[id]/editor`,
@@ -185,7 +201,8 @@ One shared `DataTable` (TanStack Table over shadcn `table`, following the regist
 example):
 
 - **Server-side pagination** 25/50/100, sorting, faceted filters (status, tags, currency, date range,
-  client, project, technology — per entity) as "+ Estado" buttons that become chips, "Limpiar", debounced
+  client, project, technology — per entity) as "Estado" buttons with a plus icon (the label carries no
+  "+") that become chips, "Limpiar", debounced
   text search.
 - All table state in the URL through `nuqs`, parsed with `listQuerySchema`, passed to `queries.ts`.
 - **Configurable columns** (visibility, order, width) persisted per user and table (key
@@ -195,10 +212,22 @@ example):
   as `EXPORT` (Hito 2). Never built from the visible page only.
 - **Empty state** with CTA; **skeletons** while loading.
 - "Mostrar archivados" toggle, Owner/Admin only.
+- **Column layout**: the table is laid out at the sum of its column widths (`table-fixed`) and scrolls
+  horizontally; every column declares a `size` wide enough for its header. Cells clip to their column:
+  single-line cells truncate, `meta.wrap` cells (badge lists, icon stacks) wrap, `meta.align: "end"`
+  right-aligns money and counts with tabular numbers. Header labels truncate with the full label as
+  `title`. When a column is pinned, the selection column is pinned first, and the last pinned column
+  draws the block edge as an inset shadow.
 
 ## 6. Forms (PRD §7.4) — wireframe 4.6
 
 - Full-page forms at `/new` and `/[id]/edit` (`FormPage`); quick-creates in a `Sheet` or `Dialog`.
+- **Sections**: fields are grouped in a few `SectionCard group` blocks (title + one-line description),
+  never one card per field and never a card title that repeats a field label. Two-column grids use
+  `items-start` so a hint under one field does not shift its neighbor.
+- **Hints**: a `FieldDescription` under every field whose meaning or format is not obvious, linked
+  through `aria-describedby`; a `FieldInfo` tooltip next to the label only for supplementary definitions
+  (tooltips do not open on touch). Optional fields carry `OptionalMark` ("(opcional)") in their label.
 - react-hook-form + `zodResolver(schema)` with the **same** schema the action parses (C8); server
   `fieldErrors` mapped back onto fields.
 - **Unsaved-changes guard** on dirty forms.

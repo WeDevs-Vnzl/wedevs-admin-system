@@ -14,8 +14,8 @@ ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 approved 2026-10-10 ("aprobado, procede") and closed; wave 3 done 2026-10-12 (`7d33c7d`); awaiting the user's batch-close approval |
-| H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | **Closed** 2026-10-13 (user approval; wave 3 `7d33c7d`, eval-01 fixes on `fix/eval-01-ui`; local, push/PR at end of Hito 1 per DT-69) |
+| H1-B3 — Finance UI | Hito 1 UI batch | **In progress** — ODD feature `odd/tasks/h1-b3-finance-ui.md` (opened 2026-10-13; multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
 | H1-FX — Fix/change cycle | change batches | Placeholder; ends with the user's explicit "UI accepted" |
@@ -2948,7 +2948,7 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 
 ### H1-B2 batch close
 
-- [ ] User approves the H1-B2 close after reviewing the UI locally with `pnpm dev`.
+- [x] User approves the H1-B2 close after reviewing the UI locally with `pnpm dev` (2026-10-13).
 - [ ] **Deferred to the end of Hito 1 (DT-69):** push `batch/h1-b2-commercial-core`, PR, CI, deploy
       preview, merge by the user. Until then H1-B3 branches from `batch/h1-b2-commercial-core`.
 
