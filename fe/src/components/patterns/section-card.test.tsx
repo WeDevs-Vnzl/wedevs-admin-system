@@ -41,4 +41,17 @@ describe("SectionCard", () => {
     );
     expect(container.querySelector("button")).toBeNull();
   });
+
+  it("exposes a form section as a group named by its title when asked", () => {
+    const { unmount } = render(
+      <SectionCard title="Identidad" group>
+        <p>Campos</p>
+      </SectionCard>,
+    );
+    expect(screen.getByRole("group", { name: "Identidad" })).toHaveTextContent("Campos");
+    unmount();
+
+    render(<SectionCard title="Identidad">x</SectionCard>);
+    expect(screen.queryByRole("group")).toBeNull();
+  });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -97,6 +97,38 @@ beforeEach(() => {
 });
 
 describe("ClientForm", () => {
+  it("groups the fields in identity, contact and classification sections", () => {
+    renderForm();
+
+    const identity = screen.getByRole("group", { name: "Identity" });
+    expect(within(identity).getByLabelText("Trade name")).toBeInTheDocument();
+    expect(within(identity).getByLabelText("Tax ID")).toBeInTheDocument();
+    const contact = screen.getByRole("group", { name: "Contact and location" });
+    expect(within(contact).getByRole("textbox", { name: "Email" })).toBeInTheDocument();
+    expect(within(contact).getByLabelText("Address")).toBeInTheDocument();
+    const classification = screen.getByRole("group", { name: "Classification" });
+    expect(within(classification).getByTestId("tag-picker")).toBeInTheDocument();
+  });
+
+  it("marks only the optional fields as optional", () => {
+    renderForm();
+
+    const marked = screen
+      .getAllByText("(optional)")
+      .map((mark) => mark.closest("label")?.textContent);
+    expect(marked).toEqual(["Email (optional)", "Website (optional)", "Tags (optional)"]);
+  });
+
+  it("explains the less obvious fields with a description and an info button", () => {
+    renderForm();
+
+    expect(screen.getByLabelText("Trade name")).toHaveAccessibleDescription(
+      enClients.form.fields.tradeNameHint,
+    );
+    expect(screen.getByRole("button", { name: "More about Legal name" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More about Status" })).toBeInTheDocument();
+  });
+
   it("requires the legal name of an EMPRESA client and does not call the action (HU-03 CA1)", async () => {
     renderForm(company);
 

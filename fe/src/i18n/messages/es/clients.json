@@ -86,11 +86,35 @@
       "email": "Email",
       "website": "Sitio web",
       "status": "Estado",
-      "tags": "Etiquetas"
+      "tags": "Etiquetas",
+      "kindHint": "Persona natural o empresa. Para empresas la razón social es obligatoria.",
+      "tradeNameHint": "Nombre visible en todo el sistema.",
+      "legalNameInfo": "Nombre legal registrado. Si el cliente es una persona y lo dejas vacío, se usa el nombre comercial.",
+      "taxIdInfo": "La combinación de identificador fiscal y país no puede repetirse entre clientes no archivados.",
+      "countryHint": "Define cómo se valida el identificador fiscal.",
+      "phoneHint": "Elige el código de país y escribe el número local.",
+      "emailHint": "Email general de la empresa.",
+      "statusHint": "Por defecto, Prospecto. El cambio de estado es manual.",
+      "statusInfo": "Al registrar la primera factura de un prospecto, el sistema sugiere pasarlo a Activo.",
+      "tagsHint": "Sirven para filtrar y agrupar clientes."
     },
     "conflictOpen": "Abrir {code}",
     "kindOptions": "Tipo de cliente",
-    "statusOptions": "Estado del cliente"
+    "statusOptions": "Estado del cliente",
+    "sections": {
+      "identity": {
+        "title": "Identidad",
+        "description": "Cómo se llama el cliente y cómo se identifica ante el fisco."
+      },
+      "contact": {
+        "title": "Contacto y ubicación",
+        "description": "Dónde está el cliente y cómo comunicarse con él."
+      },
+      "classification": {
+        "title": "Clasificación",
+        "description": "Estado comercial y etiquetas para filtrar y agrupar."
+      }
+    }
   },
   "detail": {
     "tabs": {

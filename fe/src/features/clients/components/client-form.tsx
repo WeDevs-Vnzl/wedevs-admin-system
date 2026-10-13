@@ -7,7 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldInfo, OptionalMark } from "@/components/patterns/field-hint";
 import { FormPage } from "@/components/patterns/form-page";
+import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
 import { CountryCombobox } from "@/components/ui/country-combobox/country-combobox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -191,217 +193,285 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
       }
     >
       <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+        <SectionCard
+          group
+          title={t("form.sections.identity.title")}
+          description={t("form.sections.identity.description")}
+        >
+          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+            <Field data-invalid={errors.kind ? true : undefined}>
+              <FieldLabel htmlFor="client-kind">{t("form.fields.kind")}</FieldLabel>
+              <Controller
+                control={form.control}
+                name="kind"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="client-kind"
+                      aria-label={t("form.kindOptions")}
+                      aria-invalid={errors.kind ? true : undefined}
+                      aria-describedby={
+                        errors.kind ? "client-kind-hint client-kind-error" : "client-kind-hint"
+                      }
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLIENT_KIND_VALUES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {tEnums(`ClientKind.${value}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldDescription id="client-kind-hint">{t("form.fields.kindHint")}</FieldDescription>
+              <FieldError id="client-kind-error">{fieldMessage(errors.kind?.message)}</FieldError>
+            </Field>
+            <Field data-invalid={errors.tradeName ? true : undefined}>
+              <FieldLabel htmlFor="client-trade-name">{t("form.fields.tradeName")}</FieldLabel>
+              <Input
+                id="client-trade-name"
+                aria-invalid={errors.tradeName ? true : undefined}
+                aria-describedby={
+                  errors.tradeName
+                    ? "client-trade-name-hint client-trade-name-error"
+                    : "client-trade-name-hint"
+                }
+                {...form.register("tradeName")}
+              />
+              <FieldDescription id="client-trade-name-hint">
+                {t("form.fields.tradeNameHint")}
+              </FieldDescription>
+              <FieldError id="client-trade-name-error">
+                {fieldMessage(errors.tradeName?.message)}
+              </FieldError>
+            </Field>
+            <Field data-invalid={errors.legalName ? true : undefined}>
+              <div className="flex items-center gap-1">
+                <FieldLabel htmlFor="client-legal-name">{t("form.fields.legalName")}</FieldLabel>
+                <FieldInfo field={t("form.fields.legalName")}>
+                  {t("form.fields.legalNameInfo")}
+                </FieldInfo>
+              </div>
+              <Input
+                id="client-legal-name"
+                aria-required={kind === "EMPRESA" ? true : undefined}
+                aria-invalid={errors.legalName ? true : undefined}
+                aria-describedby={
+                  errors.legalName
+                    ? ["client-legal-name-hint", "client-legal-name-error"].join(" ")
+                    : "client-legal-name-hint"
+                }
+                {...form.register("legalName")}
+              />
+              <FieldDescription id="client-legal-name-hint">
+                {t("form.fields.legalNameHint")}
+              </FieldDescription>
+              <FieldError id="client-legal-name-error">
+                {fieldMessage(errors.legalName?.message)}
+              </FieldError>
+            </Field>
+            <Field data-invalid={errors.taxId ? true : undefined}>
+              <div className="flex items-center gap-1">
+                <FieldLabel htmlFor="client-tax-id">{t("form.fields.taxId")}</FieldLabel>
+                <FieldInfo field={t("form.fields.taxId")}>{t("form.fields.taxIdInfo")}</FieldInfo>
+              </div>
+              <Input
+                id="client-tax-id"
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <Field data-invalid={errors.kind ? true : undefined}>
-            <FieldLabel htmlFor="client-kind">{t("form.fields.kind")}</FieldLabel>
-            <Controller
-              control={form.control}
-              name="kind"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="client-kind"
-                    aria-label={t("form.kindOptions")}
-                    aria-invalid={errors.kind ? true : undefined}
-                    aria-describedby={errors.kind ? "client-kind-error" : undefined}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CLIENT_KIND_VALUES.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {tEnums(`ClientKind.${value}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            <FieldError id="client-kind-error">{fieldMessage(errors.kind?.message)}</FieldError>
-          </Field>
+                aria-invalid={errors.taxId ? true : undefined}
+                aria-describedby={
+                  errors.taxId
+                    ? ["client-tax-id-hint", "client-tax-id-error"].join(" ")
+                    : "client-tax-id-hint"
+                }
+                {...form.register("taxId")}
+              />
+              <FieldDescription id="client-tax-id-hint">{taxIdHint}</FieldDescription>
+              <FieldError id="client-tax-id-error">
+                {fieldMessage(errors.taxId?.message)}
+              </FieldError>
+              {conflict && conflictHref ? (
+                <Link
+                  href={conflictHref}
+                  className="text-sm font-medium underline underline-offset-4"
+                >
+                  {t("form.conflictOpen", { code: conflict.code ?? conflict.label })}
+                </Link>
+              ) : null}
+            </Field>
+          </div>
+        </SectionCard>
 
-          <Field data-invalid={errors.tradeName ? true : undefined}>
-            <FieldLabel htmlFor="client-trade-name">{t("form.fields.tradeName")}</FieldLabel>
-            <Input
-              id="client-trade-name"
-              aria-invalid={errors.tradeName ? true : undefined}
-              aria-describedby={errors.tradeName ? "client-trade-name-error" : undefined}
-              {...form.register("tradeName")}
-            />
-            <FieldError id="client-trade-name-error">
-              {fieldMessage(errors.tradeName?.message)}
-            </FieldError>
-          </Field>
+        <SectionCard
+          group
+          title={t("form.sections.contact.title")}
+          description={t("form.sections.contact.description")}
+        >
+          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+            <Field data-invalid={errors.country ? true : undefined}>
+              <FieldLabel htmlFor="client-country">{t("form.fields.country")}</FieldLabel>
+              <CountryCombobox
+                id="client-country"
+                value={country}
+                aria-invalid={errors.country ? true : undefined}
+                aria-describedby={
+                  errors.country
+                    ? "client-country-hint client-country-error"
+                    : "client-country-hint"
+                }
+                onChange={(next) =>
+                  form.setValue("country", next as CountryCode, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
+              <FieldDescription id="client-country-hint">
+                {t("form.fields.countryHint")}
+              </FieldDescription>
+              <FieldError id="client-country-error">
+                {fieldMessage(errors.country?.message)}
+              </FieldError>
+            </Field>
+            <Field data-invalid={errors.phone ? true : undefined}>
+              <FieldLabel htmlFor="client-phone">{t("form.fields.phone")}</FieldLabel>
+              <PhoneInput
+                id="client-phone"
+                defaultCountry="VE"
+                value={phone ?? ""}
+                aria-invalid={errors.phone ? true : undefined}
+                aria-describedby={
+                  errors.phone ? "client-phone-hint client-phone-error" : "client-phone-hint"
+                }
+                onChange={(next) =>
+                  form.setValue("phone", next, { shouldDirty: true, shouldValidate: true })
+                }
+              />
+              <FieldDescription id="client-phone-hint">
+                {t("form.fields.phoneHint")}
+              </FieldDescription>
+              <FieldError id="client-phone-error">{fieldMessage(errors.phone?.message)}</FieldError>
+            </Field>
+            <Field data-invalid={errors.email ? true : undefined}>
+              <FieldLabel htmlFor="client-email">
+                {t("form.fields.email")} <OptionalMark />
+              </FieldLabel>
+              <Input
+                id="client-email"
+                type="email"
+                autoComplete="off"
+                aria-invalid={errors.email ? true : undefined}
+                aria-describedby={
+                  errors.email ? "client-email-hint client-email-error" : "client-email-hint"
+                }
+                {...form.register("email")}
+              />
+              <FieldDescription id="client-email-hint">
+                {t("form.fields.emailHint")}
+              </FieldDescription>
+              <FieldError id="client-email-error">{fieldMessage(errors.email?.message)}</FieldError>
+            </Field>
+            <Field data-invalid={errors.website ? true : undefined}>
+              <FieldLabel htmlFor="client-website">
+                {t("form.fields.website")} <OptionalMark />
+              </FieldLabel>
+              <Input
+                id="client-website"
+                type="url"
+                placeholder="https://"
+                aria-invalid={errors.website ? true : undefined}
+                aria-describedby={errors.website ? "client-website-error" : undefined}
+                {...form.register("website")}
+              />
+              <FieldError id="client-website-error">
+                {fieldMessage(errors.website?.message)}
+              </FieldError>
+            </Field>
+            <Field data-invalid={errors.address ? true : undefined} className="md:col-span-2">
+              <FieldLabel htmlFor="client-address">{t("form.fields.address")}</FieldLabel>
+              <Textarea
+                id="client-address"
+                rows={3}
+                aria-invalid={errors.address ? true : undefined}
+                aria-describedby={errors.address ? "client-address-error" : undefined}
+                {...form.register("address")}
+              />
+              <FieldError id="client-address-error">
+                {fieldMessage(errors.address?.message)}
+              </FieldError>
+            </Field>
+          </div>
+        </SectionCard>
 
-          <Field data-invalid={errors.legalName ? true : undefined}>
-            <FieldLabel htmlFor="client-legal-name">{t("form.fields.legalName")}</FieldLabel>
-            <Input
-              id="client-legal-name"
-              aria-required={kind === "EMPRESA" ? true : undefined}
-              aria-invalid={errors.legalName ? true : undefined}
-              aria-describedby={
-                errors.legalName
-                  ? ["client-legal-name-hint", "client-legal-name-error"].join(" ")
-                  : "client-legal-name-hint"
-              }
-              {...form.register("legalName")}
-            />
-            <FieldDescription id="client-legal-name-hint">
-              {t("form.fields.legalNameHint")}
-            </FieldDescription>
-            <FieldError id="client-legal-name-error">
-              {fieldMessage(errors.legalName?.message)}
-            </FieldError>
-          </Field>
-
-          <Field data-invalid={errors.taxId ? true : undefined}>
-            <FieldLabel htmlFor="client-tax-id">{t("form.fields.taxId")}</FieldLabel>
-            <Input
-              id="client-tax-id"
-
-              aria-invalid={errors.taxId ? true : undefined}
-              aria-describedby={
-                errors.taxId
-                  ? ["client-tax-id-hint", "client-tax-id-error"].join(" ")
-                  : "client-tax-id-hint"
-              }
-              {...form.register("taxId")}
-            />
-            <FieldDescription id="client-tax-id-hint">{taxIdHint}</FieldDescription>
-            <FieldError id="client-tax-id-error">{fieldMessage(errors.taxId?.message)}</FieldError>
-            {conflict && conflictHref ? (
-              <Link
-                href={conflictHref}
-                className="text-sm font-medium underline underline-offset-4"
+        <SectionCard
+          group
+          title={t("form.sections.classification.title")}
+          description={t("form.sections.classification.description")}
+        >
+          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+            <Field data-invalid={errors.status ? true : undefined}>
+              <div className="flex items-center gap-1">
+                <FieldLabel htmlFor="client-status">{t("form.fields.status")}</FieldLabel>
+                <FieldInfo field={t("form.fields.status")}>{t("form.fields.statusInfo")}</FieldInfo>
+              </div>
+              <Select
+                value={status}
+                onValueChange={(next) =>
+                  form.setValue("status", next as (typeof CLIENT_STATUS_VALUES)[number], {
+                    shouldDirty: true,
+                  })
+                }
               >
-                {t("form.conflictOpen", { code: conflict.code ?? conflict.label })}
-              </Link>
-            ) : null}
-          </Field>
-
-          <Field data-invalid={errors.country ? true : undefined}>
-            <FieldLabel htmlFor="client-country">{t("form.fields.country")}</FieldLabel>
-            <CountryCombobox
-              id="client-country"
-              value={country}
-              aria-invalid={errors.country ? true : undefined}
-              aria-describedby={errors.country ? "client-country-error" : undefined}
-              onChange={(next) =>
-                form.setValue("country", next as CountryCode, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            />
-            <FieldError id="client-country-error">
-              {fieldMessage(errors.country?.message)}
-            </FieldError>
-          </Field>
-
-          <Field data-invalid={errors.address ? true : undefined} className="md:col-span-2">
-            <FieldLabel htmlFor="client-address">{t("form.fields.address")}</FieldLabel>
-            <Textarea
-              id="client-address"
-              rows={3}
-              aria-invalid={errors.address ? true : undefined}
-              aria-describedby={errors.address ? "client-address-error" : undefined}
-              {...form.register("address")}
-            />
-            <FieldError id="client-address-error">
-              {fieldMessage(errors.address?.message)}
-            </FieldError>
-          </Field>
-
-          <Field data-invalid={errors.phone ? true : undefined}>
-            <FieldLabel htmlFor="client-phone">{t("form.fields.phone")}</FieldLabel>
-            <PhoneInput
-              id="client-phone"
-              defaultCountry="VE"
-              value={phone ?? ""}
-              aria-invalid={errors.phone ? true : undefined}
-              onChange={(next) =>
-                form.setValue("phone", next, { shouldDirty: true, shouldValidate: true })
-              }
-            />
-            <FieldError id="client-phone-error">{fieldMessage(errors.phone?.message)}</FieldError>
-          </Field>
-
-          <Field data-invalid={errors.email ? true : undefined}>
-            <FieldLabel htmlFor="client-email">{t("form.fields.email")}</FieldLabel>
-            <Input
-              id="client-email"
-              type="email"
-              autoComplete="off"
-              aria-invalid={errors.email ? true : undefined}
-              aria-describedby={errors.email ? "client-email-error" : undefined}
-              {...form.register("email")}
-            />
-            <FieldError id="client-email-error">{fieldMessage(errors.email?.message)}</FieldError>
-          </Field>
-
-          <Field data-invalid={errors.website ? true : undefined}>
-            <FieldLabel htmlFor="client-website">{t("form.fields.website")}</FieldLabel>
-            <Input
-              id="client-website"
-              type="url"
-              placeholder="https://"
-              aria-invalid={errors.website ? true : undefined}
-              aria-describedby={errors.website ? "client-website-error" : undefined}
-              {...form.register("website")}
-            />
-            <FieldError id="client-website-error">
-              {fieldMessage(errors.website?.message)}
-            </FieldError>
-          </Field>
-
-          <Field data-invalid={errors.status ? true : undefined}>
-            <FieldLabel htmlFor="client-status">{t("form.fields.status")}</FieldLabel>
-            <Select
-              value={status}
-              onValueChange={(next) =>
-                form.setValue("status", next as (typeof CLIENT_STATUS_VALUES)[number], {
-                  shouldDirty: true,
-                })
-              }
-            >
-              <SelectTrigger
-                id="client-status"
-                aria-label={t("form.statusOptions")}
-                aria-invalid={errors.status ? true : undefined}
-                aria-describedby={errors.status ? "client-status-error" : undefined}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CLIENT_STATUS_VALUES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {tEnums(`ClientStatus.${value}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError id="client-status-error">{fieldMessage(errors.status?.message)}</FieldError>
-          </Field>
-
-          <Field className="md:col-span-2">
-            <FieldLabel htmlFor="client-tags">{t("form.fields.tags")}</FieldLabel>
-            <TagPicker
-              id="client-tags"
-              aria-label={t("form.fields.tags")}
-              value={tags}
-              canCreate={canCreateTags}
-              onChange={(next) => {
-                setTags(next);
-                form.setValue(
-                  "tagIds",
-                  next.map((tag) => tag.id),
-                  { shouldDirty: true },
-                );
-              }}
-            />
-          </Field>
-        </section>
+                <SelectTrigger
+                  id="client-status"
+                  aria-label={t("form.statusOptions")}
+                  aria-invalid={errors.status ? true : undefined}
+                  aria-describedby={
+                    errors.status ? "client-status-hint client-status-error" : "client-status-hint"
+                  }
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLIENT_STATUS_VALUES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {tEnums(`ClientStatus.${value}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription id="client-status-hint">
+                {t("form.fields.statusHint")}
+              </FieldDescription>
+              <FieldError id="client-status-error">
+                {fieldMessage(errors.status?.message)}
+              </FieldError>
+            </Field>
+            <Field className="md:col-span-2">
+              <FieldLabel htmlFor="client-tags">
+                {t("form.fields.tags")} <OptionalMark />
+              </FieldLabel>
+              <TagPicker
+                id="client-tags"
+                aria-label={t("form.fields.tags")}
+                value={tags}
+                canCreate={canCreateTags}
+                onChange={(next) => {
+                  setTags(next);
+                  form.setValue(
+                    "tagIds",
+                    next.map((tag) => tag.id),
+                    { shouldDirty: true },
+                  );
+                }}
+              />
+              <FieldDescription id="client-tags-hint">{t("form.fields.tagsHint")}</FieldDescription>
+            </Field>
+          </div>
+        </SectionCard>
       </form>
     </FormPage>
   );

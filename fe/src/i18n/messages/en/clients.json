@@ -86,11 +86,35 @@
       "email": "Email",
       "website": "Website",
       "status": "Status",
-      "tags": "Tags"
+      "tags": "Tags",
+      "kindHint": "Individual or company. A company needs a legal name.",
+      "tradeNameHint": "Name shown across the whole system.",
+      "legalNameInfo": "Registered legal name. For an individual left blank, the trade name is used.",
+      "taxIdInfo": "The tax ID and country pair cannot repeat across non-archived clients.",
+      "countryHint": "Sets how the tax ID is validated.",
+      "phoneHint": "Pick the country code and type the local number.",
+      "emailHint": "General company email.",
+      "statusHint": "Prospect by default. Status changes are manual.",
+      "statusInfo": "When a prospect gets its first invoice, the system suggests making it Active.",
+      "tagsHint": "Used to filter and group clients."
     },
     "conflictOpen": "Open {code}",
     "kindOptions": "Client kind",
-    "statusOptions": "Client status"
+    "statusOptions": "Client status",
+    "sections": {
+      "identity": {
+        "title": "Identity",
+        "description": "What the client is called and how it is identified for tax purposes."
+      },
+      "contact": {
+        "title": "Contact and location",
+        "description": "Where the client is and how to reach them."
+      },
+      "classification": {
+        "title": "Classification",
+        "description": "Commercial status and tags to filter and group by."
+      }
+    }
   },
   "detail": {
     "tabs": {

@@ -79,4 +79,18 @@ describe("PhoneInput", () => {
 
     expect(onChange).toHaveBeenLastCalledWith("");
   });
+
+  it("describes the number input with the ids the field passes", () => {
+    render(
+      <NextIntlClientProvider locale="es" messages={{ forms: esForms }}>
+        <p id="phone-hint">Código de país y número local.</p>
+        <PhoneInput value="" onChange={() => undefined} aria-describedby="phone-hint" />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "Número de teléfono" })).toHaveAccessibleDescription(
+      "Código de país y número local.",
+    );
+  });
 });
+

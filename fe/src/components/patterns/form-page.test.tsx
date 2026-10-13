@@ -53,6 +53,14 @@ describe("FormPage", () => {
     expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
   });
 
+  it("keeps the header, sections and footer actions to one readable width", () => {
+    const { container } = wrap(<FormPage {...props}><p>Campos</p></FormPage>);
+
+    expect(container.querySelector("header")).toHaveClass("max-w-3xl");
+    expect(screen.getByText("Campos").parentElement).toHaveClass("max-w-3xl");
+    expect(screen.getByRole("button", { name: "Guardar" }).parentElement).toHaveClass("max-w-3xl");
+  });
+
   it("omits the description paragraph when none is given", () => {
     const { container } = wrap(<FormPage {...props}><p>Campos</p></FormPage>);
     expect(container.querySelector("header p")).toBeNull();

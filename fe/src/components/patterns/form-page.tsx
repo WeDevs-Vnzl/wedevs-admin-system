@@ -26,7 +26,7 @@ export function FormPage({ title, description, backHref, children, footer, dirty
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <header className="space-y-3">
+      <header className="max-w-3xl space-y-3">
         <Link href={backHref} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors">
           <ArrowLeft className="size-4" aria-hidden />
           {t("back")}
@@ -36,9 +36,10 @@ export function FormPage({ title, description, backHref, children, footer, dirty
           {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         </div>
       </header>
-      <div className="grid gap-6">{children}</div>
-      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-4 flex items-center justify-end gap-2 border-t px-4 py-3 backdrop-blur">
-        {footer}
+      {/* A readable form width: wide screens no longer stretch two-column fields across the whole page. */}
+      <div className="grid max-w-3xl gap-6">{children}</div>
+      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 -mx-4 border-t px-4 py-3 backdrop-blur">
+        <div className="flex max-w-3xl items-center justify-end gap-2">{footer}</div>
       </div>
     </div>
   );

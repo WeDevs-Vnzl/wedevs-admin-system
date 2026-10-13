@@ -19,6 +19,8 @@ export interface PhoneInputProps {
   name?: string;
   "aria-label"?: string;
   "aria-invalid"?: boolean;
+  /** Ids of the field's hint and error; set on the number input. */
+  "aria-describedby"?: string;
   className?: string;
   ref?: Ref<HTMLInputElement>;
 }
@@ -96,6 +98,7 @@ export function PhoneInput({
         placeholder={t("placeholder")}
         aria-label={aria["aria-label"] ?? (id ? undefined : t("numberLabel"))}
         aria-invalid={aria["aria-invalid"]}
+        aria-describedby={aria["aria-describedby"]}
         onChange={(event) => {
           const text = event.target.value;
           if (text.trim().startsWith("+")) {

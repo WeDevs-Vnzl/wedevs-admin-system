@@ -84,5 +84,9 @@
   },
   "formPage": {
     "back": "Volver"
+  },
+  "fieldHint": {
+    "info": "Más información sobre {field}",
+    "optional": "(opcional)"
   }
 }
