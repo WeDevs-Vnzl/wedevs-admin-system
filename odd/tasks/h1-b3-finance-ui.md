@@ -1,8 +1,7 @@
 # H1-B3 — Finance UI (ODD feature)
 
-**Preconditions before T1:** decide what happens with the uncommitted `fix/eval-01-ui` work, then cut `batch/h1-b3-finance-ui` from `batch/h1-b2-commercial-core`; answer D1 before T5/T9.
 H1-B3 Finance UI over mocks: finance catalogs, accounts, billing plans, invoices with multi-rate lines (DT-44), payments + allocations, expenses + recurring, finance tabs in client/project detail.
-Branch `batch/h1-b3-finance-ui` from `batch/h1-b2-commercial-core` · delivery `ask-on-risk` (forecast ≫ 400 lines → chain strategy asked before the commit that crosses it; push/PR deferred to end of Hito 1, DT-69) · runner: Vitest (`pnpm --dir fe test`), Playwright for HU-09/11/13 E2E · gate per task: `pnpm lint && typecheck && test && i18n:check` (build at wave close).
+Branch `batch/h1-b3-finance-ui` from `main` (all earlier branches unified into `main`, L3) · delivery `ask-on-risk` (forecast ≫ 400 lines → chain strategy asked before the commit that crosses it; push/PR deferred to end of Hito 1, DT-69) · runner: Vitest (`pnpm --dir fe test`), Playwright for HU-09/11/13 E2E · gate per task: `pnpm lint && typecheck && test && i18n:check` (build at wave close).
 
 ## Specs
 - **S0** Scope (L1): "pasamos a B3". Source of truth: `docs/TASK.md` "H1-B3 — Finance UI (outline)", PRD §8.4–§8.8, §8.15, §9, §10.2, §11 finance routes; DT-44, DT-18, DT-24, DT-25, DT-29, DT-34, DT-41, DT-67, DT-70, DT-73. Invariants C1–C10, C15, C16 (shape), C17, C19 (shape), C25.
@@ -53,12 +52,12 @@ Branch `batch/h1-b3-finance-ui` from `batch/h1-b2-commercial-core` · delivery `
 - **S12 — Finance catalogs** (outline W1): "currencies, rates with quick daily load and CSV import, fiscal incl. allowed VAT rates, payment methods, expense categories" at `/settings/{currencies,rates,fiscal,payment-methods,expense-categories}`; several rates per day, one per source, prefill BCV (DT-67); IGTF proposal rule DT-70.
 - **S13 — Routes** (PRD §11, DT-25 overview ≠ list): `/projects/[id]/billing`; `/invoices`, `/invoices/list`, `/invoices/new` (`?clientId=`, `?installments=`), `/invoices/[id]`, `/edit`, `/graph`; `/payments` … `/payments/new` (`?invoiceId=`); `/expenses` … `/expenses/recurring`, `/expenses/recurring/new`, `/expenses/recurring/[id]`; `/accounts`, `/accounts/new`, `/accounts/[id]`, `/edit`, `/accounts/transfers/new`, `/accounts/movements/new`. *`/graph` routes: link only, graph UI is H1-B5.*
 - **S14 — Carried from H1-B2** (TASK.md): "`projectHeadline` delegates to `lib/finance` per §8.4.4 (proportional collected, adjustments, `toInvoice` only `FIJO`/`MIXTO`)"; "the client financial card calls `getClientFinancials` only when `canSeeFinancials`"; "alerts leave out archived finance rows once the finance DTOs carry `archivedAt`"; HU-29 CA1 invoice-total diff; note link picker gains invoice/payment/expense; un-skip the project archive `INTEGRITY_LOCK` E2E once billing data exists.
-- **D1 (open decision, user)**: "the USD value of a non-USD contract (§10 has no snapshot on the billing plan)". Recommendation: snapshot `contractedUsd` + rate at plan save (C16: snapshots never recomputed). Blocks T5 and T9.
+- **D1 (decided, L3)**: "the USD value of a non-USD contract (§10 has no snapshot on the billing plan)" → snapshot `contractedUsd` + rate at plan save, never recomputed (C16). Applies to T5 and T9.
 
 ## Tasks
 | ID | Specs | Work | Route | Status |
 |---|---|---|---|---|
-| T1 | S1, S2, S3-CA1/2, S6, S7-CA2/3/4, S9-CA1, S10-CA1 | `fe/src/lib/finance/**` pure calculators, test-first per CA, ≥ 90 % coverage | inline | pending |
+| T1 | S1, S2, S3-CA1/2, S6, S7-CA2/3/4, S9-CA1, S10-CA1 | `fe/src/lib/finance/**` pure calculators, test-first per CA, ≥ 90 % coverage | inline | done — RED 6/6 files missing module → GREEN 46/46; coverage 100 % lines, 95.94 % branches; lint + tsc clean |
 | T2 | S1, S12 | `src/mocks/derive-finance.ts` registered on the store `DeriveHook` seam (`store.ts:159`); seed fixtures (currencies, rates, accounts, plans, multi-rate invoices, payments, expenses) computed through T1 | inline | pending |
 | T3 | S12 | finance catalog settings screens | inline | pending |
 | T4 | S9, S10, S13 | accounts slice: overview, detail ledger with running balance, transfers, movements, reconciliation → `AJUSTE` | delegated (parallel W2) | pending |
@@ -74,4 +73,6 @@ Route evidence: T4–T8 are disjoint feature slices (own `features/<module>`, `a
 ## Log
 - **L1** (2026-10-13, user): "bien, cerrada B2, pasamos a B3, prepara el plan segun la forma de trabajo de gentle-ai"
 - **L2**: mapped state — `lib/finance` and `derive-finance.ts` missing; finance fixtures are typed empty arrays; validators exist (`lib/validators/{accounts,billing,invoices,payments,expenses,catalogs,settings,money}.ts`); finance routes fall through to `[...missing]`.
-- **Next**: resolve the `fix/eval-01-ui` precondition and D1, cut the branch, start T1.
+- **L3** (2026-10-13, user): "D1: recomendacion aprobada. Unica todos los cambios a main y continuamos luego de forma unificada" → pending work committed (`cb2a89d`, `c9d0ed8`, `22114a0`, `3b32533`, `17ba2fb`) and `main` fast-forwarded to `17ba2fb`; every batch branch is merged into `main`.
+- **L4** (2026-10-13, user): "ya corri yo los test, todo en orden, procede" → branch `batch/h1-b3-finance-ui` cut from `main`; T1 done: `lib/finance/{invoice-totals,invoice-status,installments,recurring,payments,accounts}.ts` + barrel. Notes: §9.4 writes `balance <= 0.00` but §9.5/HU-12 CA3 say ≤ 0.01 → status uses `isSettled`; recurring generation creates only the period after the last existing one (no back-fill, §8.4.3).
+- **Next**: T2.
