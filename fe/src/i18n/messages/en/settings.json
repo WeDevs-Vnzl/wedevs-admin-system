@@ -46,5 +46,35 @@
     "saving": "Saving…",
     "saved": "Preferences saved",
     "saveError": "The preferences could not be saved"
+  },
+  "fiscal": {
+    "title": "Fiscal",
+    "description": "VAT rates, IGTF and default invoice due days. These parameters are to be validated with the accountant.",
+    "iva": {
+      "title": "VAT",
+      "description": "Rates invoice lines can pick, besides “Exempt”.",
+      "rates": "Allowed rates",
+      "newRate": "New rate (%)",
+      "add": "Add",
+      "remove": "Remove {rate}%",
+      "default": "Default rate",
+      "defaultHint": "Preselected on every new line."
+    },
+    "igtf": {
+      "title": "IGTF",
+      "description": "IGTF is proposed on a payment when its method proposes IGTF or its currency is in this list.",
+      "rate": "IGTF rate (%)",
+      "currencies": "Currencies that propose IGTF",
+      "methods": "Methods that propose IGTF",
+      "methodsNone": "No method proposes IGTF.",
+      "manageMethods": "Manage payment methods"
+    },
+    "invoices": {
+      "title": "Invoices",
+      "dueDays": "Default due days",
+      "dueDaysHint": "Added to the issue date to propose the due date."
+    },
+    "save": "Save",
+    "saved": "Fiscal settings saved"
   }
 }

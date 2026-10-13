@@ -46,5 +46,35 @@
     "saving": "Guardando…",
     "saved": "Preferencias guardadas",
     "saveError": "No se pudieron guardar las preferencias"
+  },
+  "fiscal": {
+    "title": "Fiscal",
+    "description": "Alícuotas de IVA, IGTF y vencimiento por defecto de las facturas. Son parámetros a validar con el contador.",
+    "iva": {
+      "title": "IVA",
+      "description": "Alícuotas que pueden elegir las líneas de factura, además de “Exento”.",
+      "rates": "Alícuotas permitidas",
+      "newRate": "Nueva alícuota (%)",
+      "add": "Agregar",
+      "remove": "Quitar {rate} %",
+      "default": "Alícuota por defecto",
+      "defaultHint": "Se preselecciona en cada línea nueva."
+    },
+    "igtf": {
+      "title": "IGTF",
+      "description": "El IGTF se propone en un pago cuando su método propone IGTF o su moneda está en esta lista.",
+      "rate": "Alícuota de IGTF (%)",
+      "currencies": "Monedas que proponen IGTF",
+      "methods": "Métodos que proponen IGTF",
+      "methodsNone": "Ningún método propone IGTF.",
+      "manageMethods": "Gestionar métodos de pago"
+    },
+    "invoices": {
+      "title": "Facturas",
+      "dueDays": "Días de vencimiento por defecto",
+      "dueDaysHint": "Se suman a la fecha de emisión para proponer el vencimiento."
+    },
+    "save": "Guardar",
+    "saved": "Configuración fiscal guardada"
   }
 }

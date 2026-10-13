@@ -90,5 +90,216 @@
       "slugTaken": "A technology with that identifier already exists",
       "inUse": "The technology is in use by projects"
     }
+  },
+  "shared": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "currencies": {
+    "page": {
+      "title": "Currencies",
+      "description": "Currencies used to invoice, collect and record expenses. A currency in use is deactivated, not deleted."
+    },
+    "table": {
+      "new": "New currency",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "symbol": "Symbol",
+        "decimals": "Decimals",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No currencies",
+        "description": "Add the currencies you work with."
+      }
+    },
+    "form": {
+      "createTitle": "New currency",
+      "editTitle": "Edit currency",
+      "description": "Code, name, symbol and decimals of a currency.",
+      "fields": {
+        "code": "Code",
+        "codeHint": "Upper-case ISO code, for example USD. It does not change once created.",
+        "name": "Name",
+        "symbol": "Symbol",
+        "decimals": "Decimals",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Currency created",
+      "updated": "Currency updated",
+      "activated": "Currency activated",
+      "deactivated": "Currency deactivated"
+    },
+    "errors": {
+      "codeTaken": "A currency with that code already exists",
+      "usdAlwaysActive": "USD is the reference currency and cannot be deactivated"
+    }
+  },
+  "rates": {
+    "page": {
+      "title": "Exchange rates",
+      "description": "Units of each currency per 1 USD, by date and source. A date holds one rate per source; forms prefill the BCV one."
+    },
+    "table": {
+      "search": "Search by currency or date",
+      "columns": {
+        "date": "Date",
+        "currency": "Currency",
+        "usdRate": "Rate per USD",
+        "source": "Source",
+        "createdAt": "Recorded"
+      },
+      "facets": {
+        "currency": "Currency",
+        "source": "Source"
+      },
+      "empty": {
+        "title": "No rates",
+        "description": "Load today's rates or import them from a CSV."
+      }
+    },
+    "quickLoad": {
+      "open": "Quick load",
+      "title": "Quick daily load",
+      "description": "Type the rate of each currency for the chosen date and source. Currencies left empty are not saved.",
+      "date": "Date",
+      "source": "Source",
+      "sourceHint": "If the date already has a rate from this source, it is replaced.",
+      "rate": "{currency} rate per USD",
+      "lastRate": "Last: {rate} ({date})",
+      "noLastRate": "No previous rate",
+      "deviation": "Differs by more than {percent}% from the last rate. Check it before saving.",
+      "noRates": "Type at least one rate",
+      "noCurrencies": "There are no active currencies besides USD.",
+      "submit": "Save rates"
+    },
+    "import": {
+      "open": "Import CSV",
+      "title": "Import rates from CSV",
+      "description": "Columns: date (YYYY-MM-DD), currency, usdRate and source (optional: MANUAL, BCV or OTRA). One row per rate.",
+      "file": "CSV file",
+      "overwrite": "Replace rates that already exist",
+      "overwriteHint": "Unchecked, a rate with the same date, currency and source is skipped.",
+      "submit": "Import",
+      "invalidHeader": "The file does not have the date, currency and usdRate columns.",
+      "empty": "The file has no rows.",
+      "tooManyRows": "The file exceeds the maximum of {max} rows.",
+      "noValidRows": "No row is valid.",
+      "ready": "{count, plural, one {# row ready to import} other {# rows ready to import}}",
+      "summary": "{created} created, {updated} updated, {skipped} skipped",
+      "errorsTitle": "Rows with errors",
+      "errorRow": "Row {row}: {message}"
+    },
+    "toast": {
+      "saved": "{count, plural, one {# rate saved} other {# rates saved}}",
+      "imported": "Import finished"
+    },
+    "errors": {
+      "unknownCurrency": "The currency is not in the catalog"
+    }
+  },
+  "paymentMethods": {
+    "page": {
+      "title": "Payment methods",
+      "description": "Methods used to record payments. A method in use is deactivated, not deleted."
+    },
+    "table": {
+      "new": "New method",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "requiresReference": "Requires reference",
+        "suggestsIgtf": "Proposes IGTF",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No payment methods",
+        "description": "Add the methods you get paid with."
+      }
+    },
+    "form": {
+      "createTitle": "New payment method",
+      "editTitle": "Edit payment method",
+      "description": "Name, code and behaviour of a payment method.",
+      "fields": {
+        "code": "Code",
+        "codeHint": "Upper case, digits and underscore, for example PAGO_MOVIL. It does not change once created.",
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "requiresReference": "Requires reference",
+        "suggestsIgtf": "Proposes IGTF",
+        "suggestsIgtfHint": "A payment with this method proposes the IGTF of the fiscal settings.",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Payment method created",
+      "updated": "Payment method updated",
+      "activated": "Payment method activated",
+      "deactivated": "Payment method deactivated"
+    },
+    "errors": {
+      "codeTaken": "A method with that code already exists",
+      "nameTaken": "A method with that name already exists"
+    }
+  },
+  "expenseCategories": {
+    "page": {
+      "title": "Expense categories",
+      "description": "Two-level catalog: categories and subcategories. A category in use is deactivated, not deleted."
+    },
+    "tree": {
+      "new": "New category",
+      "addChild": "Add a subcategory to {name}",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "children": "{count, plural, =0 {No subcategories} one {# subcategory} other {# subcategories}}",
+      "empty": {
+        "title": "No expense categories",
+        "description": "Add the categories you classify your expenses with."
+      }
+    },
+    "form": {
+      "createTitle": "New category",
+      "createChildTitle": "New subcategory",
+      "editTitle": "Edit category",
+      "description": "Name, colour and parent category.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB.",
+        "parent": "Parent category",
+        "parentNone": "None (main category)",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Category created",
+      "updated": "Category updated",
+      "activated": "Category activated",
+      "deactivated": "Category deactivated"
+    },
+    "errors": {
+      "nameTaken": "A category with that name already exists at the same level",
+      "parentNotRoot": "The parent must be a main category",
+      "hasChildren": "A category with subcategories cannot have a parent"
+    }
   }
 }

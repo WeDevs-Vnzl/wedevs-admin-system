@@ -90,5 +90,216 @@
       "slugTaken": "Ya existe una tecnología con ese identificador",
       "inUse": "La tecnología está en uso por proyectos"
     }
+  },
+  "shared": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "currencies": {
+    "page": {
+      "title": "Monedas",
+      "description": "Monedas con las que se factura, se cobra y se registran gastos. Una moneda en uso se desactiva, no se elimina."
+    },
+    "table": {
+      "new": "Nueva moneda",
+      "edit": "Editar {name}",
+      "toggle": "Activar o desactivar {name}",
+      "columns": {
+        "code": "Código",
+        "name": "Nombre",
+        "symbol": "Símbolo",
+        "decimals": "Decimales",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "empty": {
+        "title": "Sin monedas",
+        "description": "Agrega las monedas con las que trabajas."
+      }
+    },
+    "form": {
+      "createTitle": "Nueva moneda",
+      "editTitle": "Editar moneda",
+      "description": "Código, nombre, símbolo y decimales de una moneda.",
+      "fields": {
+        "code": "Código",
+        "codeHint": "Código ISO en mayúsculas, por ejemplo USD. No cambia después de crearla.",
+        "name": "Nombre",
+        "symbol": "Símbolo",
+        "decimals": "Decimales",
+        "active": "Activa"
+      },
+      "create": "Crear"
+    },
+    "toast": {
+      "created": "Moneda creada",
+      "updated": "Moneda actualizada",
+      "activated": "Moneda activada",
+      "deactivated": "Moneda desactivada"
+    },
+    "errors": {
+      "codeTaken": "Ya existe una moneda con ese código",
+      "usdAlwaysActive": "USD es la moneda de referencia y no se puede desactivar"
+    }
+  },
+  "rates": {
+    "page": {
+      "title": "Tasas de cambio",
+      "description": "Unidades de cada moneda por 1 USD, por fecha y fuente. Una fecha admite una tasa por fuente; los formularios precargan la de BCV."
+    },
+    "table": {
+      "search": "Buscar por moneda o fecha",
+      "columns": {
+        "date": "Fecha",
+        "currency": "Moneda",
+        "usdRate": "Tasa por USD",
+        "source": "Fuente",
+        "createdAt": "Registrada"
+      },
+      "facets": {
+        "currency": "Moneda",
+        "source": "Fuente"
+      },
+      "empty": {
+        "title": "Sin tasas",
+        "description": "Carga las tasas del día o impórtalas desde un CSV."
+      }
+    },
+    "quickLoad": {
+      "open": "Carga rápida",
+      "title": "Carga rápida del día",
+      "description": "Escribe la tasa de cada moneda para la fecha y la fuente elegidas. Las monedas sin tasa no se guardan.",
+      "date": "Fecha",
+      "source": "Fuente",
+      "sourceHint": "Si la fecha ya tiene una tasa de esta fuente, se reemplaza.",
+      "rate": "Tasa de {currency} por USD",
+      "lastRate": "Última: {rate} ({date})",
+      "noLastRate": "Sin tasa anterior",
+      "deviation": "Difiere más de {percent} % de la última tasa. Revísala antes de guardar.",
+      "noRates": "Escribe al menos una tasa",
+      "noCurrencies": "No hay monedas activas además de USD.",
+      "submit": "Guardar tasas"
+    },
+    "import": {
+      "open": "Importar CSV",
+      "title": "Importar tasas desde CSV",
+      "description": "Columnas: date (AAAA-MM-DD), currency, usdRate y source (opcional: MANUAL, BCV u OTRA). Una fila por tasa.",
+      "file": "Archivo CSV",
+      "overwrite": "Reemplazar las tasas que ya existen",
+      "overwriteHint": "Sin marcar, una tasa con la misma fecha, moneda y fuente se omite.",
+      "submit": "Importar",
+      "invalidHeader": "El archivo no tiene las columnas date, currency y usdRate.",
+      "empty": "El archivo no tiene filas.",
+      "tooManyRows": "El archivo supera el máximo de {max} filas.",
+      "noValidRows": "Ninguna fila es válida.",
+      "ready": "{count, plural, one {# fila lista para importar} other {# filas listas para importar}}",
+      "summary": "{created} creadas, {updated} actualizadas, {skipped} omitidas",
+      "errorsTitle": "Filas con errores",
+      "errorRow": "Fila {row}: {message}"
+    },
+    "toast": {
+      "saved": "{count, plural, one {# tasa guardada} other {# tasas guardadas}}",
+      "imported": "Importación terminada"
+    },
+    "errors": {
+      "unknownCurrency": "La moneda no está en el catálogo"
+    }
+  },
+  "paymentMethods": {
+    "page": {
+      "title": "Métodos de pago",
+      "description": "Métodos con los que se registran pagos. Un método en uso se desactiva, no se elimina."
+    },
+    "table": {
+      "new": "Nuevo método",
+      "edit": "Editar {name}",
+      "toggle": "Activar o desactivar {name}",
+      "columns": {
+        "code": "Código",
+        "name": "Nombre",
+        "requiresReference": "Requiere referencia",
+        "suggestsIgtf": "Propone IGTF",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "empty": {
+        "title": "Sin métodos de pago",
+        "description": "Agrega los métodos con los que te pagan."
+      }
+    },
+    "form": {
+      "createTitle": "Nuevo método de pago",
+      "editTitle": "Editar método de pago",
+      "description": "Nombre, código y comportamiento de un método de pago.",
+      "fields": {
+        "code": "Código",
+        "codeHint": "Mayúsculas, números y guion bajo, por ejemplo PAGO_MOVIL. No cambia después de crearlo.",
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés (opcional)",
+        "nameEnHint": "Si lo dejas vacío, en inglés se muestra el nombre.",
+        "requiresReference": "Requiere referencia",
+        "suggestsIgtf": "Propone IGTF",
+        "suggestsIgtfHint": "Un pago con este método propone el IGTF de la configuración fiscal.",
+        "active": "Activo"
+      },
+      "create": "Crear"
+    },
+    "toast": {
+      "created": "Método de pago creado",
+      "updated": "Método de pago actualizado",
+      "activated": "Método de pago activado",
+      "deactivated": "Método de pago desactivado"
+    },
+    "errors": {
+      "codeTaken": "Ya existe un método con ese código",
+      "nameTaken": "Ya existe un método con ese nombre"
+    }
+  },
+  "expenseCategories": {
+    "page": {
+      "title": "Categorías de gasto",
+      "description": "Catálogo de dos niveles: categorías y subcategorías. Una categoría en uso se desactiva, no se elimina."
+    },
+    "tree": {
+      "new": "Nueva categoría",
+      "addChild": "Agregar subcategoría a {name}",
+      "edit": "Editar {name}",
+      "toggle": "Activar o desactivar {name}",
+      "children": "{count, plural, =0 {Sin subcategorías} one {# subcategoría} other {# subcategorías}}",
+      "empty": {
+        "title": "Sin categorías de gasto",
+        "description": "Agrega las categorías con las que clasificas tus gastos."
+      }
+    },
+    "form": {
+      "createTitle": "Nueva categoría",
+      "createChildTitle": "Nueva subcategoría",
+      "editTitle": "Editar categoría",
+      "description": "Nombre, color y categoría padre.",
+      "fields": {
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés (opcional)",
+        "nameEnHint": "Si lo dejas vacío, en inglés se muestra el nombre.",
+        "color": "Color (opcional)",
+        "colorHint": "Formato #RRGGBB.",
+        "parent": "Categoría padre",
+        "parentNone": "Ninguna (categoría principal)",
+        "active": "Activa"
+      },
+      "create": "Crear"
+    },
+    "toast": {
+      "created": "Categoría creada",
+      "updated": "Categoría actualizada",
+      "activated": "Categoría activada",
+      "deactivated": "Categoría desactivada"
+    },
+    "errors": {
+      "nameTaken": "Ya existe una categoría con ese nombre en el mismo nivel",
+      "parentNotRoot": "La categoría padre debe ser una categoría principal",
+      "hasChildren": "Una categoría con subcategorías no puede tener categoría padre"
+    }
   }
 }
