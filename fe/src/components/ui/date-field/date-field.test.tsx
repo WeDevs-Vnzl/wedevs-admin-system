@@ -98,4 +98,19 @@ describe("DateField", () => {
       "2026-03-15",
     );
   });
+
+  it("describes the trigger with the ids the field passes", () => {
+    render(
+      <NextIntlClientProvider locale="es" messages={{ forms: esForms }}>
+        <label htmlFor="start">Inicio</label>
+        <p id="start-hint">Obligatoria al pasar a En curso.</p>
+        <DateField id="start" value="" onChange={() => undefined} aria-describedby="start-hint" />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: /Inicio/ })).toHaveAccessibleDescription(
+      "Obligatoria al pasar a En curso.",
+    );
+  });
 });
+

@@ -14,12 +14,13 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { FieldInfo, OptionalMark } from "@/components/patterns/field-hint";
 import { FormPage } from "@/components/patterns/form-page";
 import { SectionCard } from "@/components/patterns/section-card";
 import { AsyncCombobox, type AsyncComboboxOption } from "@/components/ui/async-combobox";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/ui/date-field";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text";
 import { Textarea } from "@/components/ui/textarea";
@@ -298,7 +299,11 @@ export function ProjectForm({
           </>
         }
       >
-        <SectionCard title={t("form.name")}>
+        <SectionCard
+          group
+          title={t("form.sections.general.title")}
+          description={t("form.sections.general.description")}
+        >
           <Field data-invalid={form.formState.errors.name ? true : undefined}>
             <FieldLabel htmlFor="project-name">{t("form.name")}</FieldLabel>
             <Input
@@ -312,15 +317,15 @@ export function ProjectForm({
               <FieldError id="project-name-error">{tRoot(form.formState.errors.name.message as never)}</FieldError>
             ) : null}
           </Field>
-        </SectionCard>
-
-        <SectionCard title={t("form.clients")} description={t("form.clientsHelp")}>
           <Controller
             control={form.control}
             name="clients"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.error ? true : undefined}>
-                <FieldLabel htmlFor="project-clients">{t("form.clients")}</FieldLabel>
+                <div className="flex items-center gap-1">
+                  <FieldLabel htmlFor="project-clients">{t("form.clients")}</FieldLabel>
+                  <FieldInfo field={t("form.clients")}>{t("form.clientsInfo")}</FieldInfo>
+                </div>
                 <AsyncCombobox
                   id="project-clients"
                   multiple
@@ -340,13 +345,11 @@ export function ProjectForm({
                     )
                   }
                 />
+                <FieldDescription id="project-clients-hint">{t("form.clientsHelp")}</FieldDescription>
                 {fieldState.error ? <FieldError id="project-clients-error">{t("form.clientsRequired")}</FieldError> : null}
               </Field>
             )}
           />
-        </SectionCard>
-
-        <SectionCard title={t("form.summary")}>
           <Field data-invalid={form.formState.errors.summary ? true : undefined}>
             <FieldLabel htmlFor="project-summary">{t("form.summary")}</FieldLabel>
             <Textarea
@@ -356,11 +359,12 @@ export function ProjectForm({
               aria-invalid={form.formState.errors.summary ? true : undefined}
               aria-describedby={
                 form.formState.errors.summary
-                  ? "project-summary-counter project-summary-error"
-                  : "project-summary-counter"
+                  ? "project-summary-hint project-summary-counter project-summary-error"
+                  : "project-summary-hint project-summary-counter"
               }
               {...form.register("summary")}
             />
+            <FieldDescription id="project-summary-hint">{t("form.summaryHint")}</FieldDescription>
             <FieldDescription id="project-summary-counter" className="tabular-nums">
               {t("form.summaryCounter", { count: summary.length, max: PROJECT_SUMMARY_MAX })}
             </FieldDescription>
@@ -368,15 +372,14 @@ export function ProjectForm({
               <FieldError id="project-summary-error">{tRoot(form.formState.errors.summary.message as never)}</FieldError>
             ) : null}
           </Field>
-        </SectionCard>
-
-        <SectionCard title={t("form.description")}>
           <Controller
             control={form.control}
             name="description"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.error ? true : undefined}>
-                <FieldLabel htmlFor="project-description">{t("form.description")}</FieldLabel>
+                <FieldLabel htmlFor="project-description">
+                  {t("form.description")} <OptionalMark />
+                </FieldLabel>
                 <RichTextEditor
                   id="project-description"
                   value={field.value}
@@ -396,15 +399,28 @@ export function ProjectForm({
           />
         </SectionCard>
 
-        <SectionCard title={t("detail.datesTitle")}>
-          <div className="grid gap-4 sm:grid-cols-3">
+        <SectionCard
+          group
+          title={t("form.sections.schedule.title")}
+          description={t("form.sections.schedule.description")}
+        >
+          <div className="grid items-start gap-4 sm:grid-cols-3">
             <Controller
               control={form.control}
               name="startDate"
               render={({ field }) => (
                 <Field>
-                  <FieldLabel htmlFor="project-start-date">{t("form.startDate")}</FieldLabel>
-                  <DateField id="project-start-date" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
+                  <FieldLabel htmlFor="project-start-date">
+                    {t("form.startDate")} <OptionalMark />
+                  </FieldLabel>
+                  <DateField
+                    id="project-start-date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-describedby="project-start-date-hint"
+                  />
+                  <FieldDescription id="project-start-date-hint">{t("form.startDateHint")}</FieldDescription>
                 </Field>
               )}
             />
@@ -413,7 +429,9 @@ export function ProjectForm({
               name="targetEndDate"
               render={({ field }) => (
                 <Field>
-                  <FieldLabel htmlFor="project-target-date">{t("form.targetEndDate")}</FieldLabel>
+                  <FieldLabel htmlFor="project-target-date">
+                    {t("form.targetEndDate")} <OptionalMark />
+                  </FieldLabel>
                   <DateField id="project-target-date" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
                 </Field>
               )}
@@ -428,39 +446,61 @@ export function ProjectForm({
           </div>
         </SectionCard>
 
-        <SectionCard title={t("form.stack")} description={t("form.stackHelp")}>
+        <SectionCard
+          group
+          title={t("form.sections.delivery.title")}
+          description={t("form.sections.delivery.description")}
+        >
           <Controller
             control={form.control}
             name="technologyIds"
             render={({ field }) => (
-              <TechnologyPicker
-                id="project-stack"
-                value={field.value}
-                onChange={field.onChange}
-                technologies={technologies}
-                selected={stackRows}
-              />
+              <Field>
+                <FieldLabel htmlFor="project-stack">
+                  {t("form.stack")} <OptionalMark />
+                </FieldLabel>
+                <TechnologyPicker
+                  id="project-stack"
+                  value={field.value}
+                  onChange={field.onChange}
+                  technologies={technologies}
+                  selected={stackRows}
+                />
+                <FieldDescription>{t("form.stackHelp")}</FieldDescription>
+              </Field>
             )}
           />
+          <Field>
+            <FieldTitle>
+              {t("form.links")} <OptionalMark />
+            </FieldTitle>
+            <FieldDescription>{t("form.linksHint")}</FieldDescription>
+            <ProjectLinksEditor rows={links} onChange={setLinks} editable reorderable />
+          </Field>
         </SectionCard>
 
-        <SectionCard title={t("form.links")}>
-          <ProjectLinksEditor rows={links} onChange={setLinks} editable reorderable />
+        <SectionCard
+          group
+          title={t("form.sections.classification.title")}
+          description={t("form.sections.classification.description")}
+        >
+          <Field>
+            <FieldLabel htmlFor="project-tags">
+              {t("form.tags")} <OptionalMark />
+            </FieldLabel>
+            <TagPicker
+              id="project-tags"
+              aria-label={t("form.tags")}
+              value={tagChips}
+              canCreate={canCreateTags}
+              onChange={(next) => {
+                setTagChips(next);
+                form.setValue("tagIds", next.map((tag) => tag.id), { shouldDirty: true });
+              }}
+            />
+            <FieldDescription>{t("form.tagsHint")}</FieldDescription>
+          </Field>
         </SectionCard>
-
-        <SectionCard title={t("form.tags")}>
-          <TagPicker
-            id="project-tags"
-            aria-label={t("form.tags")}
-            value={tagChips}
-            canCreate={canCreateTags}
-            onChange={(next) => {
-              setTagChips(next);
-              form.setValue("tagIds", next.map((tag) => tag.id), { shouldDirty: true });
-            }}
-          />
-        </SectionCard>
-
       </FormPage>
     </form>
   );

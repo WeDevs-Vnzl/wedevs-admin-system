@@ -26,6 +26,8 @@ export interface DateFieldProps {
   name?: string;
   "aria-label"?: string;
   "aria-invalid"?: boolean;
+  /** Ids of the field's hint and error; set on the trigger. */
+  "aria-describedby"?: string;
   className?: string;
   ref?: Ref<HTMLButtonElement>;
 }
@@ -91,6 +93,7 @@ export function DateField({
           disabled={disabled}
           aria-label={accessibleName}
           aria-invalid={aria["aria-invalid"]}
+          aria-describedby={aria["aria-describedby"]}
           aria-haspopup="dialog"
           data-slot="date-field"
           data-empty={selected ? undefined : "true"}

@@ -117,7 +117,30 @@
     "back": "Back to project",
     "created": "Project {code} created",
     "clientRoleInvalid": "The role is too long",
-    "clientsRequired": "Link at least one client."
+    "clientsRequired": "Link at least one client.",
+    "sections": {
+      "general": {
+        "title": "General details",
+        "description": "What the project is and who it is for."
+      },
+      "schedule": {
+        "title": "Schedule",
+        "description": "Planned start and delivery dates."
+      },
+      "delivery": {
+        "title": "Stack and links",
+        "description": "Project technologies and working links."
+      },
+      "classification": {
+        "title": "Classification",
+        "description": "Tags to filter and group by."
+      }
+    },
+    "summaryHint": "Shown in tables and in the graph.",
+    "clientsInfo": "No main client: every linked client weighs the same.",
+    "startDateHint": "Required to move the project to In progress.",
+    "linksHint": "Repository, environments, design, documentation and other links, grouped by type.",
+    "tagsHint": "Used to filter and group projects."
   },
   "links": {
     "title": "Links",

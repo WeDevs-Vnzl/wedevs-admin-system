@@ -117,7 +117,30 @@
     "back": "Volver al proyecto",
     "created": "Proyecto {code} creado",
     "clientRoleInvalid": "El rol es demasiado largo",
-    "clientsRequired": "Vincula al menos un cliente."
+    "clientsRequired": "Vincula al menos un cliente.",
+    "sections": {
+      "general": {
+        "title": "Datos generales",
+        "description": "Qué es el proyecto y para quién se hace."
+      },
+      "schedule": {
+        "title": "Planificación",
+        "description": "Fechas previstas de inicio y entrega."
+      },
+      "delivery": {
+        "title": "Stack y enlaces",
+        "description": "Tecnologías del proyecto y enlaces de trabajo."
+      },
+      "classification": {
+        "title": "Clasificación",
+        "description": "Etiquetas para filtrar y agrupar."
+      }
+    },
+    "summaryHint": "Aparece en tablas y en el grafo.",
+    "clientsInfo": "Sin cliente principal: todos los clientes vinculados tienen el mismo peso.",
+    "startDateHint": "Obligatoria al pasar el proyecto a En curso.",
+    "linksHint": "Repositorio, entornos, diseño, documentación y otros enlaces, agrupados por tipo.",
+    "tagsHint": "Sirven para filtrar y agrupar proyectos."
   },
   "links": {
     "title": "Enlaces",
