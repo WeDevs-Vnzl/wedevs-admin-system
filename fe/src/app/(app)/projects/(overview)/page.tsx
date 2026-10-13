@@ -63,9 +63,9 @@ export default async function ProjectsOverviewPage() {
         <PageHeader
           title={tPage("title")}
           description={tPage("description")}
+          views={<OverviewTableToggle current="overview" overviewHref="/projects" tableHref="/projects/list" />}
           actions={
             <>
-              <OverviewTableToggle current="overview" overviewHref="/projects" tableHref="/projects/list" />
               {canCreate ? (
                 <Button asChild>
                   <Link href="/projects/new">

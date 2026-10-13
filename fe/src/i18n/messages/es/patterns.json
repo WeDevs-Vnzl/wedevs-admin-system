@@ -81,5 +81,8 @@
       "title": "Gastos todavía no disponibles",
       "description": "Los gastos de este proyecto aparecerán aquí cuando se habilite el módulo de finanzas."
     }
+  },
+  "formPage": {
+    "back": "Volver"
   }
 }

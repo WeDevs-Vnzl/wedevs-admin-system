@@ -81,5 +81,8 @@
       "title": "Expenses not available yet",
       "description": "Expenses for this project will appear here once the finance module is enabled."
     }
+  },
+  "formPage": {
+    "back": "Back"
   }
 }

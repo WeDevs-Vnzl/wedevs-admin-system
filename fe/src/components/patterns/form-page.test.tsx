@@ -28,14 +28,15 @@ const props = {
 describe("FormPage", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("links the title back to the list and shows the optional description", () => {
+  it("shows the title as the h1, a back link to the list and the optional description", () => {
     wrap(
       <FormPage {...props} description="Datos de contacto y fiscales.">
         <p>Campos</p>
       </FormPage>,
     );
 
-    expect(screen.getByRole("link", { name: /Nuevo cliente/ })).toHaveAttribute("href", "/clients");
+    expect(screen.getByRole("heading", { level: 1, name: "Nuevo cliente" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Volver" })).toHaveAttribute("href", "/clients");
     expect(screen.getByText("Datos de contacto y fiscales.")).toBeInTheDocument();
   });
 
@@ -71,7 +72,7 @@ describe("FormPage", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     wrap(<FormPage {...props} dirty><p>Campos</p></FormPage>);
 
-    const notPrevented = fireEvent.click(screen.getByRole("link", { name: /Nuevo cliente/ }));
+    const notPrevented = fireEvent.click(screen.getByRole("link", { name: "Volver" }));
 
     expect(confirm).toHaveBeenCalledWith(esPatterns.unsavedChanges.message);
     expect(notPrevented).toBe(false);
@@ -89,7 +90,7 @@ describe("FormPage", () => {
       event.preventDefault();
     };
     window.addEventListener("click", record);
-    fireEvent.click(screen.getByRole("link", { name: /Nuevo cliente/ }));
+    fireEvent.click(screen.getByRole("link", { name: "Back" }));
     window.removeEventListener("click", record);
 
     expect(defaultPrevented).toEqual([false]);

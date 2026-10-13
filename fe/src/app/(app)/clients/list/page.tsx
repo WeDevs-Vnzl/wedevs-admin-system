@@ -51,6 +51,7 @@ export default async function ClientsListPage({ searchParams }: ClientsListPageP
         title={t("page.title")}
         description={t("page.description")}
         count={page.total}
+        views={<OverviewTableToggle current="table" overviewHref="/clients" tableHref="/clients/list" />}
         actions={
           permissions.canCreate ? (
             <Button asChild>
@@ -62,7 +63,6 @@ export default async function ClientsListPage({ searchParams }: ClientsListPageP
           ) : undefined
         }
       />
-      <OverviewTableToggle current="table" overviewHref="/clients" tableHref="/clients/list" />
       <ClientsTable
         initialRows={page.items}
         initialTotal={page.total}

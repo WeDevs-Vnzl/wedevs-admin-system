@@ -191,7 +191,6 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
       }
     >
       <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-        <h1 className="sr-only">{client ? t("form.editTitle") : t("form.createTitle")}</h1>
 
         <section className="grid gap-4 md:grid-cols-2">
           <Field data-invalid={errors.kind ? true : undefined}>

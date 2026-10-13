@@ -6,11 +6,13 @@ type PageHeaderProps = {
   description?: string;
   // Count shown next to the title (e.g. number of clients).
   count?: number;
+  // View switch (e.g. OverviewTableToggle), placed before the actions so every module page lays it out the same way.
+  views?: ReactNode;
   // Primary and secondary actions, right-aligned on wide screens.
   actions?: ReactNode;
 };
 
-export function PageHeader({ title, description, count, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, count, views, actions }: PageHeaderProps) {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0 space-y-1">
@@ -24,7 +26,12 @@ export function PageHeader({ title, description, count, actions }: PageHeaderPro
         </div>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {views || actions ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {views}
+          {actions}
+        </div>
+      ) : null}
     </header>
   );
 }

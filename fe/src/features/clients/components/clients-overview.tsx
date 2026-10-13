@@ -51,27 +51,21 @@ export async function ClientsOverview({ overview, permissions }: ClientsOverview
   return (
     <OverviewLayout
       header={
-        <div className="flex flex-col gap-4">
-          <PageHeader
-            title={t("page.title")}
-            description={t("page.description")}
-            actions={
-              permissions.canCreate ? (
-                <Button asChild>
-                  <Link href="/clients/new">
-                    <Plus aria-hidden />
-                    {t("page.newAction")}
-                  </Link>
-                </Button>
-              ) : undefined
-            }
-          />
-          <OverviewTableToggle
-            current="overview"
-            overviewHref="/clients"
-            tableHref="/clients/list"
-          />
-        </div>
+        <PageHeader
+          title={t("page.title")}
+          description={t("page.description")}
+          views={<OverviewTableToggle current="overview" overviewHref="/clients" tableHref="/clients/list" />}
+          actions={
+            permissions.canCreate ? (
+              <Button asChild>
+                <Link href="/clients/new">
+                  <Plus aria-hidden />
+                  {t("page.newAction")}
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       }
       kpis={CLIENT_STATUS_VALUES.map((status) => (
         <StatCard

@@ -38,4 +38,24 @@ describe("PageHeader", () => {
     const action = screen.getByRole("button", { name: "Nuevo cliente" });
     expect(action.parentElement).toHaveClass("flex-wrap");
   });
+
+  it("renders the view switch before the actions, in the same right-hand group", () => {
+    render(
+      <PageHeader
+        title="Clientes"
+        views={<nav aria-label="Vista">Resumen</nav>}
+        actions={<Button>Nuevo cliente</Button>}
+      />,
+    );
+
+    const views = screen.getByRole("navigation", { name: "Vista" });
+    const action = screen.getByRole("button", { name: "Nuevo cliente" });
+    expect(views.parentElement).toBe(action.parentElement);
+    expect(views.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders the right-hand group for a view switch alone", () => {
+    render(<PageHeader title="Clientes" views={<nav aria-label="Vista">Resumen</nav>} />);
+    expect(screen.getByRole("navigation", { name: "Vista" }).parentElement).toHaveClass("flex-wrap");
+  });
 });

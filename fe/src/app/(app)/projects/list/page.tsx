@@ -57,9 +57,9 @@ export default async function ProjectsListPage({ searchParams }: ProjectsListPag
         title={t("title")}
         description={t("description")}
         count={page.total}
+        views={<OverviewTableToggle current="table" overviewHref="/projects" tableHref="/projects/list" />}
         actions={
           <>
-            <OverviewTableToggle current="table" overviewHref="/projects" tableHref="/projects/list" />
             {can(user, "create", "project") ? (
               <Button asChild>
                 <Link href="/projects/new">
