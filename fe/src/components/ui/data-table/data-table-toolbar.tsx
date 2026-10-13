@@ -34,7 +34,7 @@ export function facetValuesOf(filters: ListFilters): Record<string, FacetValue> 
   );
 }
 
-/** Search, "+ Field" facets with their chips, "Limpiar", archived toggle, view options and export. */
+/** Search, plus-icon "Field" facets with their chips, "Limpiar", archived toggle, view options and export. */
 export function DataTableToolbar({
   query,
   onQueryChange,

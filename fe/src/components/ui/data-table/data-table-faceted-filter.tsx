@@ -28,7 +28,7 @@ interface DataTableFacetedFilterProps {
   onChange: (value: FacetValue) => void;
 }
 
-/** "+ Field" trigger and its popover: option list, async search, or date range. */
+/** Plus-icon "Field" trigger and its popover: option list, async search, or date range. */
 export function DataTableFacetedFilter({ facet, value, labels, onChange }: DataTableFacetedFilterProps) {
   const t = useTranslations("table");
   const [open, setOpen] = useState(false);

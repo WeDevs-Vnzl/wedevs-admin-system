@@ -128,7 +128,7 @@ test.describe("HU-06 technologies (read only)", () => {
     page,
   }) => {
     await open(page, "/projects/list");
-    await page.getByRole("button", { name: "+ Tecnología", exact: true }).click();
+    await page.getByRole("button", { name: "Tecnología", exact: true }).click();
     await page.getByText("Next.js", { exact: true }).click();
 
     const rows = page.getByRole("row").filter({ has: page.getByRole("cell") });

@@ -218,7 +218,7 @@ describe("DataTableToolbar", () => {
   it("writes and removes a facet value in the filters", async () => {
     const onQueryChange = vi.fn();
     intl(<DataTableToolbar {...props} query={query()} onQueryChange={onQueryChange} />);
-    await userEvent.click(screen.getByRole("button", { name: "+ Status" }));
+    await userEvent.click(screen.getByRole("button", { name: "Status" }));
     await userEvent.click(await screen.findByRole("option", { name: "Active" }));
     expect(onQueryChange).toHaveBeenLastCalledWith({ filters: { status: ["ACTIVE"] } });
   });

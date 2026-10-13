@@ -4,7 +4,7 @@
     "placeholder": "Buscar…"
   },
   "facet": {
-    "add": "+ {field}",
+    "add": "{field}",
     "searchPlaceholder": "Buscar {field}…",
     "empty": "Sin resultados",
     "loading": "Cargando…",

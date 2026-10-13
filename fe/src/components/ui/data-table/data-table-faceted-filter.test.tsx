@@ -39,7 +39,7 @@ const options: FacetConfig = {
 describe("DataTableFacetedFilter (options)", () => {
   it("labels the search input and matches the visible label, not the stored value", async () => {
     renderFacet(options);
-    await userEvent.click(screen.getByRole("button", { name: "+ Status" }));
+    await userEvent.click(screen.getByRole("button", { name: "Status" }));
 
     const input = await screen.findByRole("combobox", { name: "Search Status" });
     await userEvent.type(input, "paid");
@@ -54,7 +54,7 @@ describe("DataTableFacetedFilter (options)", () => {
   it("toggles an option, caches its label and clears the facet from the footer", async () => {
     const onChange = vi.fn();
     const { labels } = renderFacet(options, ["EMITIDA"], onChange);
-    await userEvent.click(screen.getByRole("button", { name: "+ Status" }));
+    await userEvent.click(screen.getByRole("button", { name: "Status" }));
 
     await userEvent.click(await screen.findByRole("option", { name: "Paid" }));
     expect(onChange).toHaveBeenLastCalledWith(["EMITIDA", "PAGADA"]);
@@ -76,7 +76,7 @@ describe("DataTableFacetedFilter (async)", () => {
   it("debounces the search before calling loadOptions", async () => {
     const loadOptions = vi.fn(async (search: string) => clients(search));
     renderFacet({ id: "clientId", label: "Client", kind: "async", loadOptions });
-    await userEvent.click(screen.getByRole("button", { name: "+ Client" }));
+    await userEvent.click(screen.getByRole("button", { name: "Client" }));
     expect(await screen.findByRole("option", { name: "Kairos" })).toBeInTheDocument();
     expect(loadOptions).toHaveBeenCalledTimes(1);
 
@@ -102,7 +102,7 @@ describe("DataTableFacetedFilter (async)", () => {
       [],
       onChange,
     );
-    await userEvent.click(screen.getByRole("button", { name: "+ Client" }));
+    await userEvent.click(screen.getByRole("button", { name: "Client" }));
     await userEvent.click(await screen.findByRole("option", { name: "Nimbus" }));
     expect(onChange).toHaveBeenCalledWith(["c2"]);
     expect(labels.get("c2")).toBe("Nimbus");
@@ -114,7 +114,7 @@ describe("DataTableFacetedFilter (async)", () => {
       .mockRejectedValueOnce(new Error("down"))
       .mockResolvedValue(clients(""));
     renderFacet({ id: "clientId", label: "Client", kind: "async", loadOptions });
-    await userEvent.click(screen.getByRole("button", { name: "+ Client" }));
+    await userEvent.click(screen.getByRole("button", { name: "Client" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(enTable.facet.error);
     expect(screen.queryByText(enTable.facet.empty)).toBeNull();
@@ -127,7 +127,7 @@ describe("DataTableFacetedFilter (async)", () => {
 
   it("shows the empty state for a search without results", async () => {
     renderFacet({ id: "clientId", label: "Client", kind: "async", loadOptions: async () => [] });
-    await userEvent.click(screen.getByRole("button", { name: "+ Client" }));
+    await userEvent.click(screen.getByRole("button", { name: "Client" }));
     await waitFor(() => expect(screen.getByText(enTable.facet.empty)).toBeInTheDocument());
   });
 });
@@ -138,7 +138,7 @@ describe("DataTableFacetedFilter (date range)", () => {
   it("emits [from, to] as YYYY-MM-DD and clears", async () => {
     const onChange = vi.fn();
     renderFacet(facet, ["2026-03-10", "2026-03-12"], onChange);
-    await userEvent.click(screen.getByRole("button", { name: "+ Date" }));
+    await userEvent.click(screen.getByRole("button", { name: "Date" }));
 
     await userEvent.click(await screen.findByRole("button", { name: /March 20\D/ }));
     expect(onChange).toHaveBeenLastCalledWith(expect.arrayContaining([expect.stringMatching(/^2026-03-\d\d$/)]));
