@@ -180,6 +180,7 @@ export function NotesTable({
             {noteRowTitle(row.original) || t("untitled")}
           </Link>
         ),
+        size: 240,
         meta: { label: t("columns.title"), sortable: true, pinned: true },
       }),
       helper.accessor("excerpt", {
@@ -187,11 +188,13 @@ export function NotesTable({
         cell: ({ getValue }) => (
           <span className="line-clamp-2 text-sm text-muted-foreground">{getValue()}</span>
         ),
-        meta: { label: t("columns.excerpt") },
+        size: 260,
+        meta: { label: t("columns.excerpt"), wrap: true },
       }),
       helper.accessor((row) => row.author.name, {
         id: "author",
         header: t("columns.author"),
+        size: 160,
         meta: { label: t("columns.author") },
       }),
       helper.display({
@@ -222,13 +225,15 @@ export function NotesTable({
             })}
           </ul>
         ),
-        meta: { label: t("columns.links") },
+        size: 260,
+        meta: { label: t("columns.links"), wrap: true },
       }),
       helper.display({
         id: "tags",
         header: t("columns.tags"),
         cell: ({ row }) => <TagChips tags={row.original.tags} />,
-        meta: { label: t("columns.tags") },
+        size: 200,
+        meta: { label: t("columns.tags"), wrap: true },
       }),
       helper.accessor("attachmentCount", {
         // The id is the export column id (NOTE_COLUMN_IDS): the CSV export reads `attachments`.
@@ -241,6 +246,7 @@ export function NotesTable({
               <span className="tabular-nums">{getValue()}</span>
             </span>
           ) : null,
+        size: 110,
         meta: { label: t("columns.attachments") },
       }),
       helper.accessor("pinned", {
@@ -252,16 +258,19 @@ export function NotesTable({
               {t("card.pinned")}
             </Badge>
           ) : null,
+        size: 110,
         meta: { label: t("columns.pinned"), sortable: true },
       }),
       helper.accessor("createdAt", {
         header: t("columns.createdAt"),
         cell: ({ getValue }) => <DateText value={new Date(getValue())} />,
+        size: 130,
         meta: { label: t("columns.createdAt"), sortable: true },
       }),
       helper.accessor("updatedAt", {
         header: t("columns.updatedAt"),
         cell: ({ getValue }) => <DateText value={new Date(getValue())} />,
+        size: 150,
         meta: { label: t("columns.updatedAt"), sortable: true },
       }),
       helper.display({
@@ -278,6 +287,7 @@ export function NotesTable({
               <ArchiveIcon aria-hidden />
             </Button>
           ) : null,
+        size: 64,
         meta: { label: t("table.actions"), hideable: false, exportable: false },
       }),
     ];

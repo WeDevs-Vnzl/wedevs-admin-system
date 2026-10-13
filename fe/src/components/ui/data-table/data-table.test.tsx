@@ -180,4 +180,67 @@ describe("DataTable", () => {
     );
     expect(screen.queryByRole("region", { name: en.bulk.region })).toBeNull();
   });
+
+  describe("column layout", () => {
+    const layoutColumns: DataTableColumnDef<Row>[] = [
+      helper.accessor("code", { header: "Code", meta: { label: "Code", sortable: true } }),
+      helper.accessor("name", { header: "Name", meta: { label: "Name", sortable: true, pinned: true } }),
+      helper.accessor("email", { header: "Email", size: 200, meta: { label: "Email", align: "end", wrap: true } }),
+    ];
+
+    it("keeps the selection column first and pins it with the pinned columns, so it is never covered", () => {
+      renderTable({ columns: layoutColumns });
+
+      const headers = screen.getAllByRole("columnheader");
+      expect(within(headers[0]!).getByRole("checkbox", { name: "Select all rows on this page" })).toBeInTheDocument();
+      expect(headers[1]).toHaveTextContent("Name");
+      expect(headers[0]).toHaveClass("sticky");
+      expect(headers[0]).toHaveStyle({ left: "0px" });
+      expect(headers[1]).toHaveClass("sticky");
+      expect(headers[1]).toHaveStyle({ left: "40px" });
+    });
+
+    it("marks the edge of the pinned block with an inset shadow on the last pinned column only", () => {
+      renderTable({ columns: layoutColumns });
+
+      const headers = screen.getAllByRole("columnheader");
+      expect(headers[0]!.className).not.toMatch(/shadow-\[inset_-1px/);
+      expect(headers[1]!.className).toMatch(/shadow-\[inset_-1px/);
+    });
+
+    it("sizes the table to the sum of its column widths so it scrolls instead of squeezing", () => {
+      renderTable({ columns: layoutColumns });
+
+      // select 40 + code 150 + name 150 + email 200
+      expect(screen.getByRole("table")).toHaveStyle({ width: "540px" });
+      expect(screen.getByRole("table")).toHaveClass("table-fixed");
+    });
+
+    it("clips every cell to its column and truncates single-line content", () => {
+      renderTable({ columns: layoutColumns });
+
+      const cell = screen.getByText("Acme").closest("td");
+      expect(cell).toHaveClass("overflow-hidden", "truncate");
+      for (const header of screen.getAllByRole("columnheader")) expect(header).toHaveClass("overflow-hidden");
+    });
+
+    it("truncates a long header label and keeps the full label as its title", () => {
+      renderTable({ columns: layoutColumns });
+
+      const label = within(screen.getByRole("button", { name: "Sort by Code" })).getByText("Code");
+      expect(label).toHaveClass("truncate");
+      expect(label).toHaveAttribute("title", "Code");
+    });
+
+    it("wraps meta.wrap cells and right-aligns meta.align end cells with tabular numbers", () => {
+      renderTable({ columns: layoutColumns });
+
+      const cell = screen.getByText("ops@acme.test").closest("td");
+      expect(cell).toHaveClass("whitespace-normal", "text-right", "tabular-nums");
+      expect(cell).not.toHaveClass("truncate");
+      const header = screen.getAllByRole("columnheader")[3]!;
+      expect(header).toHaveClass("text-right");
+    });
+  });
 });
+

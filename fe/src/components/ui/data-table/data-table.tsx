@@ -27,6 +27,8 @@ import { DEFAULT_COLUMN_WIDTH, MIN_COLUMN_WIDTH, defaultColumnConfig, resolveCol
 import type { ViewColumn } from "./data-table-view-options";
 import type { ColumnConfig, DataTableEmptyConfig, FacetConfig, ListQueryPatch } from "./types";
 
+const SELECT_COLUMN_WIDTH = 40;
+
 export interface DataTableProps<TData extends RowData> {
   /** Rows of the current server page. */
   data: TData[];
@@ -86,7 +88,11 @@ export function DataTable<TData extends RowData>({
       helper.display({
         id: "select",
         meta: { hideable: false, exportable: false, label: t("select.column") },
-        size: 40,
+        // Fixed 40px: the shared default `minSize` would otherwise widen it, and it cannot be resized.
+        size: SELECT_COLUMN_WIDTH,
+        minSize: SELECT_COLUMN_WIDTH,
+        maxSize: SELECT_COLUMN_WIDTH,
+        enableResizing: false,
         header: ({ table }) => (
           <Checkbox
             checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
@@ -143,12 +149,15 @@ export function DataTable<TData extends RowData>({
   const columnVisibility = Object.fromEntries(config.map((column) => [column.id, column.visible]));
   const columnOrder = config.map((column) => column.id);
   const columnSizing: ColumnSizingState = Object.fromEntries(
-    config.flatMap((column) => (column.width === undefined ? [] : [[column.id, column.width]])),
+    config.flatMap((column) => (column.width === undefined || column.id === "select" ? [] : [[column.id, column.width]])),
   );
-  const pinned = allColumns
+  const pinnedData = allColumns
     .filter((def) => def.meta?.pinned)
     .map(columnIdOf)
     .filter((id) => config.find((column) => column.id === id)?.visible !== false);
+  // Pinning moves columns to the start; the selection column joins the pinned block so it stays first and the
+  // pinned data columns stack after it instead of sliding over it.
+  const pinned = selectable && pinnedData.length > 0 ? ["select", ...pinnedData] : pinnedData;
 
   const table = useTable({
     features: dataTableFeatures,
@@ -218,7 +227,7 @@ export function DataTable<TData extends RowData>({
 
       {/* The shadcn Table wrapper gets overflow-visible so this element scrolls both ways and the header sticks. */}
       <div className="max-h-[70vh] overflow-auto rounded-xl border bg-card [&_[data-slot=table-container]]:overflow-visible">
-        <Table>
+        <Table className="table-fixed" style={{ width: table.getTotalSize(), minWidth: "100%" }}>
           <TableHeader className="sticky top-0 z-20 bg-background shadow-[inset_0_-1px_0_var(--border)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -228,27 +237,36 @@ export function DataTable<TData extends RowData>({
                   const label = def.meta?.label ?? id;
                   const isSorted = sorted?.field === id ? sorted.direction : undefined;
                   const sortable = def.meta?.sortable === true;
+                  const end = def.meta?.align === "end";
                   return (
                     <TableHead
                       key={header.id}
-                      className={cn("relative", pinnedClass(header.column.getIsPinned()))}
+                      className={cn(
+                        "relative overflow-hidden",
+                        end && "text-right",
+                        pinnedClass(header.column.getIsPinned(), header.column.getIsLastColumn("start")),
+                      )}
                       style={pinnedStyle(header.column.getIsPinned(), header.column.getStart("start"), header.getSize())}
                     >
                       {header.isPlaceholder ? null : (
-                        <div className="flex items-center gap-1">
+                        <div className={cn("flex min-w-0 items-center gap-1", end && "justify-end")}>
                           {sortable ? (
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="-ml-2 h-8"
+                              className={cn("h-8 max-w-full min-w-0", end ? "-mr-2" : "-ml-2")}
                               onClick={() => toggleSort(id)}
                               aria-label={t("sort.by", { column: label })}
                             >
-                              <table.FlexRender header={header} />
+                              <span className="truncate" title={label}>
+                                <table.FlexRender header={header} />
+                              </span>
                               <SortIcon direction={isSorted} />
                             </Button>
                           ) : (
-                            <table.FlexRender header={header} />
+                            <span className="truncate" title={label}>
+                              <table.FlexRender header={header} />
+                            </span>
                           )}
                         </div>
                       )}
@@ -282,7 +300,12 @@ export function DataTable<TData extends RowData>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={pinnedClass(cell.column.getIsPinned())}
+                        className={cn(
+                          "overflow-hidden",
+                          cell.column.columnDef.meta?.wrap ? "whitespace-normal" : "truncate",
+                          cell.column.columnDef.meta?.align === "end" && "text-right tabular-nums",
+                          pinnedClass(cell.column.getIsPinned(), cell.column.getIsLastColumn("start")),
+                        )}
                         style={pinnedStyle(cell.column.getIsPinned(), cell.column.getStart("start"), cell.column.getSize())}
                       >
                         <table.FlexRender cell={cell} />
@@ -321,8 +344,10 @@ function columnIdOf<TData extends RowData>(def: DataTableColumnDef<TData>): stri
   throw new Error("DataTable columns need an id or an accessorKey");
 }
 
-function pinnedClass(position: ColumnPinningPosition): string | undefined {
-  return position ? "sticky z-10 bg-background" : undefined;
+/** Pinned cells stick and cover what scrolls under them; the last one draws the block's edge as an inset shadow. */
+function pinnedClass(position: ColumnPinningPosition, isLastPinned: boolean): string | undefined {
+  if (!position) return undefined;
+  return cn("sticky z-10 bg-background", isLastPinned && "shadow-[inset_-1px_0_0_var(--border)]");
 }
 
 function pinnedStyle(position: ColumnPinningPosition, start: number, size: number): CSSProperties {

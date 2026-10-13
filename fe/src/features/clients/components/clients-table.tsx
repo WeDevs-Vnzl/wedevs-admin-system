@@ -101,11 +101,13 @@ export function ClientsTable({
     const base = [
       helper.accessor("code", {
         header: t("columns.code"),
+        size: 120,
         meta: { label: t("columns.code"), sortable: true },
         cell: ({ row }) => <EntityCodeChip code={row.original.code} />,
       }),
       helper.accessor("tradeName", {
         header: t("columns.tradeName"),
+        size: 220,
         meta: { label: t("columns.tradeName"), sortable: true, pinned: true },
         cell: ({ row }) => (
           <Link href={`/clients/${row.original.id}`} className="font-medium hover:underline">
@@ -115,22 +117,26 @@ export function ClientsTable({
       }),
       helper.accessor("kind", {
         header: t("columns.kind"),
+        size: 120,
         meta: { label: t("columns.kind"), sortable: true },
         cell: ({ row }) => <StatusBadge enumName="ClientKind" value={row.original.kind} />,
       }),
       helper.accessor("country", {
         header: t("columns.country"),
+        size: 100,
         meta: { label: t("columns.country"), sortable: true },
         cell: ({ row }) => <span className="tabular-nums">{row.original.country}</span>,
       }),
       helper.accessor("status", {
         header: t("columns.status"),
+        size: 130,
         meta: { label: t("columns.status"), sortable: true },
         cell: ({ row }) => <StatusBadge enumName="ClientStatus" value={row.original.status} />,
       }),
       helper.accessor("projectCount", {
         header: t("columns.projectCount"),
-        meta: { label: t("columns.projectCount"), sortable: true },
+        size: 130,
+        meta: { label: t("columns.projectCount"), sortable: true, align: "end" },
         cell: ({ row }) => <span className="tabular-nums">{row.original.projectCount}</span>,
       }),
     ];
@@ -138,12 +144,14 @@ export function ClientsTable({
       ? [
           helper.accessor("totalInvoicedUsd", {
             header: t("columns.totalInvoicedUsd"),
-            meta: { label: t("columns.totalInvoicedUsd"), sortable: true },
+            size: 210,
+            meta: { label: t("columns.totalInvoicedUsd"), sortable: true, align: "end" },
             cell: ({ row }) => <MoneyText amount={row.original.totalInvoicedUsd} currency="USD" />,
           }),
           helper.accessor("receivableUsd", {
             header: t("columns.receivableUsd"),
-            meta: { label: t("columns.receivableUsd"), sortable: true },
+            size: 210,
+            meta: { label: t("columns.receivableUsd"), sortable: true, align: "end" },
             cell: ({ row }) => <MoneyText amount={row.original.receivableUsd} currency="USD" />,
           }),
         ]
@@ -151,11 +159,13 @@ export function ClientsTable({
     const tail = [
       helper.accessor("tags", {
         header: t("columns.tags"),
-        meta: { label: t("columns.tags"), sortable: false },
+        size: 200,
+        meta: { label: t("columns.tags"), sortable: false, wrap: true },
         cell: ({ row }) => <TagChips tags={row.original.tags} />,
       }),
       helper.accessor("lastActivityAt", {
         header: t("columns.lastActivityAt"),
+        size: 160,
         meta: { label: t("columns.lastActivityAt"), sortable: true },
         cell: ({ row }) =>
           row.original.lastActivityAt ? (

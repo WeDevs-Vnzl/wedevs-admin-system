@@ -205,7 +205,8 @@ export function ProjectsTable({
     const money = (id: MoneyKey, label: string) =>
       helper.accessor(id, {
         header: label,
-        meta: { label, sortable: true, exportable: true },
+        size: 210,
+        meta: { label, sortable: true, exportable: true, align: "end" },
         cell: ({ row }) => (
           <MoneyText amount={row.original[id]} currency="USD" />
         ),
@@ -214,6 +215,7 @@ export function ProjectsTable({
     const base: DataTableColumnDef<ProjectListRowDTO>[] = [
       helper.accessor("code", {
         header: t("columns.code"),
+        size: 120,
         meta: { label: t("columns.code"), sortable: true, pinned: true },
         cell: ({ row }) => (
           <Link href={`/projects/${row.original.id}`} className="inline-flex">
@@ -223,6 +225,7 @@ export function ProjectsTable({
       }),
       helper.accessor("name", {
         header: t("columns.name"),
+        size: 220,
         meta: { label: t("columns.name"), sortable: true },
         cell: ({ row }) => (
           <Link href={`/projects/${row.original.id}`} className="font-medium hover:underline">
@@ -233,6 +236,7 @@ export function ProjectsTable({
       helper.display({
         id: "clients",
         header: t("columns.clients"),
+        size: 220,
         meta: { label: t("columns.clients") },
         cell: ({ row }) =>
           row.original.clients
@@ -241,23 +245,27 @@ export function ProjectsTable({
       }),
       helper.accessor("status", {
         header: t("columns.status"),
+        size: 130,
         meta: { label: t("columns.status"), sortable: true },
         cell: ({ row }) => <StatusBadge enumName="ProjectStatus" value={row.original.status} />,
       }),
       helper.accessor("startDate", {
         header: t("columns.startDate"),
+        size: 130,
         meta: { label: t("columns.startDate"), sortable: true },
         cell: ({ row }) => (row.original.startDate ? formatDate(row.original.startDate, locale) : "—"),
       }),
       helper.accessor("targetEndDate", {
         header: t("columns.targetEndDate"),
+        size: 170,
         meta: { label: t("columns.targetEndDate"), sortable: true },
         cell: ({ row }) => (row.original.targetEndDate ? formatDate(row.original.targetEndDate, locale) : "—"),
       }),
       helper.display({
         id: "stack",
         header: t("columns.stack"),
-        meta: { label: t("columns.stack") },
+        size: 170,
+        meta: { label: t("columns.stack"), wrap: true },
         cell: ({ row }) => (
           <StackGlyphs technologies={row.original.stack} icons={icons} locale={locale} />
         ),
@@ -277,7 +285,8 @@ export function ProjectsTable({
       helper.display({
         id: "tags",
         header: t("columns.tags"),
-        meta: { label: t("columns.tags") },
+        size: 200,
+        meta: { label: t("columns.tags"), wrap: true },
         cell: ({ row }) => <TagChips tags={row.original.tags} />,
       }),
     ];

@@ -33,6 +33,13 @@ export interface DataTableColumnMeta {
    * the selection column; callers set it on their actions column.
    */
   exportable?: boolean;
+  /** "end" right-aligns header and cells with tabular numbers (money, counts). Default "start". */
+  align?: "start" | "end";
+  /**
+   * True for multi-line cells (badge lists, icon stacks): content wraps inside the column instead of being
+   * truncated to one line. Either way the cell clips to its width and never paints into the next column.
+   */
+  wrap?: boolean;
 }
 
 // Only the features the kit uses are registered; server modes bypass client row models (manual flags).
