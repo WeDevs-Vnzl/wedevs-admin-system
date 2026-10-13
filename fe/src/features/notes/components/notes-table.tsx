@@ -19,20 +19,13 @@ import {
 } from "@/components/ui/data-table";
 import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { useCsvExport } from "@/features/export/use-csv-export";
-import {
-  archiveNoteAction,
-  exportNotesCsvAction,
-  listNotesAction,
-} from "@/features/notes/actions";
+import { archiveNoteAction, exportNotesCsvAction, listNotesAction } from "@/features/notes/actions";
 import { assignTagsAction, listTagsAction } from "@/features/tags/actions";
 import { TagChips } from "@/features/tags/components/tag-chips";
 import { TagPicker } from "@/features/tags/components/tag-picker";
 import { entityHref } from "@/lib/entity-routes";
 import type { ListQuery } from "@/lib/validators/common";
-import {
-  NOTE_LINK_ENTITY_TYPE_VALUES,
-  type NoteListRowDTO,
-} from "@/lib/validators/notes";
+import { NOTE_LINK_ENTITY_TYPE_VALUES, type NoteListRowDTO } from "@/lib/validators/notes";
 import type { TagChipDTO } from "@/lib/validators/tags";
 import { noteRowTitle } from "../columns";
 import { toNoteFilter } from "./note-table-query";
@@ -281,7 +274,9 @@ export function NotesTable({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={t("table.archive", { title: noteRowTitle(row.original) || t("untitled") })}
+              aria-label={t("table.archive", {
+                title: noteRowTitle(row.original) || t("untitled"),
+              })}
               onClick={() => setArchiving(row.original)}
             >
               <ArchiveIcon aria-hidden />
@@ -390,4 +385,3 @@ export function NotesTable({
     </div>
   );
 }
-

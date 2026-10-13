@@ -37,7 +37,12 @@ export interface NoteDetailProps {
  * links. Links go through `linkNoteAction` / `unlinkNoteAction` at once; the service keeps the last link, and its
  * `INTEGRITY_LOCK` answer is shown as the guard message.
  */
-export function NoteDetail({ note: initial, canUpdate, canArchive, canCreateTags }: NoteDetailProps) {
+export function NoteDetail({
+  note: initial,
+  canUpdate,
+  canArchive,
+  canCreateTags,
+}: NoteDetailProps) {
   const t = useTranslations("notes");
   const tRoot = useTranslations();
   const router = useRouter();

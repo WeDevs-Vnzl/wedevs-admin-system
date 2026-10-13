@@ -47,7 +47,10 @@ const messages = {
 const note: NoteDetailDTO = {
   id: "not_kickoff",
   title: "Kickoff",
-  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Acta" }] }] },
+  content: {
+    type: "doc",
+    content: [{ type: "paragraph", content: [{ type: "text", text: "Acta" }] }],
+  },
   contentText: "Acta",
   author: { id: "usr_andres_molina", name: "Andrés Molina", imageUrl: null },
   pinned: false,

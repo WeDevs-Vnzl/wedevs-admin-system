@@ -318,7 +318,7 @@ describe("NoteComposer", () => {
   it("renders in EN", async () => {
     wrap(<NoteComposer open onOpenChange={() => {}} links={[{ ...entity }]} />, "en");
     expect(await screen.findByRole("heading", { name: "New note" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Title" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save note" })).toBeInTheDocument();
   });
 

@@ -25,8 +25,15 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 // The tag picker is replaced by a button that picks one known tag: the test covers what the composer sends.
 vi.mock("@/features/tags/components/tag-picker", () => ({
-  TagPicker: ({ onChange }: { onChange: (tags: { id: string; name: string; color: string }[]) => void }) => (
-    <button type="button" onClick={() => onChange([{ id: "tag_vip", name: "VIP", color: "#ff0000" }])}>
+  TagPicker: ({
+    onChange,
+  }: {
+    onChange: (tags: { id: string; name: string; color: string }[]) => void;
+  }) => (
+    <button
+      type="button"
+      onClick={() => onChange([{ id: "tag_vip", name: "VIP", color: "#ff0000" }])}
+    >
       pick tag
     </button>
   ),
@@ -46,7 +53,10 @@ vi.mock("@/components/ui/rich-text", () => ({
       <button
         type="button"
         onClick={() =>
-          onChange?.({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Hola" }] }] })
+          onChange?.({
+            type: "doc",
+            content: [{ type: "paragraph", content: [{ type: "text", text: "Hola" }] }],
+          })
         }
       >
         write valid
@@ -106,6 +116,26 @@ beforeEach(() => {
 });
 
 describe("NoteComposerPage", () => {
+  it("lays the new note out as a form page: title, back link and named sections", () => {
+    renderPage();
+
+    expect(screen.getByRole("heading", { level: 1, name: "New note" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/notes");
+    expect(screen.getByRole("link", { name: "Cancel" })).toHaveAttribute("href", "/notes");
+    expect(screen.getByRole("group", { name: "Note" })).toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Where it appears" })).not.toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Organization" })).not.toHaveClass("md:col-span-2");
+  });
+
+  it("explains the optional title and the tags with hints tied to their fields", () => {
+    renderPage();
+
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveAccessibleDescription(
+      "When empty, the first words of the content are used.",
+    );
+    expect(screen.getByText("Group notes so you can filter them in the list.")).toBeInTheDocument();
+  });
+
   it("prefills the link of the record it was opened for", () => {
     renderPage();
     expect(screen.getByRole("button", { name: "Remove Kairos Studio" })).toBeInTheDocument();
@@ -140,13 +170,15 @@ describe("NoteComposerPage", () => {
     ).toBeInTheDocument();
     expect(actions.createNoteAction).not.toHaveBeenCalled();
   });
-
 });
 
 const kickoff: NoteDetailDTO = {
   id: "not_kickoff",
   title: "Kickoff",
-  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Acta" }] }] },
+  content: {
+    type: "doc",
+    content: [{ type: "paragraph", content: [{ type: "text", text: "Acta" }] }],
+  },
   contentText: "Acta",
   author: { id: "usr_andres_molina", name: "Andrés Molina", imageUrl: null },
   pinned: false,
@@ -162,6 +194,17 @@ describe("NoteComposerPage edit", () => {
   beforeEach(() => {
     actions.updateNoteAction.mockResolvedValue({ ok: true, data: kickoff });
     actions.pinNoteAction.mockResolvedValue({ ok: true, data: { ...kickoff, pinned: true } });
+  });
+
+  it("stays a plain form inside the detail page, with no page title or sections of its own", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <NoteComposerPage note={kickoff} canCreateTags />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Note" })).not.toBeInTheDocument();
   });
 
   it("sends a cleared title as null, so the note loses its title (F6)", async () => {

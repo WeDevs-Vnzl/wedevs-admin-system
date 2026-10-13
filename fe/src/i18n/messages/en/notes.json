@@ -81,7 +81,7 @@
     "editTitle": "Edit note",
     "description": "Write a note and link it to records.",
     "titleLabel": "Title",
-    "titlePlaceholder": "Optional: when empty, the first words are used",
+    "titlePlaceholder": "E.g. Kickoff agreements",
     "contentLabel": "Content",
     "contentInvalid": "The content is not valid or is too long to save.",
     "attachmentsLabel": "Attachments",
@@ -92,7 +92,24 @@
     "submit": "Save note",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "unsaved": "You have unsaved changes. Leave anyway?"
+    "unsaved": "You have unsaved changes. Leave anyway?",
+    "titleHint": "When empty, the first words of the content are used.",
+    "pinnedHint": "Pinned notes show before the rest.",
+    "tagsHint": "Group notes so you can filter them in the list.",
+    "sections": {
+      "note": {
+        "title": "Note",
+        "description": "The title, the body and the files that go with it."
+      },
+      "links": {
+        "title": "Where it appears",
+        "description": "The records the note belongs to. It needs at least one."
+      },
+      "organization": {
+        "title": "Organization",
+        "description": "How it is grouped and ordered in the notes list."
+      }
+    }
   },
   "toast": {
     "created": "Note created",

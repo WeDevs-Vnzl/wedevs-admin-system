@@ -70,7 +70,13 @@ export interface NoteLinkPickerProps {
  * the current links with their remove buttons. The picker only reports adds and removes; the caller decides
  * whether they go into a form or through `linkNoteAction` / `unlinkNoteAction`.
  */
-export function NoteLinkPicker({ value, onAdd, onRemove, disabled = false, id }: NoteLinkPickerProps) {
+export function NoteLinkPicker({
+  value,
+  onAdd,
+  onRemove,
+  disabled = false,
+  id,
+}: NoteLinkPickerProps) {
   const t = useTranslations("notes.linkPicker");
   const tEntity = useTranslations("enums.EntityType");
   const tErrors = useTranslations("common.errors");

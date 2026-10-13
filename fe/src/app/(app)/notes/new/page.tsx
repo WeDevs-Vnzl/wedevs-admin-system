@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/patterns/page-header";
 import { getClient } from "@/features/clients/queries";
 import { listDocuments } from "@/features/documents/queries";
 import { NoteComposerPage } from "@/features/notes/components/note-composer";
@@ -26,7 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * it. A record that cannot be read (missing, archived, not visible) leaves the note unlinked. Contacts have no
  * read query of their own yet, so they are not prefilled.
  */
-async function prefillLink(type: string | undefined, id: string | undefined): Promise<NoteLinkRef[]> {
+async function prefillLink(
+  type: string | undefined,
+  id: string | undefined,
+): Promise<NoteLinkRef[]> {
   if (!type || !id) return [];
   try {
     if (type === "CLIENT") {
@@ -57,16 +59,11 @@ export default async function NewNotePage({ searchParams }: NewNotePageProps) {
   const params = await searchParams;
   const entityType = typeof params.entityType === "string" ? params.entityType : undefined;
   const entityId = typeof params.entityId === "string" ? params.entityId : undefined;
-  const [initialLinks, canCreateTags, t] = await Promise.all([
+  const [initialLinks, canCreateTags] = await Promise.all([
     prefillLink(entityType, entityId),
     canCreateTagsInline(),
-    getTranslations("notes.composer"),
   ]);
 
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={t("createTitle")} description={t("description")} />
-      <NoteComposerPage initialLinks={initialLinks} canCreateTags={canCreateTags} />
-    </div>
-  );
+  // The composer is a FormPage: it brings the page title, the back link and the sticky actions.
+  return <NoteComposerPage initialLinks={initialLinks} canCreateTags={canCreateTags} />;
 }

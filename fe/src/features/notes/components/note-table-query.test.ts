@@ -57,7 +57,14 @@ describe("the notes URL state (the /clients/list loader pattern)", () => {
 
   it("never forwards an archived flag: notes have no archived view", () => {
     const filter = toNoteFilter(
-      urlStateToListQuery({ page: 1, pageSize: 25, sort: null, q: null, archived: true, filters: {} }),
+      urlStateToListQuery({
+        page: 1,
+        pageSize: 25,
+        sort: null,
+        q: null,
+        archived: true,
+        filters: {},
+      }),
     );
     expect(filter.includeArchived).toBe(false);
   });

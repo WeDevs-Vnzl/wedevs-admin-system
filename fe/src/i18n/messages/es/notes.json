@@ -81,7 +81,7 @@
     "editTitle": "Editar nota",
     "description": "Escribe una nota y vincúlala a registros.",
     "titleLabel": "Título",
-    "titlePlaceholder": "Opcional: si lo dejas vacío se usan las primeras palabras",
+    "titlePlaceholder": "Ej.: Acuerdos del kickoff",
     "contentLabel": "Contenido",
     "contentInvalid": "El contenido no es válido o es demasiado largo para guardarse.",
     "attachmentsLabel": "Adjuntos",
@@ -92,7 +92,24 @@
     "submit": "Guardar nota",
     "saving": "Guardando…",
     "cancel": "Cancelar",
-    "unsaved": "Tienes cambios sin guardar. ¿Salir de todas formas?"
+    "unsaved": "Tienes cambios sin guardar. ¿Salir de todas formas?",
+    "titleHint": "Si lo dejas vacío, se usan las primeras palabras del contenido.",
+    "pinnedHint": "Las notas fijadas aparecen antes que las demás.",
+    "tagsHint": "Agrupan notas para filtrarlas en la lista.",
+    "sections": {
+      "note": {
+        "title": "Nota",
+        "description": "El título, el cuerpo y los archivos que la acompañan."
+      },
+      "links": {
+        "title": "Dónde aparece",
+        "description": "Los registros a los que pertenece la nota. Necesita al menos uno."
+      },
+      "organization": {
+        "title": "Organización",
+        "description": "Cómo se agrupa y ordena en la lista de notas."
+      }
+    }
   },
   "toast": {
     "created": "Nota creada",

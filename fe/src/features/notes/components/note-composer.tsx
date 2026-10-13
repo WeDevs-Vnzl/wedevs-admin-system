@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -8,7 +9,17 @@ import { Controller, useForm, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { OptionalMark } from "@/components/patterns/field-hint";
+import { FormPage } from "@/components/patterns/form-page";
+import { SectionCard } from "@/components/patterns/section-card";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor, EMPTY_RICH_TEXT } from "@/components/ui/rich-text";
 import {
@@ -44,6 +55,8 @@ export type { NoteLinkRef };
 
 const CONTENT_ERROR_ID = "note-content-error";
 const LINKS_ERROR_ID = "note-links-error";
+const TITLE_HINT_ID = "note-title-hint";
+const FORM_ID = "note-form";
 /** Message key of a content the editor refused (an invalid link, an oversize document). */
 const CONTENT_INVALID_KEY = "notes.composer.contentInvalid";
 
@@ -109,7 +122,11 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
 
   function changeTags(next: TagChipDTO[]) {
     setTags(next);
-    form.setValue("tagIds", next.map((tag) => tag.id), { shouldDirty: true });
+    form.setValue(
+      "tagIds",
+      next.map((tag) => tag.id),
+      { shouldDirty: true },
+    );
   }
 
   function changeLinks(next: NoteLinkRef[]) {
@@ -215,15 +232,20 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
   };
 }
 
-/** The fields shared by the sheet and the page: title, content, attachments, pin, tags and links. */
+/**
+ * The fields shared by the sheet and the pages: title, content, attachments, pin, tags and links. `sections`
+ * groups them in the FormPage cards of `/notes/new`; the sheet and the detail page keep a plain stack.
+ */
 function NoteFields({
   model,
   linkMode,
   canCreateTags,
+  sections = false,
 }: {
   model: NoteFormModel;
   linkMode: LinkMode;
   canCreateTags: boolean;
+  sections?: boolean;
 }) {
   const t = useTranslations("notes.composer");
   const tRoot = useTranslations();
@@ -231,117 +253,183 @@ function NoteFields({
   const contentError = form.formState.errors.content;
   const linksError = form.formState.errors.links;
 
-  return (
-    <>
-      <Field>
-        <FieldLabel htmlFor="note-title">{t("titleLabel")}</FieldLabel>
-        <Input
-          id="note-title"
-          maxLength={200}
-          placeholder={t("titlePlaceholder")}
-          {...form.register("title")}
-        />
-      </Field>
+  const title = (
+    <Field>
+      <FieldLabel htmlFor="note-title">
+        {t("titleLabel")} <OptionalMark />
+      </FieldLabel>
+      <Input
+        id="note-title"
+        maxLength={200}
+        placeholder={t("titlePlaceholder")}
+        aria-describedby={TITLE_HINT_ID}
+        {...form.register("title")}
+      />
+      <FieldDescription id={TITLE_HINT_ID}>{t("titleHint")}</FieldDescription>
+    </Field>
+  );
 
-      <Field data-invalid={Boolean(contentError) || undefined}>
-        <FieldLabel htmlFor="note-content">{t("contentLabel")}</FieldLabel>
-        <Controller
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <RichTextEditor
-              id="note-content"
-              aria-label={t("contentLabel")}
-              aria-invalid={Boolean(contentError)}
-              aria-describedby={contentError ? CONTENT_ERROR_ID : undefined}
-              value={field.value as RichTextDoc}
-              onChange={(doc) => {
-                model.contentChanged();
-                field.onChange(doc);
-              }}
-              onInvalid={model.contentRejected}
-              onBlur={field.onBlur}
-              uploadAdapter={uploadAdapter}
-            />
-          )}
-        />
-        {contentError?.message ? (
-          <FieldError id={CONTENT_ERROR_ID}>{tRoot(contentError.message)}</FieldError>
-        ) : null}
-      </Field>
+  const content = (
+    <Field data-invalid={Boolean(contentError) || undefined}>
+      <FieldLabel htmlFor="note-content">{t("contentLabel")}</FieldLabel>
+      <Controller
+        control={form.control}
+        name="content"
+        render={({ field }) => (
+          <RichTextEditor
+            id="note-content"
+            aria-label={t("contentLabel")}
+            aria-invalid={Boolean(contentError)}
+            aria-describedby={contentError ? CONTENT_ERROR_ID : undefined}
+            value={field.value as RichTextDoc}
+            onChange={(doc) => {
+              model.contentChanged();
+              field.onChange(doc);
+            }}
+            onInvalid={model.contentRejected}
+            onBlur={field.onBlur}
+            uploadAdapter={uploadAdapter}
+          />
+        )}
+      />
+      {contentError?.message ? (
+        <FieldError id={CONTENT_ERROR_ID}>{tRoot(contentError.message)}</FieldError>
+      ) : null}
+    </Field>
+  );
 
-      <Field>
-        <FieldLabel>{t("attachmentsLabel")}</FieldLabel>
-        <Controller
-          control={form.control}
-          name="attachmentFileIds"
-          render={({ field }) => (
-            <Uploader
-              adapter={uploadAdapter}
-              context="general"
-              aria-label={t("attachmentsLabel")}
-              onChange={(files) => field.onChange(files.map((file) => file.id))}
-            />
-          )}
-        />
-      </Field>
+  const attachments = (
+    <Field>
+      <FieldLabel>
+        {t("attachmentsLabel")} <OptionalMark />
+      </FieldLabel>
+      <Controller
+        control={form.control}
+        name="attachmentFileIds"
+        render={({ field }) => (
+          <Uploader
+            adapter={uploadAdapter}
+            context="general"
+            aria-label={t("attachmentsLabel")}
+            onChange={(files) => field.onChange(files.map((file) => file.id))}
+          />
+        )}
+      />
+    </Field>
+  );
 
-      <Field orientation="horizontal">
-        <Controller
-          control={form.control}
-          name="pinned"
-          render={({ field }) => (
-            <Switch
-              id="note-pinned"
-              checked={field.value ?? false}
-              onCheckedChange={field.onChange}
-            />
-          )}
-        />
+  const pinned = (
+    <Field orientation="horizontal">
+      <Controller
+        control={form.control}
+        name="pinned"
+        render={({ field }) => (
+          <Switch
+            id="note-pinned"
+            checked={field.value ?? false}
+            onCheckedChange={field.onChange}
+          />
+        )}
+      />
+      <FieldContent>
         <FieldLabel htmlFor="note-pinned" className="font-normal">
           {t("pinnedLabel")}
         </FieldLabel>
-      </Field>
+        <FieldDescription>{t("pinnedHint")}</FieldDescription>
+      </FieldContent>
+    </Field>
+  );
 
-      <Field>
-        <FieldLabel>{t("tagsLabel")}</FieldLabel>
-        <TagPicker
-          id="note-tags"
-          aria-label={t("tagsLabel")}
-          value={model.tags}
-          onChange={model.changeTags}
-          canCreate={canCreateTags}
-        />
-      </Field>
+  const tags = (
+    <Field>
+      <FieldLabel>
+        {t("tagsLabel")} <OptionalMark />
+      </FieldLabel>
+      <TagPicker
+        id="note-tags"
+        aria-label={t("tagsLabel")}
+        value={model.tags}
+        onChange={model.changeTags}
+        canCreate={canCreateTags}
+      />
+      <FieldDescription>{t("tagsHint")}</FieldDescription>
+    </Field>
+  );
 
-      {linkMode === "none" ? null : (
-        <Field data-invalid={Boolean(linksError) || undefined}>
-          <FieldLabel>{t("linksLabel")}</FieldLabel>
-          {linkMode === "picker" ? (
-            <NoteLinkPicker
-              id="note-links"
-              value={model.links}
-              onAdd={model.addLink}
-              onRemove={model.removeLink}
-            />
-          ) : (
-            <ul className="flex flex-wrap gap-2">
-              {model.links.length === 0 ? (
-                <li className="text-sm text-muted-foreground">{t("noLinks")}</li>
-              ) : (
-                model.links.map((link) => (
-                  <li key={`${link.type}:${link.id}`}>
-                    <Badge variant="secondary">{link.label}</Badge>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-          {linksError ? (
-            <FieldError id={LINKS_ERROR_ID}>{tRoot("validation.required")}</FieldError>
-          ) : null}
-        </Field>
-      )}
+  const links =
+    linkMode === "none" ? null : (
+      <Field data-invalid={Boolean(linksError) || undefined}>
+        <FieldLabel>{t("linksLabel")}</FieldLabel>
+        {linkMode === "picker" ? (
+          <NoteLinkPicker
+            id="note-links"
+            value={model.links}
+            onAdd={model.addLink}
+            onRemove={model.removeLink}
+          />
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {model.links.length === 0 ? (
+              <li className="text-sm text-muted-foreground">{t("noLinks")}</li>
+            ) : (
+              model.links.map((link) => (
+                <li key={`${link.type}:${link.id}`}>
+                  <Badge variant="secondary">{link.label}</Badge>
+                </li>
+              ))
+            )}
+          </ul>
+        )}
+        {linksError ? (
+          <FieldError id={LINKS_ERROR_ID}>{tRoot("validation.required")}</FieldError>
+        ) : null}
+      </Field>
+    );
+
+  if (!sections) {
+    return (
+      <>
+        {title}
+        {content}
+        {attachments}
+        {pinned}
+        {tags}
+        {links}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SectionCard
+        group
+        span={2}
+        title={t("sections.note.title")}
+        description={t("sections.note.description")}
+      >
+        {title}
+        {content}
+        {attachments}
+      </SectionCard>
+      {links ? (
+        <SectionCard
+          group
+          span={1}
+          title={t("sections.links.title")}
+          description={t("sections.links.description")}
+        >
+          {links}
+        </SectionCard>
+      ) : null}
+      <SectionCard
+        group
+        span={1}
+        title={t("sections.organization.title")}
+        description={t("sections.organization.description")}
+      >
+        {tags}
+        {pinned}
+      </SectionCard>
     </>
   );
 }
@@ -449,30 +537,48 @@ export function NoteComposerPage({
     },
   });
 
-  return (
-    <form
-      onSubmit={model.form.handleSubmit(model.submit)}
-      noValidate
-      className="flex flex-col gap-6"
-    >
-      <FieldGroup>
-        <NoteFields
-          model={model}
-          linkMode={note ? "none" : "picker"}
-          canCreateTags={canCreateTags}
-        />
-      </FieldGroup>
+  const saving = model.form.formState.isSubmitting;
+  const submitButton = (
+    <Button type="submit" form={FORM_ID} disabled={saving}>
+      {saving ? t("saving") : t("submit")}
+    </Button>
+  );
 
-      <div className="flex justify-end gap-2 border-t pt-4">
-        {note ? null : (
-          <Button type="button" variant="outline" onClick={() => router.push("/notes")}>
-            {t("cancel")}
-          </Button>
-        )}
-        <Button type="submit" disabled={model.form.formState.isSubmitting}>
-          {model.form.formState.isSubmitting ? t("saving") : t("submit")}
-        </Button>
-      </div>
+  // Inside the detail page the note's own header leads: the form stays a plain stack under it.
+  if (note) {
+    return (
+      <form
+        id={FORM_ID}
+        onSubmit={model.form.handleSubmit(model.submit)}
+        noValidate
+        className="flex flex-col gap-6"
+      >
+        <FieldGroup>
+          <NoteFields model={model} linkMode="none" canCreateTags={canCreateTags} />
+        </FieldGroup>
+        <div className="flex justify-end gap-2 border-t pt-4">{submitButton}</div>
+      </form>
+    );
+  }
+
+  // `useNoteForm` already guards unsaved changes, so FormPage gets no `dirty` (one prompt, not two).
+  return (
+    <form id={FORM_ID} onSubmit={model.form.handleSubmit(model.submit)} noValidate>
+      <FormPage
+        title={t("createTitle")}
+        description={t("description")}
+        backHref="/notes"
+        footer={
+          <>
+            <Button variant="outline" asChild>
+              <Link href="/notes">{t("cancel")}</Link>
+            </Button>
+            {submitButton}
+          </>
+        }
+      >
+        <NoteFields model={model} linkMode="picker" canCreateTags={canCreateTags} sections />
+      </FormPage>
     </form>
   );
 }

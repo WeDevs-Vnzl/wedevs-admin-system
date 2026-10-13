@@ -72,7 +72,11 @@ function row(overrides: Partial<NoteListRowDTO> & { id: string; title: string })
   };
 }
 
-const ownNote = row({ id: "not_mine", title: "Mine", author: author("usr_andres_molina", "Andrés Molina") });
+const ownNote = row({
+  id: "not_mine",
+  title: "Mine",
+  author: author("usr_andres_molina", "Andrés Molina"),
+});
 const otherNote = row({ id: "not_theirs", title: "Theirs" });
 const rows = [ownNote, otherNote];
 
@@ -108,7 +112,10 @@ beforeEach(() => {
     ok: true,
     data: { items: rows, total: rows.length, page: 1, pageSize: 25, pageCount: 1 },
   });
-  actions.archiveNoteAction.mockResolvedValue({ ok: true, data: { id: "not_mine", archivedAt: "x" } });
+  actions.archiveNoteAction.mockResolvedValue({
+    ok: true,
+    data: { id: "not_mine", archivedAt: "x" },
+  });
 });
 
 afterEach(() => {
@@ -164,9 +171,7 @@ describe("NotesTable", () => {
     await userEvent.click(screen.getByRole("button", { name: "Archive Mine" }));
     const dialog = await screen.findByRole("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /archive/i }));
-    await waitFor(() =>
-      expect(actions.archiveNoteAction).toHaveBeenCalledWith({ id: "not_mine" }),
-    );
+    await waitFor(() => expect(actions.archiveNoteAction).toHaveBeenCalledWith({ id: "not_mine" }));
     await waitFor(() => expect(actions.listNotesAction).toHaveBeenCalled());
   });
 
