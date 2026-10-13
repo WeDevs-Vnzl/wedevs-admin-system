@@ -14,7 +14,7 @@ ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md
 |---|---|---|
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 approved 2026-10-10 ("aprobado, procede"), running |
+| H1-B2 — Commercial core UI | Hito 1 UI batch | **In progress** — plan approved 2026-10-10 (DT-78, DT-79); wave 1 closed 2026-10-10; wave 2 approved 2026-10-10 ("aprobado, procede") and closed; wave 3 done 2026-10-12 (`7d33c7d`); awaiting the user's batch-close approval |
 | H1-B3 — Finance UI | Hito 1 UI batch | Outline (multi-rate invoices, DT-44) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
@@ -37,7 +37,8 @@ ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md
   - [x] `docs/rules/coverage-matrix.md`
   - [x] `docs/TASK.md` skeleton
   - [x] Revision 1: user decisions on DT-31…DT-42, OP-01…OP-06, P2, P5, P8, P9 and the drift items applied
-- [ ] **User approval of the rules** (required before H1-B1 opens — `phase-gates.md` rule 3).
+- [x] **User approval of the rules** (required before H1-B1 opens — `phase-gates.md` rule 3). *(Ticked 2026-10-12 on
+      audit: status board records batch 0 as Approved and H1-B1 opened on it; the original approval date was not logged.)*
 
 🛑 **MANDATORY STOP** — no batch opens until the user explicitly approves batch 0.
 
@@ -1542,7 +1543,7 @@ Constraints: no persistent server and no browser in this worker (safeguards rule
       `--muted-foreground` (light theme) becomes `#686874` for AA (≥ 4.67:1 on card, page and muted
       surfaces); routed to H1-FX (`src/app/globals.css`), then drop the sign-in `text-foreground/70`
       workaround.
-- [ ] **Tester scope:**
+- [x] **Tester scope:** *(Ran 2026-10-10, see the Tester result below.)*
   - Unit: `vitest run --coverage`, `i18n:check`, build.
   - E2E (`tests/e2e/h1-b1-shell.spec.ts`, written by the Tester), local only, two workers per
     `safeguards.md` rule 1 (start worker: `next start` on a free port, poll with 60 s timeout; test
@@ -2541,6 +2542,9 @@ Files: `src/features/activity/components/{activity-feed,activity-item,activity-d
 
 🛑 **MANDATORY STOP** — wave 3 does not start without the user's explicit approval.
 
+*(Audit 2026-10-12: the go-ahead for wave 3 (packages 3.1–3.3) was given but not logged here; approvals are
+logged from package 3.4 on.)*
+
 ---
 
 ### WAVE 3 — Screens: clients, projects, notes
@@ -2765,18 +2769,21 @@ the archive dialog is shared there), `src/app/(app)/projects/list/page.tsx`, `sr
 `src/features/tags/{grants.ts (new),queries.ts,actions.ts}`; `src/i18n/messages/{es,en}/{clients,projects,patterns}.json`
 (+ tests everywhere touched).
 
-- [ ] **SSR blocker.** `tableUrlParsers`, `TableUrlState`, `guardPageSize`, `listQueryToUrlState`,
+- [x] **SSR blocker.** `tableUrlParsers`, `TableUrlState`, `guardPageSize`, `listQueryToUrlState`,
       `urlStateToListQuery`, `patchToUrlState` move to a server-safe `table-url-state.ts` (no `"use client"`, parsers
       from `nuqs/server`); `use-table-url-state.ts` keeps the hook and re-exports them; RSC pages import from the
       server-safe module. `/clients/list`, `/projects/list` and `/notes` render rows under `next start`.
-- [ ] **(a)** Client archive sends without `confirm` first; on `INTEGRITY_LOCK` shows the lock message and re-sends
+- [x] **(a)** Client archive sends without `confirm` first; on `INTEGRITY_LOCK` shows the lock message and re-sends
       with `confirm: true` (same flow as `ProjectArchiveDialog`, ideally one shared dialog). Test.
-- [ ] **(b)** Projects bulk tag `canCreate` comes from `canCreateTagsInline()` via the list page and `ProjectsTable`.
-- [ ] **3.** One exported grants constant shared by `createTagAction` and `canCreateTagsInline()`.
-- [ ] **4.** Unused `parseProjectDetailTab` / `projectDetailTabHref` removed.
-- [ ] **5.** Project link label `Input` gets a `FieldError` id + `aria-describedby`; stray blank line in
+- [x] **(b)** Projects bulk tag `canCreate` comes from `canCreateTagsInline()` via the list page and `ProjectsTable`.
+- [x] **3.** One exported grants constant shared by `createTagAction` and `canCreateTagsInline()`.
+- [x] **4.** Unused `parseProjectDetailTab` / `projectDetailTabHref` removed.
+- [x] **5.** Project link label `Input` gets a `FieldError` id + `aria-describedby`; stray blank line in
       `client-form.tsx` removed.
-- [ ] Gate. Commit messages without any Claude attribution.
+- [x] Gate. Commit messages without any Claude attribution.
+
+*(Boxes ticked 2026-10-12 on audit: merged at `72adac7`; that merge kept the base `TASK.md` (see the wave 3 log), so
+they were never updated. Each item was checked present in the code.)*
 
 #### Package 3.7 — Wave 3 Tester fix: notes tab RSC boundary (T1) + guard
 
@@ -3017,6 +3024,16 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 - One or more **change batches** (`batch/fix-<topic>` or `batch/change-<topic>`) opened from the user's
   review of the Hito 1 UI. Each is usually one package in one wave; the Orchestrator asks the user before
   skipping the Planner for a trivial one.
+- **Backlog carried from H1-B2 (audit 2026-10-12)** — in addition to the items routed "→ H1-FX" in each wave close:
+  - D5: focus does not return to the contact dialog opener (`fe/tests/e2e/h1-b2-w3-notes-roles.spec.ts`, `test.fail`),
+    together with the kit `ConfirmDialog` focus item.
+  - `it.fails` in `country-combobox.keyboard.test.tsx`: fix the behavior and turn it into a passing test.
+  - Flaky jsdom timeouts in `phone-input` and `country-combobox` unit tests.
+  - D3 workaround: the global `[data-slot="combobox-content"] { pointer-events:auto }` style injected from feature
+    code moves into the kit or is removed.
+  - Restore the `/clients/list` and `/projects/list` loading skeletons.
+  - Shrink the RSC guard ALLOW_LIST (4 kit barrel re-exports).
+  - Project archive `INTEGRITY_LOCK` E2E (`h1-b2-w3-projects.spec.ts`, `test.skip`) once H1-B3 provides billing data.
 - [ ] **User's explicit acceptance of the Hito 1 UI** (closes Hito 1; Hito 2 does not open without it).
 
 ---
