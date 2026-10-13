@@ -97,6 +97,30 @@ describe("computeInvoiceTotals (C17, DT-44)", () => {
     ).toThrow(RangeError);
   });
 
+  it("rejects two adjustments for the same rate", () => {
+    expect(() =>
+      computeInvoiceTotals({
+        ...base,
+        lines: [{ quantity: "1", unitPrice: "100", discount: "0", ivaRate: "16" }],
+        taxAdjustments: [
+          { ivaRate: "16", adjustment: "0.01" },
+          { ivaRate: "16.00", adjustment: "-0.01" },
+        ],
+      }),
+    ).toThrow(RangeError);
+  });
+
+  it("rejects withholdings above the invoice total", () => {
+    expect(() =>
+      computeInvoiceTotals({
+        ...base,
+        lines: [{ quantity: "1", unitPrice: "100", discount: "0", ivaRate: "16" }],
+        ivaWithheld: "100",
+        islrWithheld: "16.01",
+      }),
+    ).toThrow(RangeError);
+  });
+
   it("rejects a line discount above its amount", () => {
     expect(() =>
       computeInvoiceTotals({

@@ -92,6 +92,9 @@ export function computeInvoiceTotals(input: InvoiceTotalsInput): InvoiceTotals {
   const adjustments = new Map<string, MoneyString>();
   for (const { ivaRate, adjustment } of input.taxAdjustments) {
     const key = rateKey(ivaRate);
+    if (adjustments.has(key)) {
+      throw new RangeError(`Only one IVA adjustment per rate (${ivaRate} %)`);
+    }
     if (!bases.has(key) || isZeroMoney(ivaRate)) {
       throw new RangeError(`No taxable line uses the ${ivaRate} % rate`);
     }
@@ -117,6 +120,9 @@ export function computeInvoiceTotals(input: InvoiceTotalsInput): InvoiceTotals {
   const ivaAmount = sumMoney(taxLines.map((line) => line.ivaAmount));
   const total = sumMoney([taxBase, exemptAmount, ivaAmount]);
   const withholdings = sumMoney([input.ivaWithheld, input.islrWithheld, input.otherWithheld]);
+  if (compareMoney(withholdings, total) > 0) {
+    throw new RangeError("Withholdings cannot exceed the invoice total");
+  }
   const receivable = subMoney(total, withholdings);
 
   return {

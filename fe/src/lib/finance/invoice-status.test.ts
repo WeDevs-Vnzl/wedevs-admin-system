@@ -46,6 +46,12 @@ describe("computeInvoiceStatus (HU-12, §9.4)", () => {
     expect(computeInvoiceStatus({ ...issued, dueDate: today }, today)).toBe("EMITIDA");
   });
 
+  it("a settled invoice past its due date is PAGADA, not VENCIDA", () => {
+    expect(
+      computeInvoiceStatus({ ...issued, dueDate: "2026-10-01", paidAmount: "1000.00" }, today),
+    ).toBe("PAGADA");
+  });
+
   it("voided wins over everything, then draft", () => {
     expect(computeInvoiceStatus({ ...issued, voided: true, draft: true }, today)).toBe("ANULADA");
     expect(computeInvoiceStatus({ ...issued, draft: true }, today)).toBe("BORRADOR");
