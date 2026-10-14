@@ -191,7 +191,8 @@ export function InvoiceForm({
           dueDate: invoice.dueDate,
           currency: invoice.currency,
           usdRate: invoice.usdRate,
-          bcvRate: invoice.bcvRate ?? "",
+          // No input renders it: an empty string would fail the resolver and block Save silently.
+          bcvRate: invoice.bcvRate ?? undefined,
           isDraft: invoice.isDraft,
           lines: defaultLines,
           ivaWithheld: invoice.totals.ivaWithheld,
@@ -207,7 +208,7 @@ export function InvoiceForm({
           dueDate: addDays(today, defaultDueDays),
           currency: "USD",
           usdRate: "1",
-          bcvRate: "",
+          bcvRate: undefined,
           isDraft: false,
           lines: defaultLines.length > 0 ? defaultLines : [emptyLine(defaultIvaRate)],
           ivaWithheld: "0",
