@@ -302,6 +302,7 @@ describe("expense DTOs", () => {
       endDate: null,
       status: "ACTIVO",
       lastGeneratedPeriodStart: "2026-10-05",
+      resumedOn: null,
       nextDueDate: "2026-11-05",
       createdAt: "2026-01-01T00:00:00Z",
     };

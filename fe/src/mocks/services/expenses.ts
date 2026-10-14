@@ -44,6 +44,8 @@ export const EXPENSE_ERRORS = {
 
 /** Guard on the periods one generation may create; a sane schedule never reaches it. */
 const MAX_PERIODS_PER_RUN = 24;
+/** Guard on the periods one walk may pass over (skipped ones included). */
+const MAX_PERIODS_WALKED = 600;
 
 /** "Far enough" to list every period that has a generation day: the next period of a schedule, whatever today is. */
 const NO_LIMIT: DateOnly = "9999-12-31";
@@ -275,9 +277,28 @@ function syncRecurring(db: MockStore): void {
     row.nextDueDate =
       row.status === "FINALIZADO"
         ? null
-        : (dueRecurringPeriods(scheduleOf(row, "ACTIVO"), existing, NO_LIMIT)[0]?.periodStart ??
-          null);
+        : (nextOpenPeriod(row, "ACTIVO", existing, NO_LIMIT)?.periodStart ?? null);
   }
+}
+
+/**
+ * The next period of `row` due by `asOf` that is neither in `taken` nor skipped by the last resume: periods whose
+ * generation day fell before `resumedOn` are passed over, so a resumed schedule never back-fills its pause.
+ */
+function nextOpenPeriod(
+  row: RecurringExpenseDTO,
+  status: RecurringSchedule["status"],
+  taken: DateOnly[],
+  asOf: DateOnly,
+) {
+  const skipped: DateOnly[] = [];
+  for (let guard = 0; guard < MAX_PERIODS_WALKED; guard += 1) {
+    const [due] = dueRecurringPeriods(scheduleOf(row, status), [...taken, ...skipped], asOf);
+    if (!due) return null;
+    if (row.resumedOn === null || due.generateOn >= row.resumedOn) return due;
+    skipped.push(due.periodStart);
+  }
+  return null;
 }
 
 /**
@@ -293,11 +314,7 @@ function generatePeriods(
 ): DateOnly[] {
   const created: DateOnly[] = [];
   for (let guard = 0; guard < MAX_PERIODS_PER_RUN; guard += 1) {
-    const [due] = dueRecurringPeriods(
-      scheduleOf(row, row.status),
-      generatedPeriods(db, row.id),
-      asOf,
-    );
+    const due = nextOpenPeriod(row, row.status, generatedPeriods(db, row.id), asOf);
     if (!due) break;
     const usdRate =
       row.currency === "USD" ? "1" : selectRate(db.exchangeRates, asOf, row.currency)?.usdRate;
@@ -657,6 +674,7 @@ export async function createRecurringExpense(
     endDate: input.endDate ?? null,
     status: "ACTIVO",
     lastGeneratedPeriodStart: null,
+    resumedOn: null,
     nextDueDate: null,
     createdAt: now,
   };
@@ -723,6 +741,8 @@ export async function setRecurringExpenseStatus(
   }
   const previous = row.status;
   row.status = input.status;
+  // A resume skips the periods missed while paused, as the billing charges do (PRD §8.4.3).
+  if (previous === "PAUSADO" && input.status === "ACTIVO") row.resumedOn = todayInCaracas(ctx.now);
   syncRecurring(db);
   await logActivity(mockTx(ctx), {
     actorType: "USER",

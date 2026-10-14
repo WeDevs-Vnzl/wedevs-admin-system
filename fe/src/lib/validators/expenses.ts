@@ -267,6 +267,8 @@ export const recurringExpenseDtoSchema = z.object({
   endDate: dateOnlySchema.nullable(),
   status: recurringStatusSchema,
   lastGeneratedPeriodStart: dateOnlySchema.nullable(),
+  /** Day of the last resume; the daily job skips the periods whose generation day fell before it. */
+  resumedOn: dateOnlySchema.nullable(),
   /** Next period start still to generate; `null` when finished. */
   nextDueDate: dateOnlySchema.nullable(),
   createdAt: timestampSchema,

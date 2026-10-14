@@ -8,7 +8,7 @@ import {
   type MarkExpensePaidInput,
 } from "@/lib/validators/expenses";
 import { mockId } from "../ids";
-import { ServiceError } from "../ctx";
+import { ServiceError, createMockContext } from "../ctx";
 import { makeTestContext } from "../test-helpers";
 import { getAccount } from "./accounts";
 import {
@@ -135,6 +135,40 @@ describe("recurring generation (HU-17 CA1)", () => {
 
     expect(result).toEqual({ created: 0, periodStarts: [] });
     expect(generatedBy(schedule.id)).toHaveLength(0);
+  });
+
+  it("resuming a paused schedule does not back-fill the skipped periods (PRD §8.4.3 rule)", async () => {
+    const schedule = await createRecurringExpense(ctx, recurringInput({ startDate: "2026-07-01" }));
+    await setRecurringExpenseStatus(ctx, { id: schedule.id, status: "PAUSADO" });
+    const resumedAt = createMockContext({
+      user: ctx.user,
+      now: new Date("2026-10-09T15:00:00.000Z"),
+      db,
+    });
+    await setRecurringExpenseStatus(resumedAt, { id: schedule.id, status: "ACTIVO" });
+
+    const result = await runRecurringExpenseGeneration(resumedAt);
+
+    expect(result).toEqual({ created: 0, periodStarts: [] });
+    expect((await getRecurringExpense(ctx, schedule.id)).nextDueDate).toBe("2026-11-05");
+
+    // The next period after the resume is generated as usual: 2026-11-05, on 2026-10-31.
+    const later = createMockContext({
+      user: ctx.user,
+      now: new Date("2026-10-31T15:00:00.000Z"),
+      db,
+    });
+    await runRecurringExpenseGeneration(later);
+    expect(generatedBy(schedule.id).map((item) => item.periodStart)).toEqual(["2026-11-05"]);
+  });
+
+  it("an active schedule that was never paused still catches up", async () => {
+    const schedule = await createRecurringExpense(ctx, recurringInput({ startDate: "2026-09-01" }));
+    await setRecurringExpenseStatus(ctx, { id: schedule.id, status: "ACTIVO" });
+
+    const result = await runRecurringExpenseGeneration(ctx);
+
+    expect(result.periodStarts).toEqual(["2026-09-05", "2026-10-05"]);
   });
 
   it("changing the amount affects only the periods not generated yet", async () => {
