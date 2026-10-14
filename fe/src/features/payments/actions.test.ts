@@ -9,7 +9,7 @@ vi.mock("@/mocks/session", () => session);
 import type { UserRole } from "@/lib/validators/enums";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
-import { listPaymentsAction } from "./actions";
+import { listPaymentsAction, searchPaymentsAction } from "./actions";
 import { paymentFilterOf } from "./components/payment-table-query";
 
 function signInAs(role: UserRole) {
@@ -82,6 +82,25 @@ describe("listPaymentsAction", () => {
     expect(await listPaymentsAction({ page: 1, pageSize: 25, sort: "client:asc" })).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
+    });
+  });
+});
+
+describe("searchPaymentsAction (note link picker)", () => {
+  it("returns payment refs matching q for a finance role", async () => {
+    signInAs("ADMIN");
+    const found = await searchPaymentsAction({ q: "PAG-0001" });
+    expect(found).toMatchObject({
+      ok: true,
+      data: [{ type: "PAYMENT", label: "PAG-0001", code: "PAG-0001" }],
+    });
+  });
+
+  it("refuses a role that may not read payments", async () => {
+    signInAs("VIEWER");
+    expect(await searchPaymentsAction({ q: "" })).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
     });
   });
 });

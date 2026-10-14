@@ -297,10 +297,26 @@ test.describe("archive a project (mutates projects)", () => {
     await expect(page.getByText("Registro archivado", { exact: true })).toBeVisible();
   });
 
-  // Not reachable with the seed: no project has billing plans, installments, recurring charges or invoices
-  // (fixtures/billing.ts and fixtures/invoices.ts are empty), so the service never answers INTEGRITY_LOCK.
-  // The lock step is covered at unit level; it needs H1-B3 billing data or a seed change to run here.
-  test.skip("a project with active billing asks for the INTEGRITY_LOCK confirmation first", async () => {});
+  // The H1-B3 seed gives pry_kairos_web a billing plan with pending installments, so the first request
+  // answers INTEGRITY_LOCK and the dialog asks again before archiving.
+  test("a project with active billing asks for the INTEGRITY_LOCK confirmation first", async ({
+    page,
+  }) => {
+    await open(page, "/projects/pry_kairos_web");
+    await page.getByRole("button", { name: "Más acciones", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Archivar proyecto", exact: true }).click();
+    const dialog = page.getByRole("alertdialog");
+    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
+
+    await expect(
+      dialog.getByText("El proyecto tiene cobros o facturas activos. Confirma para archivarlo.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
+
+    await expect(page.getByText("Proyecto archivado", { exact: true })).toBeVisible();
+  });
 });
 
 // ───────────────────────────── Read-only shape checks ─────────────────────────────

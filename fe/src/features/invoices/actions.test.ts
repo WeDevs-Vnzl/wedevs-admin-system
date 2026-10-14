@@ -10,7 +10,7 @@ import type { ListQuery } from "@/lib/validators/common";
 import type { UserRole } from "@/lib/validators/enums";
 import { mockId } from "@/mocks/ids";
 import { makeSessionUser } from "@/mocks/test-helpers";
-import { listInvoicesAction } from "./actions";
+import { listInvoicesAction, searchInvoicesAction } from "./actions";
 import { invoiceFilterOf } from "./components/invoice-table-query";
 
 const KAIROS = mockId("cli", "kairos");
@@ -126,6 +126,25 @@ describe("listInvoicesAction", () => {
     expect(await listInvoicesAction({ page: 1, pageSize: 25, sort: "nope:asc" })).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
+    });
+  });
+});
+
+describe("searchInvoicesAction (note link picker)", () => {
+  it("returns invoice refs matching q for a finance role", async () => {
+    signInAs("ADMIN");
+    const found = await searchInvoicesAction({ q: "KAI-0001" });
+    expect(found).toMatchObject({
+      ok: true,
+      data: [{ type: "INVOICE", label: "KAI-0001", code: expect.stringMatching(/^FAC-/) }],
+    });
+  });
+
+  it("refuses a role that may not read invoices", async () => {
+    signInAs("VIEWER");
+    expect(await searchInvoicesAction({ q: "" })).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
     });
   });
 });

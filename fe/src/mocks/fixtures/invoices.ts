@@ -21,10 +21,10 @@ export interface InvoiceTaxLineRow extends InvoiceTaxLineDTO {
 }
 
 /**
- * A stored invoice: the DTO plus its archive stamp. `archivedAt` is not part of the read DTO; the service hides
- * archived rows from the list and frees their number for a new invoice (HU-11 CA3).
+ * A stored invoice: the DTO, archive stamp included. The service hides archived rows from the list and frees their
+ * number for a new invoice (HU-11 CA3); the alerts leave them out.
  */
-export type InvoiceRow = InvoiceDetailDTO & { archivedAt: string | null };
+export type InvoiceRow = InvoiceDetailDTO;
 
 const today: DateOnly = todayInCaracas(new Date());
 const stamp = (day: DateOnly) => `${day}T15:00:00.000Z`;

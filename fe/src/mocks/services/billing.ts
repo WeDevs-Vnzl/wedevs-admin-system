@@ -51,15 +51,8 @@ export const BILLING_ERRORS = {
 /** Guard on the periods one generation may create; a sane schedule never reaches it. */
 const MAX_PERIODS_PER_RUN = 24;
 
-/**
- * The stored plan: the DTO plus the D1 snapshot. `contractedUsd` is the contract in USD and `usdRate` the rate
- * of the day of the save (`"1"` for USD); both are fixed at plan save and never recomputed (C16). The store
- * still types the collection with the DTO, which carries no snapshot yet (see the H1-B3 report).
- */
-export type BillingPlanRow = BillingPlanDTO & {
-  contractedUsd: MoneyString | null;
-  usdRate: MoneyString | null;
-};
+/** The stored plan; the DTO carries the D1 snapshot (`contractedUsd`, `usdRate`), fixed at plan save (C16). */
+export type BillingPlanRow = BillingPlanDTO;
 
 /** Everything the billing screen reads for one project. */
 export interface BillingPageDTO {
@@ -84,8 +77,7 @@ function liveProject(db: MockStore, projectId: string) {
 }
 
 function planRows(db: MockStore): BillingPlanRow[] {
-  // Rows are only ever written by `upsertBillingPlan`, which stores the snapshot fields.
-  return db.billingPlans as BillingPlanRow[];
+  return db.billingPlans;
 }
 
 function planOf(db: MockStore, projectId: string): BillingPlanRow | undefined {

@@ -8,7 +8,7 @@ vi.mock("@/mocks/session", () => session);
 
 import type { UserRole } from "@/lib/validators/enums";
 import { makeSessionUser } from "@/mocks/test-helpers";
-import { listExpensesAction } from "./actions";
+import { listExpensesAction, searchExpensesAction } from "./actions";
 import { expenseFilterOf } from "./components/expense-table-query";
 
 function signInAs(role: UserRole) {
@@ -71,6 +71,31 @@ describe("listExpensesAction", () => {
     expect(await listExpensesAction({ sort: "category:asc" })).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
+    });
+  });
+});
+
+describe("searchExpensesAction (note link picker)", () => {
+  it("returns expense refs matching q for a finance role", async () => {
+    signInAs("ADMIN");
+    const found = await searchExpensesAction({ q: "Hosting de producción" });
+    expect(found).toMatchObject({
+      ok: true,
+      data: [
+        {
+          type: "EXPENSE",
+          label: "Hosting de producción (MOCK)",
+          code: expect.stringMatching(/^GAS-/),
+        },
+      ],
+    });
+  });
+
+  it("refuses a role that may not read expenses", async () => {
+    signInAs("VIEWER");
+    expect(await searchExpensesAction({ q: "" })).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
     });
   });
 });

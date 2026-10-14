@@ -3,6 +3,7 @@ import { FinancialSummaryCard } from "@/components/patterns/financial-summary-ca
 import { DateText } from "@/components/patterns/date-text";
 import { MoneyText } from "@/components/patterns/money-text";
 import { SidePanelCard } from "@/components/patterns/side-panel-card";
+import { getClientFinancials } from "@/features/clients/queries";
 import { isZeroMoney } from "@/lib/money";
 import type { ClientDetailDTO } from "@/lib/validators/clients";
 
@@ -13,12 +14,13 @@ type ClientSidePanelProps = {
 
 /**
  * Side panel of the client detail: the key data, and the financial card for finance roles (the same snapshot
- * sums as the "Resumen" metrics, C16).
+ * sums as the "Resumen" metrics, C16). `getClientFinancials` is read only when `canSeeFinancials`.
  */
 export async function ClientSidePanel({ client, canSeeFinancials }: ClientSidePanelProps) {
   const t = await getTranslations("clients.detail");
   const tEnums = await getTranslations("enums");
   const none = t("keyData.none");
+  const financials = canSeeFinancials ? await getClientFinancials(client.id) : null;
   const rows: [string, string | null][] = [
     [t("keyData.kind"), tEnums(`ClientKind.${client.kind}`)],
     [t("keyData.legalName"), client.kind === "EMPRESA" ? client.legalName : null],
@@ -49,26 +51,26 @@ export async function ClientSidePanel({ client, canSeeFinancials }: ClientSidePa
         </dl>
       </SidePanelCard>
 
-      {canSeeFinancials ? (
+      {financials ? (
         <FinancialSummaryCard
           rows={[
             {
               label: t("metrics.totalInvoiced"),
-              value: <MoneyText amount={client.financials.totalInvoicedUsd} currency="USD" />,
+              value: <MoneyText amount={financials.totalInvoicedUsd} currency="USD" />,
             },
             {
               label: t("metrics.totalCollected"),
-              value: <MoneyText amount={client.financials.totalCollectedUsd} currency="USD" />,
+              value: <MoneyText amount={financials.totalCollectedUsd} currency="USD" />,
             },
             {
               label: t("metrics.overdue"),
-              value: <MoneyText amount={client.financials.overdueUsd} currency="USD" />,
-              danger: !isZeroMoney(client.financials.overdueUsd),
+              value: <MoneyText amount={financials.overdueUsd} currency="USD" />,
+              danger: !isZeroMoney(financials.overdueUsd),
             },
           ]}
           total={{
             label: t("metrics.receivable"),
-            value: <MoneyText amount={client.financials.receivableUsd} currency="USD" />,
+            value: <MoneyText amount={financials.receivableUsd} currency="USD" />,
           }}
         />
       ) : null}

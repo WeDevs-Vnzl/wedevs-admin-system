@@ -2,6 +2,7 @@
 // `src/server/services/invoices.service.ts` in Hito 2 (C9). Every formula comes from `src/lib/finance` (C17): the
 // line amounts, the per-rate tax lines, the totals, the receivable and the status are derived by the store's pass
 // (`derive-finance.ts`); this file only stores the inputs and checks the business rules around them.
+import { diffFields } from "@/lib/activity-diff";
 import { todayInCaracas, type DateOnly } from "@/lib/dates";
 import { computeInvoiceTotals, computeLineAmounts } from "@/lib/finance";
 import { compareMoney, roundMoney, subMoney, sumMoney, type MoneyString } from "@/lib/money";
@@ -69,8 +70,7 @@ type StoredLine = InvoiceRow["lines"][number];
 // ───────────────────────────── Lookups and helpers ─────────────────────────────
 
 function rowsOf(db: MockStore): InvoiceRow[] {
-  // Rows are only written here, so the archive stamp is always present.
-  return db.invoices as InvoiceRow[];
+  return db.invoices;
 }
 
 function invalid(field: string, key: string): ServiceError {
@@ -320,6 +320,7 @@ async function logInvoice(
   ctx: MockServiceContext,
   action: "CREATE" | "UPDATE" | "STATUS_CHANGE" | "DELETE",
   row: InvoiceRow,
+  changes?: ReturnType<typeof diffFields>,
 ) {
   return logActivity(mockTx(ctx), {
     actorType: "USER",
@@ -328,6 +329,7 @@ async function logInvoice(
     entityType: "INVOICE",
     entityId: row.id,
     entityLabel: row.invoiceNumber,
+    changes,
     metadata: { clientId: row.client.id },
   });
 }
@@ -598,6 +600,7 @@ export async function updateInvoice(
     throw new ServiceError("INTEGRITY_LOCK", { message: INVOICE_ERRORS.receivableBelowPaid });
   }
 
+  const totalBefore = row.totals.total;
   row.client = { id: client.id, label: client.tradeName, type: "CLIENT" };
   row.invoiceNumber = input.invoiceNumber.trim();
   row.controlNumber = input.controlNumber ?? null;
@@ -614,7 +617,13 @@ export async function updateInvoice(
   row.updatedAt = ctx.now.toISOString();
 
   deriveMockStore(db);
-  await logInvoice(ctx, "UPDATE", row);
+  // HU-29 CA1: a new total is logged as `total: [before, after]`.
+  const changes = diffFields(
+    { total: totalBefore },
+    { total: row.totals.total },
+    { fields: ["total"] },
+  );
+  await logInvoice(ctx, "UPDATE", row, changes);
   return toDetail(db, row);
 }
 

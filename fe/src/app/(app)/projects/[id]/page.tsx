@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { DetailTabs, type DetailTab } from "@/components/patterns/detail-tabs";
-import { FinanceTabSlot } from "@/components/patterns/finance-tab-slot";
 import { RichTextView } from "@/components/ui/rich-text";
 import { EntityActivityTab } from "@/features/activity/components/entity-activity-tab";
 import { canReadActivity } from "@/features/activity/queries";
+import { ProjectBillingTab } from "@/features/billing/components/project-billing-tab";
 import { EntityDocumentsTab } from "@/features/documents/components/entity-documents-tab";
+import { ProjectExpensesTab } from "@/features/expenses/components/project-expenses-tab";
+import { RelatedInvoicesTab } from "@/features/invoices/components/related-invoices-tab";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
 import { DEFAULT_PROJECT_DETAIL_TAB, type ProjectDetailTab } from "@/features/projects/detail-tabs";
 import { getProject } from "@/features/projects/queries";
@@ -87,17 +89,27 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           {
             value: "billing" satisfies ProjectDetailTab,
             label: tTabs("billing"),
-            content: <FinanceTabSlot kind="billing" />,
+            content: <ProjectBillingTab projectId={project.id} />,
           },
           {
             value: "invoices" satisfies ProjectDetailTab,
             label: tTabs("invoices"),
-            content: <FinanceTabSlot kind="invoices" />,
+            content: (
+              <RelatedInvoicesTab
+                filter={{ projectId: project.id }}
+                newHref={can(user, "create", "invoice") ? "/invoices/new" : undefined}
+              />
+            ),
           },
           {
             value: "expenses" satisfies ProjectDetailTab,
             label: tTabs("expenses"),
-            content: <FinanceTabSlot kind="expenses" />,
+            content: (
+              <ProjectExpensesTab
+                projectId={project.id}
+                newHref={can(user, "create", "expense") ? "/expenses/new" : undefined}
+              />
+            ),
           },
         ]
       : []),

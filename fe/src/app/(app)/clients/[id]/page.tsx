@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { DetailTabs, type DetailTab } from "@/components/patterns/detail-tabs";
-import { FinanceTabSlot } from "@/components/patterns/finance-tab-slot";
 import { EntityActivityTab } from "@/features/activity/components/entity-activity-tab";
 import { ClientDetailHeader } from "@/features/clients/components/client-detail-header";
 import { visibleClientDetailTabs } from "@/features/clients/components/client-detail-tabs";
@@ -16,7 +15,9 @@ import { getClient } from "@/features/clients/queries";
 import { ContactsTable } from "@/features/contacts/components/contacts-table";
 import { listContacts } from "@/features/contacts/queries";
 import { EntityDocumentsTab } from "@/features/documents/components/entity-documents-tab";
+import { RelatedInvoicesTab } from "@/features/invoices/components/related-invoices-tab";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
+import { ClientPaymentsTab } from "@/features/payments/components/client-payments-tab";
 import { requireSessionUser } from "@/server/auth/session";
 import { can } from "@/server/auth/permissions";
 import { ServiceError } from "@/server/errors";
@@ -97,12 +98,26 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     invoices: {
       value: "invoices",
       label: t("invoices"),
-      content: <FinanceTabSlot kind="invoices" />,
+      content: (
+        <RelatedInvoicesTab
+          filter={{ clientId: client.id }}
+          newHref={
+            can(user, "create", "invoice")
+              ? `/invoices/new?clientId=${encodeURIComponent(client.id)}`
+              : undefined
+          }
+        />
+      ),
     },
     payments: {
       value: "payments",
       label: t("payments"),
-      content: <FinanceTabSlot kind="payments" />,
+      content: (
+        <ClientPaymentsTab
+          clientId={client.id}
+          newHref={can(user, "create", "payment") ? "/payments/new" : undefined}
+        />
+      ),
     },
     documents: {
       value: "documents",

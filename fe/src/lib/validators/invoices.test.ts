@@ -458,6 +458,7 @@ describe("invoice DTOs", () => {
       status: "PARCIAL",
       voidedAt: null,
       voidReason: null,
+      archivedAt: null,
       fileId: null,
       file: null,
       lines: [lineDto],

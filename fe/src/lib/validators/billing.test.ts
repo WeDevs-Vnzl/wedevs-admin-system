@@ -90,10 +90,40 @@ describe("billing plan", () => {
       installmentsTotal: "4500.00",
       scheduleDifference: "500.00",
       scheduleConsistent: false,
+      contractedUsd: "5000.00",
+      usdRate: "1",
       createdAt: "2026-10-09T10:00:00Z",
       updatedAt: "2026-10-09T10:00:00Z",
     };
     expect(billingPlanDtoSchema.safeParse(dto).success).toBe(true);
+  });
+
+  it("DTO carries the D1 USD snapshot of the contract", () => {
+    const dto = {
+      id: "bp1",
+      projectId: "p1",
+      model: "PRECIO_FIJO",
+      currency: "VES",
+      contractAmount: "360000.00",
+      notes: null,
+      installments: [],
+      installmentsTotal: "0.00",
+      scheduleDifference: null,
+      scheduleConsistent: true,
+      contractedUsd: "1000.00",
+      usdRate: "360",
+      createdAt: "2026-10-09T10:00:00Z",
+      updatedAt: "2026-10-09T10:00:00Z",
+    };
+    const parsed = billingPlanDtoSchema.parse(dto);
+    expect(parsed).toMatchObject({ contractedUsd: "1000.00", usdRate: "360" });
+    const withoutSnapshot: Record<string, unknown> = { ...dto };
+    delete withoutSnapshot.contractedUsd;
+    expect(billingPlanDtoSchema.safeParse(withoutSnapshot).success).toBe(false);
+    expect(billingPlanDtoSchema.safeParse({ ...dto, usdRate: "0" }).success).toBe(false);
+    expect(
+      billingPlanDtoSchema.safeParse({ ...dto, contractAmount: null, contractedUsd: null }).success,
+    ).toBe(true);
   });
 });
 

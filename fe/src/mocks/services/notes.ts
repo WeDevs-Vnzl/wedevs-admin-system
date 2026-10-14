@@ -115,6 +115,7 @@ function isArchivedTarget(db: MockStore, target: NoteLinkTarget): boolean {
     PROJECT: db.projects,
     DOCUMENT: db.documents,
     NOTE: db.notes,
+    INVOICE: db.invoices,
   };
   const row = collections[target.entityType]?.find((item) => item.id === target.entityId);
   return Boolean(row?.archivedAt);

@@ -7,11 +7,8 @@ import { dueRecurringPeriods, splitByTemplate, type RecurringSchedule } from "@/
 import type { BillingPlanDTO, InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
 import { mockId } from "../ids";
 
-/** A plan as stored: the DTO plus the D1 snapshot of the contract in USD (C16). */
-type BillingPlanFixture = BillingPlanDTO & {
-  contractedUsd: string | null;
-  usdRate: string | null;
-};
+/** A plan as stored, with the D1 snapshot of the contract in USD (C16). */
+type BillingPlanFixture = BillingPlanDTO;
 
 const today = todayInCaracas(new Date());
 const stamp = (day: DateOnly) => `${day}T15:00:00.000Z`;

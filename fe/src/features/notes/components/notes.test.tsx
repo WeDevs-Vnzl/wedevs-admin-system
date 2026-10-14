@@ -22,6 +22,9 @@ vi.mock("@/features/clients/actions", () => ({ searchClientsAction: vi.fn() }));
 vi.mock("@/features/contacts/actions", () => ({ searchContactsAction: vi.fn() }));
 vi.mock("@/features/projects/actions", () => ({ searchProjectsAction: vi.fn() }));
 vi.mock("@/features/documents/actions", () => ({ searchDocumentsAction: vi.fn() }));
+vi.mock("@/features/invoices/actions", () => ({ searchInvoicesAction: vi.fn() }));
+vi.mock("@/features/payments/actions", () => ({ searchPaymentsAction: vi.fn() }));
+vi.mock("@/features/expenses/actions", () => ({ searchExpensesAction: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: nav.refresh }) }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 

@@ -64,24 +64,6 @@
   "financialSummary": {
     "title": "Financial summary"
   },
-  "financeSlot": {
-    "billing": {
-      "title": "Billing not available yet",
-      "description": "The billing schedule for this project will appear here once the finance module is enabled."
-    },
-    "invoices": {
-      "title": "Invoices not available yet",
-      "description": "Invoices for this record will appear here once the finance module is enabled."
-    },
-    "payments": {
-      "title": "Payments not available yet",
-      "description": "Payments from this client will appear here once the finance module is enabled."
-    },
-    "expenses": {
-      "title": "Expenses not available yet",
-      "description": "Expenses for this project will appear here once the finance module is enabled."
-    }
-  },
   "formPage": {
     "back": "Back"
   },

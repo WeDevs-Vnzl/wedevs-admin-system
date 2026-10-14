@@ -100,6 +100,21 @@ describe("listAlerts rules", () => {
     ]);
   });
 
+  it("archived invoices leave the overdue and due-soon alerts (archivedAt on the DTO)", async () => {
+    const h = makeTestContext("OWNER");
+    const archivedAt = "2026-10-01T00:00:00.000Z";
+    h.db.invoices.push(
+      invoice("inv_live_overdue", -10, { status: "VENCIDA", archivedAt: null }),
+      invoice("inv_old_overdue", -10, { status: "VENCIDA", archivedAt }),
+      invoice("inv_live_soon", 3, { archivedAt: null }),
+      invoice("inv_old_soon", 3, { archivedAt }),
+    );
+    const overdue = await only(h, "INVOICE_OVERDUE");
+    expect(overdue.items.map((i) => i.alertKey)).toEqual(["INVOICE_OVERDUE:inv_live_overdue"]);
+    const soon = await only(h, "INVOICE_DUE_SOON");
+    expect(soon.items.map((i) => i.alertKey)).toEqual(["INVOICE_DUE_SOON:inv_live_soon"]);
+  });
+
   it("installment: PENDIENTE due in 7 days or past; day 8 and billed ones are out", async () => {
     const h = makeTestContext("OWNER");
     // The billing fixtures carry their own installments (dated from the real day): this rule is isolated here.

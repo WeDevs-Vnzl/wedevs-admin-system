@@ -106,7 +106,8 @@
     "active": "Activa",
     "technology": "Tecnología",
     "clientRole": "Rol del cliente",
-    "links": "Vínculos"
+    "links": "Vínculos",
+    "total": "Total"
   },
   "detail": {
     "title": "Detalle del evento",

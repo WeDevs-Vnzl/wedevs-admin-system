@@ -83,7 +83,7 @@ function computeAlerts(ctx: MockServiceContext, types: ReadonlySet<AlertType>): 
 
   if (types.has("INVOICE_OVERDUE")) {
     for (const invoice of db.invoices) {
-      if (invoice.isDraft || invoice.status !== "VENCIDA") continue;
+      if (invoice.archivedAt || invoice.isDraft || invoice.status !== "VENCIDA") continue;
       push("INVOICE_OVERDUE", invoice.id, {
         entity: refOf(ctx, "INVOICE", invoice.id),
         date: invoice.dueDate,
@@ -96,7 +96,8 @@ function computeAlerts(ctx: MockServiceContext, types: ReadonlySet<AlertType>): 
 
   if (types.has("INVOICE_DUE_SOON")) {
     for (const invoice of db.invoices) {
-      if (invoice.isDraft || !["EMITIDA", "PARCIAL"].includes(invoice.status)) continue;
+      if (invoice.archivedAt || invoice.isDraft || !["EMITIDA", "PARCIAL"].includes(invoice.status))
+        continue;
       const days = daysBetween(today, invoice.dueDate);
       if (days < 0 || days > INVOICE_DUE_SOON_DAYS) continue;
       if (compareMoney(invoice.totals.balance, "0") <= 0) continue;

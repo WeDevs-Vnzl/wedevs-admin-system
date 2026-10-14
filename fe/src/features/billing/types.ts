@@ -4,10 +4,7 @@ import type { BillingPlanDTO, InstallmentDTO, RecurringChargeDTO } from "@/lib/v
 // never import the store or the services (lint boundary C9).
 
 /** The plan with its D1 snapshot of the contract in USD (C16). */
-export type BillingPlanRow = BillingPlanDTO & {
-  contractedUsd: string | null;
-  usdRate: string | null;
-};
+export type BillingPlanRow = BillingPlanDTO;
 
 export type BillingPageDTO = {
   projectId: string;

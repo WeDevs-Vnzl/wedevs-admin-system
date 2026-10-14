@@ -477,6 +477,11 @@ export async function getProjectExpenseTotalUsd(
 export function projectExpenseTotalUsd(db: MockStore, projectId: string): MoneyString {
   const project = db.projects.find((item) => item.id === projectId);
   if (!project || project.archivedAt) throw new ServiceError("NOT_FOUND");
+  return paidProjectExpensesUsd(db, projectId);
+}
+
+/** The paid expenses of any project, archived ones included (the project summary of the trash roles). */
+export function paidProjectExpensesUsd(db: MockStore, projectId: string): MoneyString {
   return sumMoney(
     db.expenses
       .filter((item) => item.status === "PAGADO" && item.project?.id === projectId)

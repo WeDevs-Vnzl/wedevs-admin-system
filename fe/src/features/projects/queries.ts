@@ -6,7 +6,7 @@ import {
   type ProjectFilterInput,
 } from "@/lib/validators/projects";
 import * as projects from "@/mocks/services/projects";
-import { can } from "@/server/auth/permissions";
+import { can, canSeeFinancials } from "@/server/auth/permissions";
 import { getServiceContext, ServiceError } from "@/server/context";
 
 // Reads for the project screens (RSC). Every read over business records needs the `read` grant (DT-71); a
@@ -31,4 +31,11 @@ export async function getProjectsOverview() {
     await readContext(),
     getProjectsOverviewInputSchema.parse({}),
   );
+}
+
+/** The §8.4.4 summary of the billing tab; finance roles only (`canSeeFinancials`), like the tab itself. */
+export async function getProjectFinancials(id: string) {
+  const ctx = await readContext();
+  if (!canSeeFinancials(ctx.user)) throw new ServiceError("FORBIDDEN");
+  return projects.getProjectFinancials(ctx, projectIdInputSchema.parse({ id }));
 }

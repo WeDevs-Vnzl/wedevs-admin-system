@@ -1,5 +1,7 @@
 "use server";
 
+import { z } from "@/lib/validators/zod";
+import type { EntityRef } from "@/lib/validators/common";
 import {
   createExpenseInputSchema,
   createRecurringExpenseInputSchema,
@@ -75,4 +77,24 @@ export const setRecurringExpenseStatusAction = defineAction({
     { path: `/expenses/recurring/${data.id}`, type: "page" },
   ],
   handler: (ctx, data) => expenses.setRecurringExpenseStatus(ctx, data),
+});
+
+const searchExpensesInputSchema = z.object({ q: z.string().trim().max(200).default("") });
+
+/** Async expense combobox of the note link picker: at most 20 `EntityRef` options matching `q`. */
+export const searchExpensesAction = defineAction({
+  permission: { action: "read", resource: "expense" },
+  input: searchExpensesInputSchema,
+  handler: async (ctx, data): Promise<EntityRef[]> => {
+    const page = await expenses.listExpenses(
+      ctx,
+      expenseFiltersSchema.parse({ q: data.q, pageSize: 25 }),
+    );
+    return page.items.slice(0, 20).map((row) => ({
+      id: row.id,
+      code: row.code,
+      label: row.description,
+      type: "EXPENSE" as const,
+    }));
+  },
 });

@@ -5,4 +5,5 @@ export * from "./installments";
 export * from "./invoice-status";
 export * from "./invoice-totals";
 export * from "./payments";
+export * from "./project-summary";
 export * from "./recurring";

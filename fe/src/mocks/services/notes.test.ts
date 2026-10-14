@@ -159,6 +159,34 @@ describe("pin, link, unlink, attach", () => {
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
+  it("links an invoice, a payment and an expense, and refuses an archived invoice", async () => {
+    const { ctx, db } = makeTestContext();
+    const [invoice, other] = db.invoices;
+    const payment = db.payments[0];
+    const expense = db.expenses[0];
+    if (!invoice || !other || !payment || !expense) throw new Error("finance fixtures missing");
+    for (const [entityType, entityId] of [
+      ["INVOICE", invoice.id],
+      ["PAYMENT", payment.id],
+      ["EXPENSE", expense.id],
+    ] as const) {
+      const linked = await linkNote(ctx, {
+        noteId: "note_kairos_reunion",
+        target: { entityType, entityId },
+      });
+      expect(linked.links).toContainEqual(
+        expect.objectContaining({ type: entityType, id: entityId }),
+      );
+    }
+    other.archivedAt = ctx.now.toISOString();
+    await expect(
+      linkNote(ctx, {
+        noteId: "note_kairos_reunion",
+        target: { entityType: "INVOICE", entityId: other.id },
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("unlinks one of several links and refuses to remove the last one", async () => {
     const { ctx, db } = makeTestContext();
     const note = await unlinkNote(ctx, { noteId: "note_kairos_alcance", target: KAIROS });

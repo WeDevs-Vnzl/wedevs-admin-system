@@ -1,5 +1,7 @@
 "use server";
 
+import { z } from "@/lib/validators/zod";
+import type { EntityRef } from "@/lib/validators/common";
 import {
   createInvoiceInputSchema,
   invoiceFiltersSchema,
@@ -72,4 +74,24 @@ export const listInvoicesAction = defineAction({
   permission: { action: "read", resource: "invoice" },
   input: invoiceFiltersSchema,
   handler: (ctx, data) => invoices.listInvoices(ctx, data),
+});
+
+const searchInvoicesInputSchema = z.object({ q: z.string().trim().max(200).default("") });
+
+/** Async invoice combobox of the note link picker: at most 20 `EntityRef` options matching `q`. */
+export const searchInvoicesAction = defineAction({
+  permission: { action: "read", resource: "invoice" },
+  input: searchInvoicesInputSchema,
+  handler: async (ctx, data): Promise<EntityRef[]> => {
+    const page = await invoices.listInvoices(
+      ctx,
+      invoiceFiltersSchema.parse({ q: data.q, pageSize: 25 }),
+    );
+    return page.items.slice(0, 20).map((row) => ({
+      id: row.id,
+      code: row.code,
+      label: row.invoiceNumber,
+      type: "INVOICE" as const,
+    }));
+  },
 });

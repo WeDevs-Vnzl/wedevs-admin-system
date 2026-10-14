@@ -19,6 +19,9 @@ vi.mock("@/features/clients/actions", () => ({ searchClientsAction: vi.fn() }));
 vi.mock("@/features/contacts/actions", () => ({ searchContactsAction: vi.fn() }));
 vi.mock("@/features/projects/actions", () => ({ searchProjectsAction: vi.fn() }));
 vi.mock("@/features/documents/actions", () => ({ searchDocumentsAction: vi.fn() }));
+vi.mock("@/features/invoices/actions", () => ({ searchInvoicesAction: vi.fn() }));
+vi.mock("@/features/payments/actions", () => ({ searchPaymentsAction: vi.fn() }));
+vi.mock("@/features/expenses/actions", () => ({ searchExpensesAction: vi.fn() }));
 vi.mock("@/features/tags/components/tag-picker", () => ({ TagPicker: () => null }));
 vi.mock("@/features/files/upload-adapter", () => ({ uploadAdapter: {} }));
 vi.mock("next/navigation", () => ({

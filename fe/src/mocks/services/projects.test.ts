@@ -9,10 +9,23 @@ import {
   setProjectStatusInputSchema,
   type CreateProjectInput,
 } from "@/lib/validators/projects";
-import type { InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
+import type {
+  InstallmentDTO,
+  ProjectFinancialSummary,
+  RecurringChargeDTO,
+} from "@/lib/validators/billing";
 import type { MockServiceContext } from "../ctx";
 import { clearFinanceRecords, makeTestContext as makeSeededContext } from "../test-helpers";
-import { makeInvoice, makeLine, ref } from "../finance-test-factories";
+import {
+  makeAllocation,
+  makeInstallment,
+  makeInvoice,
+  makeLine,
+  makePayment,
+  makePlan,
+  ref,
+  STAMP,
+} from "../finance-test-factories";
 import { deriveMockStore } from "../store";
 import * as svc from "./projects";
 
@@ -781,48 +794,140 @@ describe("listProjects", () => {
     const id = "pry_kairos_web";
     expect((await svc.getProject(ctx, { id })).toInvoiceUsd).toBe("0.00");
 
-    db.billingPlans.push({
-      id: "bpl_1",
-      projectId: id,
-      currency: "USD",
-      contractAmount: "5000.00",
-    } as never);
-    db.invoices.push({
-      id: "inv_1",
-      isDraft: false,
-      status: "EMITIDA",
-      usdRate: "1.00000000",
-      lines: [
-        { project: { id }, netAmount: "1500.00" },
-        { project: null, netAmount: "999.00" },
-      ],
-    } as never);
-    db.invoices.push({
-      id: "inv_2",
-      isDraft: false,
-      status: "ANULADA",
-      usdRate: "1.00000000",
-      lines: [{ project: { id }, netAmount: "700.00" }],
-    } as never);
-    db.payments.push({ id: "pay_1", status: "CONFIRMADO" } as never);
-    db.paymentAllocations.push({
-      id: "alc_1",
-      paymentId: "pay_1",
-      invoice: { id: "inv_1" },
-      amountUsd: "600.00",
-    } as never);
+    seedSummaryRows(db, id);
     const dto = await svc.getProject(ctx, { id });
     expect(dto).toMatchObject({
-      contractedValueUsd: "5000.00",
+      contractedValueUsd: "5500.00",
       invoicedUsd: "1500.00",
-      collectedUsd: "600.00",
-      toInvoiceUsd: "3500.00",
+      collectedUsd: "750.00",
+      toInvoiceUsd: "4000.00",
       hasBillingPlan: true,
     });
     const row = (await svc.listProjects(ctx, filter({ q: "PRY-0001" }))).items[0]!;
-    expect(row.toInvoiceUsd).toBe("3500.00");
+    expect(row.toInvoiceUsd).toBe("4000.00");
     const sorted = await svc.listProjects(ctx, filter({ sort: "toInvoiceUsd:desc" }));
     expect(sorted.items[0]!.id).toBe(id);
+  });
+
+  it("has nothing to invoice on a recurring plan", async () => {
+    const { ctx, db } = makeTestContext();
+    db.billingPlans.push(
+      makePlan({
+        id: "bpl_rec",
+        projectId: "pry_kairos_web",
+        model: "RECURRENTE",
+        contractAmount: null,
+        contractedUsd: null,
+        usdRate: "1",
+      }),
+    );
+    expect(await svc.getProject(ctx, { id: "pry_kairos_web" })).toMatchObject({
+      contractedValueUsd: "0.00",
+      toInvoiceUsd: "0.00",
+    });
+  });
+});
+
+/**
+ * PRD §8.4.4 rows of one project: a VES plan of 1 800 000 snapshotted at 360 (5 000 USD) plus a 500 USD
+ * adjustment; an exempt invoice of 2 000 (1 500 on the project) half paid; a voided invoice of 700.
+ */
+function seedSummaryRows(db: ReturnType<typeof makeTestContext>["db"], id: string) {
+  db.billingPlans.push(
+    makePlan({
+      id: "bpl_1",
+      projectId: id,
+      currency: "VES",
+      contractAmount: "1800000.00",
+      contractedUsd: "5000.00",
+      usdRate: "360",
+    }),
+  );
+  db.installments.push(
+    makeInstallment({
+      id: "ins_adj",
+      projectId: id,
+      billingPlanId: "bpl_1",
+      kind: "AJUSTE",
+      amount: "500.00",
+      percentage: null,
+    }),
+  );
+  db.invoices.push(
+    makeInvoice({
+      id: "inv_1",
+      status: "EMITIDA",
+      lines: [
+        makeLine({ id: "inl_1", project: ref(id, "PROJECT"), unitPrice: "1500", ivaRate: null }),
+        makeLine({ id: "inl_2", order: 1, project: null, unitPrice: "500", ivaRate: null }),
+      ],
+    }),
+    makeInvoice({
+      id: "inv_2",
+      code: "FAC-0002",
+      invoiceNumber: "A-0002",
+      status: "ANULADA",
+      voidedAt: STAMP,
+      lines: [makeLine({ id: "inl_3", project: ref(id, "PROJECT"), unitPrice: "700" })],
+    }),
+  );
+  db.payments.push(makePayment({ id: "pay_1", amount: "1000.00", status: "CONFIRMADO" }));
+  db.paymentAllocations.push(
+    makeAllocation({
+      id: "alc_1",
+      paymentId: "pay_1",
+      invoice: ref("inv_1", "INVOICE"),
+      amountPaymentCurrency: "1000.00",
+      amountInvoiceCurrency: "1000.00",
+      amountUsd: "1000.00",
+    }),
+  );
+  deriveMockStore(db);
+}
+
+describe("getProjectFinancials (PRD §8.4.4)", () => {
+  it("summarizes the project from lib/finance with its recurring charges and paid expenses", async () => {
+    const { ctx, db } = makeTestContext();
+    const id = "pry_kairos_web";
+    seedSummaryRows(db, id);
+    db.recurringCharges.push({
+      id: "rch_1",
+      projectId: id,
+      status: "ACTIVO",
+      currency: "USD",
+      monthlyAmount: "150.00",
+    } as never);
+    db.recurringCharges.push({
+      id: "rch_2",
+      projectId: id,
+      status: "PAUSADO",
+      currency: "USD",
+      monthlyAmount: "90.00",
+    } as never);
+    db.expenses.push(
+      { id: "gas_1", status: "PAGADO", project: { id }, amountUsd: "300.00" } as never,
+      { id: "gas_2", status: "PENDIENTE", project: { id }, amountUsd: "999.00" } as never,
+    );
+    expect(await svc.getProjectFinancials(ctx, { id })).toEqual({
+      projectId: id,
+      currency: "USD",
+      contractedValue: "5500.00",
+      invoiced: "1500.00",
+      collected: "750.00",
+      toInvoice: "4000.00",
+      receivable: "750.00",
+      monthlyRecurring: "150.00",
+      allocatedExpenses: "300.00",
+      margin: "450.00",
+      marginPercent: "60.00",
+    });
+  });
+
+  it("answers NOT_FOUND for an unknown project", async () => {
+    const { ctx } = makeTestContext();
+    await expect(svc.getProjectFinancials(ctx, { id: "pry_nope" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
   });
 });
 
@@ -882,8 +987,8 @@ const imageDoc = (fileId: string) => ({
 });
 
 describe("type contract (F12)", () => {
-  it("satisfies ProjectsService over the mock context, financials aside", () => {
-    const service = svc satisfies Omit<ProjectsService<MockServiceContext>, "getProjectFinancials">;
+  it("satisfies ProjectsService over the mock context", () => {
+    const service = svc satisfies ProjectsService<MockServiceContext, ProjectFinancialSummary>;
     expect(typeof service.createProject).toBe("function");
   });
 });
@@ -893,12 +998,14 @@ describe("money sorters (F3, C15)", () => {
     const { ctx, db } = makeTestContext();
     const [a, b, c] = db.projects.filter((row) => !row.archivedAt);
     const bill = (projectId: string, contractAmount: string) =>
-      db.billingPlans.push({
-        id: `bpl_${projectId}`,
-        projectId,
-        currency: "USD",
-        contractAmount,
-      } as never);
+      db.billingPlans.push(
+        makePlan({
+          id: `bpl_${projectId}`,
+          projectId,
+          contractAmount,
+          contractedUsd: contractAmount,
+        }),
+      );
     bill(a!.id, "9.00");
     bill(b!.id, "10.00");
     bill(c!.id, "100.00");
@@ -984,16 +1091,21 @@ describe("rich-text images (CR-B2, C14/C23)", () => {
   });
 });
 
-describe("financial headline placeholder (CR-B3, C16)", () => {
-  it("does not move a non-USD plan when a newer rate appears", async () => {
+describe("financial headline of a non-USD plan (CR-B3, C16, D1)", () => {
+  it("reads the snapshot taken at plan save and does not move when a newer rate appears", async () => {
     const { ctx, db } = makeTestContext();
-    db.billingPlans.push({
-      id: "bpl_eur",
-      projectId: "pry_kairos_web",
-      currency: "EUR",
-      contractAmount: "1000.00",
-    } as never);
+    db.billingPlans.push(
+      makePlan({
+        id: "bpl_eur",
+        projectId: "pry_kairos_web",
+        currency: "EUR",
+        contractAmount: "1000.00",
+        contractedUsd: "1100.00",
+        usdRate: "0.90909091",
+      }),
+    );
     const before = await svc.getProject(ctx, { id: "pry_kairos_web" });
+    expect(before.contractedValueUsd).toBe("1100.00");
     db.exchangeRates.push({
       currency: "EUR",
       date: "2026-10-09",

@@ -414,6 +414,8 @@ export const invoiceDetailDtoSchema = z.object({
   status: invoiceStatusSchema,
   voidedAt: timestampSchema.nullable(),
   voidReason: z.string().nullable(),
+  /** Archived invoices leave the lists and the alerts and free their number (HU-11 CA3). */
+  archivedAt: timestampSchema.nullable(),
   fileId: idSchema.nullable(),
   file: fileDtoSchema.nullable(),
   lines: z.array(invoiceLineDtoSchema),

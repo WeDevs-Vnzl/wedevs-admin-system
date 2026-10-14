@@ -17,6 +17,9 @@ import {
 import { searchClientsAction } from "@/features/clients/actions";
 import { searchContactsAction } from "@/features/contacts/actions";
 import { searchDocumentsAction } from "@/features/documents/actions";
+import { searchExpensesAction } from "@/features/expenses/actions";
+import { searchInvoicesAction } from "@/features/invoices/actions";
+import { searchPaymentsAction } from "@/features/payments/actions";
 import { searchProjectsAction } from "@/features/projects/actions";
 import type { ActionResult, EntityRef } from "@/lib/validators/common";
 import type { EntityType } from "@/lib/validators/enums";
@@ -25,11 +28,8 @@ import type { NoteLinkEntityType } from "@/lib/validators/notes";
 /** A record a note hangs from (client, contact, project, document…), with the label the chip shows. */
 export type NoteLinkRef = Pick<EntityRef, "id" | "label"> & { type: NoteLinkEntityType };
 
-/** Record types the picker offers in H1-B2; H1-B3 adds INVOICE, PAYMENT and EXPENSE. */
-const PICKER_TYPES = ["CLIENT", "CONTACT", "PROJECT", "DOCUMENT"] as const;
-type PickerType = (typeof PICKER_TYPES)[number];
-
-const LINK_TYPES: readonly string[] = [
+/** Record types the picker offers; a role that may not read a finance type gets the search's FORBIDDEN toast. */
+const PICKER_TYPES = [
   "CLIENT",
   "CONTACT",
   "PROJECT",
@@ -37,7 +37,10 @@ const LINK_TYPES: readonly string[] = [
   "INVOICE",
   "PAYMENT",
   "EXPENSE",
-];
+] as const;
+type PickerType = (typeof PICKER_TYPES)[number];
+
+const LINK_TYPES: readonly string[] = PICKER_TYPES;
 
 /** A link of a note as the note DTO gives it, when its type can be linked from the UI. */
 export function toNoteLinkRef(ref: EntityRef): NoteLinkRef | null {
@@ -54,6 +57,9 @@ const SEARCH: Record<PickerType, SearchAction> = {
   CONTACT: (input) => searchContactsAction(input),
   PROJECT: (input) => searchProjectsAction(input),
   DOCUMENT: (input) => searchDocumentsAction(input),
+  INVOICE: (input) => searchInvoicesAction(input),
+  PAYMENT: (input) => searchPaymentsAction(input),
+  EXPENSE: (input) => searchExpensesAction(input),
 };
 
 export interface NoteLinkPickerProps {

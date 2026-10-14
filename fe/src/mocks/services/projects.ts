@@ -1,12 +1,14 @@
 // MOCK — projects service of Hito 1 (PRD §8.3, §12 `projects`; HU-05…HU-08). `fn(ctx, input)` with the names
 // of `ProjectsService` (C9), framework-free (C11): the clock is `ctx.now`. Rows are normalized (PD-3); the
 // DTOs are assembled here, so a renamed client, technology or tag never goes stale. The financial headline
-// is computed on read from the finance collections (PD-4), `"0.00"` while they are empty. Every mutation
-// appends its activity entries through `logActivity` (C12 shape). `getProjectFinancials` belongs to H1-B3
-// and is not exported yet. Replaced by `src/server/services/projects.service.ts` in Hito 2 (C9).
+// is computed on read from the finance collections through `lib/finance` (PD-4, PRD §8.4.4), `"0.00"` while
+// they are empty. Every mutation appends its activity entries through `logActivity` (C12 shape).
+// Replaced by `src/server/services/projects.service.ts` in Hito 2 (C9).
 import { diffFields } from "@/lib/activity-diff";
 import { todayInCaracas } from "@/lib/dates";
-import { compareMoney, subMoney, sumMoney, toUsd } from "@/lib/money";
+import { computeProjectSummary, type ProjectSummary, type ProjectSummaryLine } from "@/lib/finance";
+import { compareMoney, toUsd, type MoneyString } from "@/lib/money";
+import type { BillingPlanDTO, ProjectFinancialSummary } from "@/lib/validators/billing";
 import { can } from "@/server/auth/permissions";
 import { VALIDATION_MESSAGES, type FieldErrors, type Paginated } from "@/lib/validators/common";
 import {
@@ -50,6 +52,7 @@ import { nextMockCode, nextMockId } from "../ids";
 import type { MockStore, ProjectRow } from "../store";
 import { deriveMockStore } from "../store";
 import { logActivity, mockTx, type MockTx } from "./activity";
+import { paidProjectExpensesUsd } from "./expenses";
 import { listRows, type ListSpec } from "./list";
 
 const ZERO = "0.00";
@@ -114,52 +117,73 @@ function assertDescriptionImagesReady(db: MockStore, description: unknown): void
   }
 }
 
-// ───────────────────────────── Financial headline (PD-4) ─────────────────────────────
+// ───────────────────────────── Financial summary (PD-4, PRD §8.4.4) ─────────────────────────────
 
 /**
- * H1-B2 PLACEHOLDER: USD headline of a project from the finance collections (empty until H1-B3, so
- * `"0.00"`). Contracted = the USD plans' contract amounts; a plan in another currency is NOT converted
- * here (C16: never with today's rate, and a plan stores no rate snapshot), so it adds nothing yet.
- * Invoiced = the project's lines on issued invoices at the invoice rate, collected = confirmed payment
- * allocations on those invoices, to invoice = the rest of the contract. H1-B3 replaces this function with
- * the `src/lib/finance` summary of PRD §8.4.4.
+ * A plan-currency amount in USD at the plan's own snapshot rate (D1, C16: never today's rate). USD passes
+ * through; another currency without a matching snapshot adds nothing.
  */
-function projectHeadline(db: MockStore, projectId: string): ProjectFinancialHeadlineDTO {
-  const contracted: string[] = [];
-  for (const plan of db.billingPlans) {
-    if (plan.projectId !== projectId || plan.contractAmount === null) continue;
-    if (plan.currency === "USD") contracted.push(plan.contractAmount);
-  }
+function planUsd(
+  plan: BillingPlanDTO | undefined,
+  amount: MoneyString,
+  currency: string,
+): MoneyString | null {
+  if (currency === "USD") return amount;
+  if (!plan || plan.currency !== currency || plan.usdRate === null) return null;
+  return toUsd(amount, plan.usdRate);
+}
 
-  const invoiced: string[] = [];
-  const invoiceIds = new Set<string>();
+/**
+ * The §8.4.4 summary of a project, computed by `lib/finance` from the stored snapshots: the plan's D1
+ * `contractedUsd`, the non-cancelled adjustments, the project lines of non-voided, non-draft invoices at
+ * their invoice rate (collected in proportion to what each invoice has paid), the active recurring charges
+ * and the paid expenses.
+ */
+function projectSummary(db: MockStore, projectId: string): ProjectSummary {
+  const plan = db.billingPlans.find((item) => item.projectId === projectId);
+  const adjustmentsUsd = db.installments
+    .filter((item) => item.projectId === projectId && item.kind === "AJUSTE" && !item.cancelledAt)
+    .map((item) => planUsd(plan, item.amount, item.currency))
+    .filter((amount): amount is MoneyString => amount !== null);
+
+  const lines: ProjectSummaryLine[] = [];
   for (const invoice of db.invoices) {
     if (invoice.isDraft || invoice.status === "BORRADOR" || invoice.status === "ANULADA") continue;
     for (const line of invoice.lines) {
       if (line.project?.id !== projectId) continue;
-      invoiced.push(toUsd(line.netAmount, invoice.usdRate));
-      invoiceIds.add(invoice.id);
+      lines.push({
+        netAmountUsd: toUsd(line.netAmount, invoice.usdRate),
+        invoiceReceivable: invoice.totals.receivable,
+        invoicePaid: invoice.totals.paidAmount,
+      });
     }
   }
 
-  const confirmedPayments = new Set(
-    db.payments.filter((payment) => payment.status === "CONFIRMADO").map((payment) => payment.id),
-  );
-  const collected = db.paymentAllocations
-    .filter(
-      (allocation) =>
-        invoiceIds.has(allocation.invoice.id) && confirmedPayments.has(allocation.paymentId),
-    )
-    .map((allocation) => allocation.amountUsd);
+  const monthlyRecurringUsd = db.recurringCharges
+    .filter((item) => item.projectId === projectId && item.status === "ACTIVO")
+    .map((item) => planUsd(plan, item.monthlyAmount, item.currency))
+    .filter((amount): amount is MoneyString => amount !== null);
 
-  const contractedValueUsd = contracted.length > 0 ? sumMoney(contracted) : ZERO;
-  const invoicedUsd = invoiced.length > 0 ? sumMoney(invoiced) : ZERO;
-  const remaining = subMoney(contractedValueUsd, invoicedUsd);
+  return computeProjectSummary({
+    model: plan?.model ?? null,
+    contractedUsd: plan?.contractedUsd ?? null,
+    adjustmentsUsd,
+    lines,
+    monthlyRecurringUsd,
+    allocatedExpensesUsd: paidProjectExpensesUsd(db, projectId),
+  });
+}
+
+/** The headline of the tables and the detail: the summary, never below zero (a nothing-to-invoice plan shows 0). */
+function projectHeadline(db: MockStore, projectId: string): ProjectFinancialHeadlineDTO {
+  const summary = projectSummary(db, projectId);
+  const atLeastZero = (value: MoneyString | null) =>
+    value !== null && compareMoney(value, ZERO) > 0 ? value : ZERO;
   return {
-    contractedValueUsd,
-    invoicedUsd,
-    collectedUsd: collected.length > 0 ? sumMoney(collected) : ZERO,
-    toInvoiceUsd: compareMoney(remaining, ZERO) > 0 ? remaining : ZERO,
+    contractedValueUsd: atLeastZero(summary.contractedValue),
+    invoicedUsd: summary.invoiced,
+    collectedUsd: summary.collected,
+    toInvoiceUsd: atLeastZero(summary.toInvoice),
   };
 }
 
@@ -868,6 +892,16 @@ export async function getProject(
   // An archived project is readable only by roles that may restore (C19), like `getClient`.
   if (row.archivedAt && !can(ctx.user, "restore", "trash")) throw new ServiceError("NOT_FOUND");
   return toDetail(ctx, row);
+}
+
+/** The §8.4.4 summary of the billing tab, in USD; readable like `getProject` (archived only for the trash roles). */
+export async function getProjectFinancials(
+  ctx: MockServiceContext,
+  input: ProjectIdInput,
+): Promise<ProjectFinancialSummary> {
+  const row = findProject(ctx.db, input.id);
+  if (row.archivedAt && !can(ctx.user, "restore", "trash")) throw new ServiceError("NOT_FOUND");
+  return { projectId: row.id, currency: "USD", ...projectSummary(ctx.db, row.id) };
 }
 
 /** `/projects` overview (PRD §8.3): archived projects never count. */

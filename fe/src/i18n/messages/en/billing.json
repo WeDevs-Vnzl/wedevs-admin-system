@@ -158,5 +158,17 @@
     "installmentUpdated": "Installment saved",
     "chargeCreated": "Recurring charge created",
     "chargeUpdated": "Recurring charge saved"
+  },
+  "summary": {
+    "title": "Financial summary",
+    "contractedValue": "Contracted",
+    "invoiced": "Invoiced",
+    "collected": "Collected",
+    "toInvoice": "To invoice",
+    "receivable": "Receivable",
+    "monthlyRecurring": "Monthly recurring",
+    "allocatedExpenses": "Paid expenses",
+    "margin": "Margin",
+    "open": "Manage billing"
   }
 }

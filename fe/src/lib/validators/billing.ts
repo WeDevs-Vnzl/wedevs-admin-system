@@ -7,7 +7,7 @@ import {
   installmentStatusSchema,
   recurringStatusSchema,
 } from "./enums";
-import { currencyCodeSchema, moneyAmountSchema, percentSchema } from "./money";
+import { currencyCodeSchema, moneyAmountSchema, percentSchema, rateSchema } from "./money";
 import { optionalText, requiredText, timestampSchema } from "./catalogs";
 import { isZeroMoney } from "../money";
 
@@ -261,6 +261,10 @@ export const billingPlanDtoSchema = z.object({
   scheduleDifference: amountAny.nullable(),
   /** False when the difference exceeds ±0.01: a persistent, non-blocking warning. */
   scheduleConsistent: z.boolean(),
+  /** D1 snapshot: the contract in USD, taken at plan save and never recomputed (C16); `null` without a contract. */
+  contractedUsd: moneyAmountSchema({ sign: "positive" }).nullable(),
+  /** Rate of the day of the save (`"1"` for USD); `null` when no rate was available for a plan without contract. */
+  usdRate: rateSchema.nullable(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
 });

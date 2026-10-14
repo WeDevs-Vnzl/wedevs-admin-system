@@ -468,6 +468,34 @@ describe("edit, drafts and archive", () => {
     expect(updated.totals.total).toBe("2320.00");
   });
 
+  it("HU-29 CA1: editing the total logs the diff total: [before, after]", async () => {
+    const invoice = await getInvoice(ctx, PARTIAL);
+    const before = invoice.totals.total;
+    await updateInvoice(
+      ctx,
+      updateInputOf(invoice, {
+        lines: [{ description: "Más", unitPrice: "2000.00", ivaRate: "16" }],
+      }),
+    );
+    const entries = db.activity.filter(
+      (entry) => entry.entityType === "INVOICE" && entry.entityId === PARTIAL,
+    );
+    expect(entries.at(-1)).toMatchObject({
+      action: "UPDATE",
+      changes: { total: [before, "2320.00"] },
+    });
+  });
+
+  it("an edit that keeps the total logs no total diff", async () => {
+    const invoice = await getInvoice(ctx, PARTIAL);
+    await updateInvoice(ctx, updateInputOf(invoice, { controlNumber: "CTRL-9" }));
+    const last = db.activity
+      .filter((entry) => entry.entityType === "INVOICE" && entry.entityId === PARTIAL)
+      .at(-1);
+    expect(last?.action).toBe("UPDATE");
+    expect(last?.changes?.total).toBeUndefined();
+  });
+
   it("a draft becomes an issued invoice with issueDraft", async () => {
     const draft = await createInvoice(ctx, createInput({ invoiceNumber: "BOR-1", isDraft: true }));
     expect(draft.status).toBe("BORRADOR");

@@ -64,24 +64,6 @@
   "financialSummary": {
     "title": "Estado financiero"
   },
-  "financeSlot": {
-    "billing": {
-      "title": "Cobro todavía no disponible",
-      "description": "El esquema de cobro de este proyecto aparecerá aquí cuando se habilite el módulo de finanzas."
-    },
-    "invoices": {
-      "title": "Facturas todavía no disponibles",
-      "description": "Las facturas de este registro aparecerán aquí cuando se habilite el módulo de finanzas."
-    },
-    "payments": {
-      "title": "Pagos todavía no disponibles",
-      "description": "Los pagos de este cliente aparecerán aquí cuando se habilite el módulo de finanzas."
-    },
-    "expenses": {
-      "title": "Gastos todavía no disponibles",
-      "description": "Los gastos de este proyecto aparecerán aquí cuando se habilite el módulo de finanzas."
-    }
-  },
   "formPage": {
     "back": "Volver"
   },
