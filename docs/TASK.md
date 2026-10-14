@@ -2978,6 +2978,13 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 
 🛑 **MANDATORY STOP** between every wave.
 
+### H1-B3 batch close
+
+- [x] User approves the H1-B3 close after reviewing the UI locally (2026-10-14). Feature record:
+      `odd/tasks/h1-b3-finance-ui.md` (T1–T10 done; advisories routed to H1-FX).
+- [ ] **Deferred to the end of Hito 1 (DT-69):** push `batch/h1-b3-finance-ui`, PR, CI, deploy
+      preview, merge by the user. Until then H1-B4 branches from the local `main`.
+
 ## H1-B4 — Documents and portal UI (outline)
 
 - **Objective:** document categories/types settings, documents module, markdown editor, share links
