@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { allocationProblems, computePaymentAmounts, proposeAllocation } from "./payments";
+import {
+  allocationProblems,
+  computePaymentAmounts,
+  proposeAllocation,
+  proposeIgtfAmount,
+} from "./payments";
 
 describe("computePaymentAmounts (HU-13 CA2, §9.6)", () => {
   it("CA2: 100 USD with IGTF 3 and fee 0 leaves 97 allocatable and credits 100", () => {
@@ -84,5 +89,31 @@ describe("proposeAllocation (HU-13 CA4, §9.5)", () => {
         invoiceUsdRateOnPaymentDate: "41",
       }),
     ).toEqual({ amountUsd: "100.00", amountInvoiceCurrency: "4000.00" });
+  });
+});
+
+const base = { amount: "100.00", igtfRate: "3", igtfCurrencies: ["USD", "EUR"] };
+
+describe("proposeIgtfAmount (DT-70)", () => {
+  it("proposes the fiscal rate when the method suggests IGTF", () => {
+    expect(
+      proposeIgtfAmount({ ...base, currency: "VES", suggestsIgtf: true, igtfCurrencies: [] }),
+    ).toBe("3.00");
+  });
+
+  it("proposes the fiscal rate when the currency is listed in the fiscal settings", () => {
+    expect(proposeIgtfAmount({ ...base, currency: "USD", suggestsIgtf: false })).toBe("3.00");
+  });
+
+  it("proposes nothing when neither the method nor the currency asks for it", () => {
+    expect(
+      proposeIgtfAmount({ ...base, currency: "VES", suggestsIgtf: false, igtfCurrencies: ["USD"] }),
+    ).toBe("0.00");
+  });
+
+  it("uses the amount received as the base", () => {
+    expect(
+      proposeIgtfAmount({ ...base, amount: "250.00", currency: "USD", suggestsIgtf: false }),
+    ).toBe("7.50");
   });
 });

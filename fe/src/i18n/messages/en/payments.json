@@ -4,9 +4,178 @@
     "igtfExceedsAmount": "IGTF cannot exceed the amount received",
     "feeExceedsAmount": "The fee cannot exceed the amount received",
     "allocationsExceedAllocatable": "The allocations exceed the allocatable amount",
-    "duplicateInvoiceAllocation": "The invoice already has an allocation in this payment"
+    "duplicateInvoiceAllocation": "The invoice already has an allocation in this payment",
+    "currencyMismatch": "The payment currency must be the account currency",
+    "allocationExceedsBalance": "The amount exceeds the invoice balance",
+    "allocationInvoiceNotOpen": "The invoice is not open for this client",
+    "allocationSameCurrency": "In the same currency, the invoice amount must equal the payment amount",
+    "paymentNotConfirmed": "Only a confirmed payment can be allocated"
   },
   "warnings": {
     "duplicate": "Possible duplicate payment: another one has the same reference, method and account"
+  },
+  "page": {
+    "overviewTitle": "Payments",
+    "listTitle": "Payments",
+    "newTitle": "Record payment",
+    "detailTitle": "Payment",
+    "description": "Money received from clients, how it is applied to invoices, and its receipt.",
+    "newAction": "Record payment",
+    "listAction": "View list",
+    "overviewAction": "View overview"
+  },
+  "overview": {
+    "collectedTitle": "Collected per month (USD)",
+    "pendingVerification": "Pending verification",
+    "unallocated": "With credit",
+    "unallocatedTotal": "Total credit",
+    "byMethod": "By method",
+    "byAccount": "By account",
+    "withCredit": "Payments with credit"
+  },
+  "table": {
+    "columns": {
+      "code": "Code",
+      "date": "Date",
+      "client": "Client",
+      "method": "Method",
+      "account": "Account",
+      "amount": "Amount",
+      "amountUsd": "USD",
+      "allocated": "Allocated",
+      "unallocated": "Unallocated",
+      "reference": "Reference",
+      "status": "Status"
+    },
+    "empty": {
+      "title": "No payments",
+      "description": "Record the first payment to see it here."
+    },
+    "facets": {
+      "status": "Status",
+      "client": "Client",
+      "account": "Account",
+      "method": "Method",
+      "currency": "Currency",
+      "date": "Date",
+      "unallocated": "Credit",
+      "unallocatedOnly": "With unallocated balance"
+    },
+    "searchPlaceholder": "Search by code, client, reference or account"
+  },
+  "status": {
+    "PENDIENTE_VERIFICACION": "Pending verification",
+    "CONFIRMADO": "Confirmed",
+    "ANULADO": "Voided"
+  },
+  "form": {
+    "title": "Record payment",
+    "description": "Record a payment, mark the open invoices it covers and attach its receipt.",
+    "submit": "Record payment",
+    "sections": {
+      "payer": {
+        "title": "Client and account",
+        "description": "The client who paid and the company account where the money goes."
+      },
+      "money": {
+        "title": "Amount",
+        "description": "IGTF is proposed from the method or the currency and can be edited. The fee reduces what enters the account."
+      },
+      "allocations": {
+        "title": "Apply to invoices",
+        "description": "Tick the invoices this payment covers and enter the amount in the payment currency."
+      },
+      "reference": {
+        "title": "Reference and receipt"
+      }
+    },
+    "fields": {
+      "client": "Client",
+      "date": "Date",
+      "account": "Destination account",
+      "method": "Method",
+      "currency": "Currency",
+      "amount": "Amount received",
+      "igtf": "IGTF",
+      "igtfHint": "Proposed from the fiscal settings. You can edit it.",
+      "fee": "Fee",
+      "usdRate": "Rate of the day ({currency} per USD)",
+      "reference": "Reference",
+      "receipt": "Receipt",
+      "allocatable": "Allocatable amount",
+      "netCredited": "Net credited to the account",
+      "unallocated": "Credit left on this payment",
+      "noClient": "Choose a client to see its open invoices.",
+      "noOpenInvoices": "The client has no open invoices.",
+      "clientPlaceholder": "Choose a client",
+      "accountPlaceholder": "Choose an account",
+      "methodPlaceholder": "Choose a method",
+      "appliedHeader": "Invoice",
+      "balanceHeader": "Balance",
+      "amountHeader": "Amount in {currency}",
+      "proposedHint": "Proposed with the rate of the payment day.",
+      "invoiceCurrencyHeader": "Amount in {currency} (invoice)"
+    },
+    "hints": {
+      "referenceRequired": "This method requires the reference of the transaction."
+    },
+    "duplicate": {
+      "title": "Possible duplicate",
+      "description": "Another payment already has the same reference, method and account: {codes}. You can still save it."
+    },
+    "credit": {
+      "title": "Client credit",
+      "description": "What the client paid and is not applied to invoices yet.",
+      "total": "Total in USD"
+    },
+    "receiptHint": "PDF, PNG, JPG or WEBP up to 10 MB.",
+    "ariaReceipt": "Upload receipt"
+  },
+  "toast": {
+    "created": "Payment recorded"
+  },
+  "detail": {
+    "summary": "Summary",
+    "summaryDescription": "Amounts of the payment as they entered the account.",
+    "amounts": {
+      "amount": "Amount received",
+      "igtf": "IGTF",
+      "fee": "Fee",
+      "netCredited": "Net credited",
+      "allocatable": "Allocatable",
+      "allocated": "Allocated",
+      "unallocated": "Credit",
+      "usd": "USD"
+    },
+    "fields": {
+      "client": "Client",
+      "date": "Date",
+      "account": "Account",
+      "method": "Method",
+      "reference": "Reference",
+      "usdRate": "USD rate",
+      "status": "Status"
+    },
+    "allocationsTitle": "Allocations",
+    "allocationsDescription": "Invoices this payment was applied to.",
+    "allocationsEmpty": "This payment is not applied to any invoice.",
+    "invoice": "Invoice",
+    "amountPayment": "Applied (payment currency)",
+    "amountInvoice": "Applied (invoice currency)",
+    "receiptTitle": "Receipt",
+    "receiptDescription": "Viewable here without downloading.",
+    "receiptEmpty": "This payment has no receipt.",
+    "receiptPreviewUnavailable": "The receipt preview is available once the file is stored (Hito 2). The mock only shows its details.",
+    "receiptFile": "File",
+    "receiptMime": "Type",
+    "receiptSize": "Size",
+    "receiptSizeValue": "{kb} KB",
+    "amountUsd": "Applied (USD)",
+    "dataTitle": "Payment details"
+  },
+  "credit": {
+    "title": "Credit",
+    "description": "Confirmed payments of the client with an amount not yet applied.",
+    "empty": "There is no credit."
   }
 }

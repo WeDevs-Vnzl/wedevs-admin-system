@@ -4,9 +4,178 @@
     "igtfExceedsAmount": "El IGTF no puede superar el monto recibido",
     "feeExceedsAmount": "La comisión no puede superar el monto recibido",
     "allocationsExceedAllocatable": "Las asignaciones superan el monto asignable",
-    "duplicateInvoiceAllocation": "La factura ya tiene una asignación en este pago"
+    "duplicateInvoiceAllocation": "La factura ya tiene una asignación en este pago",
+    "currencyMismatch": "La moneda del pago debe ser la moneda de la cuenta",
+    "allocationExceedsBalance": "El monto supera el saldo de la factura",
+    "allocationInvoiceNotOpen": "La factura no está abierta para este cliente",
+    "allocationSameCurrency": "En la misma moneda, el monto de la factura debe ser igual al del pago",
+    "paymentNotConfirmed": "Solo se puede asignar un pago confirmado"
   },
   "warnings": {
-    "duplicate": "Posible pago duplicado: hay otro con la misma referencia, método y cuenta"
+    "duplicate": "Posible pago duplicado: existe otro con la misma referencia, método y cuenta"
+  },
+  "page": {
+    "overviewTitle": "Pagos",
+    "listTitle": "Pagos",
+    "newTitle": "Registrar pago",
+    "detailTitle": "Pago",
+    "description": "Cobros recibidos de los clientes, su asignación a facturas y su comprobante.",
+    "newAction": "Registrar pago",
+    "listAction": "Ver lista",
+    "overviewAction": "Ver resumen"
+  },
+  "overview": {
+    "collectedTitle": "Cobrado por mes (USD)",
+    "pendingVerification": "Pendientes de verificación",
+    "unallocated": "Con saldo a favor",
+    "unallocatedTotal": "Saldo a favor total",
+    "byMethod": "Por método",
+    "byAccount": "Por cuenta",
+    "withCredit": "Pagos con saldo a favor"
+  },
+  "table": {
+    "columns": {
+      "code": "Código",
+      "date": "Fecha",
+      "client": "Cliente",
+      "method": "Método",
+      "account": "Cuenta",
+      "amount": "Monto",
+      "amountUsd": "USD",
+      "allocated": "Asignado",
+      "unallocated": "Sin asignar",
+      "reference": "Referencia",
+      "status": "Estado"
+    },
+    "empty": {
+      "title": "Sin pagos",
+      "description": "Registra el primer pago para verlo aquí."
+    },
+    "facets": {
+      "status": "Estado",
+      "client": "Cliente",
+      "account": "Cuenta",
+      "method": "Método",
+      "currency": "Moneda",
+      "date": "Fecha",
+      "unallocated": "Saldo a favor",
+      "unallocatedOnly": "Con saldo sin asignar"
+    },
+    "searchPlaceholder": "Buscar por código, cliente, referencia o cuenta"
+  },
+  "status": {
+    "PENDIENTE_VERIFICACION": "Pendiente de verificación",
+    "CONFIRMADO": "Confirmado",
+    "ANULADO": "Anulado"
+  },
+  "form": {
+    "title": "Registrar pago",
+    "description": "Registra un cobro, indica cómo se aplica a las facturas abiertas y adjunta su comprobante.",
+    "submit": "Registrar pago",
+    "sections": {
+      "payer": {
+        "title": "Cliente y cuenta",
+        "description": "El cliente que pagó y la cuenta de la empresa donde entra el dinero."
+      },
+      "money": {
+        "title": "Monto",
+        "description": "El IGTF se propone según el método o la moneda, y se puede editar. La comisión reduce lo que entra en la cuenta."
+      },
+      "allocations": {
+        "title": "Aplicar a facturas",
+        "description": "Marca las facturas que cubre este pago e indica el monto en la moneda del pago."
+      },
+      "reference": {
+        "title": "Referencia y comprobante"
+      }
+    },
+    "fields": {
+      "client": "Cliente",
+      "date": "Fecha",
+      "account": "Cuenta destino",
+      "method": "Método",
+      "currency": "Moneda",
+      "amount": "Monto recibido",
+      "igtf": "IGTF",
+      "igtfHint": "Propuesto por la configuración fiscal. Puedes editarlo.",
+      "fee": "Comisión",
+      "usdRate": "Tasa del día ({currency} por USD)",
+      "reference": "Referencia",
+      "receipt": "Comprobante",
+      "allocatable": "Monto asignable",
+      "netCredited": "Neto acreditado en la cuenta",
+      "unallocated": "Saldo a favor de este pago",
+      "noClient": "Elige un cliente para ver sus facturas abiertas.",
+      "noOpenInvoices": "El cliente no tiene facturas abiertas.",
+      "clientPlaceholder": "Elige un cliente",
+      "accountPlaceholder": "Elige una cuenta",
+      "methodPlaceholder": "Elige un método",
+      "appliedHeader": "Factura",
+      "balanceHeader": "Saldo",
+      "amountHeader": "Monto en {currency}",
+      "proposedHint": "Propuesto con la tasa del día del pago.",
+      "invoiceCurrencyHeader": "Monto en {currency} (factura)"
+    },
+    "hints": {
+      "referenceRequired": "Este método exige la referencia de la operación."
+    },
+    "duplicate": {
+      "title": "Posible duplicado",
+      "description": "Ya existe otro pago con la misma referencia, método y cuenta: {codes}. Puedes guardarlo igualmente."
+    },
+    "credit": {
+      "title": "Saldo a favor del cliente",
+      "description": "Lo que el cliente pagó y no se ha aplicado a facturas.",
+      "total": "Total en USD"
+    },
+    "receiptHint": "PDF, PNG, JPG o WEBP de hasta 10 MB.",
+    "ariaReceipt": "Subir comprobante"
+  },
+  "toast": {
+    "created": "Pago registrado"
+  },
+  "detail": {
+    "summary": "Resumen",
+    "summaryDescription": "Montos del pago tal como entraron en la cuenta.",
+    "amounts": {
+      "amount": "Monto recibido",
+      "igtf": "IGTF",
+      "fee": "Comisión",
+      "netCredited": "Neto acreditado",
+      "allocatable": "Monto asignable",
+      "allocated": "Asignado",
+      "unallocated": "Saldo a favor",
+      "usd": "USD"
+    },
+    "fields": {
+      "client": "Cliente",
+      "date": "Fecha",
+      "account": "Cuenta",
+      "method": "Método",
+      "reference": "Referencia",
+      "usdRate": "Tasa USD",
+      "status": "Estado"
+    },
+    "allocationsTitle": "Asignaciones",
+    "allocationsDescription": "Facturas a las que se aplicó este pago.",
+    "allocationsEmpty": "Este pago no está asignado a ninguna factura.",
+    "invoice": "Factura",
+    "amountPayment": "Aplicado (moneda del pago)",
+    "amountInvoice": "Aplicado (moneda de la factura)",
+    "receiptTitle": "Comprobante",
+    "receiptDescription": "Se ve aquí sin descargarlo.",
+    "receiptEmpty": "Este pago no tiene comprobante.",
+    "receiptPreviewUnavailable": "La vista previa del comprobante estará disponible cuando el archivo esté almacenado (Hito 2). En la maqueta solo se muestran sus datos.",
+    "receiptFile": "Archivo",
+    "receiptMime": "Tipo",
+    "receiptSize": "Tamaño",
+    "receiptSizeValue": "{kb} KB",
+    "amountUsd": "Aplicado (USD)",
+    "dataTitle": "Datos del pago"
+  },
+  "credit": {
+    "title": "Saldo a favor",
+    "description": "Pagos confirmados del cliente con monto sin asignar.",
+    "empty": "No hay saldo a favor."
   }
 }

@@ -1,6 +1,7 @@
 import {
   compareMoney,
   fromUsd,
+  percentOf,
   roundMoney,
   subMoney,
   sumMoney,
@@ -67,4 +68,20 @@ export function proposeAllocation(input: {
       ? roundMoney(input.amountPaymentCurrency)
       : fromUsd(amountUsd, input.invoiceUsdRateOnPaymentDate);
   return { amountUsd, amountInvoiceCurrency };
+}
+
+/**
+ * Proposed IGTF of a payment (DT-70): proposed when the method has `suggestsIgtf` or the currency is listed in
+ * the fiscal `igtfCurrencies`; the amount is the fiscal rate of the received amount. The user may edit it. The
+ * IGTF is not income and does not reduce the amount credited to the account (§9.6): the lib computes that.
+ */
+export function proposeIgtfAmount(input: {
+  amount: MoneyString;
+  currency: string;
+  suggestsIgtf: boolean;
+  igtfRate: MoneyString;
+  igtfCurrencies: readonly string[];
+}): MoneyString {
+  const proposed = input.suggestsIgtf || input.igtfCurrencies.includes(input.currency);
+  return proposed ? percentOf(input.amount, input.igtfRate) : "0.00";
 }
