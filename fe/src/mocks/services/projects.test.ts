@@ -95,6 +95,7 @@ function seedCharge(
     leadDays: 5,
     status,
     lastGeneratedPeriodStart: null,
+    resumedOn: null,
     monthlyAmount: "50.00",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",

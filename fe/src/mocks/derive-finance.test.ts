@@ -129,6 +129,7 @@ describe("deriveFinance (C17 through the store)", () => {
         leadDays: 7,
         status: "ACTIVO",
         lastGeneratedPeriodStart: null,
+        resumedOn: null,
         monthlyAmount: "0.00",
         createdAt: STAMP,
         updatedAt: STAMP,

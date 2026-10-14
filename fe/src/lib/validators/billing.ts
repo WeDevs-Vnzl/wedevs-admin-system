@@ -336,6 +336,8 @@ export const recurringChargeDtoSchema = z.object({
   leadDays: z.number().int(),
   status: recurringStatusSchema,
   lastGeneratedPeriodStart: dateOnlySchema.nullable(),
+  /** Business day of the last resume after a pause: the daily job skips the periods due before it (PRD §8.4.3). */
+  resumedOn: dateOnlySchema.nullable(),
   /** Amount normalized to a month, in the charge currency (quarterly ÷ 3, …); computed in `lib/finance`. */
   monthlyAmount: amountPositive,
   createdAt: timestampSchema,

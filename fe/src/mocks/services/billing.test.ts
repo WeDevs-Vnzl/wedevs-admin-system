@@ -398,6 +398,26 @@ describe("recurring charges (HU-10)", () => {
     expect(generated()).toHaveLength(3);
   });
 
+  it("resuming a paused charge does not back-fill the skipped periods (PRD §8.4.3)", async () => {
+    const { h, chargeId, generated } = await monthlyCharge();
+    await setRecurringChargeStatus(h.ctx, { id: chargeId, status: "PAUSADO" });
+    const resumedAt = contextAt(h, "2027-01-09T15:00:00.000Z");
+    await setRecurringChargeStatus(resumedAt, { id: chargeId, status: "ACTIVO" });
+    await runRecurringGeneration(resumedAt);
+    expect(generated()).toHaveLength(0);
+
+    // The next period after the resume is generated as usual: 2027-02-05, on 2027-01-29.
+    await runRecurringGeneration(contextAt(h, "2027-01-29T15:00:00.000Z"));
+    expect(generated().map((item) => item.periodStart)).toEqual(["2027-02-05"]);
+
+    // The skipped ones stay available on request.
+    const missing = await generateMissingPeriods(resumedAt, {
+      recurringChargeId: chargeId,
+      upTo: "2027-01-09",
+    });
+    expect(missing.periodStarts).toEqual(["2026-11-05", "2026-12-05", "2027-01-05"]);
+  });
+
   it("a finished charge is final", async () => {
     const { h, chargeId } = await monthlyCharge();
     await setRecurringChargeStatus(h.ctx, { id: chargeId, status: "FINALIZADO" });

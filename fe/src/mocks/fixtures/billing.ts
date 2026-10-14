@@ -63,6 +63,7 @@ const maintenanceCharge: RecurringChargeDTO = {
   leadDays: 7,
   status: "ACTIVO",
   lastGeneratedPeriodStart: null,
+  resumedOn: null,
   monthlyAmount: "150.00",
   createdAt: stamp(MAINTENANCE_START),
   updatedAt: stamp(MAINTENANCE_START),

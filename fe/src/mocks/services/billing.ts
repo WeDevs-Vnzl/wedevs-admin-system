@@ -50,6 +50,8 @@ export const BILLING_ERRORS = {
 
 /** Guard on the periods one generation may create; a sane schedule never reaches it. */
 const MAX_PERIODS_PER_RUN = 24;
+/** Guard on the periods one walk may pass over (existing and skipped ones included). */
+const MAX_PERIODS_WALKED = 600;
 
 /** The stored plan; the DTO carries the D1 snapshot (`contractedUsd`, `usdRate`), fixed at plan save (C16). */
 export type BillingPlanRow = BillingPlanDTO;
@@ -476,6 +478,7 @@ export async function createRecurringCharge(
     leadDays: input.leadDays,
     status: "ACTIVO",
     lastGeneratedPeriodStart: null,
+    resumedOn: null,
     // Placeholder: the derive pass normalizes it to a month (lib/finance, C17).
     monthlyAmount: roundMoney(input.amount),
     createdAt: now,
@@ -540,6 +543,8 @@ export async function setRecurringChargeStatus(
   }
   const previous = row.status;
   row.status = input.status;
+  // A resume skips the periods missed while paused; only "Generate missing periods" creates them.
+  if (previous === "PAUSADO" && input.status === "ACTIVO") row.resumedOn = todayInCaracas(ctx.now);
   row.updatedAt = ctx.now.toISOString();
   await logActivity(mockTx(ctx), {
     actorType: "USER",
@@ -565,6 +570,9 @@ function generatePeriods(
   asOf: DateOnly,
   options: { ignoreStatus?: boolean } = {},
 ): DateOnly[] {
+  // The daily job passes over the periods whose generation day fell before the last resume (PRD §8.4.3).
+  const skipBefore = options.ignoreStatus ? null : charge.resumedOn;
+  const skipped: DateOnly[] = [];
   const plan = planOf(db, charge.projectId);
   const schedule = {
     frequency: charge.frequency,
@@ -574,13 +582,29 @@ function generatePeriods(
     leadDays: charge.leadDays,
     status: options.ignoreStatus ? ("ACTIVO" as const) : charge.status,
   };
-  const created: DateOnly[] = [];
-  for (let guard = 0; guard < MAX_PERIODS_PER_RUN; guard += 1) {
-    const existing = db.installments
+  const existing = new Set(
+    db.installments
       .filter((item) => item.recurringChargeId === charge.id)
-      .flatMap((item) => (item.periodStart === null ? [] : [item.periodStart]));
-    const [due] = dueRecurringPeriods(schedule, existing, asOf);
+      .flatMap((item) => (item.periodStart === null ? [] : [item.periodStart])),
+  );
+  // The job continues after the last period; the on-request path walks from the first one and fills the gaps.
+  const walked: DateOnly[] = options.ignoreStatus ? [] : [...existing];
+  const created: DateOnly[] = [];
+  for (
+    let guard = 0;
+    guard < MAX_PERIODS_WALKED && created.length < MAX_PERIODS_PER_RUN;
+    guard += 1
+  ) {
+    const [due] = dueRecurringPeriods(schedule, [...walked, ...skipped], asOf);
     if (!due) break;
+    if (existing.has(due.periodStart)) {
+      walked.push(due.periodStart);
+      continue;
+    }
+    if (skipBefore !== null && due.generateOn < skipBefore) {
+      skipped.push(due.periodStart);
+      continue;
+    }
     const order = nextOrder(db, charge.projectId);
     db.installments.push(
       newInstallment(db, {
@@ -597,7 +621,11 @@ function generatePeriods(
         periodEnd: due.periodEnd,
       }),
     );
-    charge.lastGeneratedPeriodStart = due.periodStart;
+    if (!charge.lastGeneratedPeriodStart || due.periodStart > charge.lastGeneratedPeriodStart) {
+      charge.lastGeneratedPeriodStart = due.periodStart;
+    }
+    existing.add(due.periodStart);
+    walked.push(due.periodStart);
     created.push(due.periodStart);
   }
   return created;
