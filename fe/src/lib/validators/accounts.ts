@@ -129,6 +129,37 @@ export const accountsOverviewDtoSchema = z.object({
 });
 export type AccountsOverviewDTO = z.infer<typeof accountsOverviewDtoSchema>;
 
+/** Status facet of `/accounts/list`: accounts are deactivated, not archived. */
+export const ACCOUNT_STATUS_FILTER_VALUES = ["active", "inactive"] as const;
+export type AccountStatusFilter = (typeof ACCOUNT_STATUS_FILTER_VALUES)[number];
+
+/** Sort fields of the accounts table (the column ids). */
+export const ACCOUNT_SORT_FIELDS = [
+  "name",
+  "type",
+  "institution",
+  "currency",
+  "balance",
+  "balanceUsd",
+  "status",
+] as const;
+
+/**
+ * `listAccounts` filters (S15): the table query plus the type, currency and status facets. Every facet is
+ * optional, so the pickers keep calling it with only `pageSize`. `status` wins over `includeInactive`.
+ */
+export const accountFilterSchema = withSortFields(
+  listQuerySchema.extend({
+    type: facetSchema(accountTypeSchema),
+    currency: facetSchema(currencyCodeSchema),
+    status: facetSchema(z.enum(ACCOUNT_STATUS_FILTER_VALUES)),
+    includeInactive: z.union([z.boolean(), z.stringbool()]).default(false),
+  }),
+  ACCOUNT_SORT_FIELDS,
+);
+export type AccountFilter = z.infer<typeof accountFilterSchema>;
+export type AccountFilterInput = z.input<typeof accountFilterSchema>;
+
 // ───────────────────────────── Transfers ─────────────────────────────
 
 const transferFields = {
@@ -179,7 +210,7 @@ export type TransferDTO = z.infer<typeof transferDtoSchema>;
 
 /**
  * `createMovement`: `APORTE_CAPITAL` (+) and `RETIRO_SOCIO` (−) take a positive amount and a partner;
- * the sign is applied by the service. `AJUSTE` is signed and non-zero.
+ * they are stored as that magnitude and `lib/finance` applies the sign. `AJUSTE` is signed and non-zero.
  */
 export const createMovementInputSchema = z
   .object({
@@ -225,7 +256,7 @@ export const movementDtoSchema = z.object({
   account: entityRefSchema,
   type: accountMovementTypeSchema,
   date: dateOnlySchema,
-  /** Signed: contributions positive, withdrawals negative. */
+  /** Positive magnitude for contributions and withdrawals (the type gives the sign); signed for `AJUSTE`. */
   amount: amountAny,
   amountUsd: amountAny,
   partner: entityRefSchema.nullable(),

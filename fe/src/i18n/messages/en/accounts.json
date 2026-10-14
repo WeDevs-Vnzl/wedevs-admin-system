@@ -1,7 +1,213 @@
 {
+  "page": {
+    "title": "Account",
+    "overviewTitle": "Accounts",
+    "listTitle": "Accounts (list)",
+    "newTitle": "New account",
+    "editTitle": "Edit {name}",
+    "transferTitle": "New transfer",
+    "movementTitle": "New movement",
+    "description": "Company accounts: balances, the ledger and reconciliation.",
+    "newAction": "New account",
+    "transferAction": "Transfer",
+    "movementAction": "Movement"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "overview": {
+    "totalTitle": "Consolidated total in USD",
+    "totalDescription": "Sum of the USD balances of the active accounts.",
+    "empty": {
+      "title": "No accounts yet",
+      "description": "Create the first company account to see its balances."
+    },
+    "kpis": {
+      "active": "Active accounts",
+      "inactive": "Inactive accounts",
+      "currencies": "Currencies in use"
+    },
+    "accountsTitle": "Balances by account"
+  },
+  "table": {
+    "columns": {
+      "name": "Account",
+      "type": "Type",
+      "institution": "Institution",
+      "currency": "Currency",
+      "balance": "Balance",
+      "balanceUsd": "Balance in USD",
+      "status": "Status"
+    },
+    "empty": {
+      "title": "No accounts",
+      "description": "Create an account to get started."
+    },
+    "facets": {
+      "type": "Type",
+      "currency": "Currency",
+      "status": "Status"
+    },
+    "search": "Search by name, institution or holder"
+  },
+  "form": {
+    "createTitle": "New account",
+    "editTitle": "Edit account",
+    "description": "The account details. The identifier is stored masked.",
+    "sections": {
+      "identity": {
+        "title": "Identity",
+        "description": "Name, type and how the account is identified."
+      },
+      "opening": {
+        "title": "Opening balance",
+        "description": "The balance the account starts with in the ledger."
+      },
+      "notes": {
+        "title": "Notes"
+      }
+    },
+    "fields": {
+      "name": "Name",
+      "type": "Type",
+      "institution": "Institution",
+      "currency": "Currency",
+      "currencyHint": "The currency cannot change once the account has movements.",
+      "currencyLockedHint": "Locked: the account already has movements.",
+      "identifier": "Number or address",
+      "identifierPlaceholder": "Unchanged",
+      "identifierHint": "Only the last 4 digits or the ends of the address are stored. Empty: the current one is kept.",
+      "holderName": "Holder",
+      "openingBalance": "Opening balance",
+      "openingDate": "Opening balance date",
+      "active": "Active",
+      "activeHint": "An inactive account takes no new payments or transfers.",
+      "notes": "Notes"
+    }
+  },
+  "toast": {
+    "created": "Account created",
+    "updated": "Account updated",
+    "transferred": "Transfer recorded",
+    "movementRecorded": "Movement recorded"
+  },
+  "detail": {
+    "edit": "Edit",
+    "balance": "Current balance",
+    "balanceDescription": "Balance in the account currency, as of today.",
+    "dataTitle": "Details",
+    "noIdentifier": "No identifier",
+    "fields": {
+      "currency": "Currency",
+      "identifier": "Number or address",
+      "holderName": "Holder",
+      "openingBalance": "Opening balance",
+      "openingDate": "Opening balance date",
+      "status": "Status",
+      "notes": "Notes"
+    }
+  },
+  "ledger": {
+    "title": "Ledger",
+    "description": "Every movement that changes the balance, with the running balance after it.",
+    "columns": {
+      "date": "Date",
+      "kind": "Type",
+      "source": "Source",
+      "description": "Description",
+      "amount": "Amount",
+      "balance": "Running balance"
+    },
+    "kinds": {
+      "OPENING_BALANCE": "Opening balance",
+      "PAYMENT": "Payment",
+      "EXPENSE": "Expense",
+      "TRANSFER_IN": "Transfer received",
+      "TRANSFER_OUT": "Transfer sent"
+    },
+    "empty": {
+      "title": "No movements",
+      "description": "Payments, expenses, transfers and movements will appear here."
+    }
+  },
+  "reconcile": {
+    "title": "Reconciliation",
+    "description": "Compares the statement balance with the system balance. A difference suggests an adjustment.",
+    "readOnly": "Read only: you do not have permission to reconcile this account.",
+    "date": "Statement date",
+    "statement": "Statement balance",
+    "submit": "Calculate difference",
+    "system": "System balance",
+    "difference": "Difference",
+    "suggestion": "The difference suggests an adjustment for that amount.",
+    "adjust": "Record adjustment",
+    "noDifference": "No difference: the system balance matches the statement."
+  },
+  "transfer": {
+    "title": "New transfer",
+    "description": "Moves money between two company accounts. The origin is debited with the fee; the destination receives what arrives, in its currency.",
+    "submit": "Record transfer",
+    "sections": {
+      "route": {
+        "title": "Route",
+        "description": "Which account the money leaves and which one it reaches."
+      },
+      "amounts": {
+        "title": "Amounts",
+        "description": "What leaves the origin and what arrives at the destination."
+      },
+      "reference": {
+        "title": "Reference"
+      }
+    },
+    "fields": {
+      "date": "Date",
+      "from": "Origin account",
+      "to": "Destination account",
+      "amountFrom": "Amount leaving ({currency})",
+      "amountTo": "Amount arriving ({currency})",
+      "amountToHint": "In the destination account currency.",
+      "fee": "Fee ({currency})",
+      "rate": "Cross rate",
+      "rateHint": "Only when the currencies differ: amount arriving divided by amount leaving.",
+      "usdRate": "{currency} rate to USD",
+      "usdRatePending": "Choose the origin account to load the rate.",
+      "reference": "Reference",
+      "notes": "Notes"
+    }
+  },
+  "movement": {
+    "title": "New movement",
+    "description": "A partner contribution or withdrawal, or a signed adjustment to balance the account.",
+    "submit": "Record movement",
+    "sections": {
+      "movement": {
+        "title": "Movement",
+        "description": "Type, account, amount and, when it applies, the partner."
+      }
+    },
+    "fields": {
+      "type": "Type",
+      "typeHint": "Contributions and withdrawals take a positive amount.",
+      "adjustmentHint": "An adjustment carries a sign: a negative one lowers the balance.",
+      "account": "Account",
+      "date": "Date",
+      "amount": "Amount ({currency})",
+      "amountHint": "Positive amount.",
+      "amountSignedHint": "It can be negative, but not zero.",
+      "usdRate": "{currency} rate to USD",
+      "usdRatePending": "Choose the account to load the rate.",
+      "partner": "Partner",
+      "partnerPlaceholder": "Choose a partner",
+      "description": "Description"
+    }
+  },
   "validation": {
-    "sameAccount": "The source and destination accounts must be different",
-    "partnerRequired": "Select the partner",
-    "adjustmentNonZero": "An adjustment cannot be zero"
+    "sameAccount": "The origin and destination accounts must be different",
+    "partnerRequired": "Enter the partner",
+    "adjustmentNonZero": "An adjustment cannot be zero",
+    "inactive": "The account is inactive",
+    "currencyLocked": "The currency cannot change once the account has movements"
   }
 }

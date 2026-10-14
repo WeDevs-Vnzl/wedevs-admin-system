@@ -1,7 +1,213 @@
 {
+  "page": {
+    "title": "Cuenta",
+    "overviewTitle": "Cuentas",
+    "listTitle": "Cuentas (lista)",
+    "newTitle": "Nueva cuenta",
+    "editTitle": "Editar {name}",
+    "transferTitle": "Nueva transferencia",
+    "movementTitle": "Nuevo movimiento",
+    "description": "Cuentas de la empresa: saldos, libro de movimientos y conciliación.",
+    "newAction": "Nueva cuenta",
+    "transferAction": "Transferir",
+    "movementAction": "Movimiento"
+  },
+  "status": {
+    "active": "Activa",
+    "inactive": "Inactiva"
+  },
+  "overview": {
+    "totalTitle": "Total consolidado en USD",
+    "totalDescription": "Suma de los saldos en USD de las cuentas activas.",
+    "empty": {
+      "title": "Aún no hay cuentas",
+      "description": "Crea la primera cuenta de la empresa para ver sus saldos."
+    },
+    "kpis": {
+      "active": "Cuentas activas",
+      "inactive": "Cuentas inactivas",
+      "currencies": "Monedas en uso"
+    },
+    "accountsTitle": "Saldos por cuenta"
+  },
+  "table": {
+    "columns": {
+      "name": "Cuenta",
+      "type": "Tipo",
+      "institution": "Institución",
+      "currency": "Moneda",
+      "balance": "Saldo",
+      "balanceUsd": "Saldo en USD",
+      "status": "Estado"
+    },
+    "empty": {
+      "title": "No hay cuentas",
+      "description": "Crea una cuenta para empezar."
+    },
+    "facets": {
+      "type": "Tipo",
+      "currency": "Moneda",
+      "status": "Estado"
+    },
+    "search": "Buscar por nombre, institución o titular"
+  },
+  "form": {
+    "createTitle": "Nueva cuenta",
+    "editTitle": "Editar cuenta",
+    "description": "Los datos de la cuenta. El identificador se guarda enmascarado.",
+    "sections": {
+      "identity": {
+        "title": "Identidad",
+        "description": "Nombre, tipo y cómo se identifica la cuenta."
+      },
+      "opening": {
+        "title": "Saldo inicial",
+        "description": "El saldo con el que la cuenta entra al libro."
+      },
+      "notes": {
+        "title": "Notas"
+      }
+    },
+    "fields": {
+      "name": "Nombre",
+      "type": "Tipo",
+      "institution": "Institución",
+      "currency": "Moneda",
+      "currencyHint": "La moneda no se puede cambiar cuando la cuenta tiene movimientos.",
+      "currencyLockedHint": "Fijada: la cuenta ya tiene movimientos.",
+      "identifier": "Número o dirección",
+      "identifierPlaceholder": "Sin cambios",
+      "identifierHint": "Solo se guardan los últimos 4 dígitos o los extremos de la dirección. Vacío: se mantiene el actual.",
+      "holderName": "Titular",
+      "openingBalance": "Saldo inicial",
+      "openingDate": "Fecha del saldo inicial",
+      "active": "Activa",
+      "activeHint": "Una cuenta inactiva no recibe pagos ni transferencias nuevas.",
+      "notes": "Notas"
+    }
+  },
+  "toast": {
+    "created": "Cuenta creada",
+    "updated": "Cuenta actualizada",
+    "transferred": "Transferencia registrada",
+    "movementRecorded": "Movimiento registrado"
+  },
+  "detail": {
+    "edit": "Editar",
+    "balance": "Saldo actual",
+    "balanceDescription": "Saldo en la moneda de la cuenta, a la fecha de hoy.",
+    "dataTitle": "Datos",
+    "noIdentifier": "Sin identificador",
+    "fields": {
+      "currency": "Moneda",
+      "identifier": "Número o dirección",
+      "holderName": "Titular",
+      "openingBalance": "Saldo inicial",
+      "openingDate": "Fecha del saldo inicial",
+      "status": "Estado",
+      "notes": "Notas"
+    }
+  },
+  "ledger": {
+    "title": "Libro de movimientos",
+    "description": "Cada movimiento que cambia el saldo, con el saldo corrido después de él.",
+    "columns": {
+      "date": "Fecha",
+      "kind": "Tipo",
+      "source": "Origen",
+      "description": "Descripción",
+      "amount": "Importe",
+      "balance": "Saldo corrido"
+    },
+    "kinds": {
+      "OPENING_BALANCE": "Saldo inicial",
+      "PAYMENT": "Cobro",
+      "EXPENSE": "Gasto",
+      "TRANSFER_IN": "Transferencia recibida",
+      "TRANSFER_OUT": "Transferencia enviada"
+    },
+    "empty": {
+      "title": "Sin movimientos",
+      "description": "Los cobros, gastos, transferencias y movimientos aparecerán aquí."
+    }
+  },
+  "reconcile": {
+    "title": "Conciliación",
+    "description": "Compara el saldo del estado de cuenta con el saldo del sistema. Una diferencia sugiere un ajuste.",
+    "readOnly": "Solo lectura: no tienes permiso para conciliar esta cuenta.",
+    "date": "Fecha del estado de cuenta",
+    "statement": "Saldo del estado de cuenta",
+    "submit": "Calcular diferencia",
+    "system": "Saldo del sistema",
+    "difference": "Diferencia",
+    "suggestion": "La diferencia sugiere un ajuste por ese importe.",
+    "adjust": "Registrar ajuste",
+    "noDifference": "Sin diferencia: el saldo del sistema coincide con el estado de cuenta."
+  },
+  "transfer": {
+    "title": "Nueva transferencia",
+    "description": "Mueve dinero entre dos cuentas de la empresa. El origen se descuenta con la comisión; el destino recibe lo que llega, en su moneda.",
+    "submit": "Registrar transferencia",
+    "sections": {
+      "route": {
+        "title": "Ruta",
+        "description": "De qué cuenta sale y a qué cuenta llega el dinero."
+      },
+      "amounts": {
+        "title": "Importes",
+        "description": "Lo que sale del origen y lo que llega al destino."
+      },
+      "reference": {
+        "title": "Referencia"
+      }
+    },
+    "fields": {
+      "date": "Fecha",
+      "from": "Cuenta de origen",
+      "to": "Cuenta de destino",
+      "amountFrom": "Importe que sale ({currency})",
+      "amountTo": "Importe que llega ({currency})",
+      "amountToHint": "En la moneda de la cuenta destino.",
+      "fee": "Comisión ({currency})",
+      "rate": "Tasa de cruce",
+      "rateHint": "Solo si las monedas son distintas: lo que llega dividido entre lo que sale.",
+      "usdRate": "Tasa a USD de {currency}",
+      "usdRatePending": "Elige la cuenta de origen para cargar la tasa.",
+      "reference": "Referencia",
+      "notes": "Notas"
+    }
+  },
+  "movement": {
+    "title": "Nuevo movimiento",
+    "description": "Aporte o retiro de un socio, o un ajuste firmado para cuadrar el saldo.",
+    "submit": "Registrar movimiento",
+    "sections": {
+      "movement": {
+        "title": "Movimiento",
+        "description": "Tipo, cuenta, importe y, cuando aplica, el socio."
+      }
+    },
+    "fields": {
+      "type": "Tipo",
+      "typeHint": "Aporte y retiro suman y restan con un importe positivo.",
+      "adjustmentHint": "Un ajuste lleva signo: negativo resta del saldo.",
+      "account": "Cuenta",
+      "date": "Fecha",
+      "amount": "Importe ({currency})",
+      "amountHint": "Importe positivo.",
+      "amountSignedHint": "Puede ser negativo, pero no cero.",
+      "usdRate": "Tasa a USD de {currency}",
+      "usdRatePending": "Elige la cuenta para cargar la tasa.",
+      "partner": "Socio",
+      "partnerPlaceholder": "Elige un socio",
+      "description": "Descripción"
+    }
+  },
   "validation": {
     "sameAccount": "La cuenta de origen y la de destino deben ser distintas",
     "partnerRequired": "Indica el socio",
-    "adjustmentNonZero": "Un ajuste no puede ser cero"
+    "adjustmentNonZero": "Un ajuste no puede ser cero",
+    "inactive": "La cuenta está inactiva",
+    "currencyLocked": "La moneda no se puede cambiar cuando la cuenta tiene movimientos"
   }
 }
