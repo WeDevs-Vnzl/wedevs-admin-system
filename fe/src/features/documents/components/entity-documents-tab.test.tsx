@@ -7,6 +7,8 @@ import enPatterns from "@/i18n/messages/en/patterns.json";
 import esDocuments from "@/i18n/messages/es/documents.json";
 import esEnums from "@/i18n/messages/es/enums.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
+import esTable from "@/i18n/messages/es/table.json";
+import enTable from "@/i18n/messages/en/table.json";
 import type { DocumentListRowDTO } from "@/lib/validators/documents";
 
 const queries = vi.hoisted(() => ({
@@ -104,6 +106,7 @@ async function renderTab(loc: "en" | "es" = "en") {
     documents: loc === "es" ? esDocuments : enDocuments,
     enums: loc === "es" ? esEnums : enEnums,
     patterns: loc === "es" ? esPatterns : enPatterns,
+    table: loc === "es" ? esTable : enTable,
   };
   const tab = await EntityDocumentsTab({ entity: clientRef });
   return render(
@@ -187,7 +190,7 @@ describe("EntityDocumentsTab", () => {
   it("renders in Spanish", async () => {
     await renderTab("es");
     expect(screen.getByRole("heading", { name: /Documentos/ })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Código" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Código/ })).toBeInTheDocument();
     expect(screen.getByText("Legal · 1")).toBeInTheDocument();
   });
 });

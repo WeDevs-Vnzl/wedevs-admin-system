@@ -17,7 +17,7 @@ export function OverviewLayout({ header, kpis, main, aside }: OverviewLayoutProp
       {header}
       {kpis ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{kpis}</div> : null}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-6">{main}</div>
+        <div className="grid min-w-0 gap-6">{main}</div>
         {aside ? <aside className="space-y-6">{aside}</aside> : null}
       </div>
     </div>

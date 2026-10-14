@@ -242,5 +242,41 @@ describe("DataTable", () => {
       expect(header).toHaveClass("text-right");
     });
   });
-});
 
+  describe("compact variant", () => {
+    function renderCompact(data: Row[] = rows) {
+      return render(
+        <NextIntlClientProvider locale="en" messages={{ table: en }} timeZone="UTC">
+          <DataTable<Row>
+            variant="compact"
+            data={data}
+            columns={columns}
+            getRowId={(row) => row.id}
+            emptyState={{ title: en.empty.title }}
+          />
+        </NextIntlClientProvider>,
+      );
+    }
+
+    it("renders every row in the shared frame without toolbar, selection, sorting or pagination", () => {
+      const { container } = renderCompact();
+
+      expect(screen.getByText("Acme")).toBeInTheDocument();
+      expect(screen.getByText("Globex")).toBeInTheDocument();
+      expect(screen.queryByRole("searchbox")).toBeNull();
+      expect(screen.queryByRole("textbox")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Columns" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Sort by Code" })).toBeNull();
+      expect(screen.queryByRole("checkbox")).toBeNull();
+      expect(screen.queryByText("1–2 of 2")).toBeNull();
+      expect(container.querySelector("thead")).toHaveClass("bg-table-head");
+      expect(container.querySelector("th")).toHaveClass("sticky");
+    });
+
+    it("shows the empty state inside the table when there are no rows", () => {
+      renderCompact([]);
+
+      expect(screen.getByText(en.empty.title)).toBeInTheDocument();
+    });
+  });
+});

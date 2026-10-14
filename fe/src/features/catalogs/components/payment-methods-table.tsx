@@ -5,18 +5,14 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/patterns/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  createDataTableColumnHelper,
+  type DataTableColumnDef,
+} from "@/components/ui/data-table";
+import { Switch } from "@/components/ui/switch";
 import type { PaymentMethodDTO } from "@/lib/validators/catalogs";
 import { updatePaymentMethodAction } from "../actions";
 import { catalogLabel } from "./catalog-label";
@@ -29,6 +25,8 @@ type PaymentMethodsTableProps = {
   /** Every payment method, active or not. */
   rows: PaymentMethodDTO[];
 };
+
+const helper = createDataTableColumnHelper<PaymentMethodDTO>();
 
 // Settings → Métodos de pago (PRD §8.15): name, reference and IGTF flags (DT-70: `suggestsIgtf` is one of the two
 // sources of the IGTF proposal), activation instead of delete (C19).
@@ -66,6 +64,74 @@ export function PaymentMethodsTable({ rows }: PaymentMethodsTableProps) {
     </Badge>
   );
 
+  const columns: DataTableColumnDef<PaymentMethodDTO>[] = [
+    helper.display({
+      id: "name",
+      header: t("table.columns.name"),
+      cell: ({ row }) => <span className="font-medium">{catalogLabel(row.original, locale)}</span>,
+      meta: { label: t("table.columns.name"), pinned: true },
+      size: 200,
+    }),
+    helper.accessor("code", {
+      header: t("table.columns.code"),
+      cell: ({ getValue }) => (
+        <span className="font-mono text-xs text-muted-foreground">{getValue()}</span>
+      ),
+      meta: { label: t("table.columns.code") },
+      size: 140,
+    }),
+    helper.accessor("requiresReference", {
+      header: t("table.columns.requiresReference"),
+      cell: ({ getValue }) => flag(getValue()),
+      meta: { label: t("table.columns.requiresReference") },
+      size: 160,
+    }),
+    helper.accessor("suggestsIgtf", {
+      header: t("table.columns.suggestsIgtf"),
+      cell: ({ getValue }) => flag(getValue()),
+      meta: { label: t("table.columns.suggestsIgtf") },
+      size: 160,
+    }),
+    helper.display({
+      id: "status",
+      header: t("table.columns.status"),
+      cell: ({ row }) => {
+        const method = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={method.active}
+              disabled={pending}
+              onCheckedChange={(checked) => setActive(method, checked)}
+              aria-label={t("table.toggle", { name: catalogLabel(method, locale) })}
+            />
+            <span className="text-sm text-muted-foreground">
+              {method.active ? tShared("active") : tShared("inactive")}
+            </span>
+          </div>
+        );
+      },
+      meta: { label: t("table.columns.status") },
+      size: 160,
+    }),
+    helper.display({
+      id: "actions",
+      header: t("table.columns.actions"),
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setTarget({ mode: "edit", method: row.original })}
+          aria-label={t("table.edit", { name: catalogLabel(row.original, locale) })}
+        >
+          <Pencil aria-hidden />
+        </Button>
+      ),
+      meta: { label: t("table.columns.actions"), hideable: false, exportable: false, align: "end" },
+      size: 100,
+    }),
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
@@ -74,62 +140,13 @@ export function PaymentMethodsTable({ rows }: PaymentMethodsTableProps) {
           {t("table.new")}
         </Button>
       </div>
-      {rows.length === 0 ? (
-        <EmptyState title={t("table.empty.title")} description={t("table.empty.description")} />
-      ) : (
-        <div className="rounded-2xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("table.columns.name")}</TableHead>
-                <TableHead>{t("table.columns.code")}</TableHead>
-                <TableHead>{t("table.columns.requiresReference")}</TableHead>
-                <TableHead>{t("table.columns.suggestsIgtf")}</TableHead>
-                <TableHead>{t("table.columns.status")}</TableHead>
-                <TableHead className="text-right">{t("table.columns.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((method) => {
-                const label = catalogLabel(method, locale);
-                return (
-                  <TableRow key={method.id}>
-                    <TableCell className="font-medium">{label}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {method.code}
-                    </TableCell>
-                    <TableCell>{flag(method.requiresReference)}</TableCell>
-                    <TableCell>{flag(method.suggestsIgtf)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={method.active}
-                          disabled={pending}
-                          onCheckedChange={(checked) => setActive(method, checked)}
-                          aria-label={t("table.toggle", { name: label })}
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {method.active ? tShared("active") : tShared("inactive")}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setTarget({ mode: "edit", method })}
-                        aria-label={t("table.edit", { name: label })}
-                      >
-                        <Pencil aria-hidden />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        variant="compact"
+        data={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyState={{ title: t("table.empty.title"), description: t("table.empty.description") }}
+      />
 
       <PaymentMethodFormDialog
         target={target}

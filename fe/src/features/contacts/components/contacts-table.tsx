@@ -8,13 +8,10 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  createDataTableColumnHelper,
+  type DataTableColumnDef,
+} from "@/components/ui/data-table";
 import { TagChips } from "@/features/tags/components/tag-chips";
 import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { archiveContactAction, setPrimaryContactAction } from "@/features/contacts/actions";
@@ -35,6 +32,9 @@ type Dialog =
   | { kind: "form"; contact?: ContactListRowDTO; open: boolean; key: number }
   | { kind: "archive"; contact: ContactListRowDTO; open: boolean }
   | null;
+
+const helper = createDataTableColumnHelper<ContactListRowDTO>();
+const dash = (value: string | null) => value ?? "—";
 
 /**
  * The client's *Contactos* tab (HU-04): a table with add/edit, the primary toggle (CA2: the previous primary is
@@ -80,6 +80,107 @@ export function ContactsTable({
     refresh();
   }
 
+  const columns: DataTableColumnDef<ContactListRowDTO>[] = [
+    helper.accessor("fullName", {
+      header: t("columns.fullName"),
+      cell: ({ getValue }) => <span className="font-medium">{getValue()}</span>,
+      meta: { label: t("columns.fullName"), pinned: true },
+      size: 200,
+    }),
+    helper.accessor("position", {
+      header: t("columns.position"),
+      cell: ({ getValue }) => dash(getValue()),
+      meta: { label: t("columns.position") },
+      size: 160,
+    }),
+    helper.accessor("email", {
+      header: t("columns.email"),
+      cell: ({ getValue }) => dash(getValue()),
+      meta: { label: t("columns.email") },
+      size: 220,
+    }),
+    helper.accessor("phone", {
+      header: t("columns.phone"),
+      cell: ({ getValue }) => <span className="tabular-nums">{dash(getValue())}</span>,
+      meta: { label: t("columns.phone") },
+      size: 150,
+    }),
+    helper.display({
+      id: "primary",
+      header: t("columns.primary"),
+      cell: ({ row }) => {
+        const contact = row.original;
+        if (contact.isPrimary) {
+          return <span className="text-sm font-medium">{t("actions.primary")}</span>;
+        }
+        return canManage ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={pendingId === contact.id}
+            onClick={() => void makePrimary(contact)}
+          >
+            <Star aria-hidden />
+            {t("actions.setPrimary")}
+          </Button>
+        ) : null;
+      },
+      meta: { label: t("columns.primary") },
+      size: 170,
+    }),
+    helper.display({
+      id: "tags",
+      header: t("columns.tags"),
+      cell: ({ row }) =>
+        row.original.tags.length > 0 ? <TagChips tags={row.original.tags} /> : null,
+      meta: { label: t("columns.tags"), wrap: true },
+      size: 200,
+    }),
+    ...(canManage
+      ? [
+          helper.display({
+            id: "actions",
+            header: t("columns.actions"),
+            cell: ({ row }) => {
+              const contact = row.original;
+              const busy = pendingId === contact.id;
+              return (
+                <div className="flex justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={t("actions.edit", { name: contact.fullName })}
+                    disabled={busy}
+                    onClick={() =>
+                      setDialog({ kind: "form", contact, open: true, key: Date.now() })
+                    }
+                  >
+                    <Pencil aria-hidden />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={t("actions.archive", { name: contact.fullName })}
+                    disabled={busy}
+                    onClick={() => setDialog({ kind: "archive", contact, open: true })}
+                  >
+                    <Trash2 aria-hidden />
+                  </Button>
+                </div>
+              );
+            },
+            meta: {
+              label: t("columns.actions"),
+              hideable: false,
+              exportable: false,
+              align: "end" as const,
+            },
+            size: 110,
+          }),
+        ]
+      : []),
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       {canManage ? (
@@ -93,87 +194,13 @@ export function ContactsTable({
         <p className="text-sm text-muted-foreground">{t("tab.readOnly")}</p>
       )}
 
-      {contacts.length === 0 ? (
-        <div className="rounded-2xl border p-8 text-center">
-          <p className="font-medium">{t("empty.title")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("empty.description")}</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-2xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.fullName")}</TableHead>
-                <TableHead>{t("columns.position")}</TableHead>
-                <TableHead>{t("columns.email")}</TableHead>
-                <TableHead>{t("columns.phone")}</TableHead>
-                <TableHead>{t("columns.primary")}</TableHead>
-                <TableHead>{t("columns.tags")}</TableHead>
-                {canManage ? (
-                  <TableHead className="text-right">{t("columns.actions")}</TableHead>
-                ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contacts.map((contact) => {
-                const busy = pendingId === contact.id;
-                return (
-                  <TableRow key={contact.id}>
-                    <TableCell className="font-medium">{contact.fullName}</TableCell>
-                    <TableCell>{contact.position ?? "—"}</TableCell>
-                    <TableCell className="break-all">{contact.email ?? "—"}</TableCell>
-                    <TableCell className="tabular-nums">{contact.phone ?? "—"}</TableCell>
-                    <TableCell>
-                      {contact.isPrimary ? (
-                        <span className="text-sm font-medium">{t("actions.primary")}</span>
-                      ) : canManage ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => void makePrimary(contact)}
-                        >
-                          <Star aria-hidden />
-                          {t("actions.setPrimary")}
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      {contact.tags.length > 0 ? <TagChips tags={contact.tags} /> : null}
-                    </TableCell>
-                    {canManage ? (
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={t("actions.edit", { name: contact.fullName })}
-                            disabled={busy}
-                            onClick={() =>
-                              setDialog({ kind: "form", contact, open: true, key: Date.now() })
-                            }
-                          >
-                            <Pencil aria-hidden />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={t("actions.archive", { name: contact.fullName })}
-                            disabled={busy}
-                            onClick={() => setDialog({ kind: "archive", contact, open: true })}
-                          >
-                            <Trash2 aria-hidden />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        variant="compact"
+        data={contacts}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyState={{ title: t("empty.title"), description: t("empty.description") }}
+      />
 
       {canManage && dialog?.kind === "form" ? (
         <ContactFormDialog

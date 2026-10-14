@@ -29,18 +29,27 @@ import type { ColumnConfig, DataTableEmptyConfig, FacetConfig, ListQueryPatch } 
 
 const SELECT_COLUMN_WIDTH = 40;
 
-export interface DataTableProps<TData extends RowData> {
-  /** Rows of the current server page. */
+interface DataTableBaseProps<TData extends RowData> {
+  /** Rows of the current server page (compact: every row). */
   data: TData[];
   /** Column definitions; each needs an `id` or an `accessorKey`. Sort fields are the column ids. */
   columns: DataTableColumnDef<TData>[];
   getRowId: (row: TData) => string;
+  loading?: boolean;
+  emptyState: DataTableEmptyConfig;
+  /** Saved column state; merged with the definitions by `resolveColumnConfig`. */
+  initialColumns?: ColumnConfig[];
+  /** Called with the whole config after every visibility, order or width change. */
+  onColumnsChange?: (columns: ColumnConfig[]) => void;
+}
+
+export interface DataTableServerProps<TData extends RowData> extends DataTableBaseProps<TData> {
+  variant?: "default";
   /** Total of the filtered set (not the page), from the server result. */
   total: number;
   /** Current list query, usually from `useTableUrlState`. */
   query: ListQuery;
   onQueryChange: (patch: ListQueryPatch) => void;
-  loading?: boolean;
   facets?: FacetConfig[];
   searchPlaceholder?: string;
   /** Shows the "Mostrar archivados" toggle; only Owner/Admin pages pass `true`. */
@@ -51,35 +60,36 @@ export interface DataTableProps<TData extends RowData> {
   bulkActions?: (selectedIds: string[]) => ReactNode;
   /** Export button handler: receives the query and the visible column ids (in display order), without display-only columns (`meta.exportable === false`). */
   onExport?: (query: ListQuery, visibleColumns: string[]) => void;
-  emptyState: DataTableEmptyConfig;
-  /** Saved column state; merged with the definitions by `resolveColumnConfig`. */
-  initialColumns?: ColumnConfig[];
-  /** Called with the whole config after every visibility, order or width change. */
-  onColumnsChange?: (columns: ColumnConfig[]) => void;
 }
+
+/**
+ * Small in-memory lists (catalogs, detail tabs): the same frame, header, pinned columns and empty state, with no
+ * toolbar, selection, sorting or pagination. Every row is rendered.
+ */
+export interface DataTableCompactProps<TData extends RowData> extends DataTableBaseProps<TData> {
+  variant: "compact";
+}
+
+export type DataTableProps<TData extends RowData> = DataTableServerProps<TData> | DataTableCompactProps<TData>;
+
+// The compact variant has no query; this stands in for the table state it derives from one.
+const COMPACT_QUERY: ListQuery = { page: 1, pageSize: 100, q: undefined, filters: {}, includeArchived: false };
+const noop = () => undefined;
 
 /**
  * Server-side table (TanStack Table v9, manual pagination/sorting). The URL query is the source of truth;
  * the table never filters or pages the rows it receives.
  */
-export function DataTable<TData extends RowData>({
-  data,
-  columns,
-  getRowId,
-  total,
-  query,
-  onQueryChange,
-  loading = false,
-  facets = [],
-  searchPlaceholder,
-  showArchivedToggle = false,
-  selectable = true,
-  bulkActions,
-  onExport,
-  emptyState,
-  initialColumns,
-  onColumnsChange,
-}: DataTableProps<TData>) {
+export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
+  const { data, columns, getRowId, loading = false, emptyState, initialColumns, onColumnsChange } = props;
+  const compact = props.variant === "compact";
+  const server = props.variant === "compact" ? undefined : props;
+  const total = server?.total ?? data.length;
+  const query = server?.query ?? COMPACT_QUERY;
+  const onQueryChange = server?.onQueryChange ?? noop;
+  const facets = server?.facets ?? [];
+  const selectable = server ? (server.selectable ?? true) : false;
+  const { searchPlaceholder, showArchivedToggle = false, bulkActions, onExport } = server ?? {};
   const t = useTranslations("table");
   const helper = createDataTableColumnHelper<TData>();
 
@@ -206,7 +216,8 @@ export function DataTable<TData extends RowData>({
 
   return (
     <div className="flex flex-col gap-3">
-      <DataTableToolbar
+      {compact ? null : (
+        <DataTableToolbar
         query={query}
         onQueryChange={onQueryChange}
         facets={facets}
@@ -217,7 +228,8 @@ export function DataTable<TData extends RowData>({
         defaultColumnConfig={defaults}
         onColumnConfigChange={updateConfig}
         onExport={onExport ? () => onExport(query, exportableIds) : undefined}
-      />
+        />
+      )}
 
       {selectable && selectedIds.length > 0 ? (
         <DataTableBulkBar count={selectedIds.length} onClear={() => setSelection({ scope, ids: {} })}>
@@ -228,7 +240,7 @@ export function DataTable<TData extends RowData>({
       {/* The shadcn Table wrapper gets overflow-visible so this element scrolls both ways and the header sticks. */}
       <div className="max-h-[70vh] overflow-auto rounded-xl border bg-card [&_[data-slot=table-container]]:overflow-visible">
         <Table className="table-fixed" style={{ width: table.getTotalSize(), minWidth: "100%" }}>
-          <TableHeader className="sticky top-0 z-20 bg-background shadow-[inset_0_-1px_0_var(--border)]">
+          <TableHeader className="sticky top-0 z-20 bg-table-head shadow-[inset_0_-1px_0_var(--border)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
@@ -236,7 +248,7 @@ export function DataTable<TData extends RowData>({
                   const id = header.column.id;
                   const label = def.meta?.label ?? id;
                   const isSorted = sorted?.field === id ? sorted.direction : undefined;
-                  const sortable = def.meta?.sortable === true;
+                  const sortable = !compact && def.meta?.sortable === true;
                   const end = def.meta?.align === "end";
                   return (
                     <TableHead
@@ -325,14 +337,16 @@ export function DataTable<TData extends RowData>({
         </Table>
       </div>
 
-      <DataTablePagination
+      {compact ? null : (
+        <DataTablePagination
         page={query.page}
         pageSize={query.pageSize}
         total={total}
         clamp={!loading}
         onPageChange={(page) => onQueryChange({ page })}
         onPageSizeChange={(pageSize) => onQueryChange({ pageSize, page: 1 })}
-      />
+        />
+      )}
     </div>
   );
 }
@@ -347,7 +361,7 @@ function columnIdOf<TData extends RowData>(def: DataTableColumnDef<TData>): stri
 /** Pinned cells stick and cover what scrolls under them; the last one draws the block's edge as an inset shadow. */
 function pinnedClass(position: ColumnPinningPosition, isLastPinned: boolean): string | undefined {
   if (!position) return undefined;
-  return cn("sticky z-10 bg-background", isLastPinned && "shadow-[inset_-1px_0_0_var(--border)]");
+  return cn("sticky z-10 bg-table-head", isLastPinned && "shadow-[inset_-1px_0_0_var(--border)]");
 }
 
 function pinnedStyle(position: ColumnPinningPosition, start: number, size: number): CSSProperties {

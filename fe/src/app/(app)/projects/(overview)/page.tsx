@@ -8,6 +8,7 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { OverviewLayout } from "@/components/patterns/overview-layout";
 import { PageHeader } from "@/components/patterns/page-header";
 import { SectionCard } from "@/components/patterns/section-card";
+import { ListCode, SimpleListCard } from "@/components/patterns/simple-list-card";
 import { StatCard } from "@/components/patterns/stat-card";
 import { Button } from "@/components/ui/button";
 import { ProjectsStatusChart } from "@/features/projects/components/projects-status-chart";
@@ -27,11 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** One row of a project list: code and name linked to the detail. */
 function ProjectLink({ row }: { row: ProjectListRowDTO }) {
-  return (
-    <Link href={`/projects/${row.id}`} className="hover:underline">
-      <span className="font-mono text-xs text-muted-foreground">{row.code}</span> {row.name}
-    </Link>
-  );
+  return <ListCode href={`/projects/${row.id}`} code={row.code} name={row.name} />;
 }
 
 // `/projects` overview (wireframe 4.2, PRD §8.3): projects by status, upcoming deliveries, projects without a
@@ -107,76 +104,68 @@ export default async function ProjectsOverviewPage() {
           </SectionCard>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <SectionCard title={t("upcomingTitle")}>
-              {overview.upcomingDeliveries.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("upcomingEmpty")}</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {overview.upcomingDeliveries.map((row) => (
-                    <li key={row.id} className="flex items-center justify-between gap-3">
-                      <ProjectLink row={row} />
-                      <span className="text-muted-foreground tabular-nums">
+            <SimpleListCard
+              title={t("upcomingTitle")}
+              emptyTitle={t("upcomingEmpty")}
+              rows={overview.upcomingDeliveries.map((row) => ({
+                id: row.id,
+                label: <ProjectLink row={row} />,
+                values: [
+                  {
+                    node: (
+                      <span className="text-muted-foreground">
                         {row.targetEndDate
                           ? formatDate(row.targetEndDate, locale)
                           : tDetail("notSet")}
                       </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SectionCard>
+                    ),
+                  },
+                ],
+              }))}
+            />
 
-            <SectionCard title={t("noPlanTitle")}>
-              {overview.withoutBillingPlan.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("noPlanEmpty")}</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {overview.withoutBillingPlan.map((row) => (
-                    <li key={row.id}>
-                      <ProjectLink row={row} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SectionCard>
+            <SimpleListCard
+              title={t("noPlanTitle")}
+              emptyTitle={t("noPlanEmpty")}
+              rows={overview.withoutBillingPlan.map((row) => ({
+                id: row.id,
+                label: <ProjectLink row={row} />,
+              }))}
+            />
           </div>
 
           {showFinancials ? (
-            <SectionCard title={t("toInvoiceTitle")}>
-              {overview.highestToInvoice.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("toInvoiceEmpty")}</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {overview.highestToInvoice.map((row) => (
-                    <li key={row.id} className="flex items-center justify-between gap-3">
-                      <ProjectLink row={row} />
-                      <MoneyText amount={row.toInvoiceUsd} currency="USD" />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SectionCard>
+            <SimpleListCard
+              title={t("toInvoiceTitle")}
+              emptyTitle={t("toInvoiceEmpty")}
+              rows={overview.highestToInvoice.map((row) => ({
+                id: row.id,
+                label: <ProjectLink row={row} />,
+                values: [{ node: <MoneyText amount={row.toInvoiceUsd} currency="USD" /> }],
+              }))}
+            />
           ) : null}
         </>
       }
       aside={
         <>
-          <SectionCard title={t("topTechTitle")}>
-            {overview.topTechnologies.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("topTechEmpty")}</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {overview.topTechnologies.map(({ technology, projectCount }) => (
-                  <li key={technology.id} className="flex items-center justify-between gap-3">
-                    <span>{technologyLabel(technology, locale)}</span>
-                    <span className="text-muted-foreground tabular-nums">
+          <SimpleListCard
+            title={t("topTechTitle")}
+            emptyTitle={t("topTechEmpty")}
+            rows={overview.topTechnologies.map(({ technology, projectCount }) => ({
+              id: technology.id,
+              label: technologyLabel(technology, locale),
+              values: [
+                {
+                  node: (
+                    <span className="text-muted-foreground">
                       {t("usesTech", { count: projectCount })}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
+                  ),
+                },
+              ],
+            }))}
+          />
           {showFinancials ? (
             <SectionCard title={t("alertsTitle")}>
               <AlertList variant="full" types={["INSTALLMENT_TO_INVOICE"]} />

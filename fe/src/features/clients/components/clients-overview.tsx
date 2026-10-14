@@ -7,6 +7,8 @@ import { OverviewLayout } from "@/components/patterns/overview-layout";
 import { OverviewTableToggle } from "@/components/patterns/overview-table-toggle";
 import { PageHeader } from "@/components/patterns/page-header";
 import { RelatedMiniTable } from "@/components/patterns/related-mini-table";
+import { SectionCard } from "@/components/patterns/section-card";
+import { ListCode, SimpleListCard } from "@/components/patterns/simple-list-card";
 import { StatCard } from "@/components/patterns/stat-card";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,7 @@ type ClientsOverviewProps = {
 export async function ClientsOverview({ overview, permissions }: ClientsOverviewProps) {
   const t = await getTranslations("clients");
   const tEnums = await getTranslations("enums");
+  const tPatterns = await getTranslations("patterns.relatedTable");
 
   const recentRows = overview.recentlyCreated.map((row) => ({
     id: row.id,
@@ -84,40 +87,28 @@ export async function ClientsOverview({ overview, permissions }: ClientsOverview
         <>
           {permissions.canSeeFinancials ? (
             <>
-              <RelatedMiniTable
+              <SimpleListCard
                 title={t("overview.topRevenue")}
-                headers={[t("columns.code"), t("columns.tradeName"), t("overview.collected")]}
+                emptyTitle={tPatterns("empty")}
                 rows={overview.topByRevenue.map((row) => ({
                   id: row.id,
-                  cells: [
-                    <EntityCodeChip key="code" code={row.code} />,
-                    <Link
-                      key="name"
-                      href={`/clients/${row.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {row.tradeName}
-                    </Link>,
-                    <MoneyText key="amount" amount={row.collectedLast12MonthsUsd} currency="USD" />,
+                  label: (
+                    <ListCode href={`/clients/${row.id}`} code={row.code} name={row.tradeName} />
+                  ),
+                  values: [
+                    { node: <MoneyText amount={row.collectedLast12MonthsUsd} currency="USD" /> },
                   ],
                 }))}
               />
-              <RelatedMiniTable
+              <SimpleListCard
                 title={t("overview.overdue")}
-                headers={[t("columns.code"), t("columns.tradeName"), t("overview.overdueUsd")]}
+                emptyTitle={tPatterns("empty")}
                 rows={overview.withOverdueBalance.map((row) => ({
                   id: row.id,
-                  cells: [
-                    <EntityCodeChip key="code" code={row.code} />,
-                    <Link
-                      key="name"
-                      href={`/clients/${row.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {row.tradeName}
-                    </Link>,
-                    <MoneyText key="amount" amount={row.overdueUsd} currency="USD" />,
-                  ],
+                  label: (
+                    <ListCode href={`/clients/${row.id}`} code={row.code} name={row.tradeName} />
+                  ),
+                  values: [{ node: <MoneyText amount={row.overdueUsd} currency="USD" /> }],
                 }))}
               />
             </>
@@ -136,10 +127,9 @@ export async function ClientsOverview({ overview, permissions }: ClientsOverview
       }
       aside={
         permissions.canSeeFinancials ? (
-          <section aria-label={t("overview.alerts")} className="space-y-3">
-            <h2 className="text-base font-semibold">{t("overview.alerts")}</h2>
+          <SectionCard title={t("overview.alerts")}>
             <AlertList variant="full" types={FINANCE_ALERT_TYPES} limit={5} />
-          </section>
+          </SectionCard>
         ) : undefined
       }
     />

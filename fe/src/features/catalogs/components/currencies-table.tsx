@@ -5,18 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/patterns/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  createDataTableColumnHelper,
+  type DataTableColumnDef,
+} from "@/components/ui/data-table";
+import { Switch } from "@/components/ui/switch";
 import type { CurrencyDTO } from "@/lib/validators/catalogs";
 import { updateCurrencyAction } from "../actions";
 import { CurrencyFormDialog, type CurrencyFormTarget } from "./currency-form-dialog";
@@ -25,6 +21,8 @@ type CurrenciesTableProps = {
   /** Every currency, active or not (Settings reads with `includeInactive`). */
   rows: CurrencyDTO[];
 };
+
+const helper = createDataTableColumnHelper<CurrencyDTO>();
 
 // Settings → Monedas (PRD §8.15): the small catalog, the create and edit dialog and activation (C19: a currency
 // is retired by deactivating it). USD is the reference of every rate, so its switch is locked.
@@ -55,60 +53,78 @@ export function CurrenciesTable({ rows }: CurrenciesTableProps) {
     </Button>
   );
 
+  const columns: DataTableColumnDef<CurrencyDTO>[] = [
+    helper.accessor("code", {
+      header: t("table.columns.code"),
+      cell: ({ getValue }) => <span className="font-mono font-medium">{getValue()}</span>,
+      meta: { label: t("table.columns.code"), pinned: true },
+      size: 100,
+    }),
+    helper.accessor("name", {
+      header: t("table.columns.name"),
+      meta: { label: t("table.columns.name") },
+      size: 200,
+    }),
+    helper.accessor("symbol", {
+      header: t("table.columns.symbol"),
+      meta: { label: t("table.columns.symbol") },
+      size: 100,
+    }),
+    helper.accessor("decimals", {
+      header: t("table.columns.decimals"),
+      meta: { label: t("table.columns.decimals"), align: "end" },
+      size: 110,
+    }),
+    helper.display({
+      id: "status",
+      header: t("table.columns.status"),
+      cell: ({ row }) => {
+        const currency = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={currency.active}
+              disabled={pending || currency.code === "USD"}
+              onCheckedChange={(checked) => setActive(currency, checked)}
+              aria-label={t("table.toggle", { name: currency.name })}
+            />
+            <Badge variant={currency.active ? "secondary" : "outline"}>
+              {currency.active ? tShared("active") : tShared("inactive")}
+            </Badge>
+          </div>
+        );
+      },
+      meta: { label: t("table.columns.status") },
+      size: 170,
+    }),
+    helper.display({
+      id: "actions",
+      header: t("table.columns.actions"),
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setTarget({ mode: "edit", currency: row.original })}
+          aria-label={t("table.edit", { name: row.original.name })}
+        >
+          <Pencil aria-hidden />
+        </Button>
+      ),
+      meta: { label: t("table.columns.actions"), hideable: false, exportable: false, align: "end" },
+      size: 100,
+    }),
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">{newButton}</div>
-      {rows.length === 0 ? (
-        <EmptyState title={t("table.empty.title")} description={t("table.empty.description")} />
-      ) : (
-        <div className="rounded-2xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("table.columns.code")}</TableHead>
-                <TableHead>{t("table.columns.name")}</TableHead>
-                <TableHead>{t("table.columns.symbol")}</TableHead>
-                <TableHead className="text-right">{t("table.columns.decimals")}</TableHead>
-                <TableHead>{t("table.columns.status")}</TableHead>
-                <TableHead className="text-right">{t("table.columns.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((currency) => (
-                <TableRow key={currency.code}>
-                  <TableCell className="font-mono font-medium">{currency.code}</TableCell>
-                  <TableCell>{currency.name}</TableCell>
-                  <TableCell>{currency.symbol}</TableCell>
-                  <TableCell className="text-right tabular-nums">{currency.decimals}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={currency.active}
-                        disabled={pending || currency.code === "USD"}
-                        onCheckedChange={(checked) => setActive(currency, checked)}
-                        aria-label={t("table.toggle", { name: currency.name })}
-                      />
-                      <Badge variant={currency.active ? "secondary" : "outline"}>
-                        {currency.active ? tShared("active") : tShared("inactive")}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setTarget({ mode: "edit", currency })}
-                      aria-label={t("table.edit", { name: currency.name })}
-                    >
-                      <Pencil aria-hidden />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        variant="compact"
+        data={rows}
+        columns={columns}
+        getRowId={(row) => row.code}
+        emptyState={{ title: t("table.empty.title"), description: t("table.empty.description") }}
+      />
 
       <CurrencyFormDialog
         target={target}
