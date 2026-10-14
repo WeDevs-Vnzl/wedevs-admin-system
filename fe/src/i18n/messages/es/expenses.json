@@ -3,5 +3,234 @@
     "accountRequiredForPaid": "La cuenta de pago es obligatoria para un gasto pagado",
     "accountAmountRequired": "Indica el monto debitado en la moneda de la cuenta",
     "dueBeforeDate": "El vencimiento no puede ser anterior a la fecha del gasto"
+  },
+  "errors": {
+    "notPending": "Solo un gasto pendiente se puede marcar como pagado",
+    "voided": "El gasto está anulado",
+    "recurringFinished": "El gasto recurrente está finalizado y ya no cambia",
+    "categoryUnavailable": "La categoría no existe o está inactiva",
+    "accountUnavailable": "La cuenta no existe o está inactiva",
+    "projectUnavailable": "El proyecto no existe o está archivado",
+    "receiptUnavailable": "El comprobante no existe",
+    "rateMissing": "No hay tasa de cambio para la moneda en la fecha indicada"
+  },
+  "page": {
+    "title": "Gasto",
+    "overviewTitle": "Gastos",
+    "listTitle": "Gastos (lista)",
+    "newTitle": "Nuevo gasto",
+    "recurringTitle": "Gastos recurrentes",
+    "recurringNewTitle": "Nuevo gasto recurrente",
+    "description": "Gastos operativos: pagados, pendientes y anulados, imputables a proyectos.",
+    "recurringDescription": "Suscripciones y cobros periódicos que generan un gasto pendiente por periodo.",
+    "newAction": "Nuevo gasto",
+    "newRecurringAction": "Nuevo recurrente",
+    "recurringAction": "Recurrentes",
+    "markPaidAction": "Marcar como pagado",
+    "voidAction": "Anular"
+  },
+  "status": {
+    "overdue": "Vencido",
+    "recurring": "Recurrente"
+  },
+  "table": {
+    "columns": {
+      "code": "Código",
+      "description": "Descripción",
+      "category": "Categoría",
+      "date": "Fecha",
+      "dueDate": "Vencimiento",
+      "amount": "Monto",
+      "amountUsd": "USD",
+      "status": "Estado"
+    },
+    "empty": {
+      "title": "Sin gastos",
+      "description": "Registra el primer gasto para verlo aquí."
+    }
+  },
+  "facets": {
+    "status": "Estado",
+    "category": "Categoría",
+    "account": "Cuenta",
+    "project": "Proyecto",
+    "date": "Fecha"
+  },
+  "search": {
+    "placeholder": "Buscar por código o descripción"
+  },
+  "overview": {
+    "committedTitle": "Gasto recurrente mensual comprometido",
+    "committedHint": "Gastos recurrentes activos, por mes (USD)",
+    "thisMonthTitle": "Pagado este mes",
+    "sixMonthsTitle": "Pagado en seis meses",
+    "sixMonthsHint": "Últimos seis meses (USD)",
+    "topCategoryTitle": "Categoría principal",
+    "byCategoryTitle": "Gasto pagado por categoría (USD, seis meses)",
+    "byMonthTitle": "Gasto por mes y categoría raíz (USD)",
+    "categoryColumn": "Categoría",
+    "noSpend": "Aún no hay gastos pagados en este periodo.",
+    "upcomingTitle": "Próximos vencimientos",
+    "alertsTitle": "Alertas de gastos recurrentes"
+  },
+  "form": {
+    "createTitle": "Nuevo gasto",
+    "description": "Un gasto pendiente se paga después; uno pagado debita su cuenta.",
+    "sections": {
+      "expense": {
+        "title": "Gasto",
+        "description": "Qué se pagó, a quién y en qué categoría."
+      },
+      "payment": {
+        "title": "Monto y pago",
+        "description": "Moneda, monto, tasa y cuenta de pago."
+      }
+    },
+    "fields": {
+      "description": "Descripción",
+      "vendor": "Proveedor",
+      "category": "Categoría",
+      "project": "Proyecto",
+      "date": "Fecha",
+      "dueDate": "Vencimiento",
+      "status": "Estado",
+      "account": "Cuenta de pago",
+      "currency": "Moneda",
+      "amount": "Monto ({currency})",
+      "usdRate": "Tasa ({currency} por USD)",
+      "paidAt": "Fecha de pago",
+      "accountAmount": "Monto debitado en {currency}"
+    },
+    "hints": {
+      "project": "Si lo indicas, el gasto reduce el margen de ese proyecto.",
+      "dueDate": "El vencimiento aplica a los gastos pendientes.",
+      "accountRequired": "Obligatoria para un gasto pagado.",
+      "accountOptional": "Opcional mientras el gasto está pendiente.",
+      "accountAmount": "Es el monto que sale de la cuenta; el saldo usa este valor."
+    },
+    "placeholders": {
+      "category": "Elige una categoría"
+    },
+    "none": "Ninguno"
+  },
+  "markPaid": {
+    "title": "Marcar como pagado",
+    "description": "Confirma el pago. Puedes ajustar el monto real y la tasa del día.",
+    "fields": {
+      "account": "Cuenta de pago",
+      "paidAt": "Fecha de pago",
+      "amount": "Monto real ({currency})",
+      "usdRate": "Tasa ({currency} por USD)",
+      "accountAmount": "Monto debitado en {currency}"
+    },
+    "hints": {
+      "amount": "Reemplaza el monto estimado del gasto.",
+      "accountAmount": "Es el monto que sale de la cuenta; el saldo usa este valor."
+    },
+    "placeholders": {
+      "account": "Elige la cuenta"
+    },
+    "submit": "Marcar como pagado"
+  },
+  "detail": {
+    "amountTitle": "Monto",
+    "amountDescription": "En la moneda del gasto y en USD al cierre del pago.",
+    "dataTitle": "Datos",
+    "fields": {
+      "date": "Fecha",
+      "dueDate": "Vencimiento",
+      "category": "Categoría",
+      "vendor": "Proveedor",
+      "account": "Cuenta de pago",
+      "project": "Proyecto",
+      "paidAt": "Fecha de pago",
+      "usdRate": "Tasa",
+      "status": "Estado",
+      "recurringOrigin": "Origen recurrente",
+      "accountAmount": "Debitado en la cuenta"
+    },
+    "noAccount": "Sin cuenta",
+    "noProject": "Sin proyecto",
+    "voidDescription": "El gasto anulado sale del saldo de la cuenta y del margen del proyecto. Indica el motivo."
+  },
+  "toast": {
+    "created": "Gasto registrado",
+    "paid": "Gasto marcado como pagado",
+    "voided": "Gasto anulado",
+    "recurringCreated": "Gasto recurrente creado",
+    "recurringUpdated": "Gasto recurrente actualizado",
+    "recurringStatusChanged": "Estado del recurrente actualizado"
+  },
+  "recurring": {
+    "table": {
+      "columns": {
+        "name": "Nombre",
+        "category": "Categoría",
+        "frequency": "Frecuencia",
+        "amount": "Monto estimado",
+        "nextDueDate": "Próximo periodo",
+        "status": "Estado"
+      },
+      "empty": {
+        "title": "Sin gastos recurrentes",
+        "description": "Crea una suscripción para generar sus gastos periódicos."
+      }
+    },
+    "form": {
+      "createTitle": "Nuevo gasto recurrente",
+      "editTitle": "Editar gasto recurrente",
+      "description": "Cada periodo genera un gasto pendiente el día indicado, con los días de anticipación.",
+      "sections": {
+        "identity": {
+          "title": "Identidad",
+          "description": "Qué se paga, a quién y de qué proyecto."
+        },
+        "schedule": {
+          "title": "Periodicidad",
+          "description": "Monto, frecuencia, día del periodo y vigencia."
+        }
+      },
+      "fields": {
+        "name": "Nombre",
+        "vendor": "Proveedor",
+        "category": "Categoría",
+        "account": "Cuenta por defecto",
+        "project": "Proyecto",
+        "currency": "Moneda",
+        "amount": "Monto estimado ({currency})",
+        "frequency": "Frecuencia",
+        "dayOfPeriod": "Día del periodo",
+        "leadDays": "Días de anticipación",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin"
+      },
+      "hints": {
+        "account": "Los gastos generados se pagan desde esta cuenta.",
+        "amount": "Un cambio aplica a los periodos que aún no se generaron.",
+        "dayOfPeriod": "Entre 1 y 28, para que exista en todos los meses.",
+        "leadDays": "Por defecto 5 días antes del periodo.",
+        "endDate": "Déjala vacía para una suscripción sin fin."
+      }
+    },
+    "detail": {
+      "amountTitle": "Monto estimado",
+      "amountDescription": "Por periodo, en la moneda del recurrente.",
+      "nextDue": "Próximo periodo",
+      "lastGenerated": "Último periodo generado",
+      "scheduleTitle": "Programación",
+      "fields": {
+        "category": "Categoría",
+        "account": "Cuenta por defecto",
+        "dayOfPeriod": "Día del periodo",
+        "leadDays": "Días de anticipación",
+        "startDate": "Inicio",
+        "endDate": "Fin"
+      },
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "finish": "Finalizar",
+      "finishDescription": "Finalizar {name} es definitivo: no generará más periodos.",
+      "finishedNote": "Este gasto recurrente está finalizado y ya no genera periodos."
+    }
   }
 }

@@ -3,5 +3,234 @@
     "accountRequiredForPaid": "The payment account is required for a paid expense",
     "accountAmountRequired": "Enter the amount debited in the account currency",
     "dueBeforeDate": "The due date cannot be before the expense date"
+  },
+  "errors": {
+    "notPending": "Only a pending expense can be marked as paid",
+    "voided": "The expense is voided",
+    "recurringFinished": "The recurring expense is finished and no longer changes",
+    "categoryUnavailable": "The category does not exist or is inactive",
+    "accountUnavailable": "The account does not exist or is inactive",
+    "projectUnavailable": "The project does not exist or is archived",
+    "receiptUnavailable": "The receipt does not exist",
+    "rateMissing": "There is no exchange rate for the currency on that date"
+  },
+  "page": {
+    "title": "Expense",
+    "overviewTitle": "Expenses",
+    "listTitle": "Expenses (list)",
+    "newTitle": "New expense",
+    "recurringTitle": "Recurring expenses",
+    "recurringNewTitle": "New recurring expense",
+    "description": "Operating expenses: paid, pending and voided, chargeable to projects.",
+    "recurringDescription": "Subscriptions and periodic charges that generate one pending expense per period.",
+    "newAction": "New expense",
+    "newRecurringAction": "New recurring",
+    "recurringAction": "Recurring",
+    "markPaidAction": "Mark as paid",
+    "voidAction": "Void"
+  },
+  "status": {
+    "overdue": "Overdue",
+    "recurring": "Recurring"
+  },
+  "table": {
+    "columns": {
+      "code": "Code",
+      "description": "Description",
+      "category": "Category",
+      "date": "Date",
+      "dueDate": "Due date",
+      "amount": "Amount",
+      "amountUsd": "USD",
+      "status": "Status"
+    },
+    "empty": {
+      "title": "No expenses",
+      "description": "Record the first expense to see it here."
+    }
+  },
+  "facets": {
+    "status": "Status",
+    "category": "Category",
+    "account": "Account",
+    "project": "Project",
+    "date": "Date"
+  },
+  "search": {
+    "placeholder": "Search by code or description"
+  },
+  "overview": {
+    "committedTitle": "Committed monthly recurring spend",
+    "committedHint": "Active recurring expenses, per month (USD)",
+    "thisMonthTitle": "Paid this month",
+    "sixMonthsTitle": "Paid in six months",
+    "sixMonthsHint": "Last six months (USD)",
+    "topCategoryTitle": "Top category",
+    "byCategoryTitle": "Paid spend by category (USD, six months)",
+    "byMonthTitle": "Spend by month and root category (USD)",
+    "categoryColumn": "Category",
+    "noSpend": "No paid expenses in this period yet.",
+    "upcomingTitle": "Upcoming due dates",
+    "alertsTitle": "Recurring expense alerts"
+  },
+  "form": {
+    "createTitle": "New expense",
+    "description": "A pending expense is paid later; a paid one debits its account.",
+    "sections": {
+      "expense": {
+        "title": "Expense",
+        "description": "What was paid, to whom and in which category."
+      },
+      "payment": {
+        "title": "Amount and payment",
+        "description": "Currency, amount, rate and payment account."
+      }
+    },
+    "fields": {
+      "description": "Description",
+      "vendor": "Vendor",
+      "category": "Category",
+      "project": "Project",
+      "date": "Date",
+      "dueDate": "Due date",
+      "status": "Status",
+      "account": "Payment account",
+      "currency": "Currency",
+      "amount": "Amount ({currency})",
+      "usdRate": "Rate ({currency} per USD)",
+      "paidAt": "Payment date",
+      "accountAmount": "Amount debited in {currency}"
+    },
+    "hints": {
+      "project": "If you set it, the expense reduces that project's margin.",
+      "dueDate": "The due date applies to pending expenses.",
+      "accountRequired": "Required for a paid expense.",
+      "accountOptional": "Optional while the expense is pending.",
+      "accountAmount": "This is the amount that leaves the account; the balance uses this value."
+    },
+    "placeholders": {
+      "category": "Choose a category"
+    },
+    "none": "None"
+  },
+  "markPaid": {
+    "title": "Mark as paid",
+    "description": "Confirm the payment. You can adjust the real amount and the rate of the day.",
+    "fields": {
+      "account": "Payment account",
+      "paidAt": "Payment date",
+      "amount": "Real amount ({currency})",
+      "usdRate": "Rate ({currency} per USD)",
+      "accountAmount": "Amount debited in {currency}"
+    },
+    "hints": {
+      "amount": "Replaces the estimated amount of the expense.",
+      "accountAmount": "This is the amount that leaves the account; the balance uses this value."
+    },
+    "placeholders": {
+      "account": "Choose the account"
+    },
+    "submit": "Mark as paid"
+  },
+  "detail": {
+    "amountTitle": "Amount",
+    "amountDescription": "In the expense currency and in USD at the payment date.",
+    "dataTitle": "Details",
+    "fields": {
+      "date": "Date",
+      "dueDate": "Due date",
+      "category": "Category",
+      "vendor": "Vendor",
+      "account": "Payment account",
+      "project": "Project",
+      "paidAt": "Payment date",
+      "usdRate": "Rate",
+      "status": "Status",
+      "recurringOrigin": "Recurring origin",
+      "accountAmount": "Debited from the account"
+    },
+    "noAccount": "No account",
+    "noProject": "No project",
+    "voidDescription": "A voided expense leaves the account balance and the project margin. Give the reason."
+  },
+  "toast": {
+    "created": "Expense recorded",
+    "paid": "Expense marked as paid",
+    "voided": "Expense voided",
+    "recurringCreated": "Recurring expense created",
+    "recurringUpdated": "Recurring expense updated",
+    "recurringStatusChanged": "Recurring expense status updated"
+  },
+  "recurring": {
+    "table": {
+      "columns": {
+        "name": "Name",
+        "category": "Category",
+        "frequency": "Frequency",
+        "amount": "Estimated amount",
+        "nextDueDate": "Next period",
+        "status": "Status"
+      },
+      "empty": {
+        "title": "No recurring expenses",
+        "description": "Create a subscription to generate its periodic expenses."
+      }
+    },
+    "form": {
+      "createTitle": "New recurring expense",
+      "editTitle": "Edit recurring expense",
+      "description": "Each period generates a pending expense on the chosen day, with the lead days before it.",
+      "sections": {
+        "identity": {
+          "title": "Identity",
+          "description": "What is paid, to whom and for which project."
+        },
+        "schedule": {
+          "title": "Schedule",
+          "description": "Amount, frequency, day of the period and validity."
+        }
+      },
+      "fields": {
+        "name": "Name",
+        "vendor": "Vendor",
+        "category": "Category",
+        "account": "Default account",
+        "project": "Project",
+        "currency": "Currency",
+        "amount": "Estimated amount ({currency})",
+        "frequency": "Frequency",
+        "dayOfPeriod": "Day of the period",
+        "leadDays": "Lead days",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
+      "hints": {
+        "account": "The generated expenses are paid from this account.",
+        "amount": "A change applies to the periods not generated yet.",
+        "dayOfPeriod": "From 1 to 28, so it exists in every month.",
+        "leadDays": "5 days before the period by default.",
+        "endDate": "Leave it empty for a subscription with no end."
+      }
+    },
+    "detail": {
+      "amountTitle": "Estimated amount",
+      "amountDescription": "Per period, in the currency of the recurring expense.",
+      "nextDue": "Next period",
+      "lastGenerated": "Last generated period",
+      "scheduleTitle": "Schedule",
+      "fields": {
+        "category": "Category",
+        "account": "Default account",
+        "dayOfPeriod": "Day of the period",
+        "leadDays": "Lead days",
+        "startDate": "Start",
+        "endDate": "End"
+      },
+      "pause": "Pause",
+      "resume": "Resume",
+      "finish": "Finish",
+      "finishDescription": "Finishing {name} is final: it will not generate more periods.",
+      "finishedNote": "This recurring expense is finished and no longer generates periods."
+    }
   }
 }

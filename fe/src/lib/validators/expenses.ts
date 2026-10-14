@@ -300,6 +300,7 @@ export const expenseFiltersSchema = withSortFields(
   EXPENSE_SORT_FIELDS,
 );
 export type ExpenseFilters = z.infer<typeof expenseFiltersSchema>;
+export type ExpenseFiltersInput = z.input<typeof expenseFiltersSchema>;
 
 export const RECURRING_EXPENSE_SORT_FIELDS = [
   "name",
