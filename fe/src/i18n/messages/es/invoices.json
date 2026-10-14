@@ -7,6 +7,238 @@
     "duplicateAdjustmentRate": "Ya hay un ajuste para esta alícuota",
     "dueBeforeIssue": "El vencimiento no puede ser anterior a la emisión",
     "otherWithheldNoteRequired": "Describe las otras retenciones",
-    "duplicateInstallment": "La cuota está repetida"
+    "duplicateInstallment": "La cuota está repetida",
+    "invalidTotals": "Revisa los descuentos, ajustes y retenciones: no cuadran con el total",
+    "fileType": "Solo se aceptan PDF, PNG, JPG o WEBP",
+    "fileTooLarge": "El archivo supera los 10 MB",
+    "fileNotReady": "El archivo todavía se está subiendo"
+  },
+  "errors": {
+    "numberTaken": "Ya existe una factura con este número",
+    "voided": "La factura está anulada y no se puede modificar",
+    "alreadyVoided": "La factura ya está anulada",
+    "archived": "La factura está archivada",
+    "alreadyArchived": "La factura ya está archivada",
+    "notDraft": "Solo un borrador se puede emitir",
+    "hasAllocations": "La factura tiene pagos asignados: quita primero esas asignaciones",
+    "receivableBelowPaid": "El total no puede quedar por debajo de lo ya cobrado",
+    "clientLocked": "No se puede cambiar el cliente ni la moneda: la factura tiene pagos asignados",
+    "projectOtherClient": "El proyecto no pertenece al cliente de la factura",
+    "installmentCancelled": "La cuota está cancelada",
+    "installmentExceeded": "El importe supera lo que queda por facturar de la cuota",
+    "installmentCurrency": "La moneda de la cuota no coincide con la de la factura"
+  },
+  "page": {
+    "overviewTitle": "Facturación",
+    "overviewDescription": "Lo facturado, lo cobrado y lo que está vencido.",
+    "listTitle": "Facturas",
+    "listDescription": "Todas las facturas de la empresa, con su estado y su saldo.",
+    "newTitle": "Nueva factura",
+    "editTitle": "Editar factura",
+    "detailTitle": "Factura",
+    "newAction": "Nueva factura"
+  },
+  "overview": {
+    "openTitle": "Por cobrar",
+    "openDescription": "Saldo abierto por moneda de la factura.",
+    "none": "No hay facturas abiertas.",
+    "overdueTitle": "Vencidas",
+    "overdueDescription": "Facturas con saldo y fecha de vencimiento pasada.",
+    "agingTitle": "Antigüedad en USD",
+    "agingDescription": "Saldo abierto según los días de atraso.",
+    "aging": {
+      "d0_30": "0 a 30 días",
+      "d31_60": "31 a 60 días",
+      "d61_90": "61 a 90 días",
+      "d90plus": "Más de 90 días"
+    },
+    "trendTitle": "Facturado frente a cobrado",
+    "trendDescription": "Últimos seis meses, en USD.",
+    "trend": {
+      "billed": "Facturado",
+      "collected": "Cobrado"
+    },
+    "openKpi": "Por cobrar en {currency}",
+    "overdueAmount": "Vencido: {amount}",
+    "alerts": "Alertas de facturación"
+  },
+  "table": {
+    "columns": {
+      "invoiceNumber": "Número",
+      "client": "Cliente",
+      "issueDate": "Emisión",
+      "dueDate": "Vencimiento",
+      "total": "Total",
+      "balance": "Saldo",
+      "balanceUsd": "Saldo USD",
+      "status": "Estado"
+    },
+    "facets": {
+      "status": "Estado",
+      "client": "Cliente",
+      "currency": "Moneda",
+      "issued": "Emisión"
+    },
+    "search": {
+      "placeholder": "Buscar por número o cliente…"
+    },
+    "partialPayment": "Con pago parcial",
+    "empty": {
+      "title": "Aún no hay facturas",
+      "description": "Registra la primera factura para empezar a cobrar."
+    }
+  },
+  "lines": {
+    "columns": {
+      "description": "Descripción",
+      "source": "Origen",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discount": "Descuento",
+      "netAmount": "Neto",
+      "ivaRate": "IVA"
+    },
+    "empty": {
+      "title": "Sin líneas",
+      "description": "Esta factura no tiene líneas."
+    }
+  },
+  "rate": "IVA {rate} %",
+  "totals": {
+    "rate": "IVA {rate} %",
+    "rateColumn": "Alícuota",
+    "baseColumn": "Base",
+    "ivaColumn": "IVA",
+    "subtotal": "Subtotal",
+    "discount": "Descuentos",
+    "exempt": "Exento",
+    "taxBase": "Base imponible",
+    "iva": "IVA",
+    "total": "Total",
+    "withholdings": "Retenciones",
+    "receivable": "Por cobrar",
+    "totalUsd": "Total en USD",
+    "receivableUsd": "Por cobrar en USD"
+  },
+  "form": {
+    "createTitle": "Nueva factura",
+    "editTitle": "Editar factura",
+    "description": "Divide la factura en líneas; cada línea tiene su alícuota de IVA y un descuento opcional.",
+    "totalsInvalid": "Revisa las líneas: hay un descuento, ajuste o retención que no cuadra.",
+    "fields": {
+      "client": "Cliente",
+      "clientPlaceholder": "Elige un cliente",
+      "invoiceNumber": "Número de factura",
+      "controlNumber": "Número de control",
+      "issueDate": "Fecha de emisión",
+      "dueDate": "Fecha de vencimiento",
+      "currency": "Moneda",
+      "usdRate": "Tasa (unidades por USD)",
+      "isDraft": "Guardar como borrador",
+      "adjustment": "Ajuste de IVA {rate} % (±0,01)",
+      "ivaWithheld": "Retención de IVA",
+      "islrWithheld": "Retención de ISLR",
+      "otherWithheld": "Otras retenciones",
+      "otherWithheldNote": "Descripción de otras retenciones"
+    },
+    "sections": {
+      "header": {
+        "title": "Datos de la factura",
+        "description": "Cliente, numeración, fechas y moneda."
+      },
+      "installments": {
+        "title": "Facturar cuotas",
+        "description": "Cuotas pendientes de los proyectos del cliente. Al marcarlas se crea una línea por cada una."
+      },
+      "lines": {
+        "title": "Líneas",
+        "description": "Cada línea tiene su alícuota de IVA y un descuento opcional."
+      },
+      "adjustments": {
+        "title": "Ajuste de IVA",
+        "description": "Ajuste manual de ±0,01 por alícuota, para igualar el documento físico."
+      },
+      "withholdings": {
+        "title": "Retenciones",
+        "description": "Retenciones que el cliente aplica sobre esta factura."
+      },
+      "totals": {
+        "title": "Totales",
+        "description": "Se calculan en vivo a partir de las líneas."
+      }
+    },
+    "installments": {
+      "empty": "El cliente no tiene cuotas pendientes de facturar.",
+      "select": "Facturar la cuota {label}"
+    },
+    "line": {
+      "description": "Descripción",
+      "quantity": "Cant.",
+      "unitPrice": "Precio",
+      "discount": "Descuento",
+      "ivaRate": "IVA",
+      "exempt": "Exento",
+      "add": "Agregar línea",
+      "remove": "Quitar línea"
+    }
+  },
+  "detail": {
+    "tabs": {
+      "lines": "Líneas y totales",
+      "payments": "Pagos",
+      "file": "Archivo"
+    },
+    "actions": {
+      "edit": "Editar",
+      "issue": "Emitir",
+      "graph": "Grafo",
+      "void": "Anular",
+      "archive": "Archivar"
+    },
+    "voided": "Factura anulada. Motivo: {reason}"
+  },
+  "payments": {
+    "columns": {
+      "payment": "Pago",
+      "date": "Fecha",
+      "amount": "Asignado",
+      "amountUsd": "Asignado USD"
+    },
+    "empty": {
+      "title": "Sin pagos asignados",
+      "description": "Los pagos confirmados que se asignen a esta factura aparecen aquí."
+    }
+  },
+  "file": {
+    "title": "PDF de la factura",
+    "description": "El PDF de la factura real, para verlo sin descargarlo.",
+    "empty": "Todavía no hay un PDF adjunto.",
+    "previewUnavailable": "La vista previa se activa con el almacenamiento real; por ahora se muestra el archivo registrado.",
+    "uploadLabel": "Subir el PDF de la factura",
+    "fields": {
+      "name": "Nombre",
+      "size": "Tamaño"
+    },
+    "toast": {
+      "attached": "PDF adjuntado",
+      "detached": "PDF quitado"
+    },
+    "errors": {
+      "attach": "No se pudo adjuntar el PDF"
+    }
+  },
+  "void": {
+    "title": "Anular la factura {number}",
+    "description": "La factura queda anulada y no cuenta para el cobro. Necesitas un motivo.",
+    "reasonLabel": "Motivo",
+    "reasonPlaceholder": "Por qué se anula",
+    "confirm": "Anular factura"
+  },
+  "toast": {
+    "created": "Factura registrada",
+    "updated": "Factura guardada",
+    "issued": "Borrador emitido",
+    "archived": "Factura archivada",
+    "voided": "Factura anulada"
   }
 }

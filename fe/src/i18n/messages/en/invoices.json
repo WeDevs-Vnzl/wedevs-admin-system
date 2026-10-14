@@ -4,9 +4,241 @@
     "ivaRateNotAllowed": "The VAT rate is not one of the allowed rates",
     "adjustmentOutOfRange": "The VAT adjustment cannot exceed ±0.01",
     "adjustmentRateNotInLines": "No line uses this rate",
-    "duplicateAdjustmentRate": "There is already an adjustment for this rate",
+    "duplicateAdjustmentRate": "This rate already has an adjustment",
     "dueBeforeIssue": "The due date cannot be before the issue date",
     "otherWithheldNoteRequired": "Describe the other withholdings",
-    "duplicateInstallment": "The installment is repeated"
+    "duplicateInstallment": "The installment is repeated",
+    "invalidTotals": "Check the discounts, adjustments and withholdings: they do not add up to the total",
+    "fileType": "Only PDF, PNG, JPG or WEBP files are accepted",
+    "fileTooLarge": "The file is larger than 10 MB",
+    "fileNotReady": "The file is still uploading"
+  },
+  "errors": {
+    "numberTaken": "An invoice with this number already exists",
+    "voided": "The invoice is voided and cannot be changed",
+    "alreadyVoided": "The invoice is already voided",
+    "archived": "The invoice is archived",
+    "alreadyArchived": "The invoice is already archived",
+    "notDraft": "Only a draft can be issued",
+    "hasAllocations": "The invoice has payments allocated: remove those allocations first",
+    "receivableBelowPaid": "The total cannot fall below what has already been collected",
+    "clientLocked": "The client and currency cannot change: the invoice has payments allocated",
+    "projectOtherClient": "The project does not belong to the invoice client",
+    "installmentCancelled": "The installment is cancelled",
+    "installmentExceeded": "The amount exceeds what is left to bill of the installment",
+    "installmentCurrency": "The installment currency does not match the invoice currency"
+  },
+  "page": {
+    "overviewTitle": "Invoicing",
+    "overviewDescription": "What has been billed, collected and is overdue.",
+    "listTitle": "Invoices",
+    "listDescription": "Every invoice of the company, with its status and balance.",
+    "newTitle": "New invoice",
+    "editTitle": "Edit invoice",
+    "detailTitle": "Invoice",
+    "newAction": "New invoice"
+  },
+  "overview": {
+    "openTitle": "Receivable",
+    "openDescription": "Open balance per invoice currency.",
+    "none": "There are no open invoices.",
+    "overdueTitle": "Overdue",
+    "overdueDescription": "Invoices with a balance past their due date.",
+    "agingTitle": "Aging in USD",
+    "agingDescription": "Open balance by days past due.",
+    "aging": {
+      "d0_30": "0 to 30 days",
+      "d31_60": "31 to 60 days",
+      "d61_90": "61 to 90 days",
+      "d90plus": "More than 90 days"
+    },
+    "trendTitle": "Billed against collected",
+    "trendDescription": "Last six months, in USD.",
+    "trend": {
+      "billed": "Billed",
+      "collected": "Collected"
+    },
+    "openKpi": "Receivable in {currency}",
+    "overdueAmount": "Overdue: {amount}",
+    "alerts": "Billing alerts"
+  },
+  "table": {
+    "columns": {
+      "invoiceNumber": "Number",
+      "client": "Client",
+      "issueDate": "Issued",
+      "dueDate": "Due",
+      "total": "Total",
+      "balance": "Balance",
+      "balanceUsd": "Balance USD",
+      "status": "Status"
+    },
+    "facets": {
+      "status": "Status",
+      "client": "Client",
+      "currency": "Currency",
+      "issued": "Issued"
+    },
+    "search": {
+      "placeholder": "Search by number or client…"
+    },
+    "partialPayment": "With partial payment",
+    "empty": {
+      "title": "No invoices yet",
+      "description": "Register the first invoice to start collecting."
+    }
+  },
+  "lines": {
+    "columns": {
+      "description": "Description",
+      "source": "Source",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "netAmount": "Net",
+      "ivaRate": "VAT"
+    },
+    "empty": {
+      "title": "No lines",
+      "description": "This invoice has no lines."
+    }
+  },
+  "rate": "VAT {rate} %",
+  "totals": {
+    "rate": "VAT {rate} %",
+    "rateColumn": "Rate",
+    "baseColumn": "Base",
+    "ivaColumn": "VAT",
+    "subtotal": "Subtotal",
+    "discount": "Discounts",
+    "exempt": "Exempt",
+    "taxBase": "Taxable base",
+    "iva": "VAT",
+    "total": "Total",
+    "withholdings": "Withholdings",
+    "receivable": "Receivable",
+    "totalUsd": "Total in USD",
+    "receivableUsd": "Receivable in USD"
+  },
+  "form": {
+    "createTitle": "New invoice",
+    "editTitle": "Edit invoice",
+    "description": "Split the invoice into lines; each line has its own VAT rate and an optional discount.",
+    "totalsInvalid": "Check the lines: a discount, adjustment or withholding does not add up.",
+    "fields": {
+      "client": "Client",
+      "clientPlaceholder": "Choose a client",
+      "invoiceNumber": "Invoice number",
+      "controlNumber": "Control number",
+      "issueDate": "Issue date",
+      "dueDate": "Due date",
+      "currency": "Currency",
+      "usdRate": "Rate (units per USD)",
+      "isDraft": "Save as draft",
+      "adjustment": "VAT adjustment {rate} % (±0.01)",
+      "ivaWithheld": "VAT withholding",
+      "islrWithheld": "ISLR withholding",
+      "otherWithheld": "Other withholdings",
+      "otherWithheldNote": "Description of other withholdings"
+    },
+    "sections": {
+      "header": {
+        "title": "Invoice details",
+        "description": "Client, numbering, dates and currency."
+      },
+      "installments": {
+        "title": "Bill installments",
+        "description": "Pending installments of the client's projects. Ticking one creates a line for it."
+      },
+      "lines": {
+        "title": "Lines",
+        "description": "Each line has its own VAT rate and an optional discount."
+      },
+      "adjustments": {
+        "title": "VAT adjustment",
+        "description": "Manual ±0.01 adjustment per rate, to match the printed document."
+      },
+      "withholdings": {
+        "title": "Withholdings",
+        "description": "Withholdings the client applies to this invoice."
+      },
+      "totals": {
+        "title": "Totals",
+        "description": "Calculated live from the lines."
+      }
+    },
+    "installments": {
+      "empty": "The client has no pending installments to bill.",
+      "select": "Bill the installment {label}"
+    },
+    "line": {
+      "description": "Description",
+      "quantity": "Qty",
+      "unitPrice": "Price",
+      "discount": "Discount",
+      "ivaRate": "VAT",
+      "exempt": "Exempt",
+      "add": "Add line",
+      "remove": "Remove line"
+    }
+  },
+  "detail": {
+    "tabs": {
+      "lines": "Lines and totals",
+      "payments": "Payments",
+      "file": "File"
+    },
+    "actions": {
+      "edit": "Edit",
+      "issue": "Issue",
+      "graph": "Graph",
+      "void": "Void",
+      "archive": "Archive"
+    },
+    "voided": "Voided invoice. Reason: {reason}"
+  },
+  "payments": {
+    "columns": {
+      "payment": "Payment",
+      "date": "Date",
+      "amount": "Allocated",
+      "amountUsd": "Allocated USD"
+    },
+    "empty": {
+      "title": "No payments allocated",
+      "description": "Confirmed payments allocated to this invoice appear here."
+    }
+  },
+  "file": {
+    "title": "Invoice PDF",
+    "description": "The PDF of the real invoice, to view it without downloading.",
+    "empty": "No PDF is attached yet.",
+    "previewUnavailable": "The preview turns on with the real storage; for now the registered file is shown.",
+    "uploadLabel": "Upload the invoice PDF",
+    "fields": {
+      "name": "Name",
+      "size": "Size"
+    },
+    "toast": {
+      "attached": "PDF attached",
+      "detached": "PDF removed"
+    },
+    "errors": {
+      "attach": "The PDF could not be attached"
+    }
+  },
+  "void": {
+    "title": "Void invoice {number}",
+    "description": "The invoice is voided and no longer counts for collection. A reason is required.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Why it is voided",
+    "confirm": "Void invoice"
+  },
+  "toast": {
+    "created": "Invoice registered",
+    "updated": "Invoice saved",
+    "issued": "Draft issued",
+    "archived": "Invoice archived",
+    "voided": "Invoice voided"
   }
 }
