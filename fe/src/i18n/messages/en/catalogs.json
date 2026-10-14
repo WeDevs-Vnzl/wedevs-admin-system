@@ -301,5 +301,95 @@
       "parentNotRoot": "The parent must be a main category",
       "hasChildren": "A category with subcategories cannot have a parent"
     }
+  },
+  "documentTypes": {
+    "page": {
+      "title": "Document types",
+      "description": "Document categories and the types inside each one. A type in use is not deleted: it is deactivated."
+    },
+    "categories": {
+      "new": "New category",
+      "typeCount": "{count, plural, =0 {No types} one {# type} other {# types}}",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "addType": "Add a type to {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "noTypes": "No types in this category yet.",
+      "empty": {
+        "title": "No document categories",
+        "description": "Add the categories you classify your documents with, then the types inside each one."
+      }
+    },
+    "types": {
+      "signature": "Signature",
+      "expiration": "Expiration",
+      "documents": "{count, plural, =0 {No documents} one {# document} other {# documents}}",
+      "toggle": "Activate or deactivate {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}"
+    },
+    "categoryForm": {
+      "createTitle": "New category",
+      "editTitle": "Edit category",
+      "description": "Name and colour of a document category.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB."
+      },
+      "create": "Create"
+    },
+    "typeForm": {
+      "createTitle": "New document type",
+      "editTitle": "Edit document type",
+      "description": "Category, name, default format and what documents of this type carry.",
+      "fields": {
+        "category": "Category",
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "defaultFormat": "Default format",
+        "requiresSignature": "Requires signature",
+        "requiresSignatureHint": "Enables the Signed status and the signature date.",
+        "hasExpiration": "Has expiration",
+        "hasExpirationHint": "Enables the expiry date and its alerts.",
+        "active": "Active",
+        "activeHint": "Inactive types cannot be picked for new documents."
+      },
+      "create": "Create"
+    },
+    "delete": {
+      "categoryDescription": "“{name}” will be removed from the catalog.",
+      "typeDescription": "“{name}” will be removed from the catalog.",
+      "categoryLockedTitle": "Category with types",
+      "categoryLockedDescription": "“{name}” still has types, so it cannot be deleted. Move its types to another category or delete them first.",
+      "typeInUseTitle": "Document type in use",
+      "typeInUseDescription": "Documents use “{name}”, so it cannot be deleted. Deactivate it so it stops being offered; existing documents keep their type.",
+      "close": "Close",
+      "cancel": "Cancel",
+      "deactivate": "Deactivate"
+    },
+    "toast": {
+      "categoryCreated": "Category created",
+      "categoryUpdated": "Category updated",
+      "categoryDeleted": "Category deleted",
+      "reordered": "Order updated",
+      "typeCreated": "Document type created",
+      "typeUpdated": "Document type updated",
+      "typeActivated": "Document type activated",
+      "typeDeactivated": "Document type deactivated",
+      "typeDeleted": "Document type deleted"
+    },
+    "errors": {
+      "categoryNameTaken": "A category with that name already exists",
+      "categoryHasTypes": "The category still has types",
+      "reorderMismatch": "The order must include every category once",
+      "unknownCategory": "The category does not exist",
+      "typeNameTaken": "A type with that name already exists in this category",
+      "typeInUse": "The document type is in use by documents"
+    }
   }
 }

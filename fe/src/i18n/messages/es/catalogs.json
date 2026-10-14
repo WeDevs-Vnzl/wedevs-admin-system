@@ -301,5 +301,95 @@
       "parentNotRoot": "La categoría padre debe ser una categoría principal",
       "hasChildren": "Una categoría con subcategorías no puede tener categoría padre"
     }
+  },
+  "documentTypes": {
+    "page": {
+      "title": "Tipos de documento",
+      "description": "Categorías de documentos y los tipos de cada una. Un tipo en uso no se elimina: se desactiva."
+    },
+    "categories": {
+      "new": "Nueva categoría",
+      "typeCount": "{count, plural, =0 {Sin tipos} one {# tipo} other {# tipos}}",
+      "moveUp": "Subir {name}",
+      "moveDown": "Bajar {name}",
+      "addType": "Agregar un tipo a {name}",
+      "edit": "Editar {name}",
+      "delete": "Eliminar {name}",
+      "noTypes": "Esta categoría aún no tiene tipos.",
+      "empty": {
+        "title": "Sin categorías de documentos",
+        "description": "Agrega las categorías con las que clasificas tus documentos y luego los tipos de cada una."
+      }
+    },
+    "types": {
+      "signature": "Firma",
+      "expiration": "Vencimiento",
+      "documents": "{count, plural, =0 {Sin documentos} one {# documento} other {# documentos}}",
+      "toggle": "Activar o desactivar {name}",
+      "edit": "Editar {name}",
+      "delete": "Eliminar {name}"
+    },
+    "categoryForm": {
+      "createTitle": "Nueva categoría",
+      "editTitle": "Editar categoría",
+      "description": "Nombre y color de una categoría de documentos.",
+      "fields": {
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés (opcional)",
+        "nameEnHint": "Si lo dejas vacío, en inglés se muestra el nombre.",
+        "color": "Color (opcional)",
+        "colorHint": "Formato #RRGGBB."
+      },
+      "create": "Crear"
+    },
+    "typeForm": {
+      "createTitle": "Nuevo tipo de documento",
+      "editTitle": "Editar tipo de documento",
+      "description": "Categoría, nombre, formato por defecto y lo que llevan los documentos de este tipo.",
+      "fields": {
+        "category": "Categoría",
+        "name": "Nombre",
+        "nameEn": "Nombre en inglés (opcional)",
+        "nameEnHint": "Si lo dejas vacío, en inglés se muestra el nombre.",
+        "defaultFormat": "Formato por defecto",
+        "requiresSignature": "Requiere firma",
+        "requiresSignatureHint": "Habilita el estado Firmado y la fecha de firma.",
+        "hasExpiration": "Tiene vencimiento",
+        "hasExpirationHint": "Habilita la fecha de vencimiento y sus alertas.",
+        "active": "Activo",
+        "activeHint": "Los tipos inactivos no se pueden elegir en documentos nuevos."
+      },
+      "create": "Crear"
+    },
+    "delete": {
+      "categoryDescription": "«{name}» se eliminará del catálogo.",
+      "typeDescription": "«{name}» se eliminará del catálogo.",
+      "categoryLockedTitle": "Categoría con tipos",
+      "categoryLockedDescription": "«{name}» todavía tiene tipos, así que no se puede eliminar. Primero mueve sus tipos a otra categoría o elimínalos.",
+      "typeInUseTitle": "Tipo de documento en uso",
+      "typeInUseDescription": "Hay documentos que usan «{name}», así que no se puede eliminar. Desactívalo para que deje de ofrecerse; los documentos existentes conservan su tipo.",
+      "close": "Cerrar",
+      "cancel": "Cancelar",
+      "deactivate": "Desactivar"
+    },
+    "toast": {
+      "categoryCreated": "Categoría creada",
+      "categoryUpdated": "Categoría actualizada",
+      "categoryDeleted": "Categoría eliminada",
+      "reordered": "Orden actualizado",
+      "typeCreated": "Tipo de documento creado",
+      "typeUpdated": "Tipo de documento actualizado",
+      "typeActivated": "Tipo de documento activado",
+      "typeDeactivated": "Tipo de documento desactivado",
+      "typeDeleted": "Tipo de documento eliminado"
+    },
+    "errors": {
+      "categoryNameTaken": "Ya existe una categoría con ese nombre",
+      "categoryHasTypes": "La categoría todavía tiene tipos",
+      "reorderMismatch": "El orden debe incluir cada categoría una sola vez",
+      "unknownCategory": "La categoría no existe",
+      "typeNameTaken": "Ya existe un tipo con ese nombre en esta categoría",
+      "typeInUse": "Hay documentos que usan este tipo de documento"
+    }
   }
 }

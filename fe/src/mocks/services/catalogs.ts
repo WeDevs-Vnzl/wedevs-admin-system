@@ -26,16 +26,9 @@ import type {
   UpdatePaymentMethodInput,
   UpsertExchangeRateInput,
 } from "@/lib/validators/catalogs";
-import type {
-  DocumentCategoryDetailDTO,
-  DocumentTypeDetailDTO,
-  DocumentTypeFilter,
-  DocumentTypeListRowDTO,
-} from "@/lib/validators/document-types";
 import type { FiscalSettings } from "@/lib/validators/settings";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
-import type { DocumentTypeRow } from "../fixtures/catalogs";
 import { nextMockId } from "../ids";
 import type { MockStore } from "../store";
 import { logActivity, mockTx } from "./activity";
@@ -84,75 +77,8 @@ export { getTag, listTags } from "./tags";
 
 // ───────────────────────────── Document categories and types ─────────────────────────────
 
-type DocumentTypeBase = Omit<DocumentTypeDetailDTO, "category">;
-
-function documentTypeBase(db: MockStore, row: DocumentTypeRow): DocumentTypeBase {
-  return {
-    id: row.id,
-    name: row.name,
-    nameEn: row.nameEn,
-    defaultFormat: row.defaultFormat,
-    requiresSignature: row.requiresSignature,
-    hasExpiration: row.hasExpiration,
-    active: row.active,
-    documentCount: db.documents.filter((doc) => !doc.archivedAt && doc.typeId === row.id).length,
-  };
-}
-
-function documentTypeDetail(db: MockStore, row: DocumentTypeRow): DocumentTypeDetailDTO | null {
-  const category = db.documentCategories.find((item) => item.id === row.categoryId);
-  if (!category) return null;
-  const { id, name, nameEn, color } = category;
-  return { ...documentTypeBase(db, row), category: { id, name, nameEn, color } };
-}
-
-const documentTypeSpec: ListSpec<DocumentTypeListRowDTO> = {
-  searchText: (row) => [row.name, row.nameEn, row.category.name],
-  sorters: {
-    name: (row) => row.name,
-    category: (row) => row.category.name,
-    documentCount: (row) => row.documentCount,
-    active: (row) => row.active,
-  },
-  defaultSort: "name:asc",
-};
-
-export async function listDocumentTypes(
-  ctx: MockServiceContext,
-  input: DocumentTypeFilter,
-): Promise<Paginated<DocumentTypeListRowDTO>> {
-  const rows = ctx.db.documentTypes
-    .map((type) => documentTypeDetail(ctx.db, type))
-    .filter((row): row is DocumentTypeListRowDTO => row !== null)
-    .filter((row) => !input.categoryId || input.categoryId.includes(row.category.id))
-    .filter((row) => input.active === undefined || row.active === input.active)
-    .filter(
-      (row) =>
-        input.requiresSignature === undefined || row.requiresSignature === input.requiresSignature,
-    )
-    .filter(
-      (row) => input.hasExpiration === undefined || row.hasExpiration === input.hasExpiration,
-    );
-  return listRows(rows, input, documentTypeSpec);
-}
-
-/** Categories in their configured order, each with its types (Settings tree, grouped type picker). */
-export async function listDocumentCategories(
-  ctx: MockServiceContext,
-): Promise<DocumentCategoryDetailDTO[]> {
-  return [...ctx.db.documentCategories]
-    .sort((a, b) => a.order - b.order)
-    .map(({ id, name, nameEn, color, order }) => ({
-      id,
-      name,
-      nameEn,
-      color,
-      order,
-      types: ctx.db.documentTypes
-        .filter((type) => type.categoryId === id)
-        .map((type) => documentTypeBase(ctx.db, type)),
-    }));
-}
+// Moved to their own service (H1-B4); re-exported under the same names for the documents callers.
+export { listDocumentCategories, listDocumentTypes } from "./document-types";
 
 // ───────────────────────────── Expense categories ─────────────────────────────
 

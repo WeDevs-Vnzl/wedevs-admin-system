@@ -43,6 +43,7 @@ import {
   listTags,
   listTechnologies,
 } from "./catalogs";
+import * as documentTypesService from "./document-types";
 import * as tagsService from "./tags";
 import * as technologiesService from "./technologies";
 
@@ -220,6 +221,11 @@ describe("catalog split (H1-B2)", () => {
     expect(getTag).toBe(tagsService.getTag);
     expect(listTechnologies).toBe(technologiesService.listTechnologies);
     expect(getTechnology).toBe(technologiesService.getTechnology);
+  });
+
+  it("re-exports the document category and type reads from their own service (H1-B4)", () => {
+    expect(listDocumentTypes).toBe(documentTypesService.listDocumentTypes);
+    expect(listDocumentCategories).toBe(documentTypesService.listDocumentCategories);
   });
 
   it("counts documents of a type from the document rows, skipping archived ones", async () => {
