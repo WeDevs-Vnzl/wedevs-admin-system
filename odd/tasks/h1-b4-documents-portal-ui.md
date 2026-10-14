@@ -26,13 +26,13 @@ Branch `batch/h1-b4-documents-portal-ui` from local `main` (`fec05c4`) · delive
 - **S11 — Carried findings** (TASK.md): 793/805/817 real PDF render and the pdf.js worker under Turbopack; 829 pdf-viewer zoom-reset accessible name (WCAG 2.5.3), fullscreen `aria-pressed` with a changing label, tests for the dynamic wrapper; 1103 m7 request-metadata placement; 1116 m-d parse the token with `shareTokenSchema` before `resolveToken`, m-e never leak a specific `NOT_FOUND` reason; 2491/2533 tab counts capped at 100, unlink confirmation without `{name}`; 2492 archived-target tests for DOCUMENT/NOTE; 2881 DOCUMENT link prefill; 3005 "`createDocument` with a file must be atomic (no version-less `BORRADOR` left linked when the upload fails); category chips filter and count over all documents (not one page capped at 100); `LINK`/`UNLINK` entries carry target metadata."
 - **S12 — Tester** (TASK.md outline): "local E2E of HU-18 (autosave without version, publish N+1, compare, restore; script/iframe not executed), HU-19 UI, HU-20, HU-21, HU-22 CA2–CA4 and CA6 over mocks; key-protected document: view/download blocked until the correct key, wrong key error, lockout after 5 failures; portal mobile layout; PDF toolbar."
 
-### Assumptions (pending user confirmation)
+### Assumptions (accepted by the user, L3)
 - **A1** `/documents/[id]/graph` and the Grafo tab belong to H1-B5 ("every `/<entity>/[id]/graph`"); here the tab links there.
 - **A2** The H1 mock enforces the lockout in memory, per link/document/IP hash, so the Tester sees it (S12).
 - **A3** The mock unlock state is an httpOnly cookie scoped to `/s/[token]`, signed with a non-secret dev constant; the real `SHARE_UNLOCK_SECRET` lands in H2-B5. Metadata (IP hash, user agent, cookie) is collected in `definePublicAction` and handed to the handler (closes m7).
 - **A4** Portal download in H1 goes through a route handler `/api/s/[token]/files/[documentId]` serving bundled sample files from the mock store; H2-B5 swaps it for the presigned URL.
 - **A5** Sharing several documents proposes `ENVIADO` once, listing every `APROBADO` document with one checkbox each.
-- **A6** Code highlighting: open (L2).
+- **A6** Code highlighting with `rehype-highlight` (L3).
 
 ## Tasks
 | ID | Specs | Work | Route | Status |
@@ -54,4 +54,5 @@ Route evidence: no writer reason (units share `features/documents`, the mock sto
 ## Log
 - **L1** (2026-10-14, user): "aprobado B3, inicia la planificacion de la implementacion de B4"
 - **L2** Mapping (explorer, 2026-10-14): contracts complete in validators; mocks implement 5/16 `DocumentsService` names, only the two catalog reads for types/categories, no shares/portal service; `fixtures/shares.ts` empty stub; store already has documents, versions, links, shareLinks, shareDocumentKeys, shareAccessLogs; no `/documents*`, `/s/[token]` or `/api/s/*` routes; `/settings/document-types` is a `SectionPlaceholder`; `pdfjs-dist`, `rehype-sanitize`, `react-markdown`, `remark-gfm`, `qrcode`, `diff` installed; no syntax-highlight library installed (PRD asks "bloques de código con resaltado") → open question.
-- **Next**: user answers the highlight question and confirms A1–A5; then T1.
+- **L3** (2026-10-14, user): "agrega rehype-highlight, desde ahora usa bun en vez de pnpm, A1-A5 aceptados, procede con T1 y T2 en paralelo". `rehype-highlight@7.0.2` added with `bun add` (package.json + `bun.lock`); vitest smoke 21/21. Note: CI (`.github/workflows/ci.yml`), `packageManager` and `pnpm-lock.yaml` still name pnpm; the lock no longer matches → to align before the end-of-Hito-1 push.
+- **Next**: T1 and T2 in parallel (two writers, disjoint surfaces).
