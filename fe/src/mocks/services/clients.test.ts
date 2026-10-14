@@ -9,7 +9,11 @@ import {
 } from "@/lib/validators/clients";
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentDetailDTO } from "@/lib/validators/payments";
-import { makeTestContext, FIXED_NOW } from "../test-helpers";
+import {
+  clearFinanceRecords,
+  FIXED_NOW,
+  makeTestContext as makeSeededContext,
+} from "../test-helpers";
 import { makeAllocation, makeInvoice, makePayment, ref, STAMP } from "../finance-test-factories";
 import { deriveMockStore } from "../store";
 import {
@@ -26,6 +30,14 @@ import {
   updateClient,
 } from "./clients";
 import { archiveContact } from "./contacts";
+
+// These cases pin the rules over their own finance rows (or none), written before the H1-B3 seed: every
+// context starts without the seeded billing, invoice, payment and expense records.
+function makeTestContext(...args: Parameters<typeof makeSeededContext>) {
+  const harness = makeSeededContext(...args);
+  clearFinanceRecords(harness.db);
+  return harness;
+}
 
 const KAIROS = "cli_kairos";
 

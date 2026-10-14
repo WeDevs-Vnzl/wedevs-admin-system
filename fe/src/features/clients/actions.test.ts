@@ -176,7 +176,8 @@ describe("archive and restore actions", () => {
 
   it("restore keeps entity on CONFLICT; bulk archive validates the selection", async () => {
     signInAs("OWNER");
-    await archiveClientAction({ id: "cli_zafiro_labs" });
+    // Zafiro has the open seeded invoice FAC-0004, so archiving it needs the C19 confirmation.
+    await archiveClientAction({ id: "cli_zafiro_labs", confirm: true });
     const store = getMockStore();
     const zafiro = store.clients.find((c) => c.id === "cli_zafiro_labs")!;
     const holder = await createClientAction({
@@ -263,7 +264,9 @@ describe("exportClientsCsvAction", () => {
     const active = getMockStore().clients.filter((c) => !c.archivedAt && c.status === "ACTIVO");
     expect(rows).toHaveLength(active.length);
     expect(result.data).toMatchObject({ rowCount: active.length, truncated: false });
-    expect(rows.every((row) => row.includes(",ACTIVO,0.00,"))).toBe(true);
+    expect(rows.every((row) => /,ACTIVO,\d+\.\d{2},/.test(row))).toBe(true);
+    // Kairos carries the seeded FAC-0001..0003 (1392.00 + 500.00 + 928.00), exported as stored.
+    expect(rows.find((row) => row.includes(",Kairos Studio,"))).toContain(",ACTIVO,2820.00,");
   });
 
   it("rejects an unknown column with VALIDATION and a missing session with UNAUTHENTICATED", async () => {

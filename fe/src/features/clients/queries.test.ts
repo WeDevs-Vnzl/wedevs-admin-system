@@ -27,7 +27,8 @@ describe("clients queries", () => {
 
   it("reads one client, its financials and the overview", async () => {
     expect((await getClient("cli_kairos")).tradeName).toBe("Kairos Studio");
-    expect((await getClientFinancials("cli_kairos")).totalInvoicedUsd).toBe("0.00");
+    // Seeded FAC-0001..0003 of Kairos: 1392.00 + 500.00 + 928.00.
+    expect((await getClientFinancials("cli_kairos")).totalInvoicedUsd).toBe("2820.00");
     expect((await getClientsOverview()).recentlyCreated.length).toBeGreaterThan(0);
   });
 

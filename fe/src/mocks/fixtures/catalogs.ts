@@ -476,6 +476,9 @@ function rateRow(
  * day has no rates at all; the latest day also carries an `OTRA` VES rate, and a few older days a
  * `MANUAL` one, so the source selector (DT-67) has something to show. All arithmetic is decimal.
  */
+/** `usdRate` of USDT: units per USD, from 1 USDT = 1.01 USD (1 / 1.01 rounded to 4 places). */
+const USDT_PER_USD = "0.9901";
+
 export function createExchangeRateFixtures(today: DateOnly): ExchangeRateDTO[] {
   const days: DateOnly[] = [];
   for (let back = 0; back <= RATE_HISTORY_DAYS; back += 1) {
@@ -502,8 +505,8 @@ export function createExchangeRateFixtures(today: DateOnly): ExchangeRateDTO[] {
     rows.push(rateRow(date, "EUR", eur.toFixed(4), "MANUAL", "13:05:00"));
     const cop = toDecimal("4012.5").plus(toDecimal("3.1").times(offset % 9));
     rows.push(rateRow(date, "COP", cop.toFixed(2), "MANUAL", "13:05:00"));
-    const usdt = toDecimal("1").plus(toDecimal("0.0002").times(offset % 4));
-    rows.push(rateRow(date, "USDT", usdt.toFixed(4), "MANUAL", "13:05:00"));
+    // 1 USDT = 1.01 USD, so a USD buys 1 / 1.01 USDT.
+    rows.push(rateRow(date, "USDT", USDT_PER_USD, "MANUAL", "13:05:00"));
   });
   return rows;
 }

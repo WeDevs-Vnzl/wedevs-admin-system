@@ -28,7 +28,7 @@ describe("getMockStore", () => {
     expect((globalThis as Record<string, unknown>)[GLOBAL_KEY]).toBeDefined();
   });
 
-  it("is built from the fixtures: catalogs and the commercial dataset filled, finance still empty", () => {
+  it("is built from the fixtures: catalogs, the commercial dataset and the finance seed filled", () => {
     const store = getMockStore();
     expect(store.currencies.map((c) => c.code)).toEqual(["USD", "VES", "EUR", "USDT", "COP"]);
     expect(store.fiscal.ivaRates).toEqual(["16", "8", "0"]);
@@ -43,10 +43,6 @@ describe("getMockStore", () => {
       "documentLinks",
       "activity",
       "files",
-    ] as const) {
-      expect(store[name].length).toBeGreaterThan(0);
-    }
-    for (const name of [
       "billingPlans",
       "installments",
       "recurringCharges",
@@ -59,6 +55,10 @@ describe("getMockStore", () => {
       "movements",
       "expenses",
       "recurringExpenses",
+    ] as const) {
+      expect(store[name].length).toBeGreaterThan(0);
+    }
+    for (const name of [
       "shareLinks",
       "shareDocumentKeys",
       "shareAccessLogs",
@@ -91,9 +91,9 @@ describe("getMockStore", () => {
     expect(store.sequences).toEqual({
       CLI: store.clients.length,
       PRY: store.projects.length,
-      FAC: 0,
-      PAG: 0,
-      GAS: 0,
+      FAC: store.invoices.length,
+      PAG: store.payments.length,
+      GAS: store.expenses.length,
       DOC: store.documents.length,
     });
   });

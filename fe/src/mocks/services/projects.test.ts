@@ -11,10 +11,18 @@ import {
 } from "@/lib/validators/projects";
 import type { InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
 import type { MockServiceContext } from "../ctx";
-import { makeTestContext } from "../test-helpers";
+import { clearFinanceRecords, makeTestContext as makeSeededContext } from "../test-helpers";
 import { makeInvoice, makeLine, ref } from "../finance-test-factories";
 import { deriveMockStore } from "../store";
 import * as svc from "./projects";
+
+// These cases pin the rules over their own finance rows (or none), written before the H1-B3 seed: every
+// context starts without the seeded billing, invoice, payment and expense records.
+function makeTestContext(...args: Parameters<typeof makeSeededContext>) {
+  const harness = makeSeededContext(...args);
+  clearFinanceRecords(harness.db);
+  return harness;
+}
 
 const newProject = (overrides: Record<string, unknown> = {}): CreateProjectInput =>
   createProjectInputSchema.parse({
@@ -485,7 +493,7 @@ describe("setProjectStatus", () => {
       confirm: true,
     });
     expect(db2.installments[0]!.status).toBe("PENDIENTE");
-    expect(db2.recurringCharges[0]!.status).toBe("ACTIVO");
+    expect(db2.recurringCharges.find((c) => c.id === `rch_${id}_ACTIVO`)!.status).toBe("ACTIVO");
 
     const result = await svc.setProjectStatus(ctx, {
       id,
@@ -500,7 +508,10 @@ describe("setProjectStatus", () => {
       cancelledAt: ctx.now.toISOString(),
     });
     expect(db.installments.find((i) => i.id === "ins_b")!.status).toBe("FACTURADA");
-    expect(db.recurringCharges[0]).toMatchObject({ status: "FINALIZADO", endDate: "2026-10-09" });
+    expect(db.recurringCharges.find((c) => c.id === `rch_${id}_ACTIVO`)).toMatchObject({
+      status: "FINALIZADO",
+      endDate: "2026-10-09",
+    });
     expect(db.activity.some((e) => e.entityType === "INSTALLMENT" && e.entityId === "ins_a")).toBe(
       true,
     );

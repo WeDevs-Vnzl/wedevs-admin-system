@@ -31,8 +31,9 @@ describe("getShellData", () => {
     expect(data.vesRate).toMatchObject({ date: "2026-10-09", source: "BCV" });
     expect(data.vesRate?.usdRate).toMatch(/^755\.16/);
     expect(data.vesRateMissing).toBe(false);
-    // The dataset has the expiring NDA and the expired proposal; the finance collections are empty.
-    expect(data.alertCount).toBe(2);
+    // The dataset has the expiring NDA, the expired proposal, the overdue invoice FAC-0003 and the two
+    // maintenance installments to invoice (H1-B3 seed).
+    expect(data.alertCount).toBe(5);
   });
 
   it("flags a business day that has no rate yet and shows the previous one", async () => {
@@ -71,7 +72,7 @@ describe("getShellData", () => {
   it("counts only what the role may see and drops dismissed alerts", async () => {
     clock("2026-10-09T15:00:00.000Z");
     getMockStore().exchangeRates.length = 0;
-    expect((await getShellData()).alertCount).toBe(3); // + the missing rate (Owner reads settings)
+    expect((await getShellData()).alertCount).toBe(6); // + the missing rate (Owner reads settings)
     session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
     expect((await getShellData()).alertCount).toBe(2); // documents only
     session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER", { id: "usr_a" }));
@@ -81,7 +82,7 @@ describe("getShellData", () => {
       dismissedUntil: null,
       active: false,
     });
-    expect((await getShellData()).alertCount).toBe(2);
+    expect((await getShellData()).alertCount).toBe(5);
   });
 
   it("throws when nobody is signed in (the layout redirects to sign-in)", async () => {

@@ -26,6 +26,7 @@ describe("resetMockData", () => {
 
     expect(getMockStore()).toBe(store);
     expect(store.tags.length).toBeGreaterThan(0);
-    expect(store.sequences.PAG).toBe(0);
+    // The sequence restarts at the number of seeded payments (PAG-0001..0003).
+    expect(store.sequences.PAG).toBe(store.payments.length);
   });
 });

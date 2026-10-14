@@ -7,9 +7,22 @@ import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentDetailDTO } from "@/lib/validators/payments";
 import type { MockServiceContext } from "../ctx";
-import { FIXED_NOW, FIXED_TODAY, makeTestContext } from "../test-helpers";
+import {
+  clearFinanceRecords,
+  FIXED_NOW,
+  FIXED_TODAY,
+  makeTestContext as makeSeededContext,
+} from "../test-helpers";
 import * as alertsService from "./alerts";
 import { dismissAlert, listAlerts, restoreAlert, snoozeAlert } from "./alerts";
+
+// These cases pin the rules over their own finance rows (or none), written before the H1-B3 seed: every
+// context starts without the seeded billing, invoice, payment and expense records.
+function makeTestContext(...args: Parameters<typeof makeSeededContext>) {
+  const harness = makeSeededContext(...args);
+  clearFinanceRecords(harness.db);
+  return harness;
+}
 
 type Harness = ReturnType<typeof makeTestContext>;
 
@@ -89,6 +102,8 @@ describe("listAlerts rules", () => {
 
   it("installment: PENDIENTE due in 7 days or past; day 8 and billed ones are out", async () => {
     const h = makeTestContext("OWNER");
+    // The billing fixtures carry their own installments (dated from the real day): this rule is isolated here.
+    h.db.installments.splice(0, h.db.installments.length);
     const inst = (id: string, off: number | null, status = "PENDIENTE") =>
       partial<InstallmentDTO>({
         id,
@@ -211,6 +226,64 @@ describe("listAlerts rules", () => {
     ]);
     const saturday = { ...h.ctx, now: new Date("2026-10-10T15:00:00.000Z") };
     expect((await listAlerts(saturday, { types: ["MISSING_RATE"], limit: 5 })).total).toBe(0);
+  });
+});
+
+describe("Cuota por facturar (HU-10 CA4)", () => {
+  it("a generated recurring installment alerts seven days before its billing day, in the bell and the list", async () => {
+    const h = makeTestContext("OWNER");
+    h.db.installments.splice(0, h.db.installments.length);
+    const projectId = "pry_solaris_portal";
+    h.db.installments.push(
+      partial<InstallmentDTO>({
+        id: "ins_maint_test",
+        projectId,
+        billingPlanId: null,
+        recurringChargeId: "rch_test",
+        kind: "RECURRENTE",
+        label: "Soporte mensual",
+        amount: "150.00",
+        currency: "USD",
+        dueDate: addDays(FIXED_TODAY, 7),
+        periodStart: addDays(FIXED_TODAY, 7),
+        status: "PENDIENTE",
+        cancelledAt: null,
+      }),
+    );
+
+    const r = await only(h, "INSTALLMENT_TO_INVOICE");
+    expect(r.items.map((i) => [i.alertKey, i.days])).toEqual([
+      ["INSTALLMENT_TO_INVOICE:ins_maint_test", 7],
+    ]);
+    expect((await listAlerts(h.ctx, { limit: 50 })).byType.INSTALLMENT_TO_INVOICE).toBe(1);
+  });
+
+  it("a billed or cancelled recurring installment stops alerting", async () => {
+    const h = makeTestContext("OWNER");
+    h.db.installments.splice(0, h.db.installments.length);
+    h.db.installments.push(
+      partial<InstallmentDTO>({
+        id: "ins_billed",
+        projectId: "pry_solaris_portal",
+        kind: "RECURRENTE",
+        amount: "150.00",
+        currency: "USD",
+        dueDate: addDays(FIXED_TODAY, 2),
+        status: "FACTURADA",
+        cancelledAt: null,
+      }),
+      partial<InstallmentDTO>({
+        id: "ins_cancelled",
+        projectId: "pry_solaris_portal",
+        kind: "RECURRENTE",
+        amount: "150.00",
+        currency: "USD",
+        dueDate: addDays(FIXED_TODAY, 2),
+        status: "CANCELADA",
+        cancelledAt: FIXED_NOW.toISOString(),
+      }),
+    );
+    expect((await only(h, "INSTALLMENT_TO_INVOICE")).items).toEqual([]);
   });
 });
 

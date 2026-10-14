@@ -3,7 +3,7 @@
 import type { UserRole } from "@/lib/validators/enums";
 import type { SessionUser } from "@/server/auth/types";
 import { createMockContext, createMockPublicContext } from "./ctx";
-import { buildMockStore, type MockStore } from "./store";
+import { buildMockStore, deriveMockStore, type MockStore } from "./store";
 
 /** Friday 9 Oct 2026, 15:00 UTC (11:00 in Caracas): a business day, so rate fixtures are predictable. */
 export const FIXED_NOW = new Date("2026-10-09T15:00:00.000Z");
@@ -35,4 +35,22 @@ export function makeTestContext(role: UserRole = "OWNER", overrides: Partial<Ses
 export function makeTestPublicContext() {
   const db: MockStore = buildMockStore(FIXED_NOW);
   return { db, ctx: createMockPublicContext({ now: FIXED_NOW, db }) };
+}
+
+/**
+ * Empties the seeded billing, invoice, payment and expense records (H1-B3) and re-derives the store, for tests
+ * that pin behaviour over their own finance rows or over none. Accounts, transfers and movements stay.
+ */
+export function clearFinanceRecords(db: MockStore): MockStore {
+  db.billingPlans = [];
+  db.installments = [];
+  db.recurringCharges = [];
+  db.invoices = [];
+  db.invoiceTaxLines = [];
+  db.payments = [];
+  db.paymentAllocations = [];
+  db.expenses = [];
+  db.recurringExpenses = [];
+  deriveMockStore(db);
+  return db;
 }
