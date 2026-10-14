@@ -3034,6 +3034,9 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
   - Restore the `/clients/list` and `/projects/list` loading skeletons.
   - Shrink the RSC guard ALLOW_LIST (4 kit barrel re-exports).
   - Project archive `INTEGRITY_LOCK` E2E (`h1-b2-w3-projects.spec.ts`, `test.skip`) once H1-B3 provides billing data.
+- **Suggestion carried from H1-B3 (2026-10-14, user: "registralo como sugerencia para el final del hito 1")**:
+  `ClientDetailDTO` embeds `financials` for every role; drop it for roles without `canSeeFinancials`
+  (`getClientFinancials` is already gated server-side, 5cf18e3).
 - [ ] **User's explicit acceptance of the Hito 1 UI** (closes Hito 1; Hito 2 does not open without it).
 
 ---
