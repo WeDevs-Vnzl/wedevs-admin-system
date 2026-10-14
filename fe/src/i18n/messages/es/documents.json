@@ -61,5 +61,9 @@
     "signedAtNotAllowed": "Este tipo de documento no requiere firma, así que no admite fecha de firma",
     "expiresAtNotAllowed": "Este tipo de documento no vence, así que no admite fecha de vencimiento",
     "signedStatusNotAllowed": "Este tipo de documento no requiere firma, así que no puede estar firmado"
+  },
+  "print": {
+    "action": "Imprimir / Guardar como PDF",
+    "brand": "WeDevs"
   }
 }
