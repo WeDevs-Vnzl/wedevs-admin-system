@@ -1,10 +1,11 @@
 "use client";
 
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumnDef } from "@/components/ui/data-table";
 
 type MiniRow = { id: string; cells: ReactNode[] };
@@ -34,36 +35,38 @@ export function RelatedMiniTable({
   const t = useTranslations("patterns.relatedTable");
 
   return (
-    <Card className="rounded-2xl">
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <div className="flex flex-col gap-1.5">
-          <CardTitle className="text-base">{title}</CardTitle>
-          {description ? <CardDescription>{description}</CardDescription> : null}
-        </div>
-        {newHref ? (
+    <SectionCard
+      heading
+      title={title}
+      description={description}
+      actions={
+        newHref ? (
           <Button variant="outline" size="sm" asChild>
-            <Link href={newHref}>{t("new")}</Link>
+            <Link href={newHref}>
+              <PlusIcon aria-hidden />
+              {t("new")}
+            </Link>
           </Button>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          variant="compact"
-          data={rows}
-          columns={headers.map((header, index): DataTableColumnDef<MiniRow> => {
-            const { label, align } =
-              typeof header === "string" ? { label: header, align: undefined } : header;
-            return {
-              id: `col-${index}`,
-              header: label,
-              cell: ({ row }) => row.original.cells[index],
-              meta: { label, pinned: index === 0, align },
-            };
-          })}
-          getRowId={(row) => row.id}
-          emptyState={{ title: emptyTitle ?? t("empty") }}
-        />
-      </CardContent>
-    </Card>
+        ) : undefined
+      }
+    >
+      <DataTable
+        variant="compact"
+        embedded
+        data={rows}
+        columns={headers.map((header, index): DataTableColumnDef<MiniRow> => {
+          const { label, align } =
+            typeof header === "string" ? { label: header, align: undefined } : header;
+          return {
+            id: `col-${index}`,
+            header: label,
+            cell: ({ row }) => row.original.cells[index],
+            meta: { label, pinned: index === 0, align },
+          };
+        })}
+        getRowId={(row) => row.id}
+        emptyState={{ title: emptyTitle ?? t("empty") }}
+      />
+    </SectionCard>
   );
 }

@@ -68,7 +68,9 @@ export function ActivityFeed({
   }
 
   if (items.length === 0) {
-    return <EmptyState icon={History} title={t("empty")} description={t("emptyDescription")} />;
+    return (
+      <EmptyState embedded icon={History} title={t("empty")} description={t("emptyDescription")} />
+    );
   }
 
   return (
@@ -82,7 +84,7 @@ export function ActivityFeed({
             className="flex flex-col gap-3"
           >
             <h2 className="text-sm font-medium text-muted-foreground">{label}</h2>
-            <ol className="flex flex-col gap-2">
+            <ol className="flex flex-col divide-y">
               {group.items.map((entry) => (
                 <li key={entry.id}>
                   <ActivityItem

@@ -11,6 +11,8 @@ type SectionCardProps = {
   // Columns taken on the two-column FormPage grid: 2 for wide content (rich text, link lists, multi-field
   // grids), 1 for compact sections. Unset leaves the card to its parent's layout (detail pages, overviews).
   span?: 1 | 2;
+  // Detail tabs: the title is the tab's level-2 heading, as the bare `<h2>` the tabs had before.
+  heading?: boolean;
   children: ReactNode;
 };
 
@@ -21,6 +23,7 @@ export function SectionCard({
   actions,
   group = false,
   span,
+  heading = false,
   children,
 }: SectionCardProps) {
   const titleId = useId();
@@ -32,7 +35,12 @@ export function SectionCard({
     >
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1">
-          <CardTitle id={titleId} className="text-base">
+          <CardTitle
+            id={titleId}
+            className="text-base"
+            role={heading ? "heading" : undefined}
+            aria-level={heading ? 2 : undefined}
+          >
             {title}
           </CardTitle>
           {description ? <CardDescription>{description}</CardDescription> : null}

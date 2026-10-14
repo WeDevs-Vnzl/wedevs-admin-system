@@ -69,6 +69,7 @@ export function PaymentAllocationsTable({ rows, currency }: PaymentAllocationsTa
   return (
     <DataTable
       variant="compact"
+      embedded
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

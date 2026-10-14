@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { DetailTabs, type DetailTab } from "@/components/patterns/detail-tabs";
+import { SectionCard } from "@/components/patterns/section-card";
 import { RichTextView } from "@/components/ui/rich-text";
 import { EntityActivityTab } from "@/features/activity/components/entity-activity-tab";
 import { canReadActivity } from "@/features/activity/queries";
@@ -66,14 +67,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       value: "summary" satisfies ProjectDetailTab,
       label: tTabs("summary"),
       content: (
-        <div className="flex flex-col gap-4">
+        <SectionCard heading title={tDetail("descriptionTitle")}>
           <p className="text-sm">{project.summary}</p>
           {project.description ? (
             <RichTextView content={project.description} />
           ) : (
             <p className="text-sm text-muted-foreground">{tDetail("noDescription")}</p>
           )}
-        </div>
+        </SectionCard>
       ),
     },
     {

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/patterns/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { ActivityFeed } from "@/features/activity/components/activity-feed";
 import {
   ActivityExportButton,
@@ -35,7 +36,12 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
       />
       <ActivityStats total={stats.total} today={stats.today} users={stats.users} />
       <ActivityFilters actors={actors} />
-      <ActivityFeed key={JSON.stringify(filter)} initial={feed} filter={filter} />
+      {/* The feed rows are flat; the card gives them a surface over the page background. */}
+      <Card className="rounded-2xl">
+        <CardContent>
+          <ActivityFeed key={JSON.stringify(filter)} initial={feed} filter={filter} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

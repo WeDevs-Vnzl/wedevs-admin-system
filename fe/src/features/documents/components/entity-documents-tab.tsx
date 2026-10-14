@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { SectionCard } from "@/components/patterns/section-card";
 import { Badge } from "@/components/ui/badge";
 import type { EntityRef } from "@/lib/validators/common";
 import type { DocumentLinkTarget, DocumentListRowDTO } from "@/lib/validators/documents";
@@ -35,16 +36,15 @@ export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
   const counts = countByCategory(page.items);
 
   return (
-    <section aria-labelledby="entity-documents-title" className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="entity-documents-title" className="text-base font-semibold">
-          {t("title")} <span className="text-muted-foreground">({page.total})</span>
-        </h2>
-        {permissions.canCreate ? (
+    <SectionCard
+      heading
+      title={`${t("title")} (${page.total})`}
+      actions={
+        permissions.canCreate ? (
           <AttachDocumentSheet entity={entity} categories={categories} />
-        ) : null}
-      </header>
-
+        ) : undefined
+      }
+    >
       <ul aria-label={t("title")} className="flex flex-wrap gap-2">
         <li>
           <Badge variant="outline">
@@ -61,7 +61,7 @@ export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
       </ul>
 
       <EntityDocumentsTable rows={page.items} target={target} canUpdate={permissions.canUpdate} />
-    </section>
+    </SectionCard>
   );
 }
 

@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { MoneyText } from "@/components/patterns/money-text";
 import { SectionCard } from "@/components/patterns/section-card";
-import { StatCard } from "@/components/patterns/stat-card";
+import { StatGrid } from "@/components/patterns/stat-grid";
 import { Badge } from "@/components/ui/badge";
 import type { ClientDetailDTO } from "@/lib/validators/clients";
 
@@ -20,7 +20,7 @@ export async function ClientSummary({ client, canSeeFinancials }: ClientSummaryP
 
   return (
     <div className="grid gap-6">
-      <SectionCard title={t("summary.contacts")}>
+      <SectionCard heading title={t("summary.contacts")}>
         {highlighted.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("summary.noContacts")}</p>
         ) : (
@@ -45,34 +45,38 @@ export async function ClientSummary({ client, canSeeFinancials }: ClientSummaryP
         )}
       </SectionCard>
 
-      <SectionCard title={t("summary.metrics")}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {canSeeFinancials ? (
-            <>
-              <StatCard
-                label={t("metrics.totalInvoiced")}
-                value={<MoneyText amount={client.financials.totalInvoicedUsd} currency="USD" />}
-              />
-              <StatCard
-                label={t("metrics.totalCollected")}
-                value={<MoneyText amount={client.financials.totalCollectedUsd} currency="USD" />}
-              />
-              <StatCard
-                label={t("metrics.receivable")}
-                value={<MoneyText amount={client.financials.receivableUsd} currency="USD" />}
-              />
-              <StatCard
-                label={t("metrics.creditBalance")}
-                value={<MoneyText amount={client.financials.creditBalanceUsd} currency="USD" />}
-              />
-            </>
-          ) : null}
-          <StatCard
-            label={t("metrics.projects")}
-            value={client.financials.projectCount}
-            hint={t("summary.projectsHint")}
-          />
-        </div>
+      <SectionCard heading title={t("summary.metrics")}>
+        <StatGrid
+          items={[
+            ...(canSeeFinancials
+              ? [
+                  {
+                    label: t("metrics.totalInvoiced"),
+                    value: <MoneyText amount={client.financials.totalInvoicedUsd} currency="USD" />,
+                  },
+                  {
+                    label: t("metrics.totalCollected"),
+                    value: (
+                      <MoneyText amount={client.financials.totalCollectedUsd} currency="USD" />
+                    ),
+                  },
+                  {
+                    label: t("metrics.receivable"),
+                    value: <MoneyText amount={client.financials.receivableUsd} currency="USD" />,
+                  },
+                  {
+                    label: t("metrics.creditBalance"),
+                    value: <MoneyText amount={client.financials.creditBalanceUsd} currency="USD" />,
+                  },
+                ]
+              : []),
+            {
+              label: t("metrics.projects"),
+              value: client.financials.projectCount,
+              hint: t("summary.projectsHint"),
+            },
+          ]}
+        />
       </SectionCard>
     </div>
   );

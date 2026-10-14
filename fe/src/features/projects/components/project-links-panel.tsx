@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { SectionCard } from "@/components/patterns/section-card";
 import { reorderProjectLinksAction } from "@/features/projects/actions";
 import type { ProjectLinkDTO } from "@/lib/validators/projects";
 import { LINK_GROUPS, linkRowsFromDto, orderedIdsOf, type ProjectLinkRow } from "../link-rows";
@@ -23,6 +24,7 @@ export interface ProjectLinksPanelProps {
  */
 export function ProjectLinksPanel({ projectId, links, canReorder }: ProjectLinksPanelProps) {
   const t = useTranslations("projects.toast");
+  const tTabs = useTranslations("projects.detail.tabs");
   const router = useRouter();
   const [rows, setRows] = useState<ProjectLinkRow[]>(() => linkRowsFromDto(links));
 
@@ -48,5 +50,9 @@ export function ProjectLinksPanel({ projectId, links, canReorder }: ProjectLinks
     router.refresh();
   }
 
-  return <ProjectLinksEditor rows={rows} onChange={onChange} reorderable={canReorder} />;
+  return (
+    <SectionCard heading title={tTabs("links")}>
+      <ProjectLinksEditor rows={rows} onChange={onChange} reorderable={canReorder} />
+    </SectionCard>
+  );
 }

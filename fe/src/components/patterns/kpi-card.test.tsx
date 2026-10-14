@@ -36,12 +36,12 @@ describe("KpiCard", () => {
 });
 
 describe("RelatedMiniTable", () => {
-  it("takes the '+ Nuevo' text from the message, not from code", () => {
+  it("takes the 'Nuevo' text from the message, not from code", () => {
     wrap(
       <RelatedMiniTable title="Proyectos" headers={["Nombre"]} rows={[]} newHref="/projects/new" />,
     );
     expect(screen.getByRole("link", { name: esPatterns.relatedTable.new })).toHaveTextContent(
-      /^\+ Nuevo$/,
+      /^Nuevo$/,
     );
   });
 });

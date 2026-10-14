@@ -76,6 +76,7 @@ export function AccountLedgerTable({ rows, currency }: AccountLedgerTableProps) 
   return (
     <DataTable
       variant="compact"
+      embedded
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

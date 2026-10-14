@@ -99,6 +99,7 @@ export function EntityDocumentsTable({ rows, target, canUpdate }: EntityDocument
   return (
     <DataTable
       variant="compact"
+      embedded
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

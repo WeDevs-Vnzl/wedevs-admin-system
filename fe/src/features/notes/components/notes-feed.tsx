@@ -6,6 +6,7 @@ import { PlusIcon, StickyNoteIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
+import { SectionCard } from "@/components/patterns/section-card";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -109,67 +110,82 @@ export function NotesFeed({ initial, entity, viewer }: NotesFeedProps) {
 
   return (
     <TooltipProvider>
-      <section aria-label={t("feed.label")} className="flex flex-col gap-4">
-        {canCreate ? (
-          <div className="flex justify-end">
-            <Button type="button" onClick={() => setComposer({ open: true })}>
-              <PlusIcon aria-hidden />
-              {t("tab.newNote")}
-            </Button>
-          </div>
-        ) : null}
-
-        {feed.items.length === 0 ? (
-          <EmptyState
-            icon={StickyNoteIcon}
-            title={t("feed.emptyTitle")}
-            description={
-              canCreate ? t("feed.emptyDescription") : t("feed.emptyDescriptionReadOnly")
-            }
-            action={
-              canCreate ? (
-                <Button type="button" onClick={() => setComposer({ open: true })}>
-                  <PlusIcon aria-hidden />
-                  {t("tab.newNote")}
-                </Button>
-              ) : undefined
-            }
-          />
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {feed.items.map((note) => (
-              <li key={note.id}>
-                <NoteCard
-                  note={note}
-                  viewer={viewer}
-                  currentEntityId={entity.id}
-                  onTogglePin={(target) => void togglePin(target)}
-                  onEdit={(target) => void edit(target)}
-                  onArchive={setArchiving}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {failed ? (
-          <p role="alert" className="text-sm text-destructive">
-            {t("feed.loadFailed")}
-          </p>
-        ) : null}
-        {feed.page < feed.pageCount ? (
-          <div className="flex justify-center">
+      <SectionCard
+        heading
+        title={t("tab.title")}
+        actions={
+          canCreate ? (
             <Button
               type="button"
               variant="outline"
-              disabled={loading}
-              onClick={() => void loadMore()}
+              size="sm"
+              onClick={() => setComposer({ open: true })}
             >
-              {loading ? t("feed.loading") : t("feed.loadMore")}
+              <PlusIcon aria-hidden />
+              {t("tab.newNote")}
             </Button>
-          </div>
-        ) : null}
-      </section>
+          ) : undefined
+        }
+      >
+        <section aria-label={t("feed.label")} className="flex flex-col gap-4">
+          {feed.items.length === 0 ? (
+            <EmptyState
+              embedded
+              icon={StickyNoteIcon}
+              title={t("feed.emptyTitle")}
+              description={
+                canCreate ? t("feed.emptyDescription") : t("feed.emptyDescriptionReadOnly")
+              }
+              action={
+                canCreate ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setComposer({ open: true })}
+                  >
+                    <PlusIcon aria-hidden />
+                    {t("tab.newNote")}
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <ul className="flex flex-col divide-y">
+              {feed.items.map((note) => (
+                <li key={note.id} className="py-4 first:pt-0 last:pb-0">
+                  <NoteCard
+                    note={note}
+                    viewer={viewer}
+                    currentEntityId={entity.id}
+                    onTogglePin={(target) => void togglePin(target)}
+                    onEdit={(target) => void edit(target)}
+                    onArchive={setArchiving}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {failed ? (
+            <p role="alert" className="text-sm text-destructive">
+              {t("feed.loadFailed")}
+            </p>
+          ) : null}
+          {feed.page < feed.pageCount ? (
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={() => void loadMore()}
+              >
+                {loading ? t("feed.loading") : t("feed.loadMore")}
+              </Button>
+            </div>
+          ) : null}
+        </section>
+      </SectionCard>
 
       {canCreate || composer.note ? (
         <NoteComposer

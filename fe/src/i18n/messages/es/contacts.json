@@ -6,6 +6,7 @@
     "archived": "Contacto archivado"
   },
   "tab": {
+    "title": "Contactos",
     "readOnly": "Solo lectura: tu rol puede consultar los contactos, pero no modificarlos."
   },
   "columns": {

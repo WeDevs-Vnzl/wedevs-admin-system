@@ -55,7 +55,7 @@
     "message": "Tienes cambios sin guardar. ¿Seguro que quieres salir?"
   },
   "relatedTable": {
-    "new": "+ Nuevo",
+    "new": "Nuevo",
     "empty": "Sin registros todavía"
   },
   "kpi": {

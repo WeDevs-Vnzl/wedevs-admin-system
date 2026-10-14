@@ -41,6 +41,8 @@ interface DataTableBaseProps<TData extends RowData> {
   initialColumns?: ColumnConfig[];
   /** Called with the whole config after every visibility, order or width change. */
   onColumnsChange?: (columns: ColumnConfig[]) => void;
+  /** Inside a card: no frame of its own, the table runs edge to edge (no card inside a card). */
+  embedded?: boolean;
 }
 
 export interface DataTableServerProps<TData extends RowData> extends DataTableBaseProps<TData> {
@@ -81,7 +83,16 @@ const noop = () => undefined;
  * the table never filters or pages the rows it receives.
  */
 export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
-  const { data, columns, getRowId, loading = false, emptyState, initialColumns, onColumnsChange } = props;
+  const {
+    data,
+    columns,
+    getRowId,
+    loading = false,
+    emptyState,
+    initialColumns,
+    onColumnsChange,
+    embedded = false,
+  } = props;
   const compact = props.variant === "compact";
   const server = props.variant === "compact" ? undefined : props;
   const total = server?.total ?? data.length;
@@ -238,7 +249,13 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
       ) : null}
 
       {/* The shadcn Table wrapper gets overflow-visible so this element scrolls both ways and the header sticks. */}
-      <div className="max-h-[70vh] overflow-auto rounded-xl border bg-card [&_[data-slot=table-container]]:overflow-visible">
+      <div
+        data-embedded={embedded || undefined}
+        className={cn(
+          "max-h-[70vh] overflow-auto [&_[data-slot=table-container]]:overflow-visible",
+          embedded ? "-mx-(--card-spacing-x) border-y" : "rounded-xl border bg-card",
+        )}
+      >
         <Table className="table-fixed" style={{ width: table.getTotalSize(), minWidth: "100%" }}>
           <TableHeader className="sticky top-0 z-20 bg-table-head shadow-[inset_0_-1px_0_var(--border)]">
             {table.getHeaderGroups().map((headerGroup) => (

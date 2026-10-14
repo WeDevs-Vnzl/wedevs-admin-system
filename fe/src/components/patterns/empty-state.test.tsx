@@ -54,4 +54,17 @@ describe("EmptyState", () => {
     expect(screen.getByText("No clients")).toBeInTheDocument();
     expect(screen.getByText("Create the first one.")).toBeInTheDocument();
   });
+
+  it("drops its border inside a card (embedded) and keeps it on its own", () => {
+    const { container, rerender } = wrap(<EmptyState title="Sin notas" />);
+    expect(container.querySelector("[data-slot=empty]")).toHaveClass("border");
+
+    rerender(
+      <NextIntlClientProvider locale="es" messages={{ patterns: esPatterns }}>
+        <EmptyState embedded title="Sin notas" />
+      </NextIntlClientProvider>,
+    );
+    expect(container.querySelector("[data-slot=empty]")).toHaveClass("border-0");
+    expect(screen.getByText("Sin notas")).toBeInTheDocument();
+  });
 });

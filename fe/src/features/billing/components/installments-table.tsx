@@ -174,6 +174,7 @@ export function InstallmentsTable({
     >
       <DataTable
         variant="compact"
+        embedded
         data={[...installments]}
         columns={columns}
         getRowId={(row) => row.id}

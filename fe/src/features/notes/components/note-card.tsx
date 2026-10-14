@@ -88,7 +88,7 @@ export function NoteCard({
       data-slot="note-card"
       data-pinned={note.pinned || undefined}
       aria-labelledby={`note-${note.id}-title`}
-      className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-xs"
+      className="flex flex-col gap-3"
     >
       <header className="flex items-start gap-3">
         <Avatar>

@@ -6,6 +6,7 @@
     "archived": "Contact archived"
   },
   "tab": {
+    "title": "Contacts",
     "readOnly": "Read-only: your role can view the contacts but cannot change them."
   },
   "columns": {

@@ -15,11 +15,19 @@ type EmptyStatePatternProps = {
   description?: string;
   // CTA such as "Nuevo cliente".
   action?: ReactNode;
+  // Inside a card: no frame of its own (no card inside a card).
+  embedded?: boolean;
 };
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStatePatternProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  embedded = false,
+}: EmptyStatePatternProps) {
   return (
-    <Empty className="rounded-2xl border">
+    <Empty className={embedded ? "border-0 p-6" : "rounded-2xl border"}>
       <EmptyHeader>
         {Icon ? (
           <EmptyMedia variant="icon">

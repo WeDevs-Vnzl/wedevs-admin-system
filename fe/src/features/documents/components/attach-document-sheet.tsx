@@ -106,7 +106,7 @@ export function AttachDocumentSheet({ entity, categories }: AttachDocumentSheetP
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm">
+        <Button variant="outline" size="sm">
           <PlusIcon aria-hidden="true" />
           {t("tab.attach")}
         </Button>

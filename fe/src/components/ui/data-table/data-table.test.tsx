@@ -244,11 +244,12 @@ describe("DataTable", () => {
   });
 
   describe("compact variant", () => {
-    function renderCompact(data: Row[] = rows) {
+    function renderCompact(data: Row[] = rows, embedded = false) {
       return render(
         <NextIntlClientProvider locale="en" messages={{ table: en }} timeZone="UTC">
           <DataTable<Row>
             variant="compact"
+            embedded={embedded}
             data={data}
             columns={columns}
             getRowId={(row) => row.id}
@@ -271,6 +272,17 @@ describe("DataTable", () => {
       expect(screen.queryByText("1–2 of 2")).toBeNull();
       expect(container.querySelector("thead")).toHaveClass("bg-table-head");
       expect(container.querySelector("th")).toHaveClass("sticky");
+    });
+
+    it("draws its own frame by default and none when embedded in a card", () => {
+      const framed = renderCompact().container.querySelector("table")!.parentElement!.parentElement!;
+      expect(framed).toHaveClass("rounded-xl", "border", "bg-card");
+
+      const embedded = renderCompact(rows, true).container.querySelector("[data-embedded]");
+      expect(embedded).not.toBeNull();
+      expect(embedded).not.toHaveClass("rounded-xl");
+      expect(embedded).not.toHaveClass("bg-card");
+      expect(screen.getAllByText("Acme")).toHaveLength(2);
     });
 
     it("shows the empty state inside the table when there are no rows", () => {

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { SectionCard } from "@/components/patterns/section-card";
 import type { EntityType } from "@/lib/validators/enums";
 import { getEntityActivity } from "../queries";
 import { ActivityFeed } from "./activity-feed";
@@ -13,11 +14,8 @@ export async function EntityActivityTab({ entity }: { entity: { type: EntityType
   const t = await getTranslations("activity.tab");
 
   return (
-    <section aria-labelledby="entity-activity-title" className="flex flex-col gap-4">
-      <h2 id="entity-activity-title" className="text-lg font-semibold">
-        {t("title")}
-      </h2>
+    <SectionCard heading title={t("title")}>
       <ActivityFeed initial={data} filter={{ entityType: [entity.type], entityId: entity.id }} />
-    </section>
+    </SectionCard>
   );
 }

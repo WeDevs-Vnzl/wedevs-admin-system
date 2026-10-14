@@ -203,6 +203,7 @@ export function RecurringChargesTable({
     >
       <DataTable
         variant="compact"
+        embedded
         data={[...charges]}
         columns={columns}
         getRowId={(row) => row.id}

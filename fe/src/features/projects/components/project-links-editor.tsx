@@ -211,7 +211,7 @@ export function ProjectLinksEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       <p aria-live="polite" role="status" className="sr-only">
         {announcement}
       </p>
@@ -225,9 +225,10 @@ export function ProjectLinksEditor({
             key={group}
             open={isOpen}
             onOpenChange={(open) => setOpenOverride((current) => ({ ...current, [group]: open }))}
-            className="rounded-2xl border"
+            // The groups split by a rule, not boxed: the editor always sits inside a card.
+            className="border-t first-of-type:border-t-0"
           >
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium">
+            <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 py-3 text-left text-sm font-medium">
               <span className="flex items-center gap-2">
                 <GroupIcon className="size-4 text-muted-foreground" aria-hidden />
                 {groupName}
@@ -239,7 +240,7 @@ export function ProjectLinksEditor({
                 <ChevronDown className="size-4" aria-hidden />
               )}
             </CollapsibleTrigger>
-            <CollapsibleContent className="flex flex-col gap-3 px-4 pb-4">
+            <CollapsibleContent className="flex flex-col gap-3 pb-4">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -253,7 +254,7 @@ export function ProjectLinksEditor({
                   items={items.map((row) => row.key)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <ul className="flex flex-col gap-2">
+                  <ul className="flex flex-col divide-y">
                     {items.map((row, index) => (
                       <SortableLinkRow
                         key={row.key}
@@ -365,8 +366,8 @@ function SortableLinkRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border bg-card p-3",
-        isDragging && "opacity-80 shadow-md",
+        "flex flex-col gap-3 bg-card py-3",
+        isDragging && "relative z-10 opacity-80 shadow-md",
       )}
     >
       <div className="flex flex-wrap items-center gap-2">

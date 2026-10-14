@@ -53,7 +53,7 @@ export function ActivityItem({
   const { actor } = entry;
 
   return (
-    <Item variant="outline" size="sm" className="rounded-xl">
+    <Item size="sm" className="rounded-none px-0">
       <ItemMedia>
         {actor.type === "USER" ? (
           <Avatar size="sm">

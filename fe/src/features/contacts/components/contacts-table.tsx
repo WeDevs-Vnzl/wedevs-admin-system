@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
+import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
 import {
   DataTable,
@@ -182,20 +183,26 @@ export function ContactsTable({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      {canManage ? (
-        <div className="flex justify-end">
-          <Button onClick={() => setDialog({ kind: "form", open: true, key: Date.now() })}>
+    <SectionCard
+      heading
+      title={t("tab.title")}
+      description={canManage ? undefined : t("tab.readOnly")}
+      actions={
+        canManage ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDialog({ kind: "form", open: true, key: Date.now() })}
+          >
             <Plus aria-hidden />
             {t("actions.new")}
           </Button>
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">{t("tab.readOnly")}</p>
-      )}
-
+        ) : undefined
+      }
+    >
       <DataTable
         variant="compact"
+        embedded
         data={contacts}
         columns={columns}
         getRowId={(row) => row.id}
@@ -229,6 +236,6 @@ export function ContactsTable({
           }}
         />
       ) : null}
-    </div>
+    </SectionCard>
   );
 }
