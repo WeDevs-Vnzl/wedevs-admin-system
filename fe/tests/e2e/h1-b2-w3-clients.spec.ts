@@ -320,7 +320,8 @@ test.describe("archive and restore a client (mutates clients)", () => {
     await page.getByRole("switch", { name: "Mostrar archivados", exact: true }).click();
     await expect(page.getByRole("row").filter({ hasText: "Veredas Digital" })).toBeVisible();
 
-    await open(page, "/clients/cli_zafiro_labs");
+    // A client with no projects and no invoices (Zafiro holds invoices since the H1-B3 finance seed).
+    await open(page, "/clients/cli_graficas_caribe");
     await page.getByRole("button", { name: "Más acciones", exact: true }).click();
     await page.getByRole("menuitem", { name: "Archivar cliente", exact: true }).click();
     const dialog = page.getByRole("alertdialog");

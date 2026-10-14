@@ -68,12 +68,17 @@ test.describe("routing and sign-in", () => {
     await page.goto("/dashboard");
     await expect(mainNav(page)).toBeVisible();
 
-    // "Clientes", "Proyectos", "Notas" and "Actividad" exist since H1-B2; the links below are still in-shell not-found.
+    // "Clientes", "Proyectos", "Notas" and "Actividad" exist since H1-B2, the finance pages since H1-B3; the links
+    // below are still in-shell not-found.
     for (const [label, url] of [
       ["Clientes", /\/clients$/],
       ["Proyectos", /\/projects$/],
       ["Notas", /\/notes$/],
       ["Actividad", /\/activity$/],
+      ["Facturas", /\/invoices$/],
+      ["Pagos", /\/payments$/],
+      ["Gastos", /\/expenses$/],
+      ["Cuentas", /\/accounts$/],
     ] as const) {
       await sidebar(page).getByRole("link", { name: label, exact: true }).click();
       await expect(page).toHaveURL(url);
@@ -81,15 +86,7 @@ test.describe("routing and sign-in", () => {
       await expect(mainNav(page)).toBeVisible();
     }
 
-    const notFoundLinks = [
-      "Facturas",
-      "Pagos",
-      "Gastos",
-      "Cuentas",
-      "Documentos",
-      "Grafo",
-      "Reportes",
-    ];
+    const notFoundLinks = ["Documentos", "Grafo", "Reportes"];
     for (const label of notFoundLinks) {
       await sidebar(page).getByRole("link", { name: label, exact: true }).click();
       await expect(page.getByText("Página no encontrada", { exact: true })).toBeVisible();
