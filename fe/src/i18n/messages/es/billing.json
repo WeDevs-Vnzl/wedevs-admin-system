@@ -9,5 +9,154 @@
     "adjustmentNonZero": "Un ajuste no puede ser cero",
     "installmentKindNotManual": "Las cuotas recurrentes se generan desde un cobro recurrente",
     "nothingToUpdate": "No hay cambios que guardar"
+  },
+  "errors": {
+    "planRequired": "Primero define el plan de facturación del proyecto",
+    "rateMissing": "No hay tasa para la moneda del contrato. Carga la tasa del día en Configuración",
+    "currencyLocked": "No se puede cambiar la moneda: ya hay cuotas facturadas",
+    "installmentBilled": "La cuota ya está facturada: solo se puede cambiar su etiqueta",
+    "installmentCancelled": "La cuota está cancelada",
+    "chargeFinished": "El cobro recurrente está finalizado"
+  },
+  "page": {
+    "title": "Cobro",
+    "description": "Plan de facturación, cuotas y cargos recurrentes del proyecto.",
+    "back": "Volver al proyecto",
+    "readOnly": "El proyecto está archivado: esta pantalla es de solo lectura."
+  },
+  "plan": {
+    "title": "Plan de facturación",
+    "description": "Modelo de cobro y monto contratado. Las cuotas se generan a partir de este monto.",
+    "save": "Guardar plan",
+    "create": "Crear plan",
+    "saved": "Plan de facturación guardado",
+    "empty": "Aún no hay plan de facturación: define el modelo y el monto contratado para empezar.",
+    "contractAmountHint": "Obligatorio en precio fijo y mixto. En recurrente puede quedar vacío.",
+    "contractedUsd": "Contrato en USD",
+    "usdRate": "Tasa del día del guardado",
+    "snapshotHint": "El valor en USD se fija al guardar el plan y no se recalcula con las tasas posteriores.",
+    "fields": {
+      "model": "Modelo de cobro",
+      "currency": "Moneda del contrato",
+      "contractAmount": "Monto contratado",
+      "notes": "Notas"
+    }
+  },
+  "warning": {
+    "title": "Las cuotas no suman el monto contratado",
+    "description": "Las cuotas suman {installments} y el contrato es {contract} (diferencia {difference}). Revisa las cuotas o el monto contratado; el aviso se mantiene hasta que coincidan."
+  },
+  "templates": {
+    "label": "Plantilla rápida",
+    "description": "Reemplaza las cuotas pendientes por el reparto del contrato. Las cuotas facturadas no se tocan.",
+    "apply": "Aplicar plantilla",
+    "applied": "Cuotas generadas desde la plantilla",
+    "options": {
+      "SPLIT_40_30_30": "40 / 30 / 30",
+      "SPLIT_30_40_30": "30 / 40 / 30",
+      "SPLIT_50_50": "50 / 50",
+      "THREE_EQUAL": "Tres partes iguales",
+      "FULL_UPFRONT": "Pago único (100 %)"
+    }
+  },
+  "installments": {
+    "title": "Cuotas",
+    "description": "Cuotas del proyecto en orden. Una cuota facturada conserva su monto y su moneda.",
+    "add": "Nueva cuota",
+    "empty": {
+      "title": "No hay cuotas",
+      "description": "Aplica una plantilla o agrega cuotas manualmente."
+    },
+    "columns": {
+      "order": "#",
+      "label": "Cuota",
+      "kind": "Tipo",
+      "amount": "Monto",
+      "percentage": "%",
+      "dueDate": "Fecha",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "locked": "Facturada",
+    "edit": "Editar {label}",
+    "cancel": "Cancelar {label}",
+    "cancelDescription": "La cuota «{label}» quedará cancelada y no contará en la suma del contrato. Las cuotas facturadas no se pueden cancelar.",
+    "toast": {
+      "cancelled": "Cuota cancelada"
+    }
+  },
+  "installmentForm": {
+    "createTitle": "Nueva cuota",
+    "editTitle": "Editar cuota",
+    "description": "Monto, moneda y fecha de la cuota. Un ajuste puede ser negativo.",
+    "create": "Crear cuota",
+    "lockedHint": "Cuota facturada: solo se puede cambiar la etiqueta.",
+    "triggerHint": "Condición libre, por ejemplo «Al aprobar el diseño».",
+    "fields": {
+      "label": "Nombre",
+      "kind": "Tipo",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "percentage": "Porcentaje del contrato",
+      "dueDate": "Fecha de facturación",
+      "trigger": "Condición"
+    }
+  },
+  "recurring": {
+    "title": "Cobros recurrentes",
+    "description": "Cargos mensuales del proyecto. Cada periodo genera su cuota unos días antes del día de cobro.",
+    "add": "Nuevo cobro recurrente",
+    "empty": {
+      "title": "No hay cobros recurrentes",
+      "description": "Agrega un cobro mensual, trimestral, semestral o anual."
+    },
+    "columns": {
+      "label": "Cobro",
+      "amount": "Monto",
+      "frequency": "Frecuencia",
+      "billingDay": "Día de cobro",
+      "lastGenerated": "Último periodo",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "monthly": "Mensual: {amount} {currency}",
+    "billingDay": "Día {day} · {lead} días antes",
+    "generate": "Generar periodos pendientes de {label}",
+    "pause": "Pausar {label}",
+    "resume": "Reanudar {label}",
+    "edit": "Editar {label}",
+    "finish": "Finalizar {label}",
+    "finishDescription": "El cobro «{label}» se finalizará y dejará de generar cuotas. No se puede reactivar.",
+    "toast": {
+      "paused": "Cobro pausado: no genera cuotas",
+      "resumed": "Cobro reanudado",
+      "finished": "Cobro finalizado",
+      "generated": "Periodos generados"
+    }
+  },
+  "recurringForm": {
+    "createTitle": "Nuevo cobro recurrente",
+    "editTitle": "Editar cobro recurrente",
+    "description": "Un cambio de monto solo afecta a los periodos que aún no se han generado.",
+    "create": "Crear cobro",
+    "amountHint": "Monto de cada periodo, en la moneda del cobro.",
+    "billingDayHint": "Entre 1 y 28, para que exista en todos los meses.",
+    "leadDaysHint": "Días antes del día de cobro en que se genera la cuota.",
+    "fields": {
+      "label": "Nombre",
+      "amount": "Monto por periodo",
+      "currency": "Moneda",
+      "frequency": "Frecuencia",
+      "startDate": "Inicio",
+      "endDate": "Fin (opcional)",
+      "billingDay": "Día de cobro",
+      "leadDays": "Días de anticipación"
+    }
+  },
+  "toast": {
+    "installmentCreated": "Cuota creada",
+    "installmentUpdated": "Cuota guardada",
+    "chargeCreated": "Cobro recurrente creado",
+    "chargeUpdated": "Cobro recurrente guardado"
   }
 }

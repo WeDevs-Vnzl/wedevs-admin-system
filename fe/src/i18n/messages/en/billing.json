@@ -9,5 +9,154 @@
     "adjustmentNonZero": "An adjustment cannot be zero",
     "installmentKindNotManual": "Recurring installments are generated from a recurring charge",
     "nothingToUpdate": "There are no changes to save"
+  },
+  "errors": {
+    "planRequired": "Define the project's billing plan first",
+    "rateMissing": "There is no rate for the contract currency. Load the day's rate in Settings",
+    "currencyLocked": "The currency cannot change: there are billed installments",
+    "installmentBilled": "The installment is billed: only its label can change",
+    "installmentCancelled": "The installment is cancelled",
+    "chargeFinished": "The recurring charge is finished"
+  },
+  "page": {
+    "title": "Billing",
+    "description": "Billing plan, installments and recurring charges of the project.",
+    "back": "Back to project",
+    "readOnly": "The project is archived: this screen is read-only."
+  },
+  "plan": {
+    "title": "Billing plan",
+    "description": "Billing model and contract amount. Installments are generated from this amount.",
+    "save": "Save plan",
+    "create": "Create plan",
+    "saved": "Billing plan saved",
+    "empty": "There is no billing plan yet: set the model and the contract amount to start.",
+    "contractAmountHint": "Required for fixed-price and mixed plans. It can stay empty for recurring plans.",
+    "contractedUsd": "Contract in USD",
+    "usdRate": "Rate on the save day",
+    "snapshotHint": "The USD value is fixed when the plan is saved and is not recalculated with later rates.",
+    "fields": {
+      "model": "Billing model",
+      "currency": "Contract currency",
+      "contractAmount": "Contract amount",
+      "notes": "Notes"
+    }
+  },
+  "warning": {
+    "title": "The installments do not add up to the contract amount",
+    "description": "The installments add up to {installments} and the contract is {contract} (difference {difference}). Review the installments or the contract amount; this warning stays until they match."
+  },
+  "templates": {
+    "label": "Quick template",
+    "description": "Replaces the pending installments with the split of the contract. Billed installments are not touched.",
+    "apply": "Apply template",
+    "applied": "Installments generated from the template",
+    "options": {
+      "SPLIT_40_30_30": "40 / 30 / 30",
+      "SPLIT_30_40_30": "30 / 40 / 30",
+      "SPLIT_50_50": "50 / 50",
+      "THREE_EQUAL": "Three equal parts",
+      "FULL_UPFRONT": "Single payment (100 %)"
+    }
+  },
+  "installments": {
+    "title": "Installments",
+    "description": "Installments of the project in order. A billed installment keeps its amount and currency.",
+    "add": "New installment",
+    "empty": {
+      "title": "No installments",
+      "description": "Apply a template or add installments by hand."
+    },
+    "columns": {
+      "order": "#",
+      "label": "Installment",
+      "kind": "Type",
+      "amount": "Amount",
+      "percentage": "%",
+      "dueDate": "Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "locked": "Billed",
+    "edit": "Edit {label}",
+    "cancel": "Cancel {label}",
+    "cancelDescription": "The installment “{label}” will be cancelled and will not count toward the contract sum. Billed installments cannot be cancelled.",
+    "toast": {
+      "cancelled": "Installment cancelled"
+    }
+  },
+  "installmentForm": {
+    "createTitle": "New installment",
+    "editTitle": "Edit installment",
+    "description": "Amount, currency and date of the installment. An adjustment can be negative.",
+    "create": "Create installment",
+    "lockedHint": "Billed installment: only the label can change.",
+    "triggerHint": "Free condition, for example “On design approval”.",
+    "fields": {
+      "label": "Name",
+      "kind": "Type",
+      "amount": "Amount",
+      "currency": "Currency",
+      "percentage": "Percentage of the contract",
+      "dueDate": "Billing date",
+      "trigger": "Condition"
+    }
+  },
+  "recurring": {
+    "title": "Recurring charges",
+    "description": "Monthly charges of the project. Each period generates its installment a few days before the billing day.",
+    "add": "New recurring charge",
+    "empty": {
+      "title": "No recurring charges",
+      "description": "Add a monthly, quarterly, half-yearly or yearly charge."
+    },
+    "columns": {
+      "label": "Charge",
+      "amount": "Amount",
+      "frequency": "Frequency",
+      "billingDay": "Billing day",
+      "lastGenerated": "Last period",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "monthly": "Monthly: {amount} {currency}",
+    "billingDay": "Day {day} · {lead} days before",
+    "generate": "Generate pending periods of {label}",
+    "pause": "Pause {label}",
+    "resume": "Resume {label}",
+    "edit": "Edit {label}",
+    "finish": "Finish {label}",
+    "finishDescription": "The charge “{label}” will be finished and will stop generating installments. It cannot be reactivated.",
+    "toast": {
+      "paused": "Charge paused: it generates no installments",
+      "resumed": "Charge resumed",
+      "finished": "Charge finished",
+      "generated": "Periods generated"
+    }
+  },
+  "recurringForm": {
+    "createTitle": "New recurring charge",
+    "editTitle": "Edit recurring charge",
+    "description": "Changing the amount only affects the periods that have not been generated yet.",
+    "create": "Create charge",
+    "amountHint": "Amount of each period, in the charge currency.",
+    "billingDayHint": "Between 1 and 28, so it exists in every month.",
+    "leadDaysHint": "Days before the billing day when the installment is generated.",
+    "fields": {
+      "label": "Name",
+      "amount": "Amount per period",
+      "currency": "Currency",
+      "frequency": "Frequency",
+      "startDate": "Start",
+      "endDate": "End (optional)",
+      "billingDay": "Billing day",
+      "leadDays": "Lead days"
+    }
+  },
+  "toast": {
+    "installmentCreated": "Installment created",
+    "installmentUpdated": "Installment saved",
+    "chargeCreated": "Recurring charge created",
+    "chargeUpdated": "Recurring charge saved"
   }
 }
