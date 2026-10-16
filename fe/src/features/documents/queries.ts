@@ -15,6 +15,7 @@ import {
   type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
 import * as documents from "@/mocks/services/documents";
+import { samplePdf } from "@/mocks/sample-pdf";
 import { getServiceContext, ServiceError } from "@/server/context";
 import { can } from "@/server/auth/permissions";
 
@@ -160,6 +161,9 @@ export type VersionFile =
   | { kind: "markdown"; fileName: string; content: string }
   | { kind: "external"; url: string }
   | { kind: "file"; fileName: string; mimeType: string };
+
+/** Hito 1 bytes of a PDF version (no object storage yet); used by the version file route. */
+export { samplePdf };
 
 export async function readVersionFile(
   documentId: string,

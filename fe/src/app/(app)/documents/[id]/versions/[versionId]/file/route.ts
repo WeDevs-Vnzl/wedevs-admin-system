@@ -1,6 +1,5 @@
-import { readVersionFile } from "@/features/documents/queries";
+import { readVersionFile, samplePdf } from "@/features/documents/queries";
 import { UnauthenticatedError } from "@/server/auth/session";
-import { samplePdf } from "./sample-pdf";
 
 type RouteParams = { params: Promise<{ id: string; versionId: string }> };
 

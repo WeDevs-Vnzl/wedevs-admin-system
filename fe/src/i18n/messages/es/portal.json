@@ -1,1 +1,57 @@
-{}
+{
+  "brand": "WeDevs",
+  "privateLink": "Enlace privado",
+  "language": "Idioma del portal",
+  "eyebrow": "Documentos compartidos",
+  "availableUntil": "Disponible hasta {date}",
+  "documentsLabel": "Documentos",
+  "formats": {
+    "MARKDOWN": "Documento web",
+    "ARCHIVO": "Archivo",
+    "ENLACE": "Enlace"
+  },
+  "document": {
+    "version": "v{version}",
+    "versionDate": "Versión del {date}",
+    "locked": "Requiere clave"
+  },
+  "actions": {
+    "view": "Ver",
+    "viewing": "Viendo",
+    "download": "Descargar",
+    "unlock": "Desbloquear",
+    "openLink": "Abrir enlace"
+  },
+  "viewer": {
+    "label": "Visor de documentos",
+    "empty": "Elige un documento para verlo aquí.",
+    "loading": "Cargando documento…",
+    "error": "No se pudo abrir el documento. Inténtalo de nuevo.",
+    "noPreview": "Este archivo no tiene vista previa. Descárgalo para abrirlo.",
+    "noPreviewNoDownload": "Este archivo no tiene vista previa.",
+    "linkDescription": "Este documento está en una dirección externa."
+  },
+  "unlock": {
+    "title": "Desbloquear documento",
+    "description": "Introduce la clave de acceso que te dieron para «{title}».",
+    "keyLabel": "Clave de acceso",
+    "showKey": "Mostrar clave",
+    "hideKey": "Ocultar clave",
+    "submit": "Desbloquear",
+    "cancel": "Cancelar",
+    "invalid": "La clave de acceso no es correcta.",
+    "tooShort": "La clave de acceso tiene al menos {min} caracteres.",
+    "lockedTitle": "Demasiados intentos",
+    "locked": "Demasiados intentos, vuelve a intentarlo en {minutes} minutos.",
+    "error": "No se pudo desbloquear el documento. Inténtalo de nuevo.",
+    "unlocked": "Documento desbloqueado"
+  },
+  "footer": {
+    "personal": "Este enlace es personal. No lo reenvíes.",
+    "copyright": "© {year} WeDevs"
+  },
+  "notFound": {
+    "title": "Enlace no disponible",
+    "description": "Este enlace no existe o ya no está disponible."
+  }
+}

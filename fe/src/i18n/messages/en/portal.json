@@ -1,1 +1,57 @@
-{}
+{
+  "brand": "WeDevs",
+  "privateLink": "Private link",
+  "language": "Portal language",
+  "eyebrow": "Shared documents",
+  "availableUntil": "Available until {date}",
+  "documentsLabel": "Documents",
+  "formats": {
+    "MARKDOWN": "Web document",
+    "ARCHIVO": "File",
+    "ENLACE": "Link"
+  },
+  "document": {
+    "version": "v{version}",
+    "versionDate": "Version of {date}",
+    "locked": "Key required"
+  },
+  "actions": {
+    "view": "View",
+    "viewing": "Viewing",
+    "download": "Download",
+    "unlock": "Unlock",
+    "openLink": "Open link"
+  },
+  "viewer": {
+    "label": "Document viewer",
+    "empty": "Choose a document to view it here.",
+    "loading": "Loading document…",
+    "error": "The document could not be opened. Try again.",
+    "noPreview": "This file has no preview. Download it to open it.",
+    "noPreviewNoDownload": "This file has no preview.",
+    "linkDescription": "This document lives at an external address."
+  },
+  "unlock": {
+    "title": "Unlock document",
+    "description": "Enter the access key you were given for “{title}”.",
+    "keyLabel": "Access key",
+    "showKey": "Show key",
+    "hideKey": "Hide key",
+    "submit": "Unlock",
+    "cancel": "Cancel",
+    "invalid": "The access key is not correct.",
+    "tooShort": "The access key has at least {min} characters.",
+    "lockedTitle": "Too many attempts",
+    "locked": "Too many attempts, try again in {minutes} minutes.",
+    "error": "The document could not be unlocked. Try again.",
+    "unlocked": "Document unlocked"
+  },
+  "footer": {
+    "personal": "This link is personal. Do not forward it.",
+    "copyright": "© {year} WeDevs"
+  },
+  "notFound": {
+    "title": "Link not available",
+    "description": "This link does not exist or is no longer available."
+  }
+}

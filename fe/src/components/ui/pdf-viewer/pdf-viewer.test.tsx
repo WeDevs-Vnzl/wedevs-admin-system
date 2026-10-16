@@ -43,10 +43,10 @@ function makeDocument(numPages: number): FakeDocument {
   };
 }
 
-function renderViewer(onDownload = vi.fn()) {
+function renderViewer(onDownload: (() => void) | null = vi.fn()) {
   return render(
     <NextIntlClientProvider locale="en" messages={{ common: enCommon }}>
-      <PdfViewerCore url="/documents/sample.pdf" onDownload={onDownload} />
+      <PdfViewerCore url="/documents/sample.pdf" {...(onDownload ? { onDownload } : {})} />
     </NextIntlClientProvider>,
   );
 }
@@ -144,6 +144,12 @@ describe("PdfViewerCore", () => {
     await user.click(button("Download"));
     expect(onDownload).toHaveBeenCalledTimes(1);
     expect(pdfjs.getDocument).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers no download button when the caller does not allow downloads", async () => {
+    renderViewer(null);
+    await screen.findByText("1 / 3");
+    expect(screen.queryByRole("button", { name: "Download" })).not.toBeInTheDocument();
   });
 
   it("shows an error state and retries the load", async () => {

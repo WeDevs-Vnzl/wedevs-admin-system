@@ -43,7 +43,8 @@ const FALLBACK_WIDTH = 600;
 
 export type PdfViewerCoreProps = {
   url: string;
-  onDownload: () => void;
+  /** Download action of the toolbar; without it (a portal link that forbids downloads) there is no button. */
+  onDownload?: () => void;
   className?: string;
 };
 
@@ -262,9 +263,11 @@ export function PdfViewerCore({ url, onDownload, className }: PdfViewerCoreProps
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon-sm" aria-label={t("download")} onClick={onDownload}>
-            <Download aria-hidden />
-          </Button>
+          {onDownload ? (
+            <Button variant="outline" size="icon-sm" aria-label={t("download")} onClick={onDownload}>
+              <Download aria-hidden />
+            </Button>
+          ) : null}
           {/* A toggle keeps one name; its state is aria-pressed alone (a changing label would contradict it). */}
           <Button
             variant="outline"
