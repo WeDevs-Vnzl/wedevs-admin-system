@@ -55,16 +55,13 @@ describe("getMockStore", () => {
       "movements",
       "expenses",
       "recurringExpenses",
-    ] as const) {
-      expect(store[name].length).toBeGreaterThan(0);
-    }
-    for (const name of [
       "shareLinks",
       "shareDocumentKeys",
       "shareAccessLogs",
-      "alertDismissals",
-      "preferences",
     ] as const) {
+      expect(store[name].length).toBeGreaterThan(0);
+    }
+    for (const name of ["alertDismissals", "preferences"] as const) {
       expect(store[name]).toEqual([]);
     }
   });

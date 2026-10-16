@@ -18,7 +18,7 @@ import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
 import type { PaymentAllocationDTO, PaymentDetailDTO } from "@/lib/validators/payments";
 import type { AccountDTO, MovementDTO, TransferDTO } from "@/lib/validators/accounts";
 import type { ExpenseDetailDTO, RecurringExpenseDTO } from "@/lib/validators/expenses";
-import type { ShareAccessLogRowDTO, ShareLinkDetailDTO } from "@/lib/validators/shares";
+import type { ShareLinkDetailDTO } from "@/lib/validators/shares";
 import { deriveFinance } from "./derive-finance";
 import {
   createMockSequences,
@@ -57,9 +57,8 @@ import {
   type DocumentVersionRow,
 } from "./fixtures/documents";
 import {
-  shareAccessLogFixtures,
-  shareDocumentKeyFixtures,
-  shareLinkFixtures,
+  createShareFixtures,
+  type ShareAccessLogRow,
   type ShareDocumentKeyRow,
 } from "./fixtures/shares";
 import { createNoteFixtures, type NoteRow } from "./fixtures/notes";
@@ -82,6 +81,7 @@ export type {
   NoteRow,
   ProjectClientRow,
   ProjectRow,
+  ShareAccessLogRow,
   ShareDocumentKeyRow,
 };
 
@@ -146,10 +146,12 @@ export interface MockStore {
   documents: DocumentRow[];
   documentVersions: DocumentVersionRow[];
   documentLinks: DocumentLinkRow[];
+  /** Link rows in the detail shape; the shares service re-derives refs, versions, counters and status (T7). */
   shareLinks: ShareLinkDetailDTO[];
   /** Δ2: access-key hashes per shared document. Never copied into a read DTO (C22). */
   shareDocumentKeys: ShareDocumentKeyRow[];
-  shareAccessLogs: ShareAccessLogRowDTO[];
+  /** Access log with the salted IP hash the unlock lockout is keyed on (C22); append-only. */
+  shareAccessLogs: ShareAccessLogRow[];
 
   // Knowledge and cross-cutting
   notes: NoteRow[];
@@ -220,6 +222,8 @@ function deriveSequences(store: MockStore): void {
 export function buildMockStore(now: Date = new Date()): MockStore {
   const catalogs = createCatalogFixtures(todayInCaracas(now));
   const documents = createDocumentFixtures(now);
+  const clients = createClientFixtures(now);
+  const shares = createShareFixtures(now, { documents, clients, users: catalogs.users });
   const store: MockStore = structuredClone({
     sequences: createMockSequences(),
     idCounters: {},
@@ -239,7 +243,7 @@ export function buildMockStore(now: Date = new Date()): MockStore {
     technologies: catalogs.technologies,
     tags: catalogs.tags,
 
-    clients: createClientFixtures(now),
+    clients,
     contacts: createContactFixtures(now),
     projects: createProjectFixtures(now),
 
@@ -259,9 +263,9 @@ export function buildMockStore(now: Date = new Date()): MockStore {
     documents: documents.documents,
     documentVersions: documents.documentVersions,
     documentLinks: documents.documentLinks,
-    shareLinks: shareLinkFixtures,
-    shareDocumentKeys: shareDocumentKeyFixtures,
-    shareAccessLogs: shareAccessLogFixtures,
+    shareLinks: shares.shareLinks,
+    shareDocumentKeys: shares.shareDocumentKeys,
+    shareAccessLogs: shares.shareAccessLogs,
 
     notes: createNoteFixtures(now),
     activity: createActivityFixtures(now),
