@@ -1,4 +1,4 @@
-// MOCK — tests for the minimal documents service of H1-B2.
+// MOCK — tests for the documents service behaviour of H1-B2 (H1-B4 additions: `documents-lifecycle.test.ts`).
 import { describe, expect, it } from "vitest";
 import {
   documentFilterSchema,
@@ -200,20 +200,21 @@ describe("createDocument", () => {
     expect(created.signedAt).toBe("2026-10-01");
   });
 
-  it("refuses types that are not ARCHIVO and inactive types (H1-B4 adds the other formats)", async () => {
+  it("refuses inactive and unknown types (every format is accepted since H1-B4)", async () => {
     const { ctx, db } = makeTestContext();
-    const markdown = db.documentTypes.find((t) => t.defaultFormat !== "ARCHIVO");
-    if (markdown) {
-      await expect(createDocument(ctx, draft(db, { typeId: markdown.id }))).rejects.toBeInstanceOf(
-        ServiceError,
-      );
-    }
-    const inactive = db.documentTypes.find((t) => !t.active);
-    if (inactive) {
-      await expect(createDocument(ctx, draft(db, { typeId: inactive.id }))).rejects.toMatchObject({
+    const inactive = archivoType(db);
+    inactive.active = false;
+    const count = db.documents.length;
+    for (const typeId of [inactive.id, "dtyp_missing"]) {
+      await expect(createDocument(ctx, draft(db, { typeId }))).rejects.toMatchObject({
         code: "VALIDATION",
+        fieldErrors: { typeId: expect.any(Array) },
       });
     }
+    expect(db.documents).toHaveLength(count);
+    await expect(createDocument(ctx, draft(db, { typeId: "dtyp_x" }))).rejects.toBeInstanceOf(
+      ServiceError,
+    );
   });
 
   it("refuses a link to a record that does not exist", async () => {

@@ -12,6 +12,9 @@
 //   - `doc_nda_tamanaco`      signed, expires in 21 days (inside its 30-day alert window).
 //   - `doc_propuesta_orinoco` `VENCIDO`: expired 12 days ago.
 //   - `doc_contrato_kairos`   linked to a client and two projects (HU-20 shape).
+//   - `doc_propuesta_aurora`  expires in 45 days, `doc_cotizacion_tornillo` in 75 (overview 60/90-day windows).
+//   - `doc_arquitectura_tamanaco` `BORRADOR` with no version, untouched for 20 days (overview stale drafts).
+//   - `doc_tsd_andina`        two markdown versions plus an unpublished draft (editor, publish N+1).
 // Formats: `MARKDOWN` (PRD, TSD, minuta, roadmap), `ARCHIVO` (contracts, proposals…), `ENLACE` (credentials).
 import { addDays, todayInCaracas, type DateOnly } from "@/lib/dates";
 import type {
@@ -159,6 +162,14 @@ export const fileFixtures: FileDTO[] = [
   ),
   file("notas_reunion", "notas-reunion-solaris.md", MD, 4_096, DIEGO, "2026-09-25T20:00:00.000Z"),
   file("brief_marca", "brief-de-marca.pdf", PDF, 322_560, ANDRES, "2026-08-08T15:40:00.000Z"),
+  file(
+    "propuesta_aurora",
+    "propuesta-app-reservas-aurora.pdf",
+    PDF,
+    274_432,
+    CAMILA,
+    "2026-09-29T14:10:00.000Z",
+  ),
 ];
 
 // ───────────────────────────── Documents ─────────────────────────────
@@ -185,6 +196,8 @@ interface DocumentSeed {
   alertDays?: number;
   versions: readonly VersionSeed[];
   draft?: string;
+  /** Days since the draft was last saved; defaults to a third of `createdDaysAgo`. */
+  draftDaysAgo?: number;
   links: readonly (readonly [DocumentLinkEntityType, string])[];
   tags?: readonly string[];
   createdDaysAgo: number;
@@ -329,6 +342,13 @@ const SEEDS: readonly DocumentSeed[] = [
         content: prd("TSD Plataforma SaaS Andina", "Cobros con Stripe"),
         by: VALERIA,
       },
+      {
+        format: "MARKDOWN",
+        daysAgo: 12,
+        changelog: "Se añade el módulo de facturación",
+        content: prd("TSD Plataforma SaaS Andina", "Cobros con Stripe y facturación"),
+        by: DIEGO,
+      },
     ],
     draft: prd("TSD Plataforma SaaS Andina", "Cobros con Stripe y reintentos"),
     links: [
@@ -458,6 +478,73 @@ const SEEDS: readonly DocumentSeed[] = [
     createdDaysAgo: 8,
     by: VALERIA,
   },
+  {
+    key: "propuesta_aurora",
+    title: "Propuesta — App de reservas Cafetería Aurora",
+    type: "propuesta",
+    status: "ENVIADO",
+    summary: "Segunda fase: reservas y pedidos en línea.",
+    effective: -10,
+    expires: 45,
+    alertDays: 15,
+    versions: [
+      {
+        format: "ARCHIVO",
+        daysAgo: 10,
+        changelog: "Propuesta enviada",
+        file: "propuesta_aurora",
+        by: CAMILA,
+      },
+    ],
+    links: [["CLIENT", "cli_cafeteria_aurora"]],
+    createdDaysAgo: 11,
+    by: CAMILA,
+  },
+  {
+    key: "arquitectura_tamanaco",
+    title: "Arquitectura — ERP Tamanaco",
+    type: "arquitectura",
+    status: "BORRADOR",
+    summary: "Borrador de la arquitectura de integraciones; sin cambios desde hace semanas.",
+    versions: [],
+    draft:
+      "# Arquitectura ERP Tamanaco\n\n## Integraciones\n\n- Banco\n- Facturación electrónica\n",
+    draftDaysAgo: 20,
+    links: [["PROJECT", "pry_tamanaco_erp"]],
+    createdDaysAgo: 24,
+    by: DIEGO,
+  },
+  {
+    key: "manual_aurora",
+    title: "Manual de usuario — POS Cafetería Aurora",
+    type: "manual_usuario",
+    status: "ENVIADO",
+    summary: "Guía de uso del punto de venta para el personal.",
+    versions: [
+      {
+        format: "MARKDOWN",
+        daysAgo: 50,
+        changelog: "Primera versión",
+        content:
+          "# Manual de usuario\n\n## Apertura de caja\n\n1. Inicia sesión\n2. Cuenta el efectivo\n",
+        by: VALERIA,
+      },
+      {
+        format: "MARKDOWN",
+        daysAgo: 44,
+        changelog: "Se añade el cierre de caja",
+        content:
+          "# Manual de usuario\n\n## Apertura de caja\n\n1. Inicia sesión\n2. Cuenta el efectivo\n\n## Cierre de caja\n\n- [x] Arqueo\n- [ ] Reporte Z\n",
+        by: VALERIA,
+      },
+    ],
+    links: [
+      ["PROJECT", "pry_aurora_pos"],
+      ["CLIENT", "cli_cafeteria_aurora"],
+    ],
+    createdDaysAgo: 50,
+    by: VALERIA,
+  },
 ];
 
 const day = (today: DateOnly, offset: number | undefined): DateOnly | null =>
@@ -495,6 +582,7 @@ export function createDocumentFixtures(now: Date): DocumentFixtures {
       content: version.content ?? null,
     }));
     documentVersions.push(...versions);
+    const draftAgo = seed.draftDaysAgo ?? Math.max(1, Math.floor(seed.createdDaysAgo / 3));
     seed.links.forEach(([entityType, entityId], position) => {
       documentLinks.push({
         id: mockId("dlk", `${seed.key}_${position + 1}`),
@@ -517,9 +605,7 @@ export function createDocumentFixtures(now: Date): DocumentFixtures {
       alertDaysBefore: seed.alertDays ?? 30,
       currentVersionId: versions.at(-1)?.id ?? null,
       draftContent: seed.draft ?? null,
-      draftUpdatedAt: seed.draft
-        ? ago(now, Math.max(1, Math.floor(seed.createdDaysAgo / 3)))
-        : null,
+      draftUpdatedAt: seed.draft ? ago(now, draftAgo) : null,
       tagIds: (seed.tags ?? []).map((tag) => mockId("tag", tag)),
       createdById: seed.by,
       createdAt: ago(now, seed.createdDaysAgo),
@@ -527,7 +613,7 @@ export function createDocumentFixtures(now: Date): DocumentFixtures {
         now,
         versions.length > 0
           ? Math.min(seed.createdDaysAgo, seed.versions.at(-1)!.daysAgo)
-          : Math.max(1, Math.floor(seed.createdDaysAgo / 3)),
+          : draftAgo,
       ),
       archivedAt: null,
       deletedById: null,
