@@ -28,7 +28,7 @@ import type { MockPublicServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
 import { shareStatusOn } from "../fixtures/shares";
 import { nextMockId } from "../ids";
-import type { DocumentRow, DocumentVersionRow, MockStore } from "../store";
+import type { DocumentRow, DocumentVersionRow, MockStore, ShareAccessLogRow } from "../store";
 import { verifyAccessKey } from "./share-keys";
 
 type Service = PortalSharesService<MockPublicServiceContext>;
@@ -154,9 +154,9 @@ function logAccess(
   event: ShareEvent,
   documentId: string | null,
   request: { ipHash: string; userAgent?: string | undefined },
-): void {
+): ShareAccessLogRow {
   const db = ctx.db;
-  db.shareAccessLogs.push({
+  const row: ShareAccessLogRow = {
     id: nextMockId(db.idCounters, "sacc", (id) => db.shareAccessLogs.some((row) => row.id === id)),
     shareLinkId: link.id,
     event,
@@ -164,7 +164,9 @@ function logAccess(
     ipHash: request.ipHash,
     userAgent: request.userAgent ?? null,
     createdAt: ctx.now.toISOString(),
-  });
+  };
+  db.shareAccessLogs.push(row);
+  return row;
 }
 
 /** Failed unlocks of this link, document and IP hash inside the lockout window (C22). */
@@ -219,7 +221,8 @@ export const recordShareAccess: Service["recordShareAccess"] = async (ctx, input
  * Checks the key of one document (DT-45). The lockout is keyed on link + document + IP hash: once
  * `ACCESS_KEY_MAX_FAILED_ATTEMPTS` failures fall inside the last `ACCESS_KEY_LOCKOUT_MINUTES`, every attempt —
  * right key included — answers `ACCESS_KEY_LOCKED` without checking the key. The failure that reaches the limit
- * already answers `ACCESS_KEY_LOCKED`, so the visitor learns about the lockout when it starts.
+ * already answers `ACCESS_KEY_LOCKED`, so the visitor learns about the lockout when it starts. Each attempt is
+ * logged as `UNLOCK_FAILED` before the key is checked and becomes `UNLOCK` when the key is right.
  */
 export const unlockSharedDocument: Service["unlockSharedDocument"] = async (ctx, input) => {
   const data = parse(unlockSharedDocumentServiceInputSchema, input);
@@ -227,17 +230,16 @@ export const unlockSharedDocument: Service["unlockSharedDocument"] = async (ctx,
   const shared = requireSharedDocument(ctx.db, link, data.documentId);
   if (shared.keyHash === null) return { documentId: data.documentId, unlocked: true };
 
-  if (recentFailures(ctx, link, data.documentId, data.ipHash) >= ACCESS_KEY_MAX_FAILED_ATTEMPTS) {
-    throw new ServiceError("ACCESS_KEY_LOCKED");
-  }
+  // The attempt is counted before the key check awaits, so parallel guesses cannot all pass the limit check.
+  const attempt = recentFailures(ctx, link, data.documentId, data.ipHash) + 1;
+  if (attempt > ACCESS_KEY_MAX_FAILED_ATTEMPTS) throw new ServiceError("ACCESS_KEY_LOCKED");
+  const entry = logAccess(ctx, link, "UNLOCK_FAILED", data.documentId, data);
   if (!(await verifyAccessKey(data.key, shared.keyHash))) {
-    logAccess(ctx, link, "UNLOCK_FAILED", data.documentId, data);
-    const failures = recentFailures(ctx, link, data.documentId, data.ipHash);
     throw new ServiceError(
-      failures >= ACCESS_KEY_MAX_FAILED_ATTEMPTS ? "ACCESS_KEY_LOCKED" : "ACCESS_KEY_INVALID",
+      attempt >= ACCESS_KEY_MAX_FAILED_ATTEMPTS ? "ACCESS_KEY_LOCKED" : "ACCESS_KEY_INVALID",
     );
   }
-  logAccess(ctx, link, "UNLOCK", data.documentId, data);
+  entry.event = "UNLOCK";
   return { documentId: data.documentId, unlocked: true };
 };
 

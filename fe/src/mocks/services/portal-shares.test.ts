@@ -167,6 +167,20 @@ describe("unlockSharedDocument", () => {
     expect(await codeOf(unlock(ctx, KEY, OTHER_IP))).toBe("OK");
   });
 
+  it(`checks at most ${ACCESS_KEY_MAX_FAILED_ATTEMPTS} keys when the guesses arrive in parallel`, async () => {
+    const { ctx } = makeTestPublicContext();
+    const guesses = [...Array.from({ length: 10 }, (_, index) => `WRONG-KEY-01${index}`), KEY];
+    const codes = await Promise.all(guesses.map((key) => codeOf(unlock(ctx, key))));
+    expect(codes.filter((code) => code === "ACCESS_KEY_INVALID")).toHaveLength(
+      ACCESS_KEY_MAX_FAILED_ATTEMPTS - 1,
+    );
+    expect(codes.filter((code) => code === "ACCESS_KEY_LOCKED")).toHaveLength(
+      guesses.length - ACCESS_KEY_MAX_FAILED_ATTEMPTS + 1,
+    );
+    expect(codes).not.toContain("OK");
+    expect(await codeOf(unlock(ctx, KEY))).toBe("ACCESS_KEY_LOCKED");
+  });
+
   it(`lifts the lockout ${ACCESS_KEY_LOCKOUT_MINUTES} minutes after the last counted failure`, async () => {
     const { db, ctx } = makeTestPublicContext();
     for (let attempt = 1; attempt <= ACCESS_KEY_MAX_FAILED_ATTEMPTS; attempt += 1) {
