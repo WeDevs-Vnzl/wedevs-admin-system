@@ -21,7 +21,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { SETTINGS_NAV_ITEM, visibleNavGroups, type NavItem } from "@/config/nav";
+import { findNavItem, SETTINGS_NAV_ITEM, visibleNavGroups, type NavItem } from "@/config/nav";
 import type { SessionUser } from "@/server/auth/types";
 
 /** Up to two initials of a name, for the avatar fallback (sidebar user block and topbar menu). */
@@ -52,10 +52,12 @@ export function AppSidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const groups = visibleNavGroups(user);
   const settingsActive = isActivePath(pathname, SETTINGS_NAV_ITEM.href);
+  // The longest matching entry wins, so `/documents/shares` marks its own entry and not Documents.
+  const activeKey = findNavItem(pathname)?.key;
 
   function renderItem(item: NavItem) {
     const label = t(`items.${item.key}`);
-    const active = isActivePath(pathname, item.href);
+    const active = item.key === activeKey;
     return (
       <SidebarMenuItem key={item.key}>
         <SidebarMenuButton asChild isActive={active} tooltip={label}>

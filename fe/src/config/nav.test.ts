@@ -32,6 +32,7 @@ describe("nav config", () => {
       "expenses",
       "accounts",
       "documents",
+      "shares",
       "notes",
       "graph",
       "reports",
@@ -65,5 +66,16 @@ describe("nav config", () => {
     expect(findNavItem("/clients/123/edit")?.key).toBe("clients");
     expect(findNavItem("/settings/rates")?.key).toBe("settings");
     expect(findNavItem("/unknown")).toBeNull();
+  });
+
+  it("offers the portal links page to Owner and Admin only, resolved before documents", () => {
+    for (const role of ["OWNER", "ADMIN"] as const) {
+      expect(visibleNavItems(userWithRole(role)).map((item) => item.key)).toContain("shares");
+    }
+    for (const role of ["MEMBER", "VIEWER"] as const) {
+      expect(visibleNavItems(userWithRole(role)).map((item) => item.key)).not.toContain("shares");
+    }
+    expect(findNavItem("/documents/shares/shl_1")?.href).toBe("/documents/shares");
+    expect(findNavItem("/documents/doc_1")?.key).toBe("documents");
   });
 });

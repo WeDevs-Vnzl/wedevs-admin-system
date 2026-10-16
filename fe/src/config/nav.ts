@@ -12,6 +12,7 @@ import {
   Plus,
   Receipt,
   Settings,
+  Share2,
   StickyNote,
   type LucideIcon,
 } from "lucide-react";
@@ -66,6 +67,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     key: "knowledge",
     items: [
       { key: "documents", href: "/documents", icon: FileText, resource: "document" },
+      { key: "shares", href: "/documents/shares", icon: Share2, resource: "share" },
       { key: "notes", href: "/notes", icon: StickyNote, resource: "note" },
     ],
   },

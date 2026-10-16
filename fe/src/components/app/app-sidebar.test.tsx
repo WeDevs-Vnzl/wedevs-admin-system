@@ -112,6 +112,18 @@ describe("AppSidebar", () => {
     );
   });
 
+  it("marks only the portal links entry under /documents/shares, not documents", () => {
+    mocks.pathname = "/documents/shares/shl_1";
+    renderSidebar("OWNER");
+    expect(screen.getByRole("link", { name: enNav.items.shares })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: enNav.items.documents })).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
+
   it("marks the configuration link with aria-current under /settings (R8)", () => {
     mocks.pathname = "/settings/preferences";
     renderSidebar("MEMBER");
