@@ -631,8 +631,8 @@ function requireLinkable(db: MockStore, target: LinkDocumentInput["target"]): vo
     CLIENT: db.clients,
     CONTACT: db.contacts,
     PROJECT: db.projects,
-    DOCUMENT: db.documents,
-    NOTE: db.notes,
+    // Payments and expenses are voided, never archived.
+    INVOICE: db.invoices,
   };
   const row = collections[target.entityType]?.find((item) => item.id === target.entityId);
   if (row?.archivedAt) throw new ServiceError("NOT_FOUND");

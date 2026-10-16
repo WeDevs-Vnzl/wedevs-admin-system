@@ -1,8 +1,7 @@
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { SectionCard } from "@/components/patterns/section-card";
-import { Badge } from "@/components/ui/badge";
 import type { EntityRef } from "@/lib/validators/common";
-import type { DocumentLinkTarget, DocumentListRowDTO } from "@/lib/validators/documents";
+import type { DocumentLinkTarget } from "@/lib/validators/documents";
 import { CreateShareDialog } from "@/features/shares/components/create-share-dialog";
 import { getShareableDocuments, getSharePermissions } from "@/features/shares/queries";
 import { getDocumentPermissions, listDocumentCategories, listEntityDocuments } from "../queries";
@@ -22,21 +21,19 @@ interface EntityDocumentsTabProps {
 
 /**
  * "Documentos" tab of a client or project (wireframe 4.6): category chips with counts, the linked documents and the
- * "Adjuntar documento" sheet. A server component: it reads through `queries.ts` and passes the result down.
- * Category chips show counts only; filtering by category comes with the documents module (H1-B4).
+ * "Adjuntar documento" sheet. A server component: it reads through `queries.ts` and passes every linked document down;
+ * the chips count and filter over all of them on the client.
  */
 export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
   const target = linkTargetOf(entity);
   if (!target) return null;
   const t = await getTranslations("documents.tab");
-  const locale = await getLocale();
   const [page, categories, permissions, sharePermissions] = await Promise.all([
     listEntityDocuments(entity),
     listDocumentCategories(),
     getDocumentPermissions(),
     getSharePermissions(),
   ]);
-  const counts = countByCategory(page.items);
   // "Compartir documentos…" (PRD §8.11): a portal link from this record's documents, for roles with the share grant.
   const shareable =
     sharePermissions.canCreate && page.items.length > 0
@@ -67,33 +64,12 @@ export async function EntityDocumentsTab({ entity }: EntityDocumentsTabProps) {
         ) : undefined
       }
     >
-      <ul aria-label={t("title")} className="flex flex-wrap gap-2">
-        <li>
-          <Badge variant="outline">
-            {t("all")} · {page.total}
-          </Badge>
-        </li>
-        {categories.map((category) => (
-          <li key={category.id}>
-            <Badge variant="outline" data-category-id={category.id}>
-              {localName(category, locale)} · {counts.get(category.id) ?? 0}
-            </Badge>
-          </li>
-        ))}
-      </ul>
-
-      <EntityDocumentsTable rows={page.items} target={target} canUpdate={permissions.canUpdate} />
+      <EntityDocumentsTable
+        rows={page.items}
+        categories={categories.map(({ id, name, nameEn }) => ({ id, name, nameEn }))}
+        target={target}
+        canUpdate={permissions.canUpdate}
+      />
     </SectionCard>
   );
-}
-
-function countByCategory(rows: readonly DocumentListRowDTO[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const row of rows) counts.set(row.category.id, (counts.get(row.category.id) ?? 0) + 1);
-  return counts;
-}
-
-/** Catalog label in the current locale: the English name in English when the catalog has one (PRD §7.8). */
-function localName(item: { name: string; nameEn: string | null }, locale: string): string {
-  return locale === "en" && item.nameEn ? item.nameEn : item.name;
 }

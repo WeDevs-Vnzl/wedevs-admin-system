@@ -73,6 +73,28 @@ describe("listEntityDocuments", () => {
     expect(projectPage.total).toBeGreaterThan(0);
   });
 
+  it("returns every linked document past one page of 100, so the tab counts and filters over all of them", async () => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    const store = getMockStore();
+    const base = store.documents.find((row) => row.archivedAt === null)!;
+    const baseLink = store.documentLinks[0]!;
+    for (let index = 0; index < 120; index += 1) {
+      const id = `doc_bulk_${index}`;
+      store.documents.push({ ...base, id, code: `DOC-9${String(index).padStart(3, "0")}` });
+      store.documentLinks.push({
+        ...baseLink,
+        id: `dlk_bulk_${index}`,
+        documentId: id,
+        entityType: "CLIENT",
+        entityId: "cli_kairos",
+      });
+    }
+    const page = await listEntityDocuments({ type: "CLIENT", id: "cli_kairos", label: "Kairos" });
+    expect(page.total).toBeGreaterThan(120);
+    expect(page.items).toHaveLength(page.total);
+    expect(new Set(page.items.map((row) => row.id)).size).toBe(page.total);
+  });
+
   it("answers an empty page for an entity the tab does not serve", async () => {
     session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
     const store = getMockStore();

@@ -4,6 +4,8 @@
     "all": "All",
     "attach": "Attach document",
     "empty": "This record has no linked documents.",
+    "emptyCategory": "No linked document in this category.",
+    "filterLabel": "Filter by category",
     "noVersion": "No version",
     "versionLabel": "v{number}",
     "columns": {
@@ -17,7 +19,7 @@
     },
     "unlink": {
       "trigger": "Unlink",
-      "description": "The document will stop appearing on this record. It stays available in Documents and on its other links.",
+      "description": "“{name}” will stop appearing on this record. It stays available in Documents and on its other links.",
       "done": "Document unlinked",
       "failed": "The document could not be unlinked"
     }

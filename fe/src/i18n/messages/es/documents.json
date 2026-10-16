@@ -4,6 +4,8 @@
     "all": "Todos",
     "attach": "Adjuntar documento",
     "empty": "Este registro no tiene documentos vinculados.",
+    "emptyCategory": "Ningún documento vinculado en esta categoría.",
+    "filterLabel": "Filtrar por categoría",
     "noVersion": "Sin versión",
     "versionLabel": "v{number}",
     "columns": {
@@ -17,7 +19,7 @@
     },
     "unlink": {
       "trigger": "Desvincular",
-      "description": "El documento dejará de aparecer en este registro. Seguirá disponible en Documentos y en sus otros vínculos.",
+      "description": "“{name}” dejará de aparecer en este registro. Seguirá disponible en Documentos y en sus otros vínculos.",
       "done": "Documento desvinculado",
       "failed": "No se pudo desvincular el documento"
     }

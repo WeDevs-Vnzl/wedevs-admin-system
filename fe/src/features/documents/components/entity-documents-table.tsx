@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { DateText } from "@/components/patterns/date-text";
 import { StatusBadge } from "@/components/patterns/status-badge";
+import { Button } from "@/components/ui/button";
 import {
   DataTable,
   createDataTableColumnHelper,
@@ -13,18 +15,46 @@ import { entityHref } from "@/lib/entity-routes";
 import type { DocumentLinkTarget, DocumentListRowDTO } from "@/lib/validators/documents";
 import { DocumentRowActions } from "./document-row-actions";
 
+interface CategoryChip {
+  id: string;
+  name: string;
+  nameEn: string | null;
+}
+
 interface EntityDocumentsTableProps {
+  /** Every document linked to the record (not one page): the chips count and filter over all of them. */
   rows: DocumentListRowDTO[];
+  /** The whole category catalog, in catalog order; a category with no document shows 0. */
+  categories: CategoryChip[];
   target: DocumentLinkTarget;
   canUpdate: boolean;
 }
 
 const helper = createDataTableColumnHelper<DocumentListRowDTO>();
 
-/** The documents linked to a client or project, in the shared compact table (wireframe 4.6). */
-export function EntityDocumentsTable({ rows, target, canUpdate }: EntityDocumentsTableProps) {
+/**
+ * The documents linked to a client or project (wireframe 4.6): category chips with counts that filter the rows
+ * ("All" clears the filter), then the shared compact table.
+ */
+export function EntityDocumentsTable({
+  rows,
+  categories,
+  target,
+  canUpdate,
+}: EntityDocumentsTableProps) {
   const t = useTranslations("documents.tab");
   const locale = useLocale();
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const counts = countByCategory(rows);
+  const visible = categoryId ? rows.filter((row) => row.category.id === categoryId) : rows;
+  const chips = [
+    { id: null, label: t("all"), count: rows.length },
+    ...categories.map((category) => ({
+      id: category.id,
+      label: localName(category, locale),
+      count: counts.get(category.id) ?? 0,
+    })),
+  ];
 
   const columns: DataTableColumnDef<DocumentListRowDTO>[] = [
     helper.accessor("code", {
@@ -97,15 +127,43 @@ export function EntityDocumentsTable({ rows, target, canUpdate }: EntityDocument
   ];
 
   return (
-    <DataTable
-      variant="compact"
-      embedded
-      data={rows}
-      columns={columns}
-      getRowId={(row) => row.id}
-      emptyState={{ title: t("empty") }}
-    />
+    <div className="flex flex-col gap-4">
+      <ul aria-label={t("filterLabel")} className="flex flex-wrap gap-2">
+        {chips.map((chip) => {
+          const pressed = chip.id === categoryId;
+          return (
+            <li key={chip.id ?? "all"}>
+              <Button
+                type="button"
+                size="sm"
+                variant={pressed ? "secondary" : "outline"}
+                className="h-7 rounded-full px-3 text-xs"
+                aria-pressed={pressed}
+                data-category-id={chip.id ?? undefined}
+                onClick={() => setCategoryId(chip.id)}
+              >
+                {chip.label} · {chip.count}
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+      <DataTable
+        variant="compact"
+        embedded
+        data={visible}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyState={{ title: categoryId ? t("emptyCategory") : t("empty") }}
+      />
+    </div>
   );
+}
+
+function countByCategory(rows: readonly DocumentListRowDTO[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const row of rows) counts.set(row.category.id, (counts.get(row.category.id) ?? 0) + 1);
+  return counts;
 }
 
 /** Catalog label in the current locale: the English name in English when the catalog has one (PRD §7.8). */

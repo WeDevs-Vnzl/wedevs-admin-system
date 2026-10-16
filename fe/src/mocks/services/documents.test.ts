@@ -377,9 +377,10 @@ describe("archived link targets (CR-B1, C14/C19)", () => {
       ["CLIENT", "cli_kairos", db.clients],
       ["CONTACT", db.contacts[0]!.id, db.contacts],
       ["PROJECT", "pry_kairos_web", db.projects],
+      ["INVOICE", db.invoices[0]!.id, db.invoices],
     ] as const;
 
-  it.each(["CLIENT", "CONTACT", "PROJECT"] as const)(
+  it.each(["CLIENT", "CONTACT", "PROJECT", "INVOICE"] as const)(
     "createDocument and linkDocument refuse an archived %s with NOT_FOUND",
     async (type) => {
       const { ctx, db } = makeTestContext();

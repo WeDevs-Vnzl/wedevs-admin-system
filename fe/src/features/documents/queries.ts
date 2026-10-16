@@ -11,6 +11,7 @@ import {
   listDocumentVersionsInputSchema,
   type DocumentDetailDTO,
   type DocumentFilterInput,
+  type DocumentListRowDTO,
   type DocumentVersionDetailDTO,
   type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
@@ -19,7 +20,7 @@ import { samplePdf } from "@/mocks/sample-pdf";
 import { getServiceContext, ServiceError } from "@/server/context";
 import { can } from "@/server/auth/permissions";
 
-/** Rows of the entity's Documentos tab fit one page: the tab shows every linked document, no paging. */
+/** Largest page the documents filter accepts; the tab reads page after page until it holds every linked document. */
 const ENTITY_TAB_PAGE_SIZE = 100;
 
 export async function listDocuments(filter: DocumentFilterInput = {}) {
@@ -27,15 +28,23 @@ export async function listDocuments(filter: DocumentFilterInput = {}) {
 }
 
 /**
- * Documents linked to one client or project, archived ones left out. The Documentos tab serves CLIENT and PROJECT only
- * (the documents filter has facets for these two); any other entity gets an empty page.
+ * Every document linked to one client or project, archived ones left out: the Documentos tab has no paging, and its
+ * category chips count and filter over all of them (not one page capped at 100). The tab serves CLIENT and PROJECT
+ * only (the documents filter has facets for these two); any other entity gets an empty list.
  */
-export async function listEntityDocuments(entity: EntityRef) {
-  if (entity.type !== "CLIENT" && entity.type !== "PROJECT") {
-    return { items: [], total: 0, page: 1, pageSize: ENTITY_TAB_PAGE_SIZE };
-  }
+export async function listEntityDocuments(
+  entity: EntityRef,
+): Promise<{ items: DocumentListRowDTO[]; total: number }> {
+  if (entity.type !== "CLIENT" && entity.type !== "PROJECT") return { items: [], total: 0 };
   const facet = entity.type === "CLIENT" ? { clientId: [entity.id] } : { projectId: [entity.id] };
-  return listDocuments({ ...facet, pageSize: ENTITY_TAB_PAGE_SIZE });
+  const items: DocumentListRowDTO[] = [];
+  for (let page = 1; ; page += 1) {
+    const result = await listDocuments({ ...facet, page, pageSize: ENTITY_TAB_PAGE_SIZE });
+    items.push(...result.items);
+    if (result.items.length < ENTITY_TAB_PAGE_SIZE || items.length >= result.total) {
+      return { items, total: items.length };
+    }
+  }
 }
 
 /** Category chips of the Documentos tab: every category, with its types (no input). */

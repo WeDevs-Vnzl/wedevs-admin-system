@@ -46,6 +46,14 @@ describe("DocumentRowActions", () => {
     expect(actions.unlinkDocumentAction).toHaveBeenCalledWith({ documentId: "doc_0001", target });
   });
 
+  it("names the document in the confirmation", async () => {
+    renderRow();
+    await userEvent.click(screen.getByRole("button", { name: "Unlink: Contrato marco" }));
+    expect(await screen.findByRole("alertdialog")).toHaveTextContent(
+      "“Contrato marco” will stop appearing on this record.",
+    );
+  });
+
   it("does nothing when the confirmation is cancelled", async () => {
     renderRow();
     await userEvent.click(screen.getByRole("button", { name: "Unlink: Contrato marco" }));

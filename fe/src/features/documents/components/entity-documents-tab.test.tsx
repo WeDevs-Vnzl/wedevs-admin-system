@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import enDocuments from "@/i18n/messages/en/documents.json";
@@ -185,6 +186,36 @@ describe("EntityDocumentsTab", () => {
     await renderTab();
     expect(screen.getByText("Legal · 1")).toBeInTheDocument();
     expect(screen.getByText("Finance · 0")).toBeInTheDocument();
+  });
+
+  it("filters the rows by category with a chip and goes back to every document with All", async () => {
+    const financeRow: DocumentListRowDTO = {
+      ...clientRow,
+      id: "doc_0002",
+      code: "DOC-0002",
+      title: "Presupuesto",
+      category: { id: "dcat_finanzas", name: "Finanzas", nameEn: "Finance", color: null },
+    };
+    queries.listEntityDocuments.mockResolvedValue({
+      items: [clientRow, financeRow],
+      total: 2,
+      page: 1,
+      pageSize: 100,
+    });
+    await renderTab();
+    const all = screen.getByRole("button", { name: "All · 2" });
+    const finance = screen.getByRole("button", { name: "Finance · 1" });
+    expect(all).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(finance);
+    expect(finance).toHaveAttribute("aria-pressed", "true");
+    expect(all).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("row", { name: /DOC-0002/ })).toBeInTheDocument();
+    expect(screen.queryByRole("row", { name: /DOC-0001/ })).not.toBeInTheDocument();
+
+    await userEvent.click(all);
+    expect(screen.getByRole("row", { name: /DOC-0001/ })).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /DOC-0002/ })).toBeInTheDocument();
   });
 
   it("gives Owner, Admin and Member the attach sheet and the unlink control", async () => {

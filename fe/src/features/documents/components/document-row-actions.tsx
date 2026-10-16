@@ -55,7 +55,7 @@ export function DocumentRowActions({ documentId, documentTitle, target }: Docume
         variant="unlink"
         open={open}
         onOpenChange={setOpen}
-        description={t("description")}
+        description={t("description", { name: documentTitle })}
         pending={pending}
         onConfirm={unlink}
       />
