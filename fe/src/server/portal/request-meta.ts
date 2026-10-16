@@ -7,6 +7,14 @@ import { createHash } from "node:crypto";
 /** Secrets of the portal (`.env.example`); only the server reads them. */
 export type PortalSecretName = "SHARE_IP_SALT" | "SHARE_UNLOCK_SECRET";
 
+/** A portal secret is missing in production: the portal refuses to run (fail closed) instead of using a known value. */
+export class PortalConfigError extends Error {
+  constructor(name: PortalSecretName) {
+    super(`${name} is not configured`);
+    this.name = "PortalConfigError";
+  }
+}
+
 /**
  * The configured secret. Production refuses to run without it; development and tests fall back to a fixed,
  * clearly named value so the mock portal works out of the box.
@@ -14,7 +22,7 @@ export type PortalSecretName = "SHARE_IP_SALT" | "SHARE_UNLOCK_SECRET";
 export function portalSecret(name: PortalSecretName): string {
   const value = process.env[name];
   if (value) return value;
-  if (process.env.NODE_ENV === "production") throw new Error(`${name} is not configured`);
+  if (process.env.NODE_ENV === "production") throw new PortalConfigError(name);
   return `dev-only-${name.toLowerCase()}`;
 }
 

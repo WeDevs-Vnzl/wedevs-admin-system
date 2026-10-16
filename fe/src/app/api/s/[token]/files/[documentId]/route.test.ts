@@ -96,6 +96,19 @@ describe("GET /api/s/[token]/files/[documentId]", () => {
     expect(open.headers.get("location")).toBe("https://vault.example.com/shared/kairos-staging");
   });
 
+  it("answers 503 with the portal headers when a portal secret is missing in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SHARE_IP_SALT", "");
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const response = await get(KAIROS, CONTRATO);
+    vi.unstubAllEnvs();
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("");
+    expectPortalHeaders(response);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("SHARE_IP_SALT is not configured"));
+    error.mockRestore();
+  });
+
   it("answers a bare 404 for a revoked link, a malformed token and a document outside the link", async () => {
     for (const response of [
       await get(REVOKED, "doc_nda_tamanaco"),

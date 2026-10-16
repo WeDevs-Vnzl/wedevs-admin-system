@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ipHashSchema } from "@/lib/validators/shares";
-import { clientIpOf, hashIp, portalSecret } from "./request-meta";
+import { PortalConfigError, clientIpOf, hashIp, portalSecret } from "./request-meta";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -32,7 +32,8 @@ describe("portal request metadata (C20, C22)", () => {
     expect(portalSecret("SHARE_IP_SALT")).toBe("configured-salt");
     vi.stubEnv("SHARE_IP_SALT", "");
     vi.stubEnv("NODE_ENV", "production");
-    expect(() => portalSecret("SHARE_IP_SALT")).toThrow(/SHARE_IP_SALT/);
+    expect(() => portalSecret("SHARE_IP_SALT")).toThrow(PortalConfigError);
+    expect(() => portalSecret("SHARE_IP_SALT")).toThrow(/SHARE_IP_SALT is not configured/);
   });
 
   it("falls back to a fixed development secret outside production", () => {

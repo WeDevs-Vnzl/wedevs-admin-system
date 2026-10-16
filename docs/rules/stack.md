@@ -115,7 +115,10 @@ addition to §6.5), `SENTRY_DSN`, `APP_URL` (placeholder until a domain exists, 
 **`E2E_DATABASE_URL`** (the Neon testing DB, OP-02). Only `.env.example` (placeholder values) is
 committed. Real values are placed by the user (`phase-gates.md` rule 11).
 
-Hito 1 needs **no** environment variable to run: the mock layer replaces DB, auth and storage.
+Hito 1 needs **no** environment variable to run in development: the mock layer replaces DB, auth and
+storage. Exception: a **production** build (`next start`, Netlify) of the portal needs `SHARE_IP_SALT`
+and `SHARE_UNLOCK_SECRET`; without them `/s/*` fails closed (page error, download route 503) instead of
+signing with a known value (H1-B4 L13). `next dev` and tests fall back to `dev-only-*` values.
 
 Serverless connection note: with `@prisma/adapter-pg` each function instance holds its own small `pg`
 pool (max a few connections) against the pooled `DATABASE_URL`; migrations use `DIRECT_URL`.
