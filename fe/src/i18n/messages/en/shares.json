@@ -1,1 +1,214 @@
-{}
+{
+  "page": {
+    "listTitle": "Portal links",
+    "listDescription": "Links that share documents with clients through the public portal",
+    "detailTitle": "Portal link"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "REVOKED": "Revoked",
+    "EXPIRED": "Expired"
+  },
+  "table": {
+    "columns": {
+      "title": "Title",
+      "client": "Client",
+      "documents": "Documents",
+      "status": "Status",
+      "expiresAt": "Expires",
+      "views": "Views",
+      "downloads": "Downloads",
+      "failedUnlocks": "Failed unlocks",
+      "lastAccessedAt": "Last access",
+      "createdAt": "Created"
+    },
+    "facets": {
+      "status": "Status",
+      "client": "Client",
+      "hasAccessKeys": "Access keys",
+      "created": "Created"
+    },
+    "documentCount": "{count}",
+    "documentCountProtected": "{count} ({protected} with key)",
+    "withKeys": "With access keys",
+    "withoutKeys": "Without access keys",
+    "never": "Never",
+    "noExpiry": "No expiry",
+    "search": {
+      "placeholder": "Search by title or client"
+    },
+    "empty": {
+      "title": "No portal links yet",
+      "description": "Share a document from its detail page, or documents from a client or a project."
+    }
+  },
+  "detail": {
+    "back": "Portal links",
+    "edit": "Edit link",
+    "revoke": "Revoke link",
+    "revoked": "Link revoked",
+    "revokeFailed": "The link could not be revoked",
+    "revokeConfirm": {
+      "title": "Revoke this link?",
+      "description": "Visitors will see “Link not available” from now on. This cannot be undone.",
+      "confirm": "Revoke"
+    },
+    "link": {
+      "title": "Public link",
+      "urlLabel": "Public URL",
+      "copy": "Copy link",
+      "copied": "Link copied",
+      "copyFailed": "The link could not be copied",
+      "open": "Open portal",
+      "qrAlt": "QR code of the public link",
+      "downloadQr": "Download QR"
+    },
+    "info": {
+      "client": "Client",
+      "locale": "Portal language",
+      "expiresAt": "Expires",
+      "allowDownload": "Downloads",
+      "downloadAllowed": "Allowed",
+      "downloadBlocked": "Not allowed",
+      "createdBy": "Created by",
+      "createdAt": "Created",
+      "lastAccessedAt": "Last access",
+      "revokedAt": "Revoked",
+      "none": "—"
+    },
+    "locales": {
+      "es": "Spanish",
+      "en": "English"
+    },
+    "counters": {
+      "title": "Activity",
+      "views": "Views",
+      "downloads": "Downloads",
+      "unlocks": "Unlocks",
+      "failedUnlocks": "Failed unlocks"
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Each document follows the latest version or stays pinned to one.",
+      "columns": {
+        "document": "Document",
+        "status": "Status",
+        "version": "Version",
+        "accessKey": "Access key",
+        "activity": "Views / downloads / failed unlocks"
+      },
+      "pinned": "v{number} (pinned)",
+      "latest": "Always the latest (v{number})",
+      "latestNoVersion": "Always the latest",
+      "keySince": "Key since",
+      "noKey": "Open",
+      "toggleKey": "Require an access key for {title}",
+      "regenerate": "Regenerate the key of {title}",
+      "regenerateShort": "Regenerate",
+      "activity": "{views} / {downloads} / {failed}"
+    },
+    "keys": {
+      "regenerateConfirm": {
+        "title": "Regenerate the access key?",
+        "description": "The current key of “{title}” stops working. Visitors need the new key.",
+        "confirm": "Regenerate"
+      },
+      "removeConfirm": {
+        "title": "Remove the access key?",
+        "description": "“{title}” will open without a key for anyone with the link.",
+        "confirm": "Remove key"
+      },
+      "removed": "Access key removed",
+      "failed": "The access key could not be changed"
+    },
+    "accessLog": {
+      "title": "Access log",
+      "description": "Visitors are shown as a short fingerprint; the IP address is never stored.",
+      "columns": {
+        "date": "Date",
+        "event": "Event",
+        "document": "Document",
+        "visitor": "Visitor",
+        "userAgent": "Browser"
+      },
+      "allEvents": "All events",
+      "eventFilter": "Filter by event",
+      "wholeLink": "Whole link",
+      "unknownAgent": "—",
+      "empty": "No visits yet",
+      "previous": "Previous page",
+      "next": "Next page",
+      "pageOf": "Page {page} of {pageCount}",
+      "loadFailed": "The access log could not be loaded"
+    },
+    "editSheet": {
+      "title": "Edit link",
+      "description": "Changes apply to the public page right away.",
+      "submit": "Save changes",
+      "saved": "Link updated"
+    }
+  },
+  "form": {
+    "fields": {
+      "title": "Title",
+      "message": "Message",
+      "locale": "Portal language",
+      "expiresAt": "Expires on",
+      "allowDownload": "Allow downloads",
+      "documents": "Documents"
+    },
+    "hints": {
+      "message": "Shown to the visitor under the title.",
+      "expiresAt": "Last day the link works. Leave empty for no expiry.",
+      "documents": "Pin a version so later versions do not change what the client sees, or follow the latest one."
+    },
+    "placeholders": {
+      "expiresAt": "No expiry",
+      "addDocument": "Add another document…"
+    },
+    "include": "Include {title}",
+    "version": "Version of {title}",
+    "latestOption": "Always the latest version",
+    "versionOption": "v{number}",
+    "currentVersionOption": "v{number} (current)",
+    "toggleKey": "Require an access key for {title}",
+    "keyHint": "A key is generated once when the link is saved.",
+    "noDocuments": "Choose at least one document",
+    "addFailed": "The document could not be added",
+    "saveFailed": "The link could not be saved"
+  },
+  "create": {
+    "trigger": "Share",
+    "triggerMany": "Share documents…",
+    "title": "Share in the portal",
+    "description": "Create a public link to {label}. Anyone with the link can open the included documents.",
+    "submit": "Create link",
+    "created": "Link created",
+    "openLink": "Open link"
+  },
+  "oneTimeKeys": {
+    "title": "Copy the access keys now",
+    "description": "For security they are shown only once. Send each key to the client through a different channel than the link.",
+    "keyLabel": "Access key of {title}",
+    "copy": "Copy the key of {title}",
+    "copied": "Key copied",
+    "copyFailed": "The key could not be copied",
+    "done": "I have copied the keys"
+  },
+  "sentProposal": {
+    "title": "Mark the shared documents as sent?",
+    "description": "These documents are approved. Sharing them usually means they were sent to the client.",
+    "confirm": "Mark as sent",
+    "skip": "Not now",
+    "done": "{count, plural, one {# document marked as sent} other {# documents marked as sent}}",
+    "partial": "Some documents could not be marked as sent",
+    "failed": "The documents could not be marked as sent"
+  },
+  "tab": {
+    "title": "Portal links",
+    "description": "Public links that include this document",
+    "empty": "This document is not shared yet",
+    "emptyDescription": "Create a link to share it with a client.",
+    "noAccess": "Only owners and admins manage portal links"
+  }
+}

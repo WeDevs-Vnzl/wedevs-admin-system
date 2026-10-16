@@ -1,1 +1,214 @@
-{}
+{
+  "page": {
+    "listTitle": "Enlaces del portal",
+    "listDescription": "Enlaces que comparten documentos con clientes a través del portal público",
+    "detailTitle": "Enlace del portal"
+  },
+  "status": {
+    "ACTIVE": "Activo",
+    "REVOKED": "Revocado",
+    "EXPIRED": "Vencido"
+  },
+  "table": {
+    "columns": {
+      "title": "Título",
+      "client": "Cliente",
+      "documents": "Documentos",
+      "status": "Estado",
+      "expiresAt": "Vence",
+      "views": "Visitas",
+      "downloads": "Descargas",
+      "failedUnlocks": "Desbloqueos fallidos",
+      "lastAccessedAt": "Último acceso",
+      "createdAt": "Creado"
+    },
+    "facets": {
+      "status": "Estado",
+      "client": "Cliente",
+      "hasAccessKeys": "Claves de acceso",
+      "created": "Creado"
+    },
+    "documentCount": "{count}",
+    "documentCountProtected": "{count} ({protected} con clave)",
+    "withKeys": "Con claves de acceso",
+    "withoutKeys": "Sin claves de acceso",
+    "never": "Nunca",
+    "noExpiry": "Sin vencimiento",
+    "search": {
+      "placeholder": "Buscar por título o cliente"
+    },
+    "empty": {
+      "title": "Aún no hay enlaces del portal",
+      "description": "Comparta un documento desde su detalle, o documentos desde un cliente o un proyecto."
+    }
+  },
+  "detail": {
+    "back": "Enlaces del portal",
+    "edit": "Editar enlace",
+    "revoke": "Revocar enlace",
+    "revoked": "Enlace revocado",
+    "revokeFailed": "No se pudo revocar el enlace",
+    "revokeConfirm": {
+      "title": "¿Revocar este enlace?",
+      "description": "A partir de ahora los visitantes verán “Enlace no disponible”. Esta acción no se puede deshacer.",
+      "confirm": "Revocar"
+    },
+    "link": {
+      "title": "Enlace público",
+      "urlLabel": "URL pública",
+      "copy": "Copiar enlace",
+      "copied": "Enlace copiado",
+      "copyFailed": "No se pudo copiar el enlace",
+      "open": "Abrir portal",
+      "qrAlt": "Código QR del enlace público",
+      "downloadQr": "Descargar QR"
+    },
+    "info": {
+      "client": "Cliente",
+      "locale": "Idioma del portal",
+      "expiresAt": "Vence",
+      "allowDownload": "Descargas",
+      "downloadAllowed": "Permitidas",
+      "downloadBlocked": "No permitidas",
+      "createdBy": "Creado por",
+      "createdAt": "Creado",
+      "lastAccessedAt": "Último acceso",
+      "revokedAt": "Revocado",
+      "none": "—"
+    },
+    "locales": {
+      "es": "Español",
+      "en": "Inglés"
+    },
+    "counters": {
+      "title": "Actividad",
+      "views": "Visitas",
+      "downloads": "Descargas",
+      "unlocks": "Desbloqueos",
+      "failedUnlocks": "Desbloqueos fallidos"
+    },
+    "documents": {
+      "title": "Documentos",
+      "description": "Cada documento sigue la última versión o queda fijado a una.",
+      "columns": {
+        "document": "Documento",
+        "status": "Estado",
+        "version": "Versión",
+        "accessKey": "Clave de acceso",
+        "activity": "Visitas / descargas / desbloqueos fallidos"
+      },
+      "pinned": "v{number} (fijada)",
+      "latest": "Siempre la última (v{number})",
+      "latestNoVersion": "Siempre la última",
+      "keySince": "Clave desde",
+      "noKey": "Abierto",
+      "toggleKey": "Exigir una clave de acceso para {title}",
+      "regenerate": "Regenerar la clave de {title}",
+      "regenerateShort": "Regenerar",
+      "activity": "{views} / {downloads} / {failed}"
+    },
+    "keys": {
+      "regenerateConfirm": {
+        "title": "¿Regenerar la clave de acceso?",
+        "description": "La clave actual de “{title}” deja de funcionar. Los visitantes necesitarán la nueva clave.",
+        "confirm": "Regenerar"
+      },
+      "removeConfirm": {
+        "title": "¿Quitar la clave de acceso?",
+        "description": "“{title}” se abrirá sin clave para cualquier persona con el enlace.",
+        "confirm": "Quitar clave"
+      },
+      "removed": "Clave de acceso eliminada",
+      "failed": "No se pudo cambiar la clave de acceso"
+    },
+    "accessLog": {
+      "title": "Registro de accesos",
+      "description": "Los visitantes se muestran como una huella corta; la dirección IP nunca se guarda.",
+      "columns": {
+        "date": "Fecha",
+        "event": "Evento",
+        "document": "Documento",
+        "visitor": "Visitante",
+        "userAgent": "Navegador"
+      },
+      "allEvents": "Todos los eventos",
+      "eventFilter": "Filtrar por evento",
+      "wholeLink": "Todo el enlace",
+      "unknownAgent": "—",
+      "empty": "Aún no hay visitas",
+      "previous": "Página anterior",
+      "next": "Página siguiente",
+      "pageOf": "Página {page} de {pageCount}",
+      "loadFailed": "No se pudo cargar el registro de accesos"
+    },
+    "editSheet": {
+      "title": "Editar enlace",
+      "description": "Los cambios se aplican de inmediato en la página pública.",
+      "submit": "Guardar cambios",
+      "saved": "Enlace actualizado"
+    }
+  },
+  "form": {
+    "fields": {
+      "title": "Título",
+      "message": "Mensaje",
+      "locale": "Idioma del portal",
+      "expiresAt": "Vence el",
+      "allowDownload": "Permitir descargas",
+      "documents": "Documentos"
+    },
+    "hints": {
+      "message": "Se muestra al visitante debajo del título.",
+      "expiresAt": "Último día en que funciona el enlace. Déjelo vacío para que no venza.",
+      "documents": "Fije una versión para que las versiones posteriores no cambien lo que ve el cliente, o siga siempre la última."
+    },
+    "placeholders": {
+      "expiresAt": "Sin vencimiento",
+      "addDocument": "Agregar otro documento…"
+    },
+    "include": "Incluir {title}",
+    "version": "Versión de {title}",
+    "latestOption": "Siempre la última versión",
+    "versionOption": "v{number}",
+    "currentVersionOption": "v{number} (vigente)",
+    "toggleKey": "Exigir una clave de acceso para {title}",
+    "keyHint": "La clave se genera una sola vez al guardar el enlace.",
+    "noDocuments": "Elija al menos un documento",
+    "addFailed": "No se pudo agregar el documento",
+    "saveFailed": "No se pudo guardar el enlace"
+  },
+  "create": {
+    "trigger": "Compartir",
+    "triggerMany": "Compartir documentos…",
+    "title": "Compartir en el portal",
+    "description": "Cree un enlace público a {label}. Cualquier persona con el enlace puede abrir los documentos incluidos.",
+    "submit": "Crear enlace",
+    "created": "Enlace creado",
+    "openLink": "Abrir enlace"
+  },
+  "oneTimeKeys": {
+    "title": "Copie ahora las claves de acceso",
+    "description": "Por seguridad se muestran una sola vez. Envíe cada clave al cliente por un canal distinto al del enlace.",
+    "keyLabel": "Clave de acceso de {title}",
+    "copy": "Copiar la clave de {title}",
+    "copied": "Clave copiada",
+    "copyFailed": "No se pudo copiar la clave",
+    "done": "Ya copié las claves"
+  },
+  "sentProposal": {
+    "title": "¿Marcar los documentos compartidos como enviados?",
+    "description": "Estos documentos están aprobados. Compartirlos suele significar que se enviaron al cliente.",
+    "confirm": "Marcar como enviados",
+    "skip": "Ahora no",
+    "done": "{count, plural, one {# documento marcado como enviado} other {# documentos marcados como enviados}}",
+    "partial": "Algunos documentos no se pudieron marcar como enviados",
+    "failed": "No se pudieron marcar los documentos como enviados"
+  },
+  "tab": {
+    "title": "Enlaces del portal",
+    "description": "Enlaces públicos que incluyen este documento",
+    "empty": "Este documento aún no está compartido",
+    "emptyDescription": "Cree un enlace para compartirlo con un cliente.",
+    "noAccess": "Solo los propietarios y administradores gestionan los enlaces del portal"
+  }
+}
