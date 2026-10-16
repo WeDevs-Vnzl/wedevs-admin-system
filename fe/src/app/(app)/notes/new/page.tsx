@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getClient } from "@/features/clients/queries";
-import { listDocuments } from "@/features/documents/queries";
+import { getDocument } from "@/features/documents/queries";
 import { NoteComposerPage } from "@/features/notes/components/note-composer";
 import type { NoteLinkRef } from "@/features/notes/components/note-link-picker";
 import { getNotesViewer } from "@/features/notes/queries";
@@ -40,9 +40,8 @@ async function prefillLink(
       return [{ type: "PROJECT", id, label: project.name }];
     }
     if (type === "DOCUMENT") {
-      const page = await listDocuments({ pageSize: 100 });
-      const document = page.items.find((row) => row.id === id);
-      return document ? [{ type: "DOCUMENT", id, label: document.title }] : [];
+      const document = await getDocument(id);
+      return document.archivedAt === null ? [{ type: "DOCUMENT", id, label: document.title }] : [];
     }
     return [];
   } catch (error) {
