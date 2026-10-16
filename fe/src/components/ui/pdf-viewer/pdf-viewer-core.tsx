@@ -238,15 +238,16 @@ export function PdfViewerCore({ url, onDownload, className }: PdfViewerCoreProps
             >
               <ZoomOut aria-hidden />
             </Button>
+            {/* Named by its visible value first, then its purpose (WCAG 2.5.3 label in name). */}
             <Button
               variant="outline"
               size="sm"
-              aria-label={t("zoomReset")}
               disabled={status !== "ready"}
               onClick={() => setZoom(DEFAULT_ZOOM)}
               className="min-w-16 tabular-nums"
             >
               {t("zoomValue", { percent })}
+              <span className="sr-only">, {t("zoomReset")}</span>
             </Button>
             <Button
               variant="outline"
@@ -264,10 +265,11 @@ export function PdfViewerCore({ url, onDownload, className }: PdfViewerCoreProps
           <Button variant="outline" size="icon-sm" aria-label={t("download")} onClick={onDownload}>
             <Download aria-hidden />
           </Button>
+          {/* A toggle keeps one name; its state is aria-pressed alone (a changing label would contradict it). */}
           <Button
             variant="outline"
             size="icon-sm"
-            aria-label={fullscreen ? t("exitFullscreen") : t("fullscreen")}
+            aria-label={t("fullscreen")}
             aria-pressed={fullscreen}
             onClick={toggleFullscreen}
           >

@@ -23,6 +23,7 @@ export const namespaces = [
   "accounts",
   "expenses",
   "documents",
+  "documentEditor",
   "shares",
   "portal",
   "notes",

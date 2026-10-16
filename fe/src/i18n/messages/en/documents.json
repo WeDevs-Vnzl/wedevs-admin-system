@@ -54,7 +54,6 @@
     "uploaded": "Document attached",
     "linked": "Document linked",
     "createFailed": "The document could not be created",
-    "versionFailed": "The document was created, but the file could not be uploaded. Upload it from the document.",
     "linkFailed": "The document could not be linked"
   },
   "validation": {
@@ -183,5 +182,133 @@
     "created": "Document created",
     "updated": "Document updated",
     "failed": "The document could not be saved"
+  },
+  "errors": {
+    "invalidTransition": "The document cannot move from its current status to the chosen one"
+  },
+  "detail": {
+    "tabs": {
+      "content": "Content",
+      "versions": "Versions",
+      "links": "Links",
+      "shares": "Share",
+      "notes": "Notes",
+      "activity": "Activity",
+      "graph": "Graph"
+    },
+    "editMeta": "Edit details",
+    "changeStatus": "Change status",
+    "meta": "{category} · {type}",
+    "panel": {
+      "title": "Details",
+      "category": "Category",
+      "type": "Type",
+      "format": "Current format",
+      "version": "Current version",
+      "versionCount": "Versions",
+      "effectiveDate": "Effective date",
+      "signedAt": "Signed date",
+      "expiresAt": "Expiry date",
+      "createdBy": "Created by",
+      "updatedAt": "Updated",
+      "summary": "Summary",
+      "notSet": "Not set",
+      "shared": "In a portal link",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "signedLock": "This document is signed: it accepts no new versions.",
+    "content": {
+      "title": "Content",
+      "edit": "Edit",
+      "print": "Print / Save as PDF",
+      "download": "Download",
+      "openLink": "Open link",
+      "linkDescription": "This document lives at an external address.",
+      "fileDescription": "This file type has no preview. Download it to open it.",
+      "emptyTitle": "No published version",
+      "emptyDescription": "Upload a file, add a link or write the content to publish the first version.",
+      "emptyMarkdown": "Write the content in the editor and publish it as the first version.",
+      "draftNotice": "There is an unpublished draft saved {date}."
+    },
+    "links": {
+      "title": "Linked records",
+      "description": "Clients, contacts, projects, invoices, payments and expenses this document belongs to.",
+      "empty": "This document is not linked to any record.",
+      "type": "Record type",
+      "search": "Search a record",
+      "linked": "Record linked",
+      "unlinkLabel": "Unlink: {label}",
+      "unlinkDescription": "The document will stop appearing on this record. Its other links stay.",
+      "unlinked": "Record unlinked",
+      "failed": "The link could not be changed"
+    },
+    "graph": {
+      "title": "Relationship graph",
+      "description": "See this document with the records it is linked to.",
+      "open": "Open graph"
+    }
+  },
+  "status": {
+    "title": "Change status",
+    "description": "Only the statuses allowed from {status} are offered.",
+    "field": "New status",
+    "signedAt": "Signed date",
+    "signedAtHint": "Required to mark the document as signed.",
+    "placeholder": "Choose a date",
+    "submit": "Change status",
+    "cancel": "Cancel",
+    "done": "Status changed",
+    "failed": "The status could not be changed"
+  },
+  "versions": {
+    "title": "Version history",
+    "description": "Each published version is kept as it was. Restoring one creates a new version.",
+    "empty": "No version has been published yet.",
+    "label": "v{number}",
+    "current": "Current",
+    "noChangelog": "No change notes",
+    "view": "View v{number}",
+    "download": "Download v{number}",
+    "compare": "Compare v{number} with the current version",
+    "restore": "Restore v{number}",
+    "restoreTitle": "Restore v{number}?",
+    "restoreDescription": "A new version will be created as a copy of v{number} and become the current one. The history stays as it is.",
+    "restoreConfirm": "Restore",
+    "restoreCancel": "Cancel",
+    "restored": "Version restored",
+    "restoreFailed": "The version could not be restored",
+    "locked": "Signed documents accept no new versions",
+    "upload": {
+      "file": "Upload new version",
+      "link": "Update link",
+      "fileTitle": "Upload new version",
+      "linkTitle": "Update link",
+      "fileDescription": "The file becomes the current version. Previous versions stay in the history.",
+      "linkDescription": "The new address becomes the current version. Previous versions stay in the history.",
+      "fileField": "File",
+      "fileRequired": "Attach a file to continue",
+      "urlField": "Address (URL)",
+      "urlPlaceholder": "https://",
+      "changelog": "Change notes",
+      "changelogPlaceholder": "What changed in this version (optional)",
+      "submit": "Publish version",
+      "cancel": "Cancel",
+      "done": "New version published",
+      "failed": "The version could not be published"
+    },
+    "page": {
+      "title": "{code} · v{number}",
+      "back": "Back to the document",
+      "viewing": "You are viewing v{number}, published by {name} on {date}.",
+      "currentNotice": "This is the current version.",
+      "compareTitle": "{code} · v{number} compared with v{current}",
+      "compareDescription": "Lines removed from v{number} and added in v{current}, the current version.",
+      "compareOnlyMarkdown": "Only markdown versions can be compared.",
+      "identical": "This version has the same content as the current one.",
+      "removed": "Removed",
+      "added": "Added",
+      "legend": "Diff legend"
+    }
   }
 }

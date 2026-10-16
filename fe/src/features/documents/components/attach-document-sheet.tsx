@@ -41,12 +41,7 @@ import {
   type DocumentLinkTarget,
 } from "@/lib/validators/documents";
 import type { FileDTO } from "@/lib/validators/files";
-import {
-  createDocumentAction,
-  linkDocumentAction,
-  searchDocumentsAction,
-  uploadDocumentVersionAction,
-} from "../actions";
+import { createDocumentAction, linkDocumentAction, searchDocumentsAction } from "../actions";
 
 type Mode = "upload" | "link";
 
@@ -202,7 +197,12 @@ function UploadDocumentForm({
   const submitValid = form.handleSubmit((values) => {
     if (!file) return;
     startTransition(async () => {
-      const created = await createDocumentAction({ ...values, links: [target] });
+      // One atomic call: the document, its link and the file as version 1 (nothing is left if the file fails).
+      const created = await createDocumentAction({
+        ...values,
+        links: [target],
+        initialVersion: { format: "ARCHIVO", fileId: file.id },
+      });
       if (!created.ok) {
         // The server's field errors land on their fields; anything else is a failure of the whole request.
         let onFields = false;
@@ -218,13 +218,7 @@ function UploadDocumentForm({
         }
         return;
       }
-      const version = await uploadDocumentVersionAction({
-        format: "ARCHIVO",
-        documentId: created.data.id,
-        fileId: file.id,
-      });
-      if (version.ok) toast.success(t("documents.sheet.uploaded"));
-      else toast.error(t("documents.sheet.versionFailed"));
+      toast.success(t("documents.sheet.uploaded"));
       onDone();
     });
   });

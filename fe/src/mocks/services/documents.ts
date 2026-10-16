@@ -3,8 +3,7 @@
 // "Documentos" tab; H1-B4 adds metadata edits, the markdown draft and versions (S5), statuses (S6), archive, the
 // reads and the overview (S7), keeping the exported names. Framework-free (C11). Replaced by
 // `src/server/services/documents.service.ts` in Hito 2 (C9). Append-only activity (C20): every mutation logs through
-// `logActivity`, except the draft autosave, which is not a change of the document (it runs every 5 s and creates no
-// version; publishing it is logged).
+// `logActivity`, the explicit draft save included.
 import { diffFields } from "@/lib/activity-diff";
 import { addDays, todayInCaracas } from "@/lib/dates";
 import {
@@ -470,6 +469,17 @@ function assertNotSigned(doc: DocumentRow): void {
 }
 
 /**
+ * The editor only writes markdown documents: the format of the current version, else the type's default (the same
+ * rule as `editorAvailability`). A file or link document is `CONFLICT`.
+ */
+function assertMarkdown(db: MockStore, doc: DocumentRow): void {
+  const current = db.documentVersions.find((version) => version.id === doc.currentVersionId);
+  const format =
+    current?.format ?? db.documentTypes.find((type) => type.id === doc.typeId)?.defaultFormat;
+  if (format !== "MARKDOWN") throw new ServiceError("CONFLICT");
+}
+
+/**
  * Appends version N+1 (immutable) to `doc`, makes it current and logs it: `UPLOAD` for a file, `VERSION_PUBLISH`
  * otherwise, with the version number (and the restored one) in the metadata.
  */
@@ -726,8 +736,9 @@ export async function updateDocumentMeta(
 }
 
 /**
- * Markdown autosave (PRD §8.9.3 "Borrador con autoguardado"): stores the draft and its time. It creates no version
- * and logs nothing (it runs every 5 s; publishing is the logged change). A `FIRMADO` document is locked.
+ * Markdown draft save (PRD §8.9.3, changed by the user on 2026-10-16: no autosave, only the editor's explicit "Save
+ * draft"): stores the draft and its time and logs one `UPDATE` marked `{ draft: true }`, without the content. It
+ * creates no version. A `FIRMADO` document is locked.
  */
 export async function saveDraft(
   ctx: MockServiceContext,
@@ -735,10 +746,20 @@ export async function saveDraft(
 ): Promise<SaveDraftResultDTO> {
   const doc = activeDocument(ctx.db, input.documentId);
   assertNotSigned(doc);
+  assertMarkdown(ctx.db, doc);
   const nowIso = ctx.now.toISOString();
   doc.draftContent = input.content;
   doc.draftUpdatedAt = nowIso;
   doc.updatedAt = nowIso;
+  await logActivity(mockTx(ctx), {
+    actorType: "USER",
+    actorId: ctx.user.id,
+    action: "UPDATE",
+    entityType: "DOCUMENT",
+    entityId: doc.id,
+    entityLabel: doc.title,
+    metadata: { draft: true },
+  });
   return { documentId: doc.id, draftUpdatedAt: nowIso };
 }
 
@@ -754,6 +775,7 @@ export async function publishVersion(
   const db = ctx.db;
   const doc = activeDocument(db, input.documentId);
   assertNotSigned(doc);
+  assertMarkdown(db, doc);
   const content = input.content ?? doc.draftContent;
   if (!content) {
     throw new ServiceError("VALIDATION", {
@@ -813,10 +835,14 @@ export async function restoreVersion(
   return toDetail(db, doc);
 }
 
+/** Key (namespace `documents`) of a status change the transition table does not allow (L6 d). */
+export const INVALID_TRANSITION_MESSAGE = "documents.errors.invalidTransition";
+
 /**
  * Status change (PRD §8.9.4) through `canTransitionDocument` and `setDocumentStatusInputSchemaFor(type)`: `FIRMADO`
  * only on types with signature and with its signature date (stored on the document); `VENCIDO` is never set by a
- * person. A transition the table does not allow is `VALIDATION` on `status`. Logs `STATUS_CHANGE`.
+ * person. A transition the table does not allow is `VALIDATION` on `status` with `INVALID_TRANSITION_MESSAGE`. Logs
+ * `STATUS_CHANGE`.
  */
 export async function setDocumentStatus(
   ctx: MockServiceContext,
@@ -833,7 +859,7 @@ export async function setDocumentStatus(
   const data = parsed.data;
   if (!canTransitionDocument(doc.status, data.status, caps)) {
     throw new ServiceError("VALIDATION", {
-      fieldErrors: { status: [VALIDATION_MESSAGES.invalidOption] },
+      fieldErrors: { status: [INVALID_TRANSITION_MESSAGE] },
     });
   }
 

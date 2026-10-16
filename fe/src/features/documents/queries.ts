@@ -7,7 +7,12 @@ import {
   documentFilterSchema,
   documentIdInputSchema,
   getDocumentsOverviewInputSchema,
+  getDocumentVersionInputSchema,
+  listDocumentVersionsInputSchema,
+  type DocumentDetailDTO,
   type DocumentFilterInput,
+  type DocumentVersionDetailDTO,
+  type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
 import * as documents from "@/mocks/services/documents";
 import { getServiceContext, ServiceError } from "@/server/context";
@@ -89,4 +94,99 @@ export async function documentLinkPrefill(
     if (error instanceof ServiceError) return [];
     throw error;
   }
+}
+
+// Reads of the document detail (`/documents/[id]`, PRD §8.9.5 "Detalle") and its version pages. Every role reads
+// documents (`document` READ); archived ones only with the trash grant (the service decides, C14). A missing,
+// hidden or malformed id answers `null`, so the pages answer not-found without telling which case it was.
+
+/** `null` instead of throwing when the record is not there (or the id is malformed). */
+async function orNull<T>(read: () => Promise<T>): Promise<T | null> {
+  try {
+    return await read();
+  } catch (error) {
+    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
+    if (error instanceof Error && error.name === "ZodError") return null;
+    throw error;
+  }
+}
+
+export async function readDocumentDetail(id: string): Promise<DocumentDetailDTO | null> {
+  return orNull(async () =>
+    documents.getDocument(await getServiceContext(), documentIdInputSchema.parse({ id })),
+  );
+}
+
+/** Version history, newest first, without content (PRD §8.9.3 "Historial"). */
+export async function listDocumentVersions(documentId: string): Promise<DocumentVersionRowDTO[]> {
+  return documents.listDocumentVersions(
+    await getServiceContext(),
+    listDocumentVersionsInputSchema.parse({ documentId }),
+  );
+}
+
+/** One version with its markdown content; `null` when it is not a version of this document. */
+export async function readDocumentVersion(
+  documentId: string,
+  versionId: string,
+): Promise<DocumentVersionDetailDTO | null> {
+  return orNull(async () =>
+    documents.getDocumentVersion(
+      await getServiceContext(),
+      getDocumentVersionInputSchema.parse({ documentId, versionId }),
+    ),
+  );
+}
+
+/**
+ * What the signed-in role may do on the detail: change status, versions and links (`document` UPDATE: Owner, Admin,
+ * Member) and read the *Actividad* tab (`activity` READ). Hiding a control is cosmetic; the actions check again (C13).
+ */
+export async function getDocumentDetailPermissions() {
+  const { user } = await getServiceContext();
+  return {
+    canUpdate: can(user, "update", "document"),
+    canReadActivity: can(user, "read", "activity"),
+  };
+}
+
+/**
+ * The bytes behind a version, as the version file route serves them (view and download). Hito 1 has no object
+ * storage: a PDF is rendered by the route from the document's own data, markdown is the version content, a link is
+ * a redirect, and any other file is a placeholder with its stored name. Hito 2 swaps this for a presigned URL.
+ */
+export type VersionFile =
+  | { kind: "pdf"; fileName: string; title: string; versionNumber: number }
+  | { kind: "markdown"; fileName: string; content: string }
+  | { kind: "external"; url: string }
+  | { kind: "file"; fileName: string; mimeType: string };
+
+export async function readVersionFile(
+  documentId: string,
+  versionId: string,
+): Promise<VersionFile | null> {
+  const [doc, version] = await Promise.all([
+    readDocumentDetail(documentId),
+    readDocumentVersion(documentId, versionId),
+  ]);
+  if (!doc || !version) return null;
+  if (version.format === "MARKDOWN") {
+    return {
+      kind: "markdown",
+      fileName: `${doc.code}-v${version.versionNumber}.md`,
+      content: version.content ?? "",
+    };
+  }
+  if (version.format === "ENLACE")
+    return version.url ? { kind: "external", url: version.url } : null;
+  if (!version.file) return null;
+  if (version.file.mimeType === "application/pdf") {
+    return {
+      kind: "pdf",
+      fileName: version.file.originalName,
+      title: doc.title,
+      versionNumber: version.versionNumber,
+    };
+  }
+  return { kind: "file", fileName: version.file.originalName, mimeType: version.file.mimeType };
 }

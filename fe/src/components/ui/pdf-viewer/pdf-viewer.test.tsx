@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import enCommon from "@/i18n/messages/en/common.json";
 
@@ -52,6 +52,8 @@ function renderViewer(onDownload = vi.fn()) {
 }
 
 const button = (name: string) => screen.getByRole("button", { name });
+// The zoom-reset button is named by its visible value first, then its purpose (WCAG 2.5.3 label in name).
+const zoomReset = () => screen.getByRole("button", { name: /Reset zoom to 100 %$/ });
 
 describe("PdfViewerCore", () => {
   let doc: FakeDocument;
@@ -99,26 +101,26 @@ describe("PdfViewerCore", () => {
     renderViewer();
     await screen.findByText("1 / 3");
 
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("100 %");
+    expect(zoomReset()).toHaveTextContent("100 %");
     await user.click(button("Zoom in"));
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("125 %");
+    expect(zoomReset()).toHaveTextContent("125 %");
     await user.click(button("Zoom out"));
     await user.click(button("Zoom out"));
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("75 %");
+    expect(zoomReset()).toHaveTextContent("75 %");
 
-    await user.click(button("Reset zoom to 100 %"));
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("100 %");
+    await user.click(zoomReset());
+    expect(zoomReset()).toHaveTextContent("100 %");
 
     for (let step = 0; step < 10; step++) {
       await user.click(button("Zoom in"));
     }
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("300 %");
+    expect(zoomReset()).toHaveTextContent("300 %");
     expect(button("Zoom in")).toBeDisabled();
 
     for (let step = 0; step < 10; step++) {
       await user.click(button("Zoom out"));
     }
-    expect(button("Reset zoom to 100 %")).toHaveTextContent("50 %");
+    expect(zoomReset()).toHaveTextContent("50 %");
     expect(button("Zoom out")).toBeDisabled();
   });
 
@@ -169,7 +171,64 @@ describe("PdfViewerCore", () => {
   it("exposes the fullscreen toggle with its pressed state", async () => {
     renderViewer();
     await screen.findByText("1 / 3");
-    // Entering fullscreen needs the Fullscreen API, which jsdom does not implement; only the state is checked here.
+    expect(button("Full screen")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("names the zoom-reset button with its visible value first (WCAG 2.5.3)", async () => {
+    const user = userEvent.setup();
+    renderViewer();
+    await screen.findByText("1 / 3");
+
+    expect(button("100 %, Reset zoom to 100 %")).toBeEnabled();
+    await user.click(button("Zoom in"));
+    // The visible text is part of the accessible name at every zoom level, so voice control can target it.
+    const reset = button("125 %, Reset zoom to 100 %");
+    expect(reset).toHaveTextContent("125 %");
+    await user.click(reset);
+    expect(button("100 %, Reset zoom to 100 %")).toBeInTheDocument();
+  });
+
+  it("keeps one fullscreen label and reports the state through aria-pressed only", async () => {
+    const user = userEvent.setup();
+    // jsdom has no Fullscreen API: emulate the browser entering and leaving fullscreen on the viewer.
+    let fullscreenElement: Element | null = null;
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    // The viewer asks for fullscreen on its own root, so that root becomes the fullscreen element.
+    const requestFullscreen = vi.fn(() => {
+      fullscreenElement = document.querySelector('[data-slot="pdf-viewer"]');
+      document.dispatchEvent(new Event("fullscreenchange"));
+      return Promise.resolve();
+    });
+    const exitFullscreen = vi.fn(() => {
+      fullscreenElement = null;
+      document.dispatchEvent(new Event("fullscreenchange"));
+      return Promise.resolve();
+    });
+    Object.defineProperty(HTMLElement.prototype, "requestFullscreen", {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    Object.defineProperty(document, "exitFullscreen", { configurable: true, value: exitFullscreen });
+    onTestFinished(() => {
+      Reflect.deleteProperty(document, "fullscreenElement");
+      Reflect.deleteProperty(document, "exitFullscreen");
+      Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
+    });
+
+    renderViewer();
+    await screen.findByText("1 / 3");
+
+    await user.click(button("Full screen"));
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    // A toggle button keeps its name; only aria-pressed changes (no "Exit full screen" + pressed contradiction).
+    expect(button("Full screen")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: "Exit full screen" })).not.toBeInTheDocument();
+
+    await user.click(button("Full screen"));
+    expect(exitFullscreen).toHaveBeenCalledTimes(1);
     expect(button("Full screen")).toHaveAttribute("aria-pressed", "false");
   });
 });

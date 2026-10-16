@@ -56,8 +56,8 @@ describe("type contract", () => {
   });
 });
 
-describe("saveDraft (S5: autosave creates no version)", () => {
-  it("stores the draft and its time, creates no version and logs nothing", async () => {
+describe("saveDraft (S5: explicit save creates no version)", () => {
+  it("stores the draft and its time, creates no version and logs one UPDATE without the content", async () => {
     const { ctx, db } = makeTestContext();
     const row = doc(db, "tsd_andina");
     const versions = versionsOf(db, row.id).length;
@@ -69,11 +69,22 @@ describe("saveDraft (S5: autosave creates no version)", () => {
     expect(row.draftContent).toBe("# TSD\n\nNuevo texto");
     expect(row.draftUpdatedAt).toBe(NOW);
     expect(versionsOf(db, row.id)).toHaveLength(versions);
-    expect(db.activity).toHaveLength(activity);
+    expect(db.activity).toHaveLength(activity + 1);
+    expect(db.activity.at(-1)).toMatchObject({
+      actorType: "USER",
+      actorId: ctx.user.id,
+      action: "UPDATE",
+      entityType: "DOCUMENT",
+      entityId: row.id,
+      entityLabel: row.title,
+      changes: null,
+      metadata: { draft: true },
+    });
   });
 
   it("refuses a FIRMADO document (INTEGRITY_LOCK) and an unknown one (NOT_FOUND)", async () => {
     const { ctx, db } = makeTestContext();
+    const activity = db.activity.length;
     const signed = doc(db, "contrato_kairos");
     await expect(saveDraft(ctx, { documentId: signed.id, content: "x" })).rejects.toMatchObject({
       code: "INTEGRITY_LOCK",
@@ -84,6 +95,7 @@ describe("saveDraft (S5: autosave creates no version)", () => {
         code: "NOT_FOUND",
       },
     );
+    expect(db.activity).toHaveLength(activity);
   });
 });
 
@@ -147,6 +159,33 @@ describe("publishVersion (S5: immutable N+1, current, optional changelog)", () =
       publishVersion(ctx, { documentId: row.id, content: "# x", changelog: undefined }),
     ).rejects.toMatchObject({ code: "INTEGRITY_LOCK" });
     expect(db.documentVersions).toHaveLength(count);
+  });
+});
+
+describe("saveDraft and publishVersion refuse a document that is not markdown", () => {
+  /** A non-signed document whose current version is a file: the editor does not open it. */
+  function fileDocument(db: Db) {
+    return db.documents.find((row) => {
+      const current = db.documentVersions.find((v) => v.id === row.currentVersionId);
+      return row.archivedAt === null && row.status !== "FIRMADO" && current?.format === "ARCHIVO";
+    })!;
+  }
+
+  it("answers CONFLICT and changes nothing", async () => {
+    const { ctx, db } = makeTestContext();
+    const row = fileDocument(db);
+    const before = structuredClone(row);
+    const versions = db.documentVersions.length;
+    const activity = db.activity.length;
+    await expect(saveDraft(ctx, { documentId: row.id, content: "# x" })).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+    await expect(
+      publishVersion(ctx, { documentId: row.id, content: "# x", changelog: undefined }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(row).toEqual(before);
+    expect(db.documentVersions).toHaveLength(versions);
+    expect(db.activity).toHaveLength(activity);
   });
 });
 
@@ -276,6 +315,24 @@ describe("setDocumentStatus (S6)", () => {
     ).rejects.toMatchObject({ code: "VALIDATION" });
     expect(row.status).toBe("BORRADOR");
     expect(db.activity).toHaveLength(activity);
+  });
+
+  it("reports a disallowed transition with its own message, not invalidOption (L6 d)", async () => {
+    const { ctx, db } = makeTestContext();
+    const row = doc(db, "minuta_solaris"); // BORRADOR
+    await expect(setDocumentStatus(ctx, { id: row.id, status: "ENVIADO" })).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { status: ["documents.errors.invalidTransition"] },
+    });
+    const voided = doc(db, "propuesta_orinoco"); // VENCIDO: no way out, not even ANULADO
+    await expect(
+      setDocumentStatus(ctx, { id: voided.id, status: "ANULADO" }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { status: ["documents.errors.invalidTransition"] },
+    });
+    expect(row.status).toBe("BORRADOR");
+    expect(voided.status).toBe("VENCIDO");
   });
 
   it("FIRMADO needs a signature type and the signature date, which it stores", async () => {
@@ -551,6 +608,8 @@ describe("listDocuments facets over the full set (S7, S11 3005)", () => {
       "doc_propuesta_aurora",
     ]);
     expect(await ids({ staleDraft: true })).toEqual(["doc_arquitectura_tamanaco"]);
+    // The share fixtures put documents in links; start from none so the facet is pinned to one link.
+    db.shareLinks.length = 0;
     expect(await ids({ shared: true })).toEqual([]);
     db.shareLinks.push({
       status: "ACTIVE",

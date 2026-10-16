@@ -30,7 +30,7 @@ import { userRefSchema } from "./users";
 
 /**
  * Documents (PRD §8.9): metadata, three formats (`MARKDOWN`, `ARCHIVO`, `ENLACE`), immutable versions,
- * markdown draft autosave, statuses with transitions and links to records.
+ * markdown draft saved explicitly, statuses with transitions and links to records.
  *
  * Type rules (PRD §8.9.1/§8.9.4): `signedAt` and the `FIRMADO` status exist only on types with
  * `requiresSignature`; `expiresAt` and `alertDaysBefore` only on types with `hasExpiration`. The base
@@ -246,7 +246,7 @@ export type DocumentIdInput = z.infer<typeof documentIdInputSchema>;
 
 const changelogSchema = optionalText(500);
 
-/** `saveDraft`: markdown autosave (every 5 s of inactivity). Does not create a version. */
+/** `saveDraft`: the editor's explicit "Save draft" (no autosave). Logged; does not create a version. */
 export const saveDraftInputSchema = z.object({
   documentId: idSchema,
   content: z.string().max(DOCUMENT_CONTENT_MAX),
@@ -255,7 +255,7 @@ export type SaveDraftInput = z.infer<typeof saveDraftInputSchema>;
 
 /**
  * `publishVersion`: freezes the markdown draft as a new immutable version and makes it current. The
- * editor may send the latest `content` to avoid racing the autosave; otherwise the stored draft is used.
+ * editor sends its latest `content`, saved or not; otherwise the stored draft is used.
  */
 export const publishVersionInputSchema = z.object({
   documentId: idSchema,
@@ -280,6 +280,26 @@ export const uploadVersionInputSchema = z.discriminatedUnion("format", [
   }),
 ]);
 export type UploadVersionInput = z.infer<typeof uploadVersionInputSchema>;
+
+/** The first version given at creation: a `READY` file or an `http(s)` URL (the `uploadVersion` content). */
+export const initialDocumentVersionSchema = z.discriminatedUnion("format", [
+  z.object({ format: z.literal("ARCHIVO"), fileId: idSchema, changelog: changelogSchema }),
+  z.object({ format: z.literal("ENLACE"), url: httpUrlSchema, changelog: changelogSchema }),
+]);
+export type InitialDocumentVersionInput = z.infer<typeof initialDocumentVersionSchema>;
+
+/**
+ * Input of the create action: the `createDocument` metadata plus an optional first version, so a document with a
+ * file is created in one atomic call (no version-less `BORRADOR` left behind when the file fails).
+ */
+export const createDocumentWithVersionInputSchema = z
+  .object({
+    ...documentFieldsShape,
+    links: uniqueTargets(30).default([]),
+    initialVersion: initialDocumentVersionSchema.optional(),
+  })
+  .superRefine(checkDocumentDates);
+export type CreateDocumentWithVersionInput = z.input<typeof createDocumentWithVersionInputSchema>;
 
 /** `restoreVersion`: creates a new version copying the chosen one; history is never rewritten. */
 export const restoreVersionInputSchema = z.object({
@@ -417,7 +437,7 @@ export const documentDetailSchema = z.object({
   alertDaysBefore: z.number().int().nonnegative(),
   currentVersion: documentVersionDetailSchema.nullable(),
   versionCount: z.number().int().nonnegative(),
-  /** Markdown draft (autosave); `null` when none. */
+  /** Markdown draft (last explicit save); `null` when none. */
   draftContent: z.string().nullable(),
   draftUpdatedAt: timestampSchema.nullable(),
   links: z.array(documentLinkSchema),

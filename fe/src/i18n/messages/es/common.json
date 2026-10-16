@@ -46,7 +46,6 @@
     "zoomValue": "{percent} %",
     "download": "Descargar",
     "fullscreen": "Pantalla completa",
-    "exitFullscreen": "Salir de pantalla completa",
     "loading": "Cargando documento…",
     "error": "No se pudo mostrar el documento"
   }

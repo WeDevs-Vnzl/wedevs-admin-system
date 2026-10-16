@@ -46,7 +46,6 @@
     "zoomValue": "{percent} %",
     "download": "Download",
     "fullscreen": "Full screen",
-    "exitFullscreen": "Exit full screen",
     "loading": "Loading document…",
     "error": "The document could not be displayed"
   }

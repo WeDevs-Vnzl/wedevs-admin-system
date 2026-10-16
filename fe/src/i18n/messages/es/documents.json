@@ -54,7 +54,6 @@
     "uploaded": "Documento adjuntado",
     "linked": "Documento vinculado",
     "createFailed": "No se pudo crear el documento",
-    "versionFailed": "El documento se creó, pero el archivo no se pudo subir. Súbelo desde el documento.",
     "linkFailed": "No se pudo vincular el documento"
   },
   "validation": {
@@ -183,5 +182,133 @@
     "created": "Documento creado",
     "updated": "Documento actualizado",
     "failed": "No se pudo guardar el documento"
+  },
+  "errors": {
+    "invalidTransition": "El documento no puede pasar de su estado actual al estado elegido"
+  },
+  "detail": {
+    "tabs": {
+      "content": "Contenido",
+      "versions": "Versiones",
+      "links": "Vínculos",
+      "shares": "Compartir",
+      "notes": "Notas",
+      "activity": "Actividad",
+      "graph": "Grafo"
+    },
+    "editMeta": "Editar datos",
+    "changeStatus": "Cambiar estado",
+    "meta": "{category} · {type}",
+    "panel": {
+      "title": "Datos",
+      "category": "Categoría",
+      "type": "Tipo",
+      "format": "Formato vigente",
+      "version": "Versión vigente",
+      "versionCount": "Versiones",
+      "effectiveDate": "Fecha de vigencia",
+      "signedAt": "Fecha de firma",
+      "expiresAt": "Fecha de vencimiento",
+      "createdBy": "Creado por",
+      "updatedAt": "Actualizado",
+      "summary": "Resumen",
+      "notSet": "Sin definir",
+      "shared": "En un enlace del portal",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "signedLock": "Este documento está firmado: no admite versiones nuevas.",
+    "content": {
+      "title": "Contenido",
+      "edit": "Editar",
+      "print": "Imprimir / Guardar como PDF",
+      "download": "Descargar",
+      "openLink": "Abrir enlace",
+      "linkDescription": "Este documento está en una dirección externa.",
+      "fileDescription": "Este tipo de archivo no tiene vista previa. Descárgalo para abrirlo.",
+      "emptyTitle": "Sin versión publicada",
+      "emptyDescription": "Sube un archivo, agrega un enlace o redacta el contenido para publicar la primera versión.",
+      "emptyMarkdown": "Redacta el contenido en el editor y publícalo como primera versión.",
+      "draftNotice": "Hay un borrador sin publicar guardado el {date}."
+    },
+    "links": {
+      "title": "Registros vinculados",
+      "description": "Clientes, contactos, proyectos, facturas, pagos y gastos a los que pertenece este documento.",
+      "empty": "Este documento no está vinculado a ningún registro.",
+      "type": "Tipo de registro",
+      "search": "Buscar un registro",
+      "linked": "Registro vinculado",
+      "unlinkLabel": "Desvincular: {label}",
+      "unlinkDescription": "El documento dejará de aparecer en este registro. Sus otros vínculos se mantienen.",
+      "unlinked": "Registro desvinculado",
+      "failed": "No se pudo cambiar el vínculo"
+    },
+    "graph": {
+      "title": "Grafo de relaciones",
+      "description": "Consulta este documento junto con los registros a los que está vinculado.",
+      "open": "Abrir grafo"
+    }
+  },
+  "status": {
+    "title": "Cambiar estado",
+    "description": "Solo se ofrecen los estados permitidos desde {status}.",
+    "field": "Nuevo estado",
+    "signedAt": "Fecha de firma",
+    "signedAtHint": "Obligatoria para marcar el documento como firmado.",
+    "placeholder": "Elige una fecha",
+    "submit": "Cambiar estado",
+    "cancel": "Cancelar",
+    "done": "Estado actualizado",
+    "failed": "No se pudo cambiar el estado"
+  },
+  "versions": {
+    "title": "Historial de versiones",
+    "description": "Cada versión publicada se conserva tal cual. Restaurar una crea una versión nueva.",
+    "empty": "Todavía no se ha publicado ninguna versión.",
+    "label": "v{number}",
+    "current": "Vigente",
+    "noChangelog": "Sin nota de cambios",
+    "view": "Ver v{number}",
+    "download": "Descargar v{number}",
+    "compare": "Comparar v{number} con la versión vigente",
+    "restore": "Restaurar v{number}",
+    "restoreTitle": "¿Restaurar v{number}?",
+    "restoreDescription": "Se creará una versión nueva como copia de v{number} y pasará a ser la vigente. El historial no cambia.",
+    "restoreConfirm": "Restaurar",
+    "restoreCancel": "Cancelar",
+    "restored": "Versión restaurada",
+    "restoreFailed": "No se pudo restaurar la versión",
+    "locked": "Los documentos firmados no admiten versiones nuevas",
+    "upload": {
+      "file": "Subir nueva versión",
+      "link": "Actualizar enlace",
+      "fileTitle": "Subir nueva versión",
+      "linkTitle": "Actualizar enlace",
+      "fileDescription": "El archivo pasa a ser la versión vigente. Las versiones anteriores quedan en el historial.",
+      "linkDescription": "La nueva dirección pasa a ser la versión vigente. Las versiones anteriores quedan en el historial.",
+      "fileField": "Archivo",
+      "fileRequired": "Adjunta un archivo para continuar",
+      "urlField": "Dirección (URL)",
+      "urlPlaceholder": "https://",
+      "changelog": "Nota de cambios",
+      "changelogPlaceholder": "Qué cambió en esta versión (opcional)",
+      "submit": "Publicar versión",
+      "cancel": "Cancelar",
+      "done": "Nueva versión publicada",
+      "failed": "No se pudo publicar la versión"
+    },
+    "page": {
+      "title": "{code} · v{number}",
+      "back": "Volver al documento",
+      "viewing": "Estás viendo la v{number}, publicada por {name} el {date}.",
+      "currentNotice": "Esta es la versión vigente.",
+      "compareTitle": "{code} · v{number} comparada con v{current}",
+      "compareDescription": "Líneas eliminadas de la v{number} y agregadas en la v{current}, la versión vigente.",
+      "compareOnlyMarkdown": "Solo se pueden comparar versiones en markdown.",
+      "identical": "Esta versión tiene el mismo contenido que la vigente.",
+      "removed": "Eliminado",
+      "added": "Agregado",
+      "legend": "Leyenda de la comparación"
+    }
   }
 }

@@ -21,7 +21,6 @@ import {
   searchDocumentsAction,
   unlinkDocumentAction,
   updateDocumentMetaAction,
-  uploadDocumentVersionAction,
 } from "./actions";
 
 /** A stored user, so the document's author resolves in the store. */
@@ -79,6 +78,45 @@ describe("createDocumentAction", () => {
     expect(getMockStore().documents).toHaveLength(before);
   });
 
+  it("creates the document with its first version in one call when given an initialVersion", async () => {
+    asRole("MEMBER");
+    const file = getMockStore().files.find((row) => row.status === "READY")!;
+    const result = await createDocumentAction({
+      ...draftInput(),
+      initialVersion: { format: "ARCHIVO", fileId: file.id },
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        status: "BORRADOR",
+        versionCount: 1,
+        currentVersion: { versionNumber: 1, format: "ARCHIVO" },
+      },
+    });
+  });
+
+  it("creates nothing when the initialVersion file is not ready (NOT_FOUND)", async () => {
+    asRole("MEMBER");
+    const before = getMockStore().documents.length;
+    const activity = getMockStore().activity.length;
+    expect(
+      await createDocumentAction({
+        ...draftInput(),
+        initialVersion: { format: "ARCHIVO", fileId: "fil_missing" },
+      }),
+    ).toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
+    expect(getMockStore().documents).toHaveLength(before);
+    expect(getMockStore().activity).toHaveLength(activity);
+  });
+
+  it("still creates a version-less document without initialVersion", async () => {
+    asRole("MEMBER");
+    expect(await createDocumentAction(draftInput())).toMatchObject({
+      ok: true,
+      data: { versionCount: 0, currentVersion: null },
+    });
+  });
+
   it("requires a session", async () => {
     session.getMockSessionUser.mockResolvedValue(null);
     expect(await createDocumentAction(draftInput())).toMatchObject({
@@ -126,17 +164,6 @@ describe("link and unlink actions", () => {
     if (result.ok)
       expect(result.data.some((link) => link.entity.id === projectTarget.entityId)).toBe(false);
     expect(store.documents.find((row) => row.id === doc.id)?.archivedAt).toBeNull();
-  });
-});
-
-describe("uploadDocumentVersionAction", () => {
-  it("refuses a Viewer", async () => {
-    asRole("VIEWER");
-    const doc = getMockStore().documents.find((row) => row.archivedAt === null)!;
-    const file = getMockStore().files.find((row) => row.status === "READY")!;
-    expect(
-      await uploadDocumentVersionAction({ documentId: doc.id, format: "ARCHIVO", fileId: file.id }),
-    ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
   });
 });
 

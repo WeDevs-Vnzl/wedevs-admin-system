@@ -1,9 +1,13 @@
 "use server";
 
 import {
-  createDocumentInputSchema,
+  createDocumentWithVersionInputSchema,
   documentFilterSchema,
   linkDocumentInputSchema,
+  publishVersionInputSchema,
+  restoreVersionInputSchema,
+  saveDraftInputSchema,
+  setDocumentStatusInputSchema,
   unlinkDocumentInputSchema,
   updateDocumentMetaInputSchema,
   uploadVersionInputSchema,
@@ -19,12 +23,16 @@ const SEARCH_LIMIT = 20;
 // matrix: `document` is CRU for Owner, Admin and Member, READ for Viewer. The type rules of the document are
 // enforced by the service (`createDocumentInputSchemaFor`), once the type is known.
 
-/** Creates the metadata of a document and its links (ARCHIVO types only in H1-B2). */
+/**
+ * Creates a document with its links and, when `initialVersion` is given, its first version in the same atomic call:
+ * a file that is not `READY` or a bad URL leaves nothing behind.
+ */
 export const createDocumentAction = defineAction({
   permission: { action: "create", resource: "document" },
-  input: createDocumentInputSchema,
+  input: createDocumentWithVersionInputSchema,
   revalidate: ["/documents"],
-  handler: (ctx, data) => documents.createDocument(ctx, data),
+  handler: (ctx, { initialVersion, ...data }) =>
+    documents.createDocument(ctx, data, initialVersion),
 });
 
 /**
@@ -43,14 +51,6 @@ export const listDocumentsAction = defineAction({
   permission: { action: "read", resource: "document" },
   input: documentFilterSchema,
   handler: (ctx, data) => documents.listDocuments(ctx, data),
-});
-
-/** Attaches an uploaded file as the next version of a document (the "Subir archivo" mode). */
-export const uploadDocumentVersionAction = defineAction({
-  permission: { action: "update", resource: "document" },
-  input: uploadVersionInputSchema,
-  revalidate: ["/documents"],
-  handler: (ctx, data) => documents.uploadVersion(ctx, data),
 });
 
 /** Links an existing document to a client or a project (the "Vincular existente" mode). */
@@ -85,4 +85,66 @@ export const searchDocumentsAction = defineAction({
       type: "DOCUMENT" as const,
     }));
   },
+});
+
+// Writes of the document detail (`/documents/[id]`): status (S6) and versions (S5). Every action checks `can()`
+// (`document` UPDATE: Owner, Admin, Member) and parses its input with zod before the service runs (C13); the type
+// rules (`FIRMADO` only on types with signature), the transition table and the signature lock (`INTEGRITY_LOCK`) are
+// the service's.
+
+/** The overview, the table and this document's detail and version pages show what changed. */
+function detailPaths(documentId: string) {
+  return [
+    "/documents",
+    "/documents/list",
+    { path: `/documents/${documentId}`, type: "layout" as const },
+  ];
+}
+
+/** "Cambiar estado": an allowed transition; `FIRMADO` carries its signature date. */
+export const setDocumentStatusAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: setDocumentStatusInputSchema,
+  revalidate: (data) => detailPaths(data.id),
+  handler: (ctx, data) => documents.setDocumentStatus(ctx, data),
+});
+
+/** "Restaurar": a new current version N+1 copying the chosen one; the history is never rewritten. */
+export const restoreDocumentVersionAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: restoreVersionInputSchema,
+  revalidate: (data) => detailPaths(data.documentId),
+  handler: (ctx, data) => documents.restoreVersion(ctx, data),
+});
+
+/** "Subir nueva versión" (a `READY` file) or "Actualizar enlace" (an `http(s)` URL). */
+export const uploadNewDocumentVersionAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: uploadVersionInputSchema,
+  revalidate: (data) => detailPaths(data.documentId),
+  handler: (ctx, data) => documents.uploadVersion(ctx, data),
+});
+
+// Server actions of the markdown editor (`/documents/[id]/editor`, PRD §8.9.3). Both write the document, so they
+// need the `document` UPDATE grant (Owner, Admin, Member). The service locks a `FIRMADO` document (INTEGRITY_LOCK).
+
+/**
+ * "Save draft": stores the editor's text as the document's draft (`draftContent`) and logs the change. It creates
+ * no version. The editor never saves on its own; this runs only when the user saves.
+ */
+export const saveDocumentDraftAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: saveDraftInputSchema,
+  handler: (ctx, data) => documents.saveDraft(ctx, data),
+});
+
+/**
+ * "Publicar versión": freezes `content` (the editor's latest text, saved or not) as the
+ * immutable version N+1 with the optional change note, and makes it current.
+ */
+export const publishDocumentVersionAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: publishVersionInputSchema,
+  revalidate: (data) => ["/documents", `/documents/${data.documentId}`],
+  handler: (ctx, data) => documents.publishVersion(ctx, data),
 });

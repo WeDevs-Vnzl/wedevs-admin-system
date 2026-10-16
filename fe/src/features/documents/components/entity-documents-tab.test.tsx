@@ -16,9 +16,27 @@ const queries = vi.hoisted(() => ({
   listDocumentCategories: vi.fn(),
   getDocumentPermissions: vi.fn(),
 }));
+const shareQueries = vi.hoisted(() => ({
+  getSharePermissions: vi.fn(),
+  getShareableDocuments: vi.fn(),
+}));
 const locale = vi.hoisted(() => ({ value: "en" as "en" | "es" }));
 
 vi.mock("../queries", () => queries);
+vi.mock("@/features/shares/queries", () => shareQueries);
+vi.mock("@/features/shares/components/create-share-dialog", () => ({
+  CreateShareDialog: ({
+    origin,
+    documents,
+  }: {
+    origin: { type: string };
+    documents: unknown[];
+  }) => (
+    <button type="button">
+      share-dialog {origin.type} {documents.length}
+    </button>
+  ),
+}));
 vi.mock("./attach-document-sheet", () => ({
   AttachDocumentSheet: () => <button type="button">attach-sheet</button>,
 }));
@@ -126,6 +144,8 @@ beforeEach(() => {
   queries.getDocumentPermissions
     .mockReset()
     .mockResolvedValue({ canCreate: true, canUpdate: true });
+  shareQueries.getSharePermissions.mockReset().mockResolvedValue({ canCreate: true });
+  shareQueries.getShareableDocuments.mockReset().mockResolvedValue([{ id: "doc_0001" }]);
 });
 
 describe("EntityDocumentsTab", () => {
@@ -179,6 +199,23 @@ describe("EntityDocumentsTab", () => {
     expect(screen.queryByText("attach-sheet")).not.toBeInTheDocument();
     expect(screen.queryByText("row-unlink")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Contrato marco" })).toBeInTheDocument();
+  });
+
+  it("offers sharing the record's documents to roles with the share grant", async () => {
+    await renderTab();
+    expect(screen.getByText("share-dialog CLIENT 1")).toBeInTheDocument();
+    expect(shareQueries.getShareableDocuments).toHaveBeenCalledWith(["doc_0001"]);
+  });
+
+  it("hides sharing without the share grant or without documents", async () => {
+    shareQueries.getSharePermissions.mockResolvedValue({ canCreate: false });
+    const { unmount } = await renderTab();
+    expect(screen.queryByText(/share-dialog/)).not.toBeInTheDocument();
+    unmount();
+    shareQueries.getSharePermissions.mockResolvedValue({ canCreate: true });
+    queries.listEntityDocuments.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
+    await renderTab();
+    expect(screen.queryByText(/share-dialog/)).not.toBeInTheDocument();
   });
 
   it("shows the empty state when the record has no documents", async () => {

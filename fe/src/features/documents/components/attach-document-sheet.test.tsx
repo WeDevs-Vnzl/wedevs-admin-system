@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,7 +13,6 @@ import type { FileDTO } from "@/lib/validators/files";
 
 const actions = vi.hoisted(() => ({
   createDocumentAction: vi.fn(),
-  uploadDocumentVersionAction: vi.fn(),
   linkDocumentAction: vi.fn(),
   searchDocumentsAction: vi.fn(),
 }));
@@ -95,6 +94,8 @@ async function openSheet(user: ReturnType<typeof userEvent.setup>) {
 }
 
 beforeEach(() => {
+  Element.prototype.scrollIntoView ??= () => {};
+  Element.prototype.hasPointerCapture ??= () => false;
   for (const mock of Object.values(actions)) mock.mockReset();
   for (const mock of Object.values(adapter)) mock.mockReset();
   router.refresh.mockReset();
@@ -140,6 +141,29 @@ describe("AttachDocumentSheet, upload mode", () => {
     expect(title).toHaveAttribute("aria-invalid", "true");
     const error = document.getElementById(title.getAttribute("aria-describedby") ?? "");
     expect(error).toHaveAttribute("role", "alert");
+  });
+
+  it("creates the document with the uploaded file as its first version in a single call", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    actions.createDocumentAction.mockResolvedValue({ ok: true, data: { id: "doc_0099" } });
+    renderSheet();
+    const dialog = await openSheet(user);
+    await user.upload(fileInput(), fileOf("contrato.pdf", "application/pdf"));
+    await waitFor(() => expect(adapter.confirmUpload).toHaveBeenCalled());
+    await user.type(within(dialog).getByLabelText("Title"), "Contrato marco");
+    await user.click(within(dialog).getByRole("combobox", { name: "Document type" }));
+    await user.click(await screen.findByRole("option", { name: "Contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Upload and attach" }));
+
+    await waitFor(() => expect(actions.createDocumentAction).toHaveBeenCalledTimes(1));
+    expect(actions.createDocumentAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Contrato marco",
+        typeId: "dtyp_contrato",
+        links: [{ entityType: "CLIENT", entityId: clientRef.id }],
+        initialVersion: { format: "ARCHIVO", fileId: readyFile.id },
+      }),
+    );
   });
 
   it("applies the title rule on the client: no document is created without a title", async () => {
