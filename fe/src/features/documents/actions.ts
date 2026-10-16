@@ -5,6 +5,7 @@ import {
   documentFilterSchema,
   linkDocumentInputSchema,
   unlinkDocumentInputSchema,
+  updateDocumentMetaInputSchema,
   uploadVersionInputSchema,
 } from "@/lib/validators/documents";
 import { listQuerySchema, type EntityRef } from "@/lib/validators/common";
@@ -24,6 +25,24 @@ export const createDocumentAction = defineAction({
   input: createDocumentInputSchema,
   revalidate: ["/documents"],
   handler: (ctx, data) => documents.createDocument(ctx, data),
+});
+
+/**
+ * Updates the metadata of a document (`/documents/[id]/edit`). The type rules of the chosen type
+ * (`updateDocumentMetaInputSchemaFor`) are enforced by the service once the type is known.
+ */
+export const updateDocumentMetaAction = defineAction({
+  permission: { action: "update", resource: "document" },
+  input: updateDocumentMetaInputSchema,
+  revalidate: ["/documents"],
+  handler: (ctx, data) => documents.updateDocumentMeta(ctx, data),
+});
+
+/** One page of `/documents/list` for the table's query (facets, search, sort, pagination). Every role reads. */
+export const listDocumentsAction = defineAction({
+  permission: { action: "read", resource: "document" },
+  input: documentFilterSchema,
+  handler: (ctx, data) => documents.listDocuments(ctx, data),
 });
 
 /** Attaches an uploaded file as the next version of a document (the "Subir archivo" mode). */

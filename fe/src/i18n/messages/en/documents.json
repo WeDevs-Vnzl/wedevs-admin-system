@@ -65,5 +65,123 @@
   "print": {
     "action": "Print / Save as PDF",
     "brand": "WeDevs"
+  },
+  "page": {
+    "overviewTitle": "Documents",
+    "overviewDescription": "Contracts, proposals and records of the company, by category, status and expiry.",
+    "listTitle": "Documents",
+    "listDescription": "Every document with its category, type, status, current version and links.",
+    "newAction": "New document",
+    "newTitle": "New document",
+    "editTitle": "Edit document"
+  },
+  "overview": {
+    "expiringKpi": "Expiring in {days} days",
+    "expiringHint": "See them in the table",
+    "staleKpi": "Stale drafts",
+    "staleHint": "More than 14 days without changes",
+    "byCategoryTitle": "By category and status",
+    "byCategoryDescription": "Documents of each category, counted by status.",
+    "categoryColumn": "Category",
+    "statusesColumn": "Statuses",
+    "totalColumn": "Total",
+    "expiringTitle": "Expiring in the next 90 days",
+    "expiringDescription": "Documents whose expiry date falls in the next 90 days.",
+    "documentColumn": "Document",
+    "typeColumn": "Type",
+    "expiresColumn": "Expires",
+    "statusColumn": "Status",
+    "recentTitle": "Recent",
+    "recentDescription": "Last documents created or changed.",
+    "staleTitle": "Stale drafts",
+    "staleDescription": "Drafts with no change for more than 14 days.",
+    "alertsTitle": "Document alerts",
+    "none": "Nothing to show yet."
+  },
+  "table": {
+    "columns": {
+      "code": "Code",
+      "title": "Title",
+      "category": "Category",
+      "type": "Type",
+      "status": "Status",
+      "format": "Current format",
+      "version": "Version",
+      "links": "Linked to",
+      "expiresAt": "Expires",
+      "shared": "Shared",
+      "updatedAt": "Updated"
+    },
+    "facets": {
+      "status": "Status",
+      "category": "Category",
+      "type": "Type",
+      "format": "Format",
+      "client": "Client",
+      "project": "Project",
+      "shared": "Shared",
+      "expires": "Expiry"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "noVersion": "—",
+    "versionLabel": "v{number}",
+    "search": {
+      "placeholder": "Search by code or title"
+    },
+    "empty": {
+      "title": "No documents",
+      "description": "Create a document or change the filters."
+    }
+  },
+  "form": {
+    "createDescription": "The document starts as a draft; its content is added after it is created.",
+    "editDescription": "Metadata of the document. Content, status and links change from its detail.",
+    "sections": {
+      "general": {
+        "title": "General",
+        "description": "Title, type and summary."
+      },
+      "dates": {
+        "title": "Dates",
+        "description": "The dates the document type allows."
+      },
+      "classification": {
+        "title": "Classification",
+        "description": "Tags to find it later."
+      },
+      "links": {
+        "title": "Linked to",
+        "description": "Records the document is created for. More links are added from its detail."
+      }
+    },
+    "fields": {
+      "title": "Title",
+      "type": "Document type",
+      "summary": "Summary",
+      "effectiveDate": "Effective date",
+      "signedAt": "Signed date",
+      "expiresAt": "Expiry date",
+      "alertDaysBefore": "Alert days before expiry",
+      "tags": "Tags"
+    },
+    "placeholders": {
+      "title": "E.g. Master agreement 2026",
+      "type": "Choose a type",
+      "date": "Choose a date"
+    },
+    "hints": {
+      "type": "The category comes from the type. The type decides whether the document is signed or expires.",
+      "noDates": "This type takes no signature or expiry date."
+    },
+    "noLinks": "Not linked to any record.",
+    "removeLink": "Remove link to {label}",
+    "submit": {
+      "create": "Create document",
+      "edit": "Save changes"
+    },
+    "created": "Document created",
+    "updated": "Document updated",
+    "failed": "The document could not be saved"
   }
 }

@@ -4,12 +4,29 @@ const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
+// The overview and detail reads of the documents service are stubbed (their mock implementation is another
+// task); every other service function stays the real one over the mock store.
+const service = vi.hoisted(() => ({ getDocumentsOverview: vi.fn(), getDocument: vi.fn() }));
+vi.mock("@/mocks/services/documents", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  ...service,
+}));
+
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
-import { getDocumentPermissions, listDocumentCategories, listEntityDocuments } from "./queries";
+import {
+  documentLinkPrefill,
+  getDocument,
+  getDocumentPermissions,
+  getDocumentsOverview,
+  listDocumentCategories,
+  listEntityDocuments,
+} from "./queries";
 
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
+  service.getDocumentsOverview.mockReset();
+  service.getDocument.mockReset();
 });
 
 afterEach(() => {
@@ -76,5 +93,69 @@ describe("listDocumentCategories", () => {
     expect(categories.length).toBe(getMockStore().documentCategories.length);
     const orders = categories.map((category) => category.order);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
+  });
+});
+
+describe("getDocumentsOverview", () => {
+  it("reads the overview for the signed-in user with the empty overview input", async () => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    const overview = { recent: [] };
+    service.getDocumentsOverview.mockResolvedValue(overview);
+    expect(await getDocumentsOverview()).toBe(overview);
+    expect(service.getDocumentsOverview).toHaveBeenCalledWith(
+      expect.objectContaining({ user: expect.objectContaining({ role: "VIEWER" }) }),
+      {},
+    );
+  });
+});
+
+describe("getDocument", () => {
+  it("reads one document by id", async () => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    service.getDocument.mockResolvedValue({ id: "doc_1" });
+    expect(await getDocument("doc_1")).toEqual({ id: "doc_1" });
+    expect(service.getDocument).toHaveBeenCalledWith(expect.anything(), { id: "doc_1" });
+  });
+
+  it("rejects an empty id before the service runs", async () => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    await expect(getDocument("")).rejects.toThrow();
+    expect(service.getDocument).not.toHaveBeenCalled();
+  });
+});
+
+describe("documentLinkPrefill", () => {
+  beforeEach(() => {
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+  });
+
+  it("prefills the client a document is created from, labelled with its trade name", async () => {
+    const client = getMockStore().clients.find((row) => row.archivedAt === null)!;
+    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([
+      { type: "CLIENT", id: client.id, code: client.code, label: client.tradeName },
+    ]);
+  });
+
+  it("prefills the project a document is created from, labelled with its name", async () => {
+    const project = getMockStore().projects.find((row) => row.archivedAt === null)!;
+    expect(await documentLinkPrefill("PROJECT", project.id)).toEqual([
+      { type: "PROJECT", id: project.id, code: project.code, label: project.name },
+    ]);
+  });
+
+  it("prefills nothing for a missing, unknown or unsupported record", async () => {
+    const client = getMockStore().clients[0]!;
+    expect(await documentLinkPrefill(undefined, undefined)).toEqual([]);
+    expect(await documentLinkPrefill("CLIENT", "")).toEqual([]);
+    expect(await documentLinkPrefill("CLIENT", "cli_missing")).toEqual([]);
+    expect(await documentLinkPrefill("PROJECT", client.id)).toEqual([]);
+    expect(await documentLinkPrefill("INVOICE", client.id)).toEqual([]);
+  });
+
+  it("prefills nothing for an archived client", async () => {
+    const store = getMockStore();
+    const client = store.clients.find((row) => row.archivedAt === null)!;
+    client.archivedAt = new Date().toISOString();
+    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([]);
   });
 });

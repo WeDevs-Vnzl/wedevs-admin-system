@@ -65,5 +65,123 @@
   "print": {
     "action": "Imprimir / Guardar como PDF",
     "brand": "WeDevs"
+  },
+  "page": {
+    "overviewTitle": "Documentos",
+    "overviewDescription": "Contratos, propuestas y actas de la empresa, por categoría, estado y vencimiento.",
+    "listTitle": "Documentos",
+    "listDescription": "Todos los documentos con su categoría, tipo, estado, versión vigente y vínculos.",
+    "newAction": "Nuevo documento",
+    "newTitle": "Nuevo documento",
+    "editTitle": "Editar documento"
+  },
+  "overview": {
+    "expiringKpi": "Vencen en {days} días",
+    "expiringHint": "Verlos en la tabla",
+    "staleKpi": "Borradores estancados",
+    "staleHint": "Más de 14 días sin cambios",
+    "byCategoryTitle": "Por categoría y estado",
+    "byCategoryDescription": "Documentos de cada categoría, contados por estado.",
+    "categoryColumn": "Categoría",
+    "statusesColumn": "Estados",
+    "totalColumn": "Total",
+    "expiringTitle": "Por vencer en los próximos 90 días",
+    "expiringDescription": "Documentos cuya fecha de vencimiento cae en los próximos 90 días.",
+    "documentColumn": "Documento",
+    "typeColumn": "Tipo",
+    "expiresColumn": "Vence",
+    "statusColumn": "Estado",
+    "recentTitle": "Recientes",
+    "recentDescription": "Últimos documentos creados o modificados.",
+    "staleTitle": "Borradores estancados",
+    "staleDescription": "Borradores con más de 14 días sin cambios.",
+    "alertsTitle": "Alertas de documentos",
+    "none": "Aún no hay nada que mostrar."
+  },
+  "table": {
+    "columns": {
+      "code": "Código",
+      "title": "Título",
+      "category": "Categoría",
+      "type": "Tipo",
+      "status": "Estado",
+      "format": "Formato vigente",
+      "version": "Versión",
+      "links": "Vinculado a",
+      "expiresAt": "Vencimiento",
+      "shared": "Compartido",
+      "updatedAt": "Actualizado"
+    },
+    "facets": {
+      "status": "Estado",
+      "category": "Categoría",
+      "type": "Tipo",
+      "format": "Formato",
+      "client": "Cliente",
+      "project": "Proyecto",
+      "shared": "Compartido",
+      "expires": "Vencimiento"
+    },
+    "yes": "Sí",
+    "no": "No",
+    "noVersion": "—",
+    "versionLabel": "v{number}",
+    "search": {
+      "placeholder": "Buscar por código o título"
+    },
+    "empty": {
+      "title": "No hay documentos",
+      "description": "Crea un documento o cambia los filtros."
+    }
+  },
+  "form": {
+    "createDescription": "El documento nace como borrador; su contenido se agrega después de crearlo.",
+    "editDescription": "Metadatos del documento. El contenido, el estado y los vínculos se cambian desde su detalle.",
+    "sections": {
+      "general": {
+        "title": "General",
+        "description": "Título, tipo y resumen."
+      },
+      "dates": {
+        "title": "Fechas",
+        "description": "Las fechas que admite el tipo de documento."
+      },
+      "classification": {
+        "title": "Clasificación",
+        "description": "Etiquetas para encontrarlo después."
+      },
+      "links": {
+        "title": "Vinculado a",
+        "description": "Registros para los que se crea el documento. Más vínculos se agregan desde su detalle."
+      }
+    },
+    "fields": {
+      "title": "Título",
+      "type": "Tipo de documento",
+      "summary": "Resumen",
+      "effectiveDate": "Fecha de vigencia",
+      "signedAt": "Fecha de firma",
+      "expiresAt": "Fecha de vencimiento",
+      "alertDaysBefore": "Días de aviso antes del vencimiento",
+      "tags": "Etiquetas"
+    },
+    "placeholders": {
+      "title": "Ej. Contrato marco 2026",
+      "type": "Elige un tipo",
+      "date": "Elige una fecha"
+    },
+    "hints": {
+      "type": "La categoría sale del tipo. El tipo decide si el documento se firma o vence.",
+      "noDates": "Este tipo no lleva fecha de firma ni de vencimiento."
+    },
+    "noLinks": "Sin vínculos a registros.",
+    "removeLink": "Quitar el vínculo con {label}",
+    "submit": {
+      "create": "Crear documento",
+      "edit": "Guardar cambios"
+    },
+    "created": "Documento creado",
+    "updated": "Documento actualizado",
+    "failed": "No se pudo guardar el documento"
   }
 }

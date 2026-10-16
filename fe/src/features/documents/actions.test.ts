@@ -4,13 +4,23 @@ const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
+// `updateDocumentMeta` of the documents service is stubbed (its mock implementation is another task); every
+// other service function stays the real one over the mock store.
+const service = vi.hoisted(() => ({ updateDocumentMeta: vi.fn() }));
+vi.mock("@/mocks/services/documents", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  ...service,
+}));
+
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import {
   createDocumentAction,
   linkDocumentAction,
+  listDocumentsAction,
   searchDocumentsAction,
   unlinkDocumentAction,
+  updateDocumentMetaAction,
   uploadDocumentVersionAction,
 } from "./actions";
 
@@ -40,6 +50,7 @@ function draftInput() {
 
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
+  service.updateDocumentMeta.mockReset();
 });
 
 afterEach(() => {
@@ -160,5 +171,81 @@ describe("searchDocumentsAction", () => {
       ok: false,
       error: { code: "UNAUTHENTICATED" },
     });
+  });
+});
+
+describe("listDocumentsAction", () => {
+  it("answers every signed-in role, Viewer included, with one page of documents", async () => {
+    asRole("VIEWER");
+    const result = await listDocumentsAction({ pageSize: 25 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.pageSize).toBe(25);
+    expect(result.data.items.length).toBeGreaterThan(0);
+  });
+
+  it("applies the table facets of the filter", async () => {
+    asRole("MEMBER");
+    const doc = getMockStore().documents.find((row) => row.archivedAt === null)!;
+    const result = await listDocumentsAction({ status: [doc.status] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.items.every((row) => row.status === doc.status)).toBe(true);
+  });
+
+  it("validates the filter and requires a session", async () => {
+    asRole("MEMBER");
+    expect(await listDocumentsAction({ status: ["NOPE"] } as never)).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
+    });
+    session.getMockSessionUser.mockResolvedValue(null);
+    expect(await listDocumentsAction({})).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED" },
+    });
+  });
+});
+
+describe("updateDocumentMetaAction", () => {
+  function metaInput() {
+    const { typeId, alertDaysBefore, tagIds } = draftInput();
+    return {
+      id: getMockStore().documents[0]!.id,
+      typeId,
+      alertDaysBefore,
+      tagIds,
+      title: "Contrato marco",
+    };
+  }
+
+  it("lets Owner, Admin and Member update the metadata through the service", async () => {
+    for (const role of ["OWNER", "ADMIN", "MEMBER"] as const) {
+      asRole(role);
+      service.updateDocumentMeta.mockResolvedValueOnce({ id: metaInput().id });
+      expect(await updateDocumentMetaAction(metaInput())).toMatchObject({ ok: true });
+    }
+    expect(service.updateDocumentMeta).toHaveBeenCalledTimes(3);
+    expect(service.updateDocumentMeta).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: metaInput().id, title: "Contrato marco" }),
+    );
+  });
+
+  it("refuses a Viewer with FORBIDDEN without calling the service", async () => {
+    asRole("VIEWER");
+    expect(await updateDocumentMetaAction(metaInput())).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
+    });
+    expect(service.updateDocumentMeta).not.toHaveBeenCalled();
+  });
+
+  it("validates the input before the service runs", async () => {
+    asRole("MEMBER");
+    expect(await updateDocumentMetaAction({ ...metaInput(), title: "" })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
+    });
+    expect(service.updateDocumentMeta).not.toHaveBeenCalled();
   });
 });
