@@ -9,7 +9,7 @@ How this project is built with the Orca agent fleet.
 
 ## Repo topology
 
-One git repo, `admin-system/`, holding the Next.js monolith (PRD §6) in `fe/`, the process docs in `docs/` and visual references in `resources/`. App paths in these docs (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `pnpm` command runs inside `fe/`. Orca sessions run from the repo root; each Developer works in its own Orca worktree of this same repo.
+One git repo, `admin-system/`, holding the Next.js monolith (PRD §6) in `fe/`, the process docs in `docs/` and visual references in `resources/`. App paths in these docs (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun` command runs inside `fe/`. Orca sessions run from the repo root; each Developer works in its own Orca worktree of this same repo.
 
 Packages are defined by the files they touch. The folder layout is the one in PRD §6.3:
 
@@ -65,7 +65,7 @@ Model routing for the Planner is always written per package, never implied:
 
 - Orca CLI (`orca orchestration …`, `orca worktree …`, `orca terminal …`).
 - shadcn MCP (`.mcp.json`, enabled in `.claude/settings.json`): **mandatory for every UI package** (user decision DU-02). Developers, the Planner and the Code Reviewer consult it before adding or composing shadcn components; components are installed with the shadcn CLI, never copied by hand.
-- Node (LTS pinned in `.nvmrc`) and pnpm through corepack (pinned by `packageManager`). Exact versions are fixed in batch 0 (`docs/rules/stack.md`).
+- Node (LTS pinned in `.nvmrc`) and bun (pinned by `packageManager`). Exact versions are fixed in batch 0 (`docs/rules/stack.md`).
 - Podman, for local Postgres (one container per worktree, on its own port):
   ```sh
   podman run -d --name core-pg-<worktree> -e POSTGRES_PASSWORD=dev -p <port>:5432 postgres:17
@@ -73,7 +73,7 @@ Model routing for the Planner is always written per package, never implied:
   Use `DATABASE_URL=postgresql://postgres:dev@localhost:<port>/core` (and the same value for `DIRECT_URL`). `unaccent` and `pg_trgm` ship with the image's contrib. Stop and remove the container at the end of the task (see safeguards).
 - Optional: a local S3-compatible container (e.g. MinIO) to exercise `StorageProvider` without touching the real bucket. Same safeguards as Postgres.
 - Clerk: development keys only, placed by the human in `.env.local`. Agents never read, print or commit them. Code under test must allow running without real Clerk credentials (mocked `AuthContext`) for unit and service tests.
-- Playwright Chromium, for the Tester: `pnpm exec playwright install chromium`.
+- Playwright Chromium, for the Tester: `bun x playwright install chromium`.
 - Lighthouse CI (if a batch asks for it) needs Chrome; if the system has none, set `CHROME_PATH` to Playwright's Chromium.
 
 Decided in batch 0 (see `docs/rules/decisions.md`):

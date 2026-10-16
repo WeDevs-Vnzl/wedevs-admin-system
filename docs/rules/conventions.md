@@ -32,13 +32,13 @@ toasts, empty states, `aria-label`, `title`, page metadata, Zod error messages s
 headers) comes from `src/i18n/messages/{es,en}/<namespace>.json` through `next-intl`. Data entered by
 users is not translated. Enum labels come from the `enums` namespace. (PRD §7.8, §14.)
 
-**C2 [H1] — ES/EN key parity.** Every key exists in both `es` and `en`. `pnpm i18n:check` (script
+**C2 [H1] — ES/EN key parity.** Every key exists in both `es` and `en`. `bun run i18n:check` (script
 `scripts/check-i18n.ts`) fails on any missing or extra key and runs in CI. Catalogs store `name` (ES)
 and optional `nameEn`; the UI falls back to `name`. (PRD §7.8, §14.)
 
 **C3 [H1] — shadcn MCP mandatory; registry components only through the pinned CLI (DU-02).** Every
 agent doing UI work consults the shadcn MCP (`mcp__shadcn`) before adding or composing shadcn
-components. Components are installed with `pnpm exec shadcn add …` (exact-pinned devDependency),
+components. Components are installed with `bun x shadcn add …` (exact-pinned devDependency),
 never copied by hand from the website or another repo, and a component the registry provides is never
 hand-written. Generated files under `src/components/ui/` are only modified for theming or i18n, and the
 modification is noted in the package report. Shared kit components (data-table, `MoneyInput`,

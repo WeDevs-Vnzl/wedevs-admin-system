@@ -21,7 +21,7 @@ El sistema interno de WeDevs para clientes, proyectos, facturas, pagos, cuentas,
 | `docs/rules/ADE/` | Reglas de proceso: fases y aprobaciones, salvaguardas, modelos |
 | `docs/rules/*.md` | Reglas operativas derivadas del PRD *(las escribe el planner en el lote 0)* |
 | `.claude/agents/wedevs-*.md` | La flota: project-manager, planner, developer, code-reviewer, tester |
-| `fe/` | La aplicación Next.js (`src/`, `tests/`, `scripts/`, configs). Los comandos `pnpm` se ejecutan dentro de `fe/` |
+| `fe/` | La aplicación Next.js (`src/`, `tests/`, `scripts/`, configs). Los comandos `bun` se ejecutan dentro de `fe/` |
 
 ## Estado
 

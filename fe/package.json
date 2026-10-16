@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.34.6",
+  "packageManager": "bun@1.4.2",
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@codemirror/commands": "6.11.1",

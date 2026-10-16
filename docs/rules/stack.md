@@ -18,14 +18,14 @@ behind `StorageProvider`. Changing provider = changing environment variables.
 
 ## Version policy
 
-- **Exact pins.** `.npmrc` sets `save-exact=true`; `package.json` never carries `^` or `~`. The exact
-  versions live in `package.json` + `pnpm-lock.yaml`; this file fixes the **major line** and the rules.
+- **Exact pins.** `bunfig.toml` sets `install.exact = true` (`.npmrc` keeps `save-exact=true`); `package.json` never carries `^` or `~`. The exact
+  versions live in `package.json` + `bun.lock`; this file fixes the **major line** and the rules.
 - Where this file says **"pin in scaffold"**, the scaffold package (H1-B1, package 1.1) picks the latest
   stable release of the stated major at the time it runs, verifies compatibility with the rest of the
   stack, and pins it exactly. It reports the chosen versions in its `worker_done`. Versions are not
   guessed in this file.
 - Upgrading a major is a change batch with its own package (it changes the lockfile).
-- Only one package per wave changes `package.json`/`pnpm-lock.yaml` (`phase-gates.md` rule 10,
+- Only one package per wave changes `package.json`/`bun.lock` (`phase-gates.md` rule 10,
   `safeguards.md` rule 7).
 
 ## Runtime and tooling
@@ -33,7 +33,7 @@ behind `StorageProvider`. Changing provider = changing environment variables.
 | Item | Decision | Pin |
 |---|---|---|
 | Node | Active LTS line **24.x** | Exact version in `.nvmrc` (pin in scaffold) |
-| Package manager | **pnpm 10.x** through corepack | `"packageManager": "pnpm@10.x.y"` (pin in scaffold) |
+| Package manager | **bun 1.x** (since 2026-10-14; Node still runs the app and the tools) | `"packageManager": "bun@1.x.y"`, lockfile `bun.lock` |
 | Language | TypeScript, `strict: true`, `noUncheckedIndexedAccess: true` | pin in scaffold (5.x) |
 | Lint / format | ESLint (flat config, `eslint-config-next`) + Prettier (+ `prettier-plugin-tailwindcss`) | pin in scaffold |
 | Unit / service tests | Vitest + `@vitest/coverage-v8`, `@testing-library/react`, `jsdom` | pin in scaffold |
@@ -92,7 +92,7 @@ Portal access keys (P5) are hashed with Node's built-in `crypto.scrypt` — no e
 
 - `components.json` is created by `shadcn init`; style, base color and CSS variables follow
   `frontend-patterns.md` § "Visual language".
-- Components are added **only** with the pinned CLI: `pnpm exec shadcn add <name>` (the `shadcn`
+- Components are added **only** with the pinned CLI: `bun x shadcn add <name>` (the `shadcn`
   devDependency is exact-pinned). `npx shadcn@latest` is not used by developers.
 - The shadcn MCP (`.mcp.json`, tool `mcp__shadcn`) is consulted before adding or composing a
   component (invariant **C3**).
@@ -124,7 +124,7 @@ pool (max a few connections) against the pooled `DATABASE_URL`; migrations use `
 
 - Next.js runs through Netlify's Next.js runtime (OpenNext adapter, selected automatically). The scaffold
   verifies Next.js 16 support and records it in its report.
-- `netlify.toml` is root config (shared file) with `base = "fe"`. Its build command in Hito 1 is the plain `pnpm build`.
+- `netlify.toml` is root config (shared file) with `base = "fe"`. Its build command in Hito 1 is the plain `bun run build`.
   The `prisma migrate deploy` step is added in H2-B1 (OP-02); agents never run it.
 - Portal rate limiting uses Netlify's rate-limit rules (OP-03); agents may write code-based rule config
   in the repo if the user's plan supports it; the user enables and verifies it.

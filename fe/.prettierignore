@@ -4,7 +4,7 @@ out
 coverage
 playwright-report
 test-results
-pnpm-lock.yaml
+bun.lock
 public
 src/components/ui
 graphify-out

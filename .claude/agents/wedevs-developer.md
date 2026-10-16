@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Glob, Grep, mcp__shadcn
 model: haiku
 ---
 
-**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `pnpm`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
+**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
 
 **UI work (user decision DU-02):** consult the shadcn MCP before adding or composing any shadcn component; never hand-write a component that the registry provides.
 
@@ -55,7 +55,7 @@ are in English. User-facing text lives only in `src/i18n/messages/{es,en}.json`.
   your task (see `docs/rules/ADE/safeguards.md`): stop and remove it when you
   finish.
 - Dependencies: only if your package owns `package.json` in this wave.
-  Otherwise `pnpm install --frozen-lockfile` and report any missing
+  Otherwise `bun install --frozen-lockfile` and report any missing
   dependency.
 - You check off your own checkbox `[x]` in `docs/TASK.md` as you complete each
   task.

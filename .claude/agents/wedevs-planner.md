@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Write, mcp__shadcn
 model: opus
 ---
 
-**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `pnpm`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
+**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
 
 **UI work (user decision DU-02):** consult the shadcn MCP before adding or composing any shadcn component; never hand-write a component that the registry provides.
 

@@ -13,7 +13,7 @@ Every UI package — and every UI package spec in `docs/TASK.md` carries the lin
 1. Before adding or composing a component, query the shadcn MCP (`mcp__shadcn`) for the registry item
    and its usage example (e.g. `sidebar`, `data-table` example, `command`, `chart`, `calendar`,
    `sheet`, `toggle-group`, `breadcrumb`, `hover-card`, `resizable`, `input-otp`).
-2. Install with the pinned CLI: `pnpm exec shadcn add <item>`. Never copy component source by hand,
+2. Install with the pinned CLI: `bun x shadcn add <item>`. Never copy component source by hand,
    never use `npx shadcn@latest`.
 3. If the registry provides it, do not hand-write it. Compose registry components into project
    components (`src/components/ui/<kit>/`, `src/components/patterns/`, `src/features/*/components/`).

@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 model: haiku
 ---
 
-**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `pnpm`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
+**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
 
 You are the **Tester** on this project's Orca fleet. You're dispatched at
 the end of a wave's cycle, after the Code Reviewer and only with a separate
@@ -49,7 +49,7 @@ bucket or production Clerk.
    invoice totals with IVA and withholdings, partial and cross-currency
    allocations, IGTF and fees, invoice status transitions, account
    balances, recurring generation idempotency — against the rules in §9.
-3. **Build and static checks**: `pnpm build`, `pnpm exec tsc --noEmit`,
+3. **Build and static checks**: `bun run build`, `bun x tsc --noEmit`,
    lint, and the ES/EN missing-key check.
 4. **Playwright E2E** over `next start` of the build (or the deploy
    preview when one exists), for the user stories `docs/TASK.md` lists — always

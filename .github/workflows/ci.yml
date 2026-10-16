@@ -28,23 +28,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Reads the pnpm version from `packageManager`; must run before setup-node so `cache: pnpm` finds pnpm.
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: fe/package.json
-
+      # Node runs Next.js, Vitest and Playwright; bun only installs and runs the package scripts.
       - uses: actions/setup-node@v4
         with:
           node-version-file: fe/.nvmrc
-          cache: pnpm
-          cache-dependency-path: fe/pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test:coverage
-      - run: pnpm i18n:check
-      - run: pnpm build
+      # Reads the bun version from `packageManager`.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: fe/package.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('fe/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test:coverage
+      - run: bun run i18n:check
+      - run: bun run build
 
   e2e:
     name: E2E (Hito 1, mocks, no database)
@@ -56,27 +61,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Reads the pnpm version from `packageManager`; must run before setup-node so `cache: pnpm` finds pnpm.
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: fe/package.json
-
+      # Node runs Next.js, Vitest and Playwright; bun only installs and runs the package scripts.
       - uses: actions/setup-node@v4
         with:
           node-version-file: fe/.nvmrc
-          cache: pnpm
-          cache-dependency-path: fe/pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      # Reads the bun version from `packageManager`.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: fe/package.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('fe/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
 
       - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: bun x playwright install --with-deps chromium
 
-      - run: pnpm build
+      - run: bun run build
 
       - name: Start app, run E2E, stop app
         run: |
-          pnpm start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          bun run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 
@@ -98,7 +108,7 @@ jobs:
             exit 1
           fi
 
-          pnpm test:e2e --pass-with-no-tests
+          bun run test:e2e --pass-with-no-tests
 
       - name: Stop app (safety net)
         if: always()
