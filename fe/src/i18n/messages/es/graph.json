@@ -1,1 +1,160 @@
-{}
+{
+  "page": {
+    "title": "Grafo",
+    "globalTitle": "Grafo de relaciones",
+    "globalDescription": "Clientes, proyectos y documentos de la empresa y cómo se relacionan.",
+    "entityDescription": "{code} · {type}"
+  },
+  "types": {
+    "CLIENT": "Cliente",
+    "CONTACT": "Contacto",
+    "PROJECT": "Proyecto",
+    "INVOICE": "Factura",
+    "PAYMENT": "Pago",
+    "EXPENSE": "Gasto",
+    "ACCOUNT": "Cuenta",
+    "DOCUMENT": "Documento",
+    "NOTE": "Nota",
+    "TECHNOLOGY": "Tecnología",
+    "TAG": "Etiqueta"
+  },
+  "typesPlural": {
+    "CLIENT": "Clientes",
+    "CONTACT": "Contactos",
+    "PROJECT": "Proyectos",
+    "INVOICE": "Facturas",
+    "PAYMENT": "Pagos",
+    "EXPENSE": "Gastos",
+    "ACCOUNT": "Cuentas",
+    "DOCUMENT": "Documentos",
+    "NOTE": "Notas",
+    "TECHNOLOGY": "Tecnologías",
+    "TAG": "Etiquetas"
+  },
+  "relations": {
+    "contacto": "Contacto",
+    "participa": "Participa",
+    "facturado_a": "Facturada a",
+    "incluido_en": "Incluida en",
+    "paga": "Paga",
+    "pago": "Pago de",
+    "acreditado_en": "Acreditado en",
+    "pagado_desde": "Pagado desde",
+    "imputado_a": "Imputado a",
+    "adjunto_a": "Adjunto a",
+    "anotado_en": "Anotada en",
+    "usa": "Usa",
+    "etiquetado": "Etiquetado"
+  },
+  "meta": {
+    "kind": "Tipo",
+    "country": "País",
+    "receivableUsd": "Por cobrar (USD)",
+    "position": "Cargo",
+    "email": "Correo",
+    "stack": "Stack",
+    "startDate": "Inicio",
+    "targetEndDate": "Fin estimado",
+    "currency": "Moneda",
+    "total": "Total",
+    "balance": "Saldo",
+    "dueDate": "Vencimiento",
+    "amount": "Monto",
+    "date": "Fecha",
+    "method": "Método",
+    "accountType": "Tipo de cuenta",
+    "documentType": "Tipo de documento",
+    "version": "Versión",
+    "author": "Autor",
+    "excerpt": "Extracto",
+    "category": "Categoría"
+  },
+  "toolbar": {
+    "label": "Herramientas del grafo",
+    "search": "Buscar en el grafo",
+    "searchPlaceholder": "Buscar por nombre o código",
+    "searchSubmit": "Buscar",
+    "noMatch": "Ningún nodo coincide con \"{query}\".",
+    "centeredOn": "Centrado en {label}.",
+    "layout": "Disposición",
+    "layouts": {
+      "radial": "Radial",
+      "hierarchical": "Jerárquico",
+      "force": "Fuerzas"
+    },
+    "focus": "Modo foco",
+    "clusters": "Agrupar por cliente",
+    "export": "Exportar",
+    "exportPng": "Exportar a PNG",
+    "exportSvg": "Exportar a SVG",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
+    "filters": "Filtros",
+    "computing": "Organizando el grafo…",
+    "loading": "Cargando…"
+  },
+  "filters": {
+    "title": "Filtros",
+    "types": "Tipos de nodo",
+    "typeOption": "{type} ({count})",
+    "status": "Estado",
+    "projectStatus": "Estado del proyecto",
+    "tags": "Etiquetas",
+    "technologies": "Tecnologías",
+    "clients": "Clientes",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "archived": "Mostrar archivados",
+    "onlyActive": "Solo activos",
+    "clear": "Limpiar filtros",
+    "noOptions": "Todavía no hay nada que filtrar."
+  },
+  "node": {
+    "expand": "Expandir {label}",
+    "collapse": "Contraer {label}",
+    "more": "+{count} más",
+    "moreLabel": "Cargar {count} vecinos más de {label}",
+    "archived": "Archivado",
+    "root": "Punto de partida",
+    "pinned": "Fijado"
+  },
+  "panel": {
+    "title": "Nodo seleccionado",
+    "close": "Cerrar panel",
+    "openDetail": "Abrir detalle",
+    "viewGraph": "Ver su grafo",
+    "viewFromHere": "Ver desde aquí",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "unpin": "Desfijar",
+    "type": "Tipo",
+    "code": "Código",
+    "status": "Estado",
+    "degree": "Relaciones",
+    "empty": "Selecciona un nodo para ver su detalle."
+  },
+  "list": {
+    "title": "Lista de nodos",
+    "description": "Alternativa con teclado al lienzo: selecciona un nodo para abrir su panel.",
+    "empty": "Ningún nodo coincide con los filtros.",
+    "select": "Seleccionar {label}",
+    "loadMore": "Cargar {count} vecinos más de {label}"
+  },
+  "legend": {
+    "title": "Leyenda",
+    "more": "Vecinos agrupados",
+    "pinned": "Nodo fijado"
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "nodes": "Nodos",
+    "edges": "Relaciones",
+    "mostConnected": "Más conectados",
+    "connections": "{count, plural, one {# relación} other {# relaciones}}"
+  },
+  "errors": {
+    "load": "No se pudo cargar el grafo.",
+    "expand": "No se pudieron cargar los vecinos de este nodo.",
+    "export": "No se pudo exportar el grafo."
+  }
+}

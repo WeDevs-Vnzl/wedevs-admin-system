@@ -34,6 +34,7 @@ import {
   type TechnologyRow,
 } from "./fixtures/catalogs";
 import { createClientFixtures, type ClientRow } from "./fixtures/clients";
+import { appendGraphStressRecords } from "./fixtures/graph-stress";
 import { createContactFixtures, type ContactRow } from "./fixtures/contacts";
 import { createProjectFixtures, type ProjectClientRow, type ProjectRow } from "./fixtures/projects";
 import {
@@ -273,6 +274,9 @@ export function buildMockStore(now: Date = new Date()): MockStore {
   } satisfies MockStore);
 
   deriveSequences(store);
+  // Dev-only switch for the HU-25 CA3 manual check (500 nodes in the global graph). Added after the sequences are
+  // derived, so the codes of new records keep following the seed instead of the synthetic CLI-5xxx rows.
+  if (process.env.NEXT_PUBLIC_MOCK_GRAPH_STRESS === "1") appendGraphStressRecords(store);
   deriveFinance(store, todayInCaracas(now));
   for (const hook of globalState().deriveHooks.values()) hook(store);
   return store;

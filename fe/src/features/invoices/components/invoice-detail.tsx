@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, Send, Archive, Network } from "lucide-react";
+import { Pencil, Send, Archive } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { DetailGraphToggle } from "@/components/patterns/detail-header";
 import { DetailTabs, type DetailTab } from "@/components/patterns/detail-tabs";
 import { MoneyText } from "@/components/patterns/money-text";
 import { PageHeader } from "@/components/patterns/page-header";
@@ -33,7 +34,7 @@ const allocationHelper = createDataTableColumnHelper<InvoiceAllocationRow>();
 /**
  * `/invoices/[id]` (PRD §8.5): the header with its status and actions, then three tabs: the lines with the per-rate
  * totals, the payments that allocate to the invoice, and the "Archivo" with the PDF of the real invoice (CA4).
- * The graph link is only a link: its screen belongs to H1-B5.
+ * The "Detalle | Grafo" toggle opens `/invoices/[id]/graph` (A4).
  */
 export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   const t = useTranslations("invoices");
@@ -152,6 +153,13 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
       <PageHeader
         title={invoice.invoiceNumber}
         description={`${invoice.code} · ${invoice.client.label}`}
+        views={
+          <DetailGraphToggle
+            mode="detail"
+            detailHref={`/invoices/${invoice.id}`}
+            graphHref={`/invoices/${invoice.id}/graph`}
+          />
+        }
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge enumName="InvoiceStatus" value={invoice.status} />
@@ -169,12 +177,6 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
                 {t("detail.actions.issue")}
               </Button>
             ) : null}
-            <Button variant="outline" asChild>
-              <Link href={`/invoices/${invoice.id}/graph`}>
-                <Network aria-hidden />
-                {t("detail.actions.graph")}
-              </Link>
-            </Button>
             {editable ? (
               <VoidInvoiceDialog invoiceId={invoice.id} invoiceNumber={invoice.invoiceNumber} />
             ) : null}

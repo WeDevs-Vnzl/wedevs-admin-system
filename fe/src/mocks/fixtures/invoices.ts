@@ -111,6 +111,12 @@ function invoice(fields: {
 
 const KAIROS = { id: mockId("cli", "kairos"), label: "Kairos Studio" };
 const ZAFIRO = { id: mockId("cli", "zafiro_labs"), label: "Zafiro Labs" };
+const KAIROS_WEB: NonNullable<InvoiceLineDTO["project"]> = {
+  id: mockId("pry", "kairos_web"),
+  code: "PRY-0001",
+  label: "Sitio web Kairos Studio",
+  type: "PROJECT",
+};
 /**
  * MOCK seed contract with T7 (payments): `kairos_partial` (receivable 1 392.00, due in the future) takes a 300 USD
  * allocation and `kairos_paid` (receivable exactly 500.00) takes 500 USD. Neither is linked to the installments
@@ -125,10 +131,12 @@ export const invoiceFixtures: InvoiceRow[] = [
     issueDate: addDays(today, -10),
     dueDate: addDays(today, 20),
     lines: [
+      // Linked to its project so the graph shows the invoice when the project expands (HU-24 CA2).
       line(mockId("inl", "kairos_partial_1"), 0, {
         description: "Desarrollo del sitio corporativo, fase 1 (MOCK)",
         unitPrice: "1200.00",
         ivaRate: "16",
+        project: KAIROS_WEB,
       }),
     ],
   }),

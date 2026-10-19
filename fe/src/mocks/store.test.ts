@@ -1,5 +1,6 @@
 // MOCK — tests for the in-memory store: lazy singleton, reset, derive hooks, sequences.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GRAPH_STRESS_DEFAULT_NODES } from "./fixtures/graph-stress";
 import { FIXED_NOW } from "./test-helpers";
 import {
   buildMockStore,
@@ -223,5 +224,34 @@ describe("sequence derivation", () => {
     const store = buildMockStore(FIXED_NOW);
     expect(store.sequences.CLI).toBe(store.clients.length);
     expect(store.clients.at(-1)?.code).toBe(`CLI-${String(store.sequences.CLI).padStart(4, "0")}`);
+  });
+});
+
+describe("graph stress records (HU-25 CA3 manual check)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('appends the 500-node stress set only when NEXT_PUBLIC_MOCK_GRAPH_STRESS is "1"', () => {
+    const isStress = (store: MockStore) => store.clients.some((row) => row.id === "cli_stress_000");
+
+    vi.stubEnv("NEXT_PUBLIC_MOCK_GRAPH_STRESS", "");
+    const plain = buildMockStore(FIXED_NOW);
+    expect(isStress(plain)).toBe(false);
+
+    vi.stubEnv("NEXT_PUBLIC_MOCK_GRAPH_STRESS", "true");
+    expect(isStress(buildMockStore(FIXED_NOW))).toBe(false);
+
+    vi.stubEnv("NEXT_PUBLIC_MOCK_GRAPH_STRESS", "1");
+    const stressed = buildMockStore(FIXED_NOW);
+    expect(isStress(stressed)).toBe(true);
+    expect(stressed.clients.length + stressed.projects.length + stressed.documents.length).toBe(
+      plain.clients.length +
+        plain.projects.length +
+        plain.documents.length +
+        GRAPH_STRESS_DEFAULT_NODES,
+    );
+    // Sequences are derived before the stress rows are added: new codes keep following the seed.
+    expect(stressed.sequences).toEqual(plain.sequences);
   });
 });

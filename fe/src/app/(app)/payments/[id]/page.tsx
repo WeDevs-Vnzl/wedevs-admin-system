@@ -3,12 +3,11 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { MoneyText } from "@/components/patterns/money-text";
-import { PageHeader } from "@/components/patterns/page-header";
-import { StatusBadge } from "@/components/patterns/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PaymentDetailDTO } from "@/lib/validators/payments";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
 import { PaymentAllocationsTable } from "@/features/payments/components/payment-allocations-table";
+import { PaymentDetailHeader } from "@/features/payments/components/payment-detail-header";
 import { PaymentReceipt } from "@/features/payments/components/payment-receipt";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getPayment } from "@/features/payments/queries";
@@ -54,12 +53,15 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
   return (
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment={payment.id} label={payment.code} />
-      <PageHeader
-        title={payment.code}
-        description={[payment.client.label, catalogLabel(payment.method, locale)]
-          .filter(Boolean)
-          .join(" · ")}
-        actions={<StatusBadge enumName="PaymentStatus" value={payment.status} />}
+      <PaymentDetailHeader
+        payment={{
+          id: payment.id,
+          code: payment.code,
+          status: payment.status,
+          description: [payment.client.label, catalogLabel(payment.method, locale)]
+            .filter(Boolean)
+            .join(" · "),
+        }}
       />
 
       <div className="grid gap-4 @lg:grid-cols-3">

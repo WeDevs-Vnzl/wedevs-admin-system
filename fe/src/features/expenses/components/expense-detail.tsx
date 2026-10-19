@@ -8,6 +8,7 @@ import { Ban, CheckCircle2, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { DateText } from "@/components/patterns/date-text";
+import { DetailGraphToggle } from "@/components/patterns/detail-header";
 import { MoneyText } from "@/components/patterns/money-text";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatusBadge } from "@/components/patterns/status-badge";
@@ -70,6 +71,13 @@ export function ExpenseDetail({ expense, accounts, today, canUpdate }: ExpenseDe
       <PageHeader
         title={expense.description}
         description={`${expense.code}${expense.vendor ? ` · ${expense.vendor}` : ""}`}
+        views={
+          <DetailGraphToggle
+            mode="detail"
+            detailHref={`/expenses/${expense.id}`}
+            graphHref={`/expenses/${expense.id}/graph`}
+          />
+        }
         actions={
           canUpdate && (isPending || !isVoided) ? (
             <div className="flex flex-wrap gap-2">

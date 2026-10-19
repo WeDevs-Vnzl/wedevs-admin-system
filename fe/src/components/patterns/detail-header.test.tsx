@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { DetailHeader } from "./detail-header";
+import { DetailGraphToggle, DetailHeader } from "./detail-header";
 
 beforeAll(() => {
   // Radix dropdown and popper need these in jsdom.
@@ -113,5 +113,24 @@ describe("DetailHeader", () => {
 
     expect(await screen.findByRole("menuitem", { name: "Archivar" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Anular" })).toBeInTheDocument();
+  });
+});
+
+describe("DetailGraphToggle", () => {
+  it("is the same Detalle | Grafo toggle on its own, for headers built on PageHeader (A4)", () => {
+    const { unmount } = wrap(
+      <DetailGraphToggle mode="detail" detailHref="/payments/9" graphHref="/payments/9/graph" />,
+    );
+    expect(screen.getByRole("radiogroup", { name: "Vista" })).toBeInTheDocument();
+    expect(screen.getByText("Detalle").closest("a")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("Grafo").closest("a")).toHaveAttribute("href", "/payments/9/graph");
+    unmount();
+
+    wrap(
+      <DetailGraphToggle mode="graph" detailHref="/payments/9" graphHref="/payments/9/graph" />,
+      "en",
+    );
+    expect(screen.getByText("Graph").closest("a")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("Detail").closest("a")).toHaveAttribute("href", "/payments/9");
   });
 });

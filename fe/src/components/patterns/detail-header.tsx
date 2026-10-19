@@ -32,6 +32,34 @@ type DetailHeaderProps = {
   moreActions?: ReactNode;
 };
 
+type DetailGraphToggleProps = {
+  mode: "detail" | "graph";
+  detailHref: string;
+  graphHref: string;
+};
+
+/**
+ * The "Detalle | Grafo" toggle (frontend-patterns §4) on its own, for detail screens whose header is a
+ * `PageHeader` (invoices, payments, expenses: A4) and for the graph screens themselves.
+ */
+export function DetailGraphToggle({ mode, detailHref, graphHref }: DetailGraphToggleProps) {
+  const t = useTranslations("patterns.detailHeader");
+  return (
+    <ToggleGroup type="single" variant="outline" value={mode} aria-label={t("toggleLabel")}>
+      <ToggleGroupItem value="detail" asChild>
+        <Link href={detailHref} aria-current={mode === "detail" ? "page" : undefined}>
+          {t("detail")}
+        </Link>
+      </ToggleGroupItem>
+      <ToggleGroupItem value="graph" asChild>
+        <Link href={graphHref} aria-current={mode === "graph" ? "page" : undefined}>
+          {t("graph")}
+        </Link>
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
 export function DetailHeader({
   backHref,
   icon,
@@ -57,18 +85,7 @@ export function DetailHeader({
             {t("back")}
           </Link>
         </Button>
-        <ToggleGroup type="single" variant="outline" value={mode} aria-label={t("toggleLabel")}>
-          <ToggleGroupItem value="detail" asChild>
-            <Link href={detailHref} aria-current={mode === "detail" ? "page" : undefined}>
-              {t("detail")}
-            </Link>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="graph" asChild>
-            <Link href={graphHref} aria-current={mode === "graph" ? "page" : undefined}>
-              {t("graph")}
-            </Link>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <DetailGraphToggle mode={mode} detailHref={detailHref} graphHref={graphHref} />
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

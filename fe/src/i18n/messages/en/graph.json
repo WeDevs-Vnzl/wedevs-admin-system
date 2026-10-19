@@ -1,1 +1,160 @@
-{}
+{
+  "page": {
+    "title": "Graph",
+    "globalTitle": "Relationship graph",
+    "globalDescription": "Clients, projects and documents of the company and how they connect.",
+    "entityDescription": "{code} · {type}"
+  },
+  "types": {
+    "CLIENT": "Client",
+    "CONTACT": "Contact",
+    "PROJECT": "Project",
+    "INVOICE": "Invoice",
+    "PAYMENT": "Payment",
+    "EXPENSE": "Expense",
+    "ACCOUNT": "Account",
+    "DOCUMENT": "Document",
+    "NOTE": "Note",
+    "TECHNOLOGY": "Technology",
+    "TAG": "Tag"
+  },
+  "typesPlural": {
+    "CLIENT": "Clients",
+    "CONTACT": "Contacts",
+    "PROJECT": "Projects",
+    "INVOICE": "Invoices",
+    "PAYMENT": "Payments",
+    "EXPENSE": "Expenses",
+    "ACCOUNT": "Accounts",
+    "DOCUMENT": "Documents",
+    "NOTE": "Notes",
+    "TECHNOLOGY": "Technologies",
+    "TAG": "Tags"
+  },
+  "relations": {
+    "contacto": "Contact",
+    "participa": "Participates",
+    "facturado_a": "Billed to",
+    "incluido_en": "Included in",
+    "paga": "Pays",
+    "pago": "Payment from",
+    "acreditado_en": "Credited to",
+    "pagado_desde": "Paid from",
+    "imputado_a": "Charged to",
+    "adjunto_a": "Attached to",
+    "anotado_en": "Noted on",
+    "usa": "Uses",
+    "etiquetado": "Tagged"
+  },
+  "meta": {
+    "kind": "Kind",
+    "country": "Country",
+    "receivableUsd": "Receivable (USD)",
+    "position": "Position",
+    "email": "Email",
+    "stack": "Stack",
+    "startDate": "Start",
+    "targetEndDate": "Target end",
+    "currency": "Currency",
+    "total": "Total",
+    "balance": "Balance",
+    "dueDate": "Due date",
+    "amount": "Amount",
+    "date": "Date",
+    "method": "Method",
+    "accountType": "Account type",
+    "documentType": "Document type",
+    "version": "Version",
+    "author": "Author",
+    "excerpt": "Excerpt",
+    "category": "Category"
+  },
+  "toolbar": {
+    "label": "Graph tools",
+    "search": "Search in the graph",
+    "searchPlaceholder": "Search by name or code",
+    "searchSubmit": "Find",
+    "noMatch": "No node matches \"{query}\".",
+    "centeredOn": "Centered on {label}.",
+    "layout": "Layout",
+    "layouts": {
+      "radial": "Radial",
+      "hierarchical": "Hierarchical",
+      "force": "Force"
+    },
+    "focus": "Focus mode",
+    "clusters": "Group by client",
+    "export": "Export",
+    "exportPng": "Export as PNG",
+    "exportSvg": "Export as SVG",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "filters": "Filters",
+    "computing": "Arranging the graph…",
+    "loading": "Loading…"
+  },
+  "filters": {
+    "title": "Filters",
+    "types": "Node types",
+    "typeOption": "{type} ({count})",
+    "status": "Status",
+    "projectStatus": "Project status",
+    "tags": "Tags",
+    "technologies": "Technologies",
+    "clients": "Clients",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "archived": "Show archived",
+    "onlyActive": "Only active",
+    "clear": "Clear filters",
+    "noOptions": "Nothing to filter yet."
+  },
+  "node": {
+    "expand": "Expand {label}",
+    "collapse": "Collapse {label}",
+    "more": "+{count} more",
+    "moreLabel": "Load {count} more neighbors of {label}",
+    "archived": "Archived",
+    "root": "Starting point",
+    "pinned": "Pinned"
+  },
+  "panel": {
+    "title": "Selected node",
+    "close": "Close panel",
+    "openDetail": "Open detail",
+    "viewGraph": "View its graph",
+    "viewFromHere": "View from here",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "unpin": "Unpin",
+    "type": "Type",
+    "code": "Code",
+    "status": "Status",
+    "degree": "Relations",
+    "empty": "Select a node to see its details."
+  },
+  "list": {
+    "title": "Node list",
+    "description": "Keyboard alternative to the canvas: select a node to open its panel.",
+    "empty": "No nodes match the filters.",
+    "select": "Select {label}",
+    "loadMore": "Load {count} more neighbors of {label}"
+  },
+  "legend": {
+    "title": "Legend",
+    "more": "Aggregated neighbors",
+    "pinned": "Pinned node"
+  },
+  "stats": {
+    "title": "Statistics",
+    "nodes": "Nodes",
+    "edges": "Relations",
+    "mostConnected": "Most connected",
+    "connections": "{count, plural, one {# relation} other {# relations}}"
+  },
+  "errors": {
+    "load": "The graph could not be loaded.",
+    "expand": "The neighbors of this node could not be loaded.",
+    "export": "The graph could not be exported."
+  }
+}
