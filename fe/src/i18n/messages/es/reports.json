@@ -2,5 +2,203 @@
   "validation": {
     "customRangeRequired": "Indica las fechas del rango personalizado",
     "rangeInverted": "La fecha final no puede ser anterior a la inicial"
+  },
+  "page": {
+    "title": "Reportes y KPI",
+    "description": "La moneda de presentación es USD, a partir de los snapshots.",
+    "kpisTitle": "KPI",
+    "reportsTitle": "Reportes financieros",
+    "range": "Del {from} al {to}"
+  },
+  "filters": {
+    "label": "Rango de fechas",
+    "from": "Desde",
+    "to": "Hasta",
+    "presets": {
+      "THIS_MONTH": "Este mes",
+      "PREVIOUS_MONTH": "Mes anterior",
+      "QUARTER": "Trimestre",
+      "YEAR": "Año",
+      "LAST_12_MONTHS": "Últimos 12 meses",
+      "CUSTOM": "Personalizado"
+    }
+  },
+  "items": {
+    "reports": {
+      "COLLECTED_BY_MONTH": {
+        "title": "Ingresos cobrados por mes",
+        "description": "Asignaciones de pagos confirmados agrupadas por mes del pago (USD)"
+      },
+      "BILLED_VS_COLLECTED": {
+        "title": "Facturado frente a cobrado",
+        "description": "Totales mensuales en barras dobles"
+      },
+      "REVENUE_BY_CLIENT": {
+        "title": "Ingresos por cliente",
+        "description": "Ranking por cobrado y facturado"
+      },
+      "REVENUE_BY_PROJECT": {
+        "title": "Ingresos por proyecto",
+        "description": "Ranking por cobrado, con el margen"
+      },
+      "RECEIVABLES_AGING": {
+        "title": "Cuentas por cobrar y antigüedad",
+        "description": "Saldo por cliente en tramos de 0-30, 31-60, 61-90 y más de 90 días desde el vencimiento"
+      },
+      "EXPENSES_BY_MONTH_CATEGORY": {
+        "title": "Gastos por mes y por categoría",
+        "description": "Barras apiladas por categoría"
+      },
+      "NET_RESULT_MONTHLY": {
+        "title": "Resultado neto mensual",
+        "description": "Cobrado − gastos pagados"
+      },
+      "ACCOUNT_FLOW": {
+        "title": "Flujo por cuenta",
+        "description": "Entradas y salidas por cuenta y mes"
+      },
+      "COLLECTIONS_BY_METHOD": {
+        "title": "Cobros por método",
+        "description": "Distribución por método de pago"
+      },
+      "TAXES_REGISTERED": {
+        "title": "Impuestos registrados",
+        "description": "IVA facturado, retenciones sufridas e IGTF registrado por mes. Es informativo, no reemplaza la contabilidad."
+      }
+    },
+    "kpis": {
+      "MRR": {
+        "title": "MRR",
+        "description": "Σ cobros recurrentes activos normalizados a mes (trimestral ÷ 3, semestral ÷ 6, anual ÷ 12)"
+      },
+      "ARR": { "title": "ARR", "description": "MRR × 12" },
+      "DSO": {
+        "title": "DSO (días de cobro)",
+        "description": "(Cuentas por cobrar al cierre ÷ facturado en el periodo) × días del periodo"
+      },
+      "COLLECTION_RATE": {
+        "title": "Tasa de cobro",
+        "description": "Cobrado en el periodo ÷ facturado en el periodo"
+      },
+      "DELINQUENCY": {
+        "title": "Morosidad",
+        "description": "Saldo vencido ÷ cuentas por cobrar totales"
+      },
+      "PROJECT_MARGIN": {
+        "title": "Margen por proyecto",
+        "description": "(Cobrado − gastos imputados) ÷ cobrado"
+      },
+      "OPERATING_MARGIN": {
+        "title": "Margen operativo",
+        "description": "(Cobrado − gastos totales) ÷ cobrado"
+      },
+      "FIXED_MONTHLY_EXPENSE": {
+        "title": "Gasto fijo mensual",
+        "description": "Σ gastos recurrentes activos normalizados a mes"
+      },
+      "RUNWAY": {
+        "title": "Runway (meses)",
+        "description": "Saldo total en cuentas (USD) ÷ promedio de gasto mensual de los últimos 3 meses"
+      },
+      "REVENUE_CONCENTRATION": {
+        "title": "Concentración de ingresos",
+        "description": "% del cobrado en los últimos 12 meses que corresponde al top 1 y al top 3 de clientes"
+      },
+      "AVG_PROJECT_TICKET": {
+        "title": "Ticket promedio por proyecto",
+        "description": "Valor contratado medio de los proyectos iniciados en el periodo"
+      },
+      "CLIENT_LTV": {
+        "title": "LTV por cliente",
+        "description": "Cobrado histórico por cliente; también su promedio"
+      },
+      "NEW_CLIENTS": {
+        "title": "Nuevos clientes",
+        "description": "Clientes que pasaron a ACTIVO en el periodo"
+      },
+      "PROSPECT_CONVERSION": {
+        "title": "Conversión de prospectos",
+        "description": "Prospectos que pasaron a ACTIVO ÷ prospectos creados (en el periodo)"
+      },
+      "AVG_PROJECT_DURATION": {
+        "title": "Duración media de proyecto",
+        "description": "Promedio de (entrega real − inicio) de los proyectos entregados"
+      },
+      "ON_TIME_PROJECTS": {
+        "title": "Proyectos a tiempo",
+        "description": "% de proyectos entregados en o antes de la fecha estimada"
+      },
+      "STACK_USAGE": {
+        "title": "Uso del stack",
+        "description": "Número de proyectos por tecnología"
+      },
+      "DOCUMENT_COVERAGE": {
+        "title": "Cobertura documental",
+        "description": "% de proyectos activos con contrato FIRMADO y NDA vigente"
+      }
+    }
+  },
+  "kpi": {
+    "noData": "Sin datos",
+    "variation": "{change} frente al periodo anterior",
+    "noPrevious": "Sin periodo anterior",
+    "sparkline": "Últimos 12 meses",
+    "value": "Valor",
+    "previous": "Periodo anterior",
+    "breakdown": "Detalle"
+  },
+  "units": {
+    "PERCENT": "{value} %",
+    "DAYS": "{value} días",
+    "MONTHS": "{value} meses",
+    "COUNT": "{value}"
+  },
+  "columns": {
+    "period": "Mes",
+    "client": "Cliente",
+    "project": "Proyecto",
+    "account": "Cuenta",
+    "method": "Método",
+    "collected": "Cobrado",
+    "billed": "Facturado",
+    "margin": "Margen",
+    "marginPercent": "Margen (%)",
+    "d0_30": "0-30 días",
+    "d31_60": "31-60 días",
+    "d61_90": "61-90 días",
+    "d90plus": "Más de 90 días",
+    "total": "Total",
+    "net": "Resultado neto",
+    "inflow": "Entradas",
+    "outflow": "Salidas",
+    "share": "Participación (%)",
+    "ivaRate": "Alícuota de IVA",
+    "taxBase": "Base imponible",
+    "ivaAmount": "IVA facturado",
+    "ivaTotal": "IVA facturado",
+    "ivaWithheld": "Retención de IVA",
+    "islrWithheld": "Retención de ISLR",
+    "otherWithheld": "Otras retenciones",
+    "igtf": "IGTF registrado",
+    "value": "Valor",
+    "item": "Elemento"
+  },
+  "breakdown": {
+    "top1": "Top 1",
+    "top3": "Top 3"
+  },
+  "chart": {
+    "showData": "Ver tabla de datos",
+    "hideData": "Ocultar tabla de datos",
+    "exportCsv": "Exportar CSV",
+    "empty": "No hay datos en este rango"
+  },
+  "taxes": {
+    "byRate": "IVA facturado por alícuota",
+    "byMonth": "Impuestos por mes",
+    "rate": "IVA {rate} %"
+  },
+  "errors": {
+    "load": "No se pudieron cargar los datos del reporte"
   }
 }

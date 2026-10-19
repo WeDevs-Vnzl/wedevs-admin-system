@@ -5,10 +5,12 @@ import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import enCommon from "@/i18n/messages/en/common.json";
 import enNav from "@/i18n/messages/en/nav.json";
+import enReports from "@/i18n/messages/en/reports.json";
 import enSettings from "@/i18n/messages/en/settings.json";
 import enShell from "@/i18n/messages/en/shell.json";
 import esCommon from "@/i18n/messages/es/common.json";
 import esNav from "@/i18n/messages/es/nav.json";
+import esReports from "@/i18n/messages/es/reports.json";
 import esSettings from "@/i18n/messages/es/settings.json";
 import esShell from "@/i18n/messages/es/shell.json";
 import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
@@ -22,8 +24,8 @@ function renderAt(pathname: string, locale: "es" | "en" = "es", registration?: R
   mocks.pathname = pathname;
   const messages =
     locale === "es"
-      ? { common: esCommon, nav: esNav, settings: esSettings, shell: esShell }
-      : { common: enCommon, nav: enNav, settings: enSettings, shell: enShell };
+      ? { common: esCommon, nav: esNav, settings: esSettings, shell: esShell, reports: esReports }
+      : { common: enCommon, nav: enNav, settings: enSettings, shell: enShell, reports: enReports };
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
       <BreadcrumbLabelProvider>
@@ -74,6 +76,40 @@ describe("AppBreadcrumbs", () => {
       screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Otro")).not.toBeInTheDocument();
+  });
+
+  // Carried from H1-B2 (TASK.md:1989): a report page showed "Detalle" instead of its name.
+  it("names a report or KPI page after the report, not Detalle", () => {
+    renderAt("/reports/taxes-registered");
+    expect(screen.getByRole("link", { name: esNav.items.reports })).toHaveAttribute(
+      "href",
+      "/reports",
+    );
+    expect(
+      screen.getByText(esReports.items.reports.TAXES_REGISTERED.title, {
+        selector: "[aria-current='page']",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(esNav.segments.detail)).not.toBeInTheDocument();
+  });
+
+  it("names a KPI page after the KPI, in the current locale", () => {
+    renderAt("/reports/collection-rate", "en");
+    expect(
+      screen.getByText(enReports.items.kpis.COLLECTION_RATE.title, {
+        selector: "[aria-current='page']",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps Detalle for the same slug under any other section", () => {
+    renderAt("/clients/taxes-registered");
+    expect(
+      screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(esReports.items.reports.TAXES_REGISTERED.title),
+    ).not.toBeInTheDocument();
   });
 
   // D2 (wave 5 Tester): the separator <li> sat inside the item <li>; the HTML parser closes the outer item, so the

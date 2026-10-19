@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { findNavItem, SETTINGS_NAV_ITEM } from "@/config/nav";
 import { findSettingsSection } from "@/config/settings-nav";
+import { parseReportSlug, reportPageTitleKey } from "@/features/reports/report-catalog";
 
 interface Crumb {
   label: string;
@@ -23,12 +24,14 @@ interface Crumb {
 
 // Breadcrumbs of the topbar, derived from the route and the nav entry it belongs to (`nav.ts`). Segments
 // with a translated label under `nav.segments` use it. Any other segment is an id: it shows the label its
-// detail page registered (`BreadcrumbLabel`), or `nav.segments.detail` until one is registered.
+// detail page registered (`BreadcrumbLabel`), or `nav.segments.detail` until one is registered. Under /reports the
+// first segment is a report or KPI slug, labelled with its name from the `reports` namespace.
 export function AppBreadcrumbs() {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const tSettings = useTranslations("settings");
   const tShell = useTranslations("shell.breadcrumbs");
+  const tReports = useTranslations("reports");
   const registeredLabels = useBreadcrumbLabels();
   const pathname = usePathname();
 
@@ -46,6 +49,11 @@ export function AppBreadcrumbs() {
     href = `${href}/${segment}`;
     if (index === 0 && section) {
       crumbs.push({ label: tSettings(`nav.${section.labelKey}`), href });
+      continue;
+    }
+    const report = index === 0 && item?.key === "reports" ? parseReportSlug(segment) : null;
+    if (report) {
+      crumbs.push({ label: tReports(reportPageTitleKey(report)), href });
       continue;
     }
     const label = t.has(`segments.${segment}`)

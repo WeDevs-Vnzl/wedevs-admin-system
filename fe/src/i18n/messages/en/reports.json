@@ -2,5 +2,203 @@
   "validation": {
     "customRangeRequired": "Enter the dates of the custom range",
     "rangeInverted": "The end date cannot be before the start date"
+  },
+  "page": {
+    "title": "Reports and KPIs",
+    "description": "Figures are shown in USD, from the stored snapshots.",
+    "kpisTitle": "KPIs",
+    "reportsTitle": "Financial reports",
+    "range": "From {from} to {to}"
+  },
+  "filters": {
+    "label": "Date range",
+    "from": "From",
+    "to": "To",
+    "presets": {
+      "THIS_MONTH": "This month",
+      "PREVIOUS_MONTH": "Previous month",
+      "QUARTER": "Quarter",
+      "YEAR": "Year",
+      "LAST_12_MONTHS": "Last 12 months",
+      "CUSTOM": "Custom"
+    }
+  },
+  "items": {
+    "reports": {
+      "COLLECTED_BY_MONTH": {
+        "title": "Revenue collected by month",
+        "description": "Confirmed payment allocations grouped by payment month (USD)"
+      },
+      "BILLED_VS_COLLECTED": {
+        "title": "Billed vs collected",
+        "description": "Monthly totals in double bars"
+      },
+      "REVENUE_BY_CLIENT": {
+        "title": "Revenue by client",
+        "description": "Ranking by collected and billed"
+      },
+      "REVENUE_BY_PROJECT": {
+        "title": "Revenue by project",
+        "description": "Ranking by collected, with the margin"
+      },
+      "RECEIVABLES_AGING": {
+        "title": "Receivables and aging",
+        "description": "Balance per client in 0-30, 31-60, 61-90 and over 90 days past due"
+      },
+      "EXPENSES_BY_MONTH_CATEGORY": {
+        "title": "Expenses by month and category",
+        "description": "Bars stacked by category"
+      },
+      "NET_RESULT_MONTHLY": {
+        "title": "Monthly net result",
+        "description": "Collected − paid expenses"
+      },
+      "ACCOUNT_FLOW": {
+        "title": "Flow by account",
+        "description": "Inflows and outflows by account and month"
+      },
+      "COLLECTIONS_BY_METHOD": {
+        "title": "Collections by method",
+        "description": "Distribution by payment method"
+      },
+      "TAXES_REGISTERED": {
+        "title": "Taxes registered",
+        "description": "VAT billed, withholdings suffered and IGTF recorded by month. Informative only; it does not replace the accounting."
+      }
+    },
+    "kpis": {
+      "MRR": {
+        "title": "MRR",
+        "description": "Σ active recurring charges normalized to a month (quarterly ÷ 3, semiannual ÷ 6, annual ÷ 12)"
+      },
+      "ARR": { "title": "ARR", "description": "MRR × 12" },
+      "DSO": {
+        "title": "DSO (days sales outstanding)",
+        "description": "(Receivables at close ÷ billed in the period) × days in the period"
+      },
+      "COLLECTION_RATE": {
+        "title": "Collection rate",
+        "description": "Collected in the period ÷ billed in the period"
+      },
+      "DELINQUENCY": {
+        "title": "Delinquency",
+        "description": "Overdue balance ÷ total receivables"
+      },
+      "PROJECT_MARGIN": {
+        "title": "Margin per project",
+        "description": "(Collected − allocated expenses) ÷ collected"
+      },
+      "OPERATING_MARGIN": {
+        "title": "Operating margin",
+        "description": "(Collected − total expenses) ÷ collected"
+      },
+      "FIXED_MONTHLY_EXPENSE": {
+        "title": "Fixed monthly expense",
+        "description": "Σ active recurring expenses normalized to a month"
+      },
+      "RUNWAY": {
+        "title": "Runway (months)",
+        "description": "Total account balance (USD) ÷ average monthly expense of the last 3 months"
+      },
+      "REVENUE_CONCENTRATION": {
+        "title": "Revenue concentration",
+        "description": "% of the amount collected in the last 12 months that comes from the top 1 and top 3 clients"
+      },
+      "AVG_PROJECT_TICKET": {
+        "title": "Average ticket per project",
+        "description": "Average contracted value of the projects started in the period"
+      },
+      "CLIENT_LTV": {
+        "title": "LTV per client",
+        "description": "Historical amount collected per client; also its average"
+      },
+      "NEW_CLIENTS": {
+        "title": "New clients",
+        "description": "Clients that became ACTIVO in the period"
+      },
+      "PROSPECT_CONVERSION": {
+        "title": "Prospect conversion",
+        "description": "Prospects that became ACTIVO ÷ prospects created (in the period)"
+      },
+      "AVG_PROJECT_DURATION": {
+        "title": "Average project duration",
+        "description": "Average of (actual delivery − start) of the delivered projects"
+      },
+      "ON_TIME_PROJECTS": {
+        "title": "On-time projects",
+        "description": "% of projects delivered on or before the estimated date"
+      },
+      "STACK_USAGE": {
+        "title": "Stack usage",
+        "description": "Number of projects per technology"
+      },
+      "DOCUMENT_COVERAGE": {
+        "title": "Document coverage",
+        "description": "% of active projects with a FIRMADO contract and a current NDA"
+      }
+    }
+  },
+  "kpi": {
+    "noData": "No data",
+    "variation": "{change} vs the previous period",
+    "noPrevious": "No previous period",
+    "sparkline": "Last 12 months",
+    "value": "Value",
+    "previous": "Previous period",
+    "breakdown": "Breakdown"
+  },
+  "units": {
+    "PERCENT": "{value}%",
+    "DAYS": "{value} days",
+    "MONTHS": "{value} months",
+    "COUNT": "{value}"
+  },
+  "columns": {
+    "period": "Month",
+    "client": "Client",
+    "project": "Project",
+    "account": "Account",
+    "method": "Method",
+    "collected": "Collected",
+    "billed": "Billed",
+    "margin": "Margin",
+    "marginPercent": "Margin (%)",
+    "d0_30": "0-30 days",
+    "d31_60": "31-60 days",
+    "d61_90": "61-90 days",
+    "d90plus": "Over 90 days",
+    "total": "Total",
+    "net": "Net result",
+    "inflow": "Inflows",
+    "outflow": "Outflows",
+    "share": "Share (%)",
+    "ivaRate": "VAT rate",
+    "taxBase": "Taxable base",
+    "ivaAmount": "VAT billed",
+    "ivaTotal": "VAT billed",
+    "ivaWithheld": "VAT withheld",
+    "islrWithheld": "ISLR withheld",
+    "otherWithheld": "Other withholdings",
+    "igtf": "IGTF recorded",
+    "value": "Value",
+    "item": "Item"
+  },
+  "breakdown": {
+    "top1": "Top 1",
+    "top3": "Top 3"
+  },
+  "chart": {
+    "showData": "Show data table",
+    "hideData": "Hide data table",
+    "exportCsv": "Export CSV",
+    "empty": "No data in this range"
+  },
+  "taxes": {
+    "byRate": "VAT billed per rate",
+    "byMonth": "Taxes by month",
+    "rate": "VAT {rate}%"
+  },
+  "errors": {
+    "load": "The report data could not be loaded"
   }
 }
