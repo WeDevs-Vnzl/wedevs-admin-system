@@ -1,4 +1,77 @@
 {
+  "page": {
+    "title": "Home",
+    "greeting": "{part, select, morning {Good morning} afternoon {Good afternoon} other {Good evening}}, {name}",
+    "summary": "Studio summary",
+    "currencyNote": "Every figure is in USD from the snapshots stored on each record.",
+    "export": "Export",
+    "exportFilename": "dashboard-{period}.csv"
+  },
+  "period": {
+    "label": "Period",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year"
+  },
+  "kpis": {
+    "label": "Indicators",
+    "COLLECTED_MONTH": "Collected this {period, select, quarter {quarter} year {year} other {month}}",
+    "BILLED_MONTH": "Billed this {period, select, quarter {quarter} year {year} other {month}}",
+    "RECEIVABLE": "Accounts receivable",
+    "EXPENSES_MONTH": "Expenses this {period, select, quarter {quarter} year {year} other {month}}",
+    "RESULT_MONTH": "Result this {period, select, quarter {quarter} year {year} other {month}}",
+    "ACCOUNTS_BALANCE": "Total balance in accounts",
+    "MRR": "MRR",
+    "ACTIVE_PROJECTS": "Active projects",
+    "overdue": "{amount} overdue",
+    "change": "{percent} vs. previous {period, select, quarter {quarter} year {year} other {month}}",
+    "previousZero": "{amount} in the previous {period, select, quarter {quarter} year {year} other {month}}",
+    "csvCard": "Indicator",
+    "csvValue": "Value",
+    "csvPrevious": "Previous period",
+    "csvChange": "Change (%)"
+  },
+  "chart": {
+    "title": "Income vs expenses over the last 12 months",
+    "mrr": "MRR {amount}",
+    "income": "Income",
+    "expenses": "Expenses",
+    "month": "Month",
+    "showData": "Show data",
+    "hideData": "Hide data",
+    "exportCsv": "Export CSV",
+    "filename": "income-expenses-{month}.csv"
+  },
+  "panels": {
+    "invoicesDue": {
+      "title": "Overdue and soon-due invoices (top 5)",
+      "empty": "No overdue or soon-due invoices",
+      "overdue": "Overdue by {days, plural, one {# day} other {# days}}",
+      "dueIn": "{days, plural, =0 {Due today} one {Due in # day} other {Due in # days}}"
+    },
+    "installments": {
+      "title": "Installments to invoice (next 30 days)",
+      "empty": "No installments to invoice",
+      "noDate": "No date"
+    },
+    "documents": {
+      "title": "Documents expiring (next 30 days)",
+      "empty": "No documents expiring",
+      "daysLeft": "{days, plural, =0 {Expires today} one {Expires in # day} other {Expires in # days}}"
+    },
+    "recurring": {
+      "title": "Upcoming recurring expenses",
+      "empty": "No upcoming recurring expenses"
+    },
+    "activity": {
+      "title": "Recent activity (last 15 events)",
+      "empty": "No recent activity",
+      "system": "System"
+    }
+  },
+  "alerts": {
+    "title": "Alerts"
+  },
   "validation": {
     "invalidMonth": "Invalid month (use YYYY-MM)",
     "seriesLengthMismatch": "The series does not have one value per period"

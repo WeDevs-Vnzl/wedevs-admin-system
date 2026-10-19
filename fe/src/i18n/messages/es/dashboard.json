@@ -1,4 +1,77 @@
 {
+  "page": {
+    "title": "Inicio",
+    "greeting": "{part, select, morning {Buenos días} afternoon {Buenas tardes} other {Buenas noches}}, {name}",
+    "summary": "Resumen del estudio",
+    "currencyNote": "Todas las cifras se expresan en USD a partir de los snapshots guardados en cada registro.",
+    "export": "Exportar",
+    "exportFilename": "dashboard-{period}.csv"
+  },
+  "period": {
+    "label": "Periodo",
+    "month": "Mes",
+    "quarter": "Trimestre",
+    "year": "Año"
+  },
+  "kpis": {
+    "label": "Indicadores",
+    "COLLECTED_MONTH": "Cobrado en {period, select, quarter {el trimestre} year {el año} other {el mes}}",
+    "BILLED_MONTH": "Facturado en {period, select, quarter {el trimestre} year {el año} other {el mes}}",
+    "RECEIVABLE": "Cuentas por cobrar",
+    "EXPENSES_MONTH": "Gastos del {period, select, quarter {trimestre} year {año} other {mes}}",
+    "RESULT_MONTH": "Resultado del {period, select, quarter {trimestre} year {año} other {mes}}",
+    "ACCOUNTS_BALANCE": "Saldo total en cuentas",
+    "MRR": "MRR",
+    "ACTIVE_PROJECTS": "Proyectos activos",
+    "overdue": "{amount} vencido",
+    "change": "{percent} vs. {period, select, quarter {trimestre anterior} year {año anterior} other {mes anterior}}",
+    "previousZero": "{amount} en el {period, select, quarter {trimestre anterior} year {año anterior} other {mes anterior}}",
+    "csvCard": "Indicador",
+    "csvValue": "Valor",
+    "csvPrevious": "Periodo anterior",
+    "csvChange": "Variación (%)"
+  },
+  "chart": {
+    "title": "Ingresos frente a gastos de los últimos 12 meses",
+    "mrr": "MRR {amount}",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "month": "Mes",
+    "showData": "Ver datos",
+    "hideData": "Ocultar datos",
+    "exportCsv": "Exportar CSV",
+    "filename": "ingresos-gastos-{month}.csv"
+  },
+  "panels": {
+    "invoicesDue": {
+      "title": "Facturas vencidas y por vencer (top 5)",
+      "empty": "No hay facturas vencidas ni por vencer",
+      "overdue": "Vencida hace {days, plural, one {# día} other {# días}}",
+      "dueIn": "{days, plural, =0 {Vence hoy} one {Vence en # día} other {Vence en # días}}"
+    },
+    "installments": {
+      "title": "Cuotas por facturar (próximos 30 días)",
+      "empty": "No hay cuotas por facturar",
+      "noDate": "Sin fecha"
+    },
+    "documents": {
+      "title": "Documentos por vencer (próximos 30 días)",
+      "empty": "No hay documentos por vencer",
+      "daysLeft": "{days, plural, =0 {Vence hoy} one {Vence en # día} other {Vence en # días}}"
+    },
+    "recurring": {
+      "title": "Gastos recurrentes próximos",
+      "empty": "No hay gastos recurrentes próximos"
+    },
+    "activity": {
+      "title": "Actividad reciente (últimos 15 eventos)",
+      "empty": "Sin actividad reciente",
+      "system": "Sistema"
+    }
+  },
+  "alerts": {
+    "title": "Alertas"
+  },
   "validation": {
     "invalidMonth": "Mes no válido (usa AAAA-MM)",
     "seriesLengthMismatch": "La serie no tiene un valor por periodo"
