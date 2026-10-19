@@ -4,6 +4,7 @@ export * from "./accounts";
 export * from "./installments";
 export * from "./invoice-status";
 export * from "./invoice-totals";
+export * from "./kpis";
 export * from "./payments";
 export * from "./project-summary";
 export * from "./recurring";
