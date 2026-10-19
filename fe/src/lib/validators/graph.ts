@@ -103,6 +103,8 @@ export type GraphEdge = z.infer<typeof graphEdgeSchema>;
 export const graphTruncatedSchema = z.object({
   nodeId: z.string(),
   remaining: z.number().int().positive(),
+  /** Pass to `expandNode({ nodeId, cursor })` to load the next page. */
+  cursor: z.string().min(1).max(256),
 });
 export type GraphTruncated = z.infer<typeof graphTruncatedSchema>;
 
@@ -131,13 +133,14 @@ export const getEntityGraphInputSchema = z.object({
 export type GetEntityGraphInput = z.infer<typeof getEntityGraphInputSchema>;
 
 /**
- * `expandNode({ nodeId, include?, cursor? })`: neighbours of one node, at most `GRAPH_EXPANSION_LIMIT`;
- * `cursor` (from the "+N more" node) loads the next page.
+ * `expandNode({ nodeId, include?, cursor?, includeArchived? })`: neighbours of one node, at most
+ * `GRAPH_EXPANSION_LIMIT`; `cursor` (from the "+N more" node) loads the next page.
  */
 export const expandNodeInputSchema = z.object({
   nodeId: graphNodeIdSchema,
   include: includeSchema.optional(),
   cursor: z.string().min(1).max(256).optional(),
+  includeArchived: z.boolean().optional(),
 });
 export type ExpandNodeInput = z.infer<typeof expandNodeInputSchema>;
 

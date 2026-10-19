@@ -83,7 +83,7 @@ describe("§8.12.5 data contract", () => {
       graphResponseSchema.safeParse({
         nodes: [node],
         edges: [edge],
-        truncated: [{ nodeId: "CLIENT:cli_1", remaining: 12 }],
+        truncated: [{ nodeId: "CLIENT:cli_1", remaining: 12, cursor: "50" }],
       }).success,
     ).toBe(true);
     expect(graphResponseSchema.safeParse({ nodes: [], edges: [] }).success).toBe(false);
@@ -91,7 +91,14 @@ describe("§8.12.5 data contract", () => {
       graphResponseSchema.safeParse({
         nodes: [],
         edges: [],
-        truncated: [{ nodeId: "x", remaining: 0 }],
+        truncated: [{ nodeId: "x", remaining: 0, cursor: "50" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      graphResponseSchema.safeParse({
+        nodes: [],
+        edges: [],
+        truncated: [{ nodeId: "x", remaining: 3 }],
       }).success,
     ).toBe(false);
   });
