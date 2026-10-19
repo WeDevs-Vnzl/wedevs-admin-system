@@ -90,6 +90,18 @@ export type SnoozeAlertInput = z.infer<typeof snoozeAlertInputSchema>;
 export const restoreAlertInputSchema = z.object({ alertKey: alertKeySchema });
 export type RestoreAlertInput = z.infer<typeof restoreAlertInputSchema>;
 
+/** Longest batch `markAlertsRead` accepts (the bell panel marks what it lists). */
+export const ALERT_MAX_MARK_READ = 200;
+
+/**
+ * `markAlertsRead` (A2, "Marcar leídas"): marks these alerts read for the current user. A read alert stays
+ * listed; only the unread counter of the bell leaves it out. Stored next to `AlertDismissal` in H2-B6.
+ */
+export const markAlertsReadInputSchema = z.object({
+  alertKeys: z.array(alertKeySchema).min(1).max(ALERT_MAX_MARK_READ),
+});
+export type MarkAlertsReadInput = z.infer<typeof markAlertsReadInputSchema>;
+
 // ───────────────────────────── DTOs ─────────────────────────────
 
 export const alertSchema = z.object({
@@ -117,6 +129,20 @@ export const alertsSummarySchema = z.object({
 });
 export type AlertsSummaryDTO = z.infer<typeof alertsSummarySchema>;
 
+/**
+ * The summary plus the per-user read state (A2): `unread` is the bell counter (active alerts not marked
+ * read, not capped by `limit`) and `readKeys` the active alerts already read. Assignable to the summary.
+ */
+export const alertsInboxSchema = alertsSummarySchema.extend({
+  unread: z.number().int().nonnegative(),
+  readKeys: z.array(alertKeySchema),
+});
+export type AlertsInboxDTO = z.infer<typeof alertsInboxSchema>;
+
+/** Output of `markAlertsRead`: the keys now marked read. */
+export const alertsReadResultSchema = z.object({ alertKeys: z.array(alertKeySchema) });
+export type AlertsReadResultDTO = z.infer<typeof alertsReadResultSchema>;
+
 /** Output of `dismissAlert`, `snoozeAlert` and `restoreAlert`. */
 export const alertDismissalSchema = z.object({
   alertKey: alertKeySchema,
@@ -137,4 +163,6 @@ export type AlertsService<Ctx = unknown> = {
   dismissAlert: (ctx: Ctx, input: DismissAlertInput) => Promise<AlertDismissalDTO>;
   snoozeAlert: (ctx: Ctx, input: SnoozeAlertInput) => Promise<AlertDismissalDTO>;
   restoreAlert: (ctx: Ctx, input: RestoreAlertInput) => Promise<AlertDismissalDTO>;
+  /** A2: per-user read mark; the alert stays listed. */
+  markAlertsRead: (ctx: Ctx, input: MarkAlertsReadInput) => Promise<AlertsReadResultDTO>;
 };

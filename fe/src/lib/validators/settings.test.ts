@@ -10,6 +10,8 @@ import {
   isAllowedIvaRate,
   sameRate,
   settingsDtoSchema,
+  updateCompanySettingsInputSchema,
+  type CompanySettingsService,
 } from "./settings";
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -100,5 +102,20 @@ describe("company settings", () => {
       fiscal: {},
     });
     expect(dto.fiscal.ivaRates).toEqual(["16", "8", "0"]);
+  });
+});
+
+describe("CompanySettingsService (A1)", () => {
+  it("declares getCompanySettings and updateCompanySettings", () => {
+    const names = [
+      "getCompanySettings",
+      "updateCompanySettings",
+    ] as const satisfies readonly (keyof CompanySettingsService)[];
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("the update input is still the company schema (name required, logo optional)", () => {
+    expect(updateCompanySettingsInputSchema.safeParse({ name: "WeDevs" }).success).toBe(true);
+    expect(updateCompanySettingsInputSchema.safeParse({ name: "" }).success).toBe(false);
   });
 });

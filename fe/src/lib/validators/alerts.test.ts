@@ -8,10 +8,14 @@ import {
   alertsSummarySchema,
   buildAlertKey,
   dismissAlertInputSchema,
+  alertsInboxSchema,
+  alertsReadResultSchema,
   listAlertsInputSchema,
+  markAlertsReadInputSchema,
   parseAlertKey,
   restoreAlertInputSchema,
   snoozeAlertInputSchema,
+  type AlertsService,
 } from "./alerts";
 
 describe("alert types (PRD §7.9)", () => {
@@ -142,5 +146,46 @@ describe("DTOs", () => {
         active: false,
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("mark as read (A2)", () => {
+  it("takes one to 200 valid alert keys", () => {
+    expect(
+      markAlertsReadInputSchema.safeParse({ alertKeys: ["INVOICE_OVERDUE:inv_1"] }).success,
+    ).toBe(true);
+    expect(markAlertsReadInputSchema.safeParse({ alertKeys: [] }).success).toBe(false);
+    expect(markAlertsReadInputSchema.safeParse({ alertKeys: ["NOPE:x"] }).success).toBe(false);
+    const many = Array.from({ length: 201 }, (_, i) => `INVOICE_OVERDUE:inv_${i}`);
+    expect(markAlertsReadInputSchema.safeParse({ alertKeys: many }).success).toBe(false);
+  });
+
+  it("the inbox extends the summary with the unread counter and the read keys", () => {
+    const summary = { total: 1, byType: { INVOICE_OVERDUE: 1 }, items: [] };
+    expect(
+      alertsInboxSchema.safeParse({ ...summary, unread: 0, readKeys: ["INVOICE_OVERDUE:inv_1"] })
+        .success,
+    ).toBe(true);
+    expect(alertsInboxSchema.safeParse({ ...summary, unread: -1, readKeys: [] }).success).toBe(
+      false,
+    );
+    expect(alertsSummarySchema.safeParse(summary).success).toBe(true);
+  });
+
+  it("the result lists the keys marked read", () => {
+    expect(
+      alertsReadResultSchema.safeParse({ alertKeys: ["MISSING_RATE:VES:2026-10-09"] }).success,
+    ).toBe(true);
+  });
+
+  it("AlertsService keeps its four services and adds markAlertsRead", () => {
+    const names = [
+      "listAlerts",
+      "dismissAlert",
+      "snoozeAlert",
+      "restoreAlert",
+      "markAlertsRead",
+    ] as const satisfies readonly (keyof AlertsService)[];
+    expect(new Set(names).size).toBe(5);
   });
 });

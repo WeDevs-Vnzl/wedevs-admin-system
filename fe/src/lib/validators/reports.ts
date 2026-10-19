@@ -291,3 +291,14 @@ export const kpiResultDtoSchema = z.object({
     .optional(),
 });
 export type KpiResultDTO = z.infer<typeof kpiResultDtoSchema>;
+
+// ───────────────────────────── Services ─────────────────────────────
+
+/**
+ * Reports and KPI services (A1; PRD §8.13, Owner/Admin). Every service is `fn(ctx, input) → Promise<DTO>`
+ * (C9, C11); presets resolve from `ctx.now` in `America/Caracas`.
+ */
+export type ReportsService<Ctx = unknown> = {
+  getReport: (ctx: Ctx, input: GetReportInput) => Promise<ReportResult>;
+  getKpi: (ctx: Ctx, input: GetKpiInput) => Promise<KpiResultDTO>;
+};

@@ -14,7 +14,7 @@ import {
   makeTestContext as makeSeededContext,
 } from "../test-helpers";
 import * as alertsService from "./alerts";
-import { dismissAlert, listAlerts, restoreAlert, snoozeAlert } from "./alerts";
+import { dismissAlert, listAlerts, markAlertsRead, restoreAlert, snoozeAlert } from "./alerts";
 
 // These cases pin the rules over their own finance rows (or none), written before the H1-B3 seed: every
 // context starts without the seeded billing, invoice, payment and expense records.
@@ -383,6 +383,57 @@ describe("dismiss, snooze, restore", () => {
     });
     expect(await types(h, ["INVOICE_OVERDUE"])).toEqual(["INVOICE_OVERDUE"]);
     expect(h.db.alertDismissals).toMatchObject([{ userId: "usr_other" }]);
+  });
+});
+
+describe("mark as read (A2)", () => {
+  const overdue = "INVOICE_OVERDUE:a";
+  const dueSoon = "INVOICE_DUE_SOON:b";
+  const setup = () => {
+    const h = makeTestContext("OWNER");
+    h.db.invoices.push(invoice("a", -1, { status: "VENCIDA" }), invoice("b", 2));
+    return h;
+  };
+  const only = ["INVOICE_OVERDUE", "INVOICE_DUE_SOON"] as AlertType[];
+
+  it("starts with every active alert unread", async () => {
+    const h = setup();
+    const inbox = await listAlerts(h.ctx, { types: only, limit: 50 });
+    expect(inbox).toMatchObject({ total: 2, unread: 2, readKeys: [] });
+  });
+
+  it("a read alert stays listed but leaves the unread counter, per user", async () => {
+    const h = setup();
+    expect(await markAlertsRead(h.ctx, { alertKeys: [overdue] })).toEqual({ alertKeys: [overdue] });
+    const inbox = await listAlerts(h.ctx, { types: only, limit: 50 });
+    expect(inbox.items.map((item) => item.alertKey).sort()).toEqual([dueSoon, overdue].sort());
+    expect(inbox).toMatchObject({ total: 2, unread: 1, readKeys: [overdue] });
+    const other = { ...h.ctx, user: { ...h.user, id: "usr_other" } };
+    expect(await listAlerts(other, { types: only, limit: 50 })).toMatchObject({
+      unread: 2,
+      readKeys: [],
+    });
+    expect(h.db.alertDismissals).toEqual([]);
+  });
+
+  it("marking twice is idempotent and a dismissed read alert counts nowhere", async () => {
+    const h = setup();
+    await markAlertsRead(h.ctx, { alertKeys: [overdue, overdue] });
+    await markAlertsRead(h.ctx, { alertKeys: [overdue] });
+    await dismissAlert(h.ctx, { alertKey: overdue });
+    expect(await listAlerts(h.ctx, { types: only, limit: 50 })).toMatchObject({
+      total: 1,
+      unread: 1,
+      readKeys: [],
+    });
+  });
+
+  it("keeps the summary fields as before (total, byType, capped items)", async () => {
+    const h = setup();
+    const inbox = await listAlerts(h.ctx, { types: only, limit: 1 });
+    expect(inbox.total).toBe(2);
+    expect(inbox.byType).toEqual({ INVOICE_OVERDUE: 1, INVOICE_DUE_SOON: 1 });
+    expect(inbox.items).toHaveLength(1);
   });
 });
 

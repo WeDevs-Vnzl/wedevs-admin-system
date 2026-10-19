@@ -52,6 +52,15 @@ export type CompanySettings = z.infer<typeof companySettingsSchema>;
 export const updateCompanySettingsInputSchema = companySettingsSchema;
 export type UpdateCompanySettingsInput = CompanySettings;
 
+/**
+ * Company settings services (A1; PRD §8.15 "Empresa"). Every service is `fn(ctx, input) → Promise<DTO>`
+ * (C9, C11); the read takes no input, like the fiscal one.
+ */
+export type CompanySettingsService<Ctx = unknown> = {
+  getCompanySettings: (ctx: Ctx) => Promise<CompanySettings>;
+  updateCompanySettings: (ctx: Ctx, input: UpdateCompanySettingsInput) => Promise<CompanySettings>;
+};
+
 // ───────────────────────────── Fiscal ─────────────────────────────
 
 const ivaRatesSchema = z

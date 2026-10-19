@@ -10,6 +10,8 @@
 //   payment to verify         age > 2 days (3 is in)          unallocated credit       age > 15 days (16 is in)
 //   missing rate              business day with no VES rate dated today
 // Payment age counts from the payment's business `date`. Items are ordered by urgency (fewest days first).
+// Read marks (A2, "Marcar leídas") live in memory per store and user: a read alert stays listed and only
+// leaves the `unread` counter; H2-B6 persists them next to `AlertDismissal`.
 import { daysBetween, isBusinessDay, todayInCaracas } from "@/lib/dates";
 import { compareMoney } from "@/lib/money";
 import {
@@ -18,9 +20,11 @@ import {
   type AlertDTO,
   type AlertDismissalDTO,
   type AlertType,
-  type AlertsSummaryDTO,
+  type AlertsInboxDTO,
+  type AlertsReadResultDTO,
   type DismissAlertInput,
   type ListAlertsInput,
+  type MarkAlertsReadInput,
   type RestoreAlertInput,
   type SnoozeAlertInput,
 } from "@/lib/validators/alerts";
@@ -29,6 +33,7 @@ import type { EntityRef } from "@/lib/validators/common";
 import { can, canSeeFinancials } from "@/server/auth/permissions";
 import type { MockServiceContext } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";
+import type { MockStore } from "../store";
 
 const INVOICE_DUE_SOON_DAYS = 7;
 const INSTALLMENT_DUE_DAYS = 7;
@@ -236,13 +241,24 @@ const TYPE_ORDER = new Map<AlertType, number>(
   ALERT_TYPE_VALUES.map((type, index) => [type, index]),
 );
 
+/** Read alert keys per store and user (A2); a rebuilt store starts with none. */
+const readMarks = new WeakMap<MockStore, Map<string, Set<string>>>();
+
+function readKeysOf(ctx: MockServiceContext): Set<string> {
+  let byUser = readMarks.get(ctx.db);
+  if (!byUser) readMarks.set(ctx.db, (byUser = new Map()));
+  let keys = byUser.get(ctx.user.id);
+  if (!keys) byUser.set(ctx.user.id, (keys = new Set()));
+  return keys;
+}
+
 /** `ListAlertsInput` with `types` optional, so `{ limit: 1 }` (the shell counter) is a valid call. */
 type ListAlertsArgs = Pick<ListAlertsInput, "limit"> & { types?: ListAlertsInput["types"] };
 
 export async function listAlerts(
   ctx: MockServiceContext,
   input: ListAlertsArgs,
-): Promise<AlertsSummaryDTO> {
+): Promise<AlertsInboxDTO> {
   const allowed = visibleTypes(ctx);
   const wanted = input.types?.length ? new Set(input.types) : null;
   const types = new Set([...allowed].filter((type) => !wanted || wanted.has(type)));
@@ -255,9 +271,28 @@ export async function listAlerts(
         (TYPE_ORDER.get(a.type) ?? 0) - (TYPE_ORDER.get(b.type) ?? 0) ||
         a.alertKey.localeCompare(b.alertKey),
     );
-  const byType: AlertsSummaryDTO["byType"] = {};
+  const byType: AlertsInboxDTO["byType"] = {};
   for (const alert of alerts) byType[alert.type] = (byType[alert.type] ?? 0) + 1;
-  return { total: alerts.length, byType, items: alerts.slice(0, input.limit) };
+  const read = readKeysOf(ctx);
+  const readKeys = alerts.map((alert) => alert.alertKey).filter((key) => read.has(key));
+  return {
+    total: alerts.length,
+    byType,
+    items: alerts.slice(0, input.limit),
+    unread: alerts.length - readKeys.length,
+    readKeys,
+  };
+}
+
+/** Marks the alerts read for the current user (idempotent); they stay listed (A2). */
+export async function markAlertsRead(
+  ctx: MockServiceContext,
+  input: MarkAlertsReadInput,
+): Promise<AlertsReadResultDTO> {
+  const read = readKeysOf(ctx);
+  const alertKeys = [...new Set(input.alertKeys)];
+  for (const key of alertKeys) read.add(key);
+  return { alertKeys };
 }
 
 function upsertDismissal(
