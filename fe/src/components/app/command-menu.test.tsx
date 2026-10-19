@@ -2,20 +2,55 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import enEnums from "@/i18n/messages/en/enums.json";
 import enNav from "@/i18n/messages/en/nav.json";
 import enSearch from "@/i18n/messages/en/search.json";
+import esEnums from "@/i18n/messages/es/enums.json";
 import esNav from "@/i18n/messages/es/nav.json";
 import esSearch from "@/i18n/messages/es/search.json";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { searchGlobalAction } from "@/features/search/actions";
+import { searchGlobalInputSchema } from "@/lib/validators/search";
+import { searchGlobal } from "@/mocks/services/search";
+import { makeTestContext } from "@/mocks/test-helpers";
 import type { SessionUser } from "@/server/auth/types";
+import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
 import { CommandMenu } from "./command-menu";
 
 const push = vi.fn();
+const nav = vi.hoisted(() => ({ pathname: "/dashboard" }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => nav.pathname,
   useRouter: () => ({ push, refresh: vi.fn() }),
 }));
+vi.mock("@/features/search/actions", () => ({ searchGlobalAction: vi.fn() }));
+
+// The real mock search over a fixture store with the HU-26 records added: "Talleres García",
+// "Grupo Inversión" and an invoice coded FAC-0012.
+function seedSearch() {
+  const { ctx, db } = makeTestContext("OWNER");
+  const base = db.clients.find((row) => !row.archivedAt)!;
+  for (const [id, name] of [
+    ["cli_garcia", "Talleres García"],
+    ["cli_inversion", "Grupo Inversión"],
+  ] as const) {
+    db.clients.push({
+      ...structuredClone(base),
+      id,
+      code: `CLI-9${db.clients.length}`,
+      tradeName: name,
+      legalName: `${name} C.A.`,
+    });
+  }
+  const invoice = db.invoices.find((row) => row.code === "FAC-0003")!;
+  db.invoices.push({ ...structuredClone(invoice), id: "inv_twelve", code: "FAC-0012" });
+  vi.mocked(searchGlobalAction).mockImplementation((async (input: unknown) => ({
+    ok: true,
+    data: await searchGlobal(ctx, searchGlobalInputSchema.parse(input)),
+  })) as never);
+  return { db, invoice };
+}
 
 function userWithRole(role: SessionUser["role"]): SessionUser {
   return {
@@ -29,13 +64,22 @@ function userWithRole(role: SessionUser["role"]): SessionUser {
   };
 }
 
-function renderMenu(role: SessionUser["role"], locale: "en" | "es" = "en") {
+function renderMenu(
+  role: SessionUser["role"],
+  locale: "en" | "es" = "en",
+  extra: React.ReactNode = null,
+) {
   const messages =
-    locale === "es" ? { nav: esNav, search: esSearch } : { nav: enNav, search: enSearch };
+    locale === "es"
+      ? { nav: esNav, search: esSearch, enums: esEnums }
+      : { nav: enNav, search: enSearch, enums: enEnums };
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
       <TooltipProvider>
-        <CommandMenu user={userWithRole(role)} />
+        <BreadcrumbLabelProvider>
+          {extra}
+          <CommandMenu user={userWithRole(role)} />
+        </BreadcrumbLabelProvider>
       </TooltipProvider>
     </NextIntlClientProvider>,
   );
@@ -59,6 +103,9 @@ describe("CommandMenu", () => {
 
   beforeEach(() => {
     push.mockClear();
+    nav.pathname = "/dashboard";
+    window.localStorage.clear();
+    seedSearch();
   });
 
   it("opens with Ctrl+K and Cmd+K and closes on a second Ctrl+K", async () => {
@@ -159,12 +206,12 @@ describe("CommandMenu", () => {
     expect(within(dialog).getByRole("listbox", { name: esSearch.listLabel })).toBeInTheDocument();
   });
 
-  it("keeps the pending note out of the listbox (R9)", async () => {
+  it("keeps the prefix hint out of the listbox (R9)", async () => {
     renderMenu("OWNER");
     openWithShortcut();
     const listbox = await screen.findByRole("listbox");
-    expect(within(listbox).queryByText(enSearch.resultsPending)).not.toBeInTheDocument();
-    expect(screen.getByText(enSearch.resultsPending)).toBeInTheDocument();
+    expect(within(listbox).queryByText(enSearch.prefixHint)).not.toBeInTheDocument();
+    expect(screen.getByText(enSearch.prefixHint)).toBeInTheDocument();
   });
 
   it("composes the dialog with its title and description inside it (R5)", async () => {
@@ -177,5 +224,123 @@ describe("CommandMenu", () => {
     const dialog = await screen.findByRole("dialog", { name: esSearch.dialogTitle });
     expect(dialog).toHaveAccessibleDescription(esSearch.dialogDescription);
     expect(within(dialog).getByRole("heading", { name: esSearch.dialogTitle })).toBeInTheDocument();
+  });
+
+  describe("record search (PRD §7.6, HU-26)", () => {
+    it('CA1: "garcia" finds "García" (ignores accents)', async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "garcia");
+      expect(await screen.findByRole("option", { name: /Talleres García/ })).toBeInTheDocument();
+    });
+
+    it('CA2: "invsion" finds "Inversión" (trigram similarity)', async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "invsion");
+      expect(await screen.findByRole("option", { name: /Grupo Inversión/ })).toBeInTheDocument();
+    });
+
+    it("CA3: the code FAC-0012 goes straight to that invoice on Enter", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "FAC-0012");
+      const option = await screen.findByRole("option", { name: /FAC-0012/ });
+      await waitFor(() => expect(option).toHaveAttribute("aria-selected", "true"));
+      await user.keyboard("{Enter}");
+      expect(push).toHaveBeenCalledWith("/invoices/inv_twelve");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("groups hits by type and shows icon, code, title, subtitle and translated status", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "garcia");
+      const option = await screen.findByRole("option", { name: /Talleres García/ });
+      const group = option.closest("[cmdk-group]") as HTMLElement;
+      expect(within(group).getByText(enSearch.types.CLIENT)).toBeInTheDocument();
+      expect(option.querySelector('[data-entity-icon="CLIENT"]')).not.toBeNull();
+      expect(option).toHaveTextContent(/CLI-9\d+/);
+      expect(option).toHaveTextContent("Talleres García C.A.");
+      expect(option).toHaveTextContent(enEnums.ClientStatus.ACTIVO);
+      await user.click(option);
+      expect(push).toHaveBeenCalledWith("/clients/cli_garcia");
+    });
+
+    it("the `c:` prefix narrows to clients and `f:` to invoices", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      const input = await screen.findByRole("combobox");
+      await user.type(input, "c: garcia");
+      expect(await screen.findByRole("option", { name: /Talleres García/ })).toBeInTheDocument();
+      expect(vi.mocked(searchGlobalAction)).toHaveBeenLastCalledWith({ q: "c: garcia" });
+
+      await user.clear(input);
+      await user.type(input, "f: garcia");
+      await waitFor(() =>
+        expect(vi.mocked(searchGlobalAction)).toHaveBeenLastCalledWith({ q: "f: garcia" }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("option", { name: /Talleres García/ })).not.toBeInTheDocument(),
+      );
+    });
+
+    it("does not search while the query is empty or only a prefix", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "c:");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(searchGlobalAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("recently visited records", () => {
+    it("lists a record opened from the search when the menu opens again", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "garcia");
+      await user.click(await screen.findByRole("option", { name: /Talleres García/ }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      push.mockClear();
+      openWithShortcut();
+      const recent = await screen.findByRole("group", { name: enSearch.recent });
+      await user.click(within(recent).getByRole("option", { name: /Talleres García/ }));
+      expect(push).toHaveBeenCalledWith("/clients/cli_garcia");
+    });
+
+    it("records the detail page the user visits, named by its breadcrumb label", async () => {
+      nav.pathname = "/projects/pry_1";
+      renderMenu("OWNER", "en", <BreadcrumbLabel segment="pry_1" label="PRY-0001 · Web" />);
+      openWithShortcut();
+      const recent = await screen.findByRole("group", { name: enSearch.recent });
+      expect(within(recent).getByRole("option", { name: /PRY-0001 · Web/ })).toBeInTheDocument();
+    });
+
+    it("keeps recents per user and shows none for a fresh user", async () => {
+      window.localStorage.setItem(
+        "wedevs:recent-records:usr_admin",
+        JSON.stringify([
+          {
+            entityType: "CLIENT",
+            entityId: "cli_x",
+            title: "Other",
+            code: null,
+            href: "/clients/cli_x",
+          },
+        ]),
+      );
+      renderMenu("OWNER");
+      openWithShortcut();
+      await screen.findByRole("dialog");
+      expect(screen.queryByRole("group", { name: enSearch.recent })).not.toBeInTheDocument();
+    });
   });
 });

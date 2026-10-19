@@ -3,6 +3,7 @@
 import {
   dismissAlertInputSchema,
   listAlertsInputSchema,
+  markAlertsReadInputSchema,
   restoreAlertInputSchema,
   snoozeAlertInputSchema,
 } from "@/lib/validators/alerts";
@@ -39,4 +40,12 @@ export const restoreAlertAction = defineAction({
   input: restoreAlertInputSchema,
   revalidate: REFRESH_SHELL,
   handler: (ctx, data) => alerts.restoreAlert(ctx, data),
+});
+
+// "Marcar leídas" (A2): a per-user read mark; the alerts stay listed and only the bell counter drops.
+export const markAlertsReadAction = defineAction({
+  permission: "authenticated",
+  input: markAlertsReadInputSchema,
+  revalidate: REFRESH_SHELL,
+  handler: (ctx, data) => alerts.markAlertsRead(ctx, data),
 });

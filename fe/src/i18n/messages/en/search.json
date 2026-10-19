@@ -2,13 +2,11 @@
   "trigger": "Search",
   "shortcut": "⌘K",
   "dialogTitle": "Command menu",
-  "dialogDescription": "Go to a section or run a quick action",
+  "dialogDescription": "Go to a section, run a quick action or search records",
   "placeholder": "Type a command or search…",
   "navigation": "Go to",
   "quickActions": "Quick actions",
-  "results": "Results",
   "listLabel": "Search results",
-  "resultsPending": "Record search is coming in a later batch.",
   "empty": "No matches",
   "actions": {
     "newClient": "New client",
@@ -18,5 +16,21 @@
     "newExpense": "New expense",
     "newNote": "New note",
     "newDocument": "New document"
+  },
+  "recent": "Recently visited",
+  "searching": "Searching…",
+  "searchFailed": "The search failed. Try again.",
+  "prefixHint": "Narrow with c: clients · p: projects · f: invoices · d: documents · n: notes",
+  "archived": "Archived",
+  "types": {
+    "CLIENT": "Clients",
+    "CONTACT": "Contacts",
+    "PROJECT": "Projects",
+    "INVOICE": "Invoices",
+    "PAYMENT": "Payments",
+    "EXPENSE": "Expenses",
+    "ACCOUNT": "Accounts",
+    "DOCUMENT": "Documents",
+    "NOTE": "Notes"
   }
 }

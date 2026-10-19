@@ -38,7 +38,8 @@
     "description": "Items that need your attention",
     "empty": "You have no pending alerts",
     "markAllRead": "Mark all as read",
-    "counter": "{count, plural, one {# alert} other {# alerts}}"
+    "counter": "{count, plural, one {# alert} other {# alerts}}",
+    "markedRead": "Alerts marked as read"
   },
   "userMenu": {
     "label": "User menu",

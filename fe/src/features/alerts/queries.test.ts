@@ -5,7 +5,10 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
 import { makeSessionUser } from "@/mocks/test-helpers";
-import { listAlerts } from "./queries";
+import { markAlertsRead } from "@/mocks/services/alerts";
+import { getMockStore } from "@/mocks/store";
+import { createMockContext } from "@/mocks/ctx";
+import { countUnreadAlerts, listAlerts } from "./queries";
 
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
@@ -31,5 +34,17 @@ describe("listAlerts query", () => {
   it("throws UNAUTHENTICATED without a session", async () => {
     session.getMockSessionUser.mockResolvedValue(null);
     await expect(listAlerts()).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+  });
+
+  it("countUnreadAlerts is the bell counter: active alerts minus the ones the user read", async () => {
+    const summary = await listAlerts();
+    expect(await countUnreadAlerts()).toBe(summary.total);
+
+    const user = makeSessionUser("OWNER");
+    const first = summary.items[0]!.alertKey;
+    await markAlertsRead(createMockContext({ user, now: new Date(), db: getMockStore() }), {
+      alertKeys: [first],
+    });
+    expect(await countUnreadAlerts()).toBe(summary.total - 1);
   });
 });

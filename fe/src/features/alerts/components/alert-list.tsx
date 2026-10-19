@@ -12,7 +12,7 @@ import {
   restoreAlertAction,
   snoozeAlertAction,
 } from "@/features/alerts/actions";
-import type { AlertDTO, AlertType } from "@/lib/validators/alerts";
+import type { AlertDTO, AlertsInboxDTO, AlertType } from "@/lib/validators/alerts";
 import type { ErrorCode } from "@/lib/validators/common";
 import { cn } from "@/lib/utils";
 import { AlertItem } from "./alert-item";
@@ -26,6 +26,8 @@ export interface AlertListProps {
   limit?: number;
   /** Called with the active total whenever the list is (re)loaded or changes. */
   onTotalChange?: (total: number) => void;
+  /** Called with the whole inbox (unread counter and read keys included) on every (re)load. */
+  onLoad?: (inbox: AlertsInboxDTO) => void;
   className?: string;
 }
 
@@ -41,6 +43,7 @@ export function AlertList({
   types,
   limit,
   onTotalChange,
+  onLoad,
   className,
 }: AlertListProps) {
   const t = useTranslations("alerts");
@@ -52,9 +55,11 @@ export function AlertList({
   const focusIndex = useRef<number | null>(null);
   const typesKey = types?.join(",") ?? "";
   const onTotal = useRef(onTotalChange);
+  const onInbox = useRef(onLoad);
   useEffect(() => {
     onTotal.current = onTotalChange;
-  }, [onTotalChange]);
+    onInbox.current = onLoad;
+  }, [onTotalChange, onLoad]);
 
   const load = useCallback(async () => {
     const result = await listAlertsAction({
@@ -67,6 +72,7 @@ export function AlertList({
     }
     setState({ status: "ready", items: result.data.items, total: result.data.total });
     onTotal.current?.(result.data.total);
+    onInbox.current?.(result.data);
   }, [typesKey, limit]);
 
   useEffect(() => {

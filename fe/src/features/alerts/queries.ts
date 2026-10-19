@@ -7,3 +7,8 @@ import { getServiceContext } from "@/server/context";
 export async function listAlerts(input: Partial<ListAlertsInput> = {}) {
   return alerts.listAlerts(await getServiceContext(), listAlertsInputSchema.parse(input));
 }
+
+/** The bell counter: the current user's active alerts not marked read (A2). */
+export async function countUnreadAlerts() {
+  return (await alerts.listAlerts(await getServiceContext(), { limit: 1 })).unread;
+}

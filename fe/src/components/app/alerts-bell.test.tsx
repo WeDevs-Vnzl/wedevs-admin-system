@@ -2,7 +2,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { listAlertsAction } from "@/features/alerts/actions";
+import { toast } from "sonner";
+import { listAlertsAction, markAlertsReadAction } from "@/features/alerts/actions";
 import enAlerts from "@/i18n/messages/en/alerts.json";
 import enCommon from "@/i18n/messages/en/common.json";
 import enShell from "@/i18n/messages/en/shell.json";
@@ -14,6 +15,7 @@ vi.mock("@/features/alerts/actions", () => ({
   dismissAlertAction: vi.fn(),
   snoozeAlertAction: vi.fn(),
   restoreAlertAction: vi.fn(),
+  markAlertsReadAction: vi.fn(),
 }));
 
 function renderBell(count: number) {
@@ -41,7 +43,17 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(listAlertsAction).mockResolvedValue({
     ok: true,
-    data: { total: 1, byType: { DOCUMENT_EXPIRED: 1 }, items: [alert] },
+    data: {
+      total: 1,
+      byType: { DOCUMENT_EXPIRED: 1 },
+      items: [alert],
+      unread: 1,
+      readKeys: [],
+    },
+  } as never);
+  vi.mocked(markAlertsReadAction).mockResolvedValue({
+    ok: true,
+    data: { alertKeys: [alert.alertKey] },
   } as never);
 });
 
@@ -57,7 +69,7 @@ describe("AlertsBell", () => {
       "/documents/doc_1",
     );
     expect(listAlertsAction).toHaveBeenCalledWith({ limit: 20 });
-    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeDisabled();
+    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeEnabled();
     // the panel is labelled by its visible title
     const panel = screen.getByRole("dialog");
     expect(panel).toHaveAccessibleName(enShell.alerts.title);
@@ -69,7 +81,7 @@ describe("AlertsBell", () => {
   it("keeps the empty state when there are no alerts and disables 'mark all read'", async () => {
     vi.mocked(listAlertsAction).mockResolvedValue({
       ok: true,
-      data: { total: 0, byType: {}, items: [] },
+      data: { total: 0, byType: {}, items: [], unread: 0, readKeys: [] },
     } as never);
     const user = userEvent.setup();
     renderBell(0);
@@ -99,5 +111,56 @@ describe("AlertsBell", () => {
     expect(document.querySelector('[data-slot="alerts-badge"]')?.className).toBe(
       ALERTS_BADGE_CLASSES,
     );
+  });
+
+  it("counts only unread alerts once the panel loads (A2)", async () => {
+    const other = { ...alert, alertKey: "DOCUMENT_EXPIRED:doc_2" };
+    vi.mocked(listAlertsAction).mockResolvedValue({
+      ok: true,
+      data: {
+        total: 2,
+        byType: { DOCUMENT_EXPIRED: 2 },
+        items: [alert, other],
+        unread: 1,
+        readKeys: [other.alertKey],
+      },
+    } as never);
+    const user = userEvent.setup();
+    renderBell(2);
+    await user.click(screen.getByRole("button", { name: "Alerts: 2 alerts" }));
+    expect(await screen.findAllByRole("link", { name: "Expired document" })).toHaveLength(2);
+    await waitFor(() =>
+      expect(document.querySelector('[data-slot="alerts-badge"]')?.textContent).toBe("1"),
+    );
+  });
+
+  it("'Mark all as read' marks the listed unread alerts and clears the counter; they stay listed", async () => {
+    const user = userEvent.setup();
+    renderBell(1);
+    await user.click(screen.getByRole("button", { name: "Alerts: 1 alert" }));
+    await screen.findByRole("link", { name: "Expired document" });
+
+    await user.click(screen.getByRole("button", { name: enShell.alerts.markAllRead }));
+    expect(markAlertsReadAction).toHaveBeenCalledWith({ alertKeys: [alert.alertKey] });
+    await waitFor(() => expect(document.querySelector('[data-slot="alerts-badge"]')).toBeNull());
+    expect(screen.getByRole("button", { name: "Alerts" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Expired document" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeDisabled();
+    expect(toast.success).toHaveBeenCalledWith(enShell.alerts.markedRead);
+  });
+
+  it("keeps the counter and reports the error when marking fails", async () => {
+    vi.mocked(markAlertsReadAction).mockResolvedValue({
+      ok: false,
+      error: { code: "INTERNAL" },
+    } as never);
+    const user = userEvent.setup();
+    renderBell(1);
+    await user.click(screen.getByRole("button", { name: "Alerts: 1 alert" }));
+    await screen.findByRole("link", { name: "Expired document" });
+    await user.click(screen.getByRole("button", { name: enShell.alerts.markAllRead }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(enCommon.errors.INTERNAL));
+    expect(document.querySelector('[data-slot="alerts-badge"]')?.textContent).toBe("1");
+    expect(screen.getByRole("button", { name: enShell.alerts.markAllRead })).toBeEnabled();
   });
 });

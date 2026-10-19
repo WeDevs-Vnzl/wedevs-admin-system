@@ -10,6 +10,7 @@ import { makeSessionUser } from "@/mocks/test-helpers";
 import {
   dismissAlertAction,
   listAlertsAction,
+  markAlertsReadAction,
   restoreAlertAction,
   snoozeAlertAction,
 } from "./actions";
@@ -70,6 +71,31 @@ describe("alert actions", () => {
     expect(await listAlertsAction({})).toMatchObject({
       ok: false,
       error: { code: "UNAUTHENTICATED" },
+    });
+  });
+
+  it("'Marcar leídas' marks per user: the unread counter drops, the alert stays listed (A2)", async () => {
+    const before = await listAlertsAction({});
+    expect(before.ok && before.data.readKeys).not.toContain(key);
+    const unread = before.ok ? before.data.unread : 0;
+
+    expect(await markAlertsReadAction({ alertKeys: [key] })).toMatchObject({
+      ok: true,
+      data: { alertKeys: [key] },
+    });
+    const after = await listAlertsAction({});
+    expect(after.ok && after.data.unread).toBe(unread - 1);
+    expect(after.ok && after.data.items.map((i) => i.alertKey)).toContain(key);
+
+    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER", { id: "usr_o" }));
+    const other = await listAlertsAction({});
+    expect(other.ok && other.data.readKeys).not.toContain(key);
+  });
+
+  it("rejects an empty batch of keys with VALIDATION", async () => {
+    expect(await markAlertsReadAction({ alertKeys: [] })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
     });
   });
 });

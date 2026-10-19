@@ -38,7 +38,8 @@
     "description": "Elementos que requieren tu atención",
     "empty": "No tienes alertas pendientes",
     "markAllRead": "Marcar leídas",
-    "counter": "{count, plural, one {# alerta} other {# alertas}}"
+    "counter": "{count, plural, one {# alerta} other {# alertas}}",
+    "markedRead": "Alertas marcadas como leídas"
   },
   "userMenu": {
     "label": "Menú de usuario",

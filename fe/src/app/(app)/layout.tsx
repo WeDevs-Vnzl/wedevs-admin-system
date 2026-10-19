@@ -10,6 +10,7 @@ import { SkipLink } from "@/components/app/skip-link";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import { UserMenu } from "@/components/app/user-menu";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { countUnreadAlerts } from "@/features/alerts/queries";
 import { getShellData } from "@/features/shell/queries";
 import { can } from "@/server/auth/permissions";
 
@@ -20,7 +21,7 @@ const MAIN_CONTENT_ID = "main-content";
 // Cmd+K trigger, rate chip, alerts, locale and theme, user menu, and the footer. From 768 to 1023 px the sidebar
 // still takes 16rem, so the topbar controls shrink (icon-only Cmd+K, rate without label) instead of overflowing.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const shell = await getShellData();
+  const [shell, unreadAlerts] = await Promise.all([getShellData(), countUnreadAlerts()]);
 
   return (
     <BreadcrumbLabelProvider>
@@ -38,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 missing={shell.vesRateMissing}
                 canManage={can(shell.user, "read", "settings")}
               />
-              <AlertsBell count={shell.alertCount} />
+              <AlertsBell count={unreadAlerts} />
               <LocaleSwitcher />
               <ThemeToggle />
               <UserMenu user={shell.user} />

@@ -2,13 +2,11 @@
   "trigger": "Buscar",
   "shortcut": "⌘K",
   "dialogTitle": "Menú de comandos",
-  "dialogDescription": "Ir a una sección o ejecutar una acción rápida",
+  "dialogDescription": "Ir a una sección, ejecutar una acción rápida o buscar registros",
   "placeholder": "Escribe un comando o busca…",
   "navigation": "Ir a",
   "quickActions": "Acciones rápidas",
-  "results": "Resultados",
   "listLabel": "Resultados de búsqueda",
-  "resultsPending": "La búsqueda de registros llega en un lote posterior.",
   "empty": "Sin coincidencias",
   "actions": {
     "newClient": "Nuevo cliente",
@@ -18,5 +16,21 @@
     "newExpense": "Nuevo gasto",
     "newNote": "Nueva nota",
     "newDocument": "Nuevo documento"
+  },
+  "recent": "Visitados recientemente",
+  "searching": "Buscando…",
+  "searchFailed": "La búsqueda falló. Inténtalo de nuevo.",
+  "prefixHint": "Filtra con c: clientes · p: proyectos · f: facturas · d: documentos · n: notas",
+  "archived": "Archivado",
+  "types": {
+    "CLIENT": "Clientes",
+    "CONTACT": "Contactos",
+    "PROJECT": "Proyectos",
+    "INVOICE": "Facturas",
+    "PAYMENT": "Pagos",
+    "EXPENSE": "Gastos",
+    "ACCOUNT": "Cuentas",
+    "DOCUMENT": "Documentos",
+    "NOTE": "Notas"
   }
 }
