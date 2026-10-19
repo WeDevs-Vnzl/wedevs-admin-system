@@ -6,8 +6,9 @@ type SettingsSectionPageProps = {
   params: Promise<{ section: string }>;
 };
 
-// The Configuración sections not built in Hito 1 B1 (every §8.15 slug except preferences, which has its own
-// page). Unknown slugs and sections the role cannot open render the in-shell not-found page.
+// Fallback for `/settings/<slug>`: every §8.15 section has its own page since H1-B5 (company, users and trash
+// were the last), so this only renders the placeholder for a section added to the config before its page.
+// Unknown slugs and sections the role cannot open render the in-shell not-found page.
 export default async function SettingsSectionPage({ params }: SettingsSectionPageProps) {
   const { section } = await params;
   const openable = await getOpenableSettingsSection(section);

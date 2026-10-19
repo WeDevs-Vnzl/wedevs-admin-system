@@ -76,5 +76,76 @@
     },
     "save": "Save",
     "saved": "Fiscal settings saved"
+  },
+  "company": {
+    "title": "Company",
+    "description": "Name, legal name, tax ID, address and logo, used by the client portal and the print views.",
+    "profile": {
+      "title": "Profile"
+    },
+    "name": "Name",
+    "legalName": "Legal name",
+    "taxId": "Tax ID (RIF)",
+    "address": "Address",
+    "logo": {
+      "label": "Logo",
+      "description": "Shown in the client portal and on printed documents.",
+      "current": "A logo is set. Upload a new one to replace it.",
+      "none": "No logo yet.",
+      "remove": "Remove logo",
+      "uploadLabel": "Upload the company logo"
+    },
+    "save": "Save",
+    "saved": "Company profile saved"
+  },
+  "users": {
+    "page": {
+      "title": "Users",
+      "description": "People with access to WeDevs Core, their role and pending invitations. Invitations are sent by e-mail."
+    },
+    "columns": {
+      "name": "Name",
+      "email": "E-mail",
+      "role": "Role",
+      "status": "Status",
+      "createdAt": "Since",
+      "actions": "Actions"
+    },
+    "facets": {
+      "role": "Role",
+      "status": "Status"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "INVITED": "Invited"
+    },
+    "search": {
+      "placeholder": "Search users…"
+    },
+    "empty": {
+      "title": "No users",
+      "description": "Invite the first person to your team."
+    },
+    "roleOf": "Role of {name}",
+    "revoke": "Revoke the invitation of {email}",
+    "invite": {
+      "open": "Invite user",
+      "title": "Invite user",
+      "description": "The person receives an e-mail to join with the chosen role.",
+      "email": "E-mail",
+      "role": "Role",
+      "cancel": "Cancel",
+      "submit": "Send invitation",
+      "sending": "Sending…"
+    },
+    "toast": {
+      "invited": "Invitation sent to {email}",
+      "roleChanged": "Role of {name} updated",
+      "revoked": "Invitation revoked"
+    },
+    "errors": {
+      "emailTaken": "This e-mail already has a user or a pending invitation",
+      "lastOwner": "The last Owner cannot be demoted"
+    }
   }
 }

@@ -5,6 +5,7 @@ import {
   SETTINGS_SECTIONS,
   type SettingsSection,
 } from "@/config/settings-nav";
+import * as companySettings from "@/mocks/services/company-settings";
 import { getServiceContext } from "@/server/context";
 
 /** The Configuración sections the signed-in user may see, in §8.15 order. */
@@ -19,4 +20,9 @@ export async function getOpenableSettingsSection(slug: string): Promise<Settings
   if (!section) return null;
   const ctx = await getServiceContext();
   return isSettingsSectionVisible(section, ctx.user) ? section : null;
+}
+
+/** The company profile (name, legal name, RIF, address, logo) for Settings → Empresa. */
+export async function getCompanySettings() {
+  return companySettings.getCompanySettings(await getServiceContext());
 }

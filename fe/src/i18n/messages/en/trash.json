@@ -1,1 +1,37 @@
-{}
+{
+  "page": {
+    "title": "Trash",
+    "description": "Archived records. Restoring one returns it to its previous state; nothing is deleted for good."
+  },
+  "columns": {
+    "label": "Record",
+    "entityType": "Type",
+    "context": "Context",
+    "deletedAt": "Archived on",
+    "deletedBy": "Archived by",
+    "actions": "Actions"
+  },
+  "facets": {
+    "entityType": "Type",
+    "deleted": "Archived on"
+  },
+  "search": {
+    "placeholder": "Search archived records…"
+  },
+  "empty": {
+    "title": "The trash is empty",
+    "description": "Archived records show up here and can be restored."
+  },
+  "actions": {
+    "restore": "Restore",
+    "restoreLabel": "Restore {label}"
+  },
+  "toast": {
+    "restored": "{label} restored"
+  },
+  "errors": {
+    "taxIdTaken": "Another active client already uses this tax ID. Archive or edit it before restoring this one.",
+    "clientArchived": "Its client is archived. Restore the client first.",
+    "invoiceNumberTaken": "Another active invoice already uses this number. Edit it before restoring this one."
+  }
+}

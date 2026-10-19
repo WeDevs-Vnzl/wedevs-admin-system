@@ -1,1 +1,37 @@
-{}
+{
+  "page": {
+    "title": "Papelera",
+    "description": "Registros archivados. Al restaurar uno vuelve a su estado anterior; nada se elimina definitivamente."
+  },
+  "columns": {
+    "label": "Registro",
+    "entityType": "Tipo",
+    "context": "Contexto",
+    "deletedAt": "Archivado el",
+    "deletedBy": "Archivado por",
+    "actions": "Acciones"
+  },
+  "facets": {
+    "entityType": "Tipo",
+    "deleted": "Archivado el"
+  },
+  "search": {
+    "placeholder": "Buscar registros archivados…"
+  },
+  "empty": {
+    "title": "La papelera está vacía",
+    "description": "Los registros archivados aparecen aquí y se pueden restaurar."
+  },
+  "actions": {
+    "restore": "Restaurar",
+    "restoreLabel": "Restaurar {label}"
+  },
+  "toast": {
+    "restored": "{label} restaurado"
+  },
+  "errors": {
+    "taxIdTaken": "Otro cliente activo ya usa este RIF. Archívalo o edítalo antes de restaurar este.",
+    "clientArchived": "Su cliente está archivado. Restaura primero el cliente.",
+    "invoiceNumberTaken": "Otra factura activa ya usa este número. Edítala antes de restaurar esta."
+  }
+}

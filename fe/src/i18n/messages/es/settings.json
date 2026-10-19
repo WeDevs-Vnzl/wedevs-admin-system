@@ -76,5 +76,76 @@
     },
     "save": "Guardar",
     "saved": "Configuración fiscal guardada"
+  },
+  "company": {
+    "title": "Empresa",
+    "description": "Nombre, razón social, RIF, dirección y logo, usados por el portal de clientes y la impresión.",
+    "profile": {
+      "title": "Perfil"
+    },
+    "name": "Nombre",
+    "legalName": "Razón social",
+    "taxId": "RIF",
+    "address": "Dirección",
+    "logo": {
+      "label": "Logo",
+      "description": "Se muestra en el portal de clientes y en los documentos impresos.",
+      "current": "Hay un logo cargado. Sube uno nuevo para reemplazarlo.",
+      "none": "Aún no hay logo.",
+      "remove": "Quitar logo",
+      "uploadLabel": "Subir el logo de la empresa"
+    },
+    "save": "Guardar",
+    "saved": "Perfil de la empresa guardado"
+  },
+  "users": {
+    "page": {
+      "title": "Usuarios",
+      "description": "Personas con acceso a WeDevs Core, su rol e invitaciones pendientes. Las invitaciones se envían por correo."
+    },
+    "columns": {
+      "name": "Nombre",
+      "email": "Correo",
+      "role": "Rol",
+      "status": "Estado",
+      "createdAt": "Desde",
+      "actions": "Acciones"
+    },
+    "facets": {
+      "role": "Rol",
+      "status": "Estado"
+    },
+    "status": {
+      "ACTIVE": "Activo",
+      "INVITED": "Invitado"
+    },
+    "search": {
+      "placeholder": "Buscar usuarios…"
+    },
+    "empty": {
+      "title": "Sin usuarios",
+      "description": "Invita a la primera persona de tu equipo."
+    },
+    "roleOf": "Rol de {name}",
+    "revoke": "Revocar la invitación de {email}",
+    "invite": {
+      "open": "Invitar usuario",
+      "title": "Invitar usuario",
+      "description": "La persona recibe un correo para unirse con el rol elegido.",
+      "email": "Correo",
+      "role": "Rol",
+      "cancel": "Cancelar",
+      "submit": "Enviar invitación",
+      "sending": "Enviando…"
+    },
+    "toast": {
+      "invited": "Invitación enviada a {email}",
+      "roleChanged": "Rol de {name} actualizado",
+      "revoked": "Invitación revocada"
+    },
+    "errors": {
+      "emailTaken": "Este correo ya tiene un usuario o una invitación pendiente",
+      "lastOwner": "No se puede degradar al último Owner"
+    }
   }
 }
