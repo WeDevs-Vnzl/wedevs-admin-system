@@ -66,6 +66,15 @@ describe("HU-26: global search", () => {
       },
     ]);
   });
+
+  it("CA3: the exact fiscal invoice number resolves to that invoice alone", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const invoice = db.invoices.find((row) => row.invoiceNumber === "KAI-0001")!;
+    const result = await searchGlobal(ctx, query("kai-0001"));
+    expect(result.groups).toHaveLength(1);
+    expect(result.groups[0]).toMatchObject({ entityType: "INVOICE", total: 1 });
+    expect(result.groups[0]!.items.map((item) => item.entityId)).toEqual([invoice.id]);
+  });
 });
 
 describe("result shape (PRD §7.6)", () => {

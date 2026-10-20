@@ -4,8 +4,8 @@
 // `src/server/services/search.service.ts` over `SearchEntry` + `pg_trgm` in Hito 2 (C9).
 //
 // Matching, after `parseSearchQuery` (the prefix wins over `entityTypes`) and accent folding (`foldText`):
-//   exact code   the text equals a record's code (`FAC-0012`, any case): that record alone is returned,
-//                so the palette goes straight to it (HU-26 CA3).
+//   exact code   the text equals a record's code (`FAC-0012`, any case) or an invoice's fiscal number: that
+//                record alone is returned, so the palette goes straight to it (HU-26 CA3).
 //   substring    a folded field contains the text (a field starting with it ranks first).
 //   trigrams     every word of the text is similar to some word of a field: pg_trgm similarity (padded
 //                trigrams, |A ∩ B| ÷ |A ∪ B|) ≥ 0.3, its default threshold ("invsion" → "Inversión").
@@ -43,10 +43,12 @@ const RESOURCE: Record<SearchableEntityType, PermissionResource> = {
   NOTE: "note",
 };
 
-/** One index entry: the hit it becomes plus the texts it is matched against. */
+/** One index entry: the hit it becomes, the texts it is matched against and its exact-hit keys. */
 interface Entry {
   hit: SearchResultDTO;
   texts: (string | null | undefined)[];
+  /** Texts that resolve to this record alone when typed in full (its code by default). */
+  keys: string[];
 }
 
 const entry = (
@@ -54,7 +56,12 @@ const entry = (
   entityId: string,
   fields: Omit<SearchResultDTO, "entityType" | "entityId">,
   texts: (string | null | undefined)[],
-): Entry => ({ hit: { entityType, entityId, ...fields }, texts });
+  keys: (string | null)[] = [fields.code],
+): Entry => ({
+  hit: { entityType, entityId, ...fields },
+  texts,
+  keys: keys.filter((key): key is string => Boolean(key)),
+});
 
 function clientName(db: MockStore, id: string | undefined): string | null {
   return db.clients.find((row) => row.id === id)?.tradeName ?? null;
@@ -121,6 +128,7 @@ function entriesOf(db: MockStore, type: SearchableEntityType): Entry[] {
             archived: row.archivedAt !== null,
           },
           [row.code, row.invoiceNumber, row.controlNumber, row.client.label],
+          [row.code, row.invoiceNumber],
         ),
       );
     case "PAYMENT":
@@ -260,7 +268,7 @@ export async function searchGlobal(
     .flatMap((type) => entriesOf(ctx.db, type))
     .filter((item) => withArchived || !item.hit.archived);
 
-  const exact = candidates.find((item) => item.hit.code && foldText(item.hit.code) === needle);
+  const exact = candidates.find((item) => item.keys.some((key) => foldText(key) === needle));
   if (exact) {
     result.groups = [{ entityType: exact.hit.entityType, total: 1, items: [exact.hit] }];
     return result;
