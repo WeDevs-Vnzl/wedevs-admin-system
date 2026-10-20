@@ -126,7 +126,9 @@ describe("NoteComposerPage", () => {
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/notes");
     expect(screen.getByRole("link", { name: "Cancel" })).toHaveAttribute("href", "/notes");
     expect(screen.getByRole("group", { name: "Note" })).toHaveClass("md:col-span-2");
-    expect(screen.getByRole("group", { name: "Where it appears" })).not.toHaveClass("md:col-span-2");
+    expect(screen.getByRole("group", { name: "Where it appears" })).not.toHaveClass(
+      "md:col-span-2",
+    );
     expect(screen.getByRole("group", { name: "Organization" })).not.toHaveClass("md:col-span-2");
   });
 
