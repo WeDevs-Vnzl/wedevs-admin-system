@@ -9,6 +9,7 @@ import enProjects from "@/i18n/messages/en/projects.json";
 import enTags from "@/i18n/messages/en/tags.json";
 import enValidation from "@/i18n/messages/en/validation.json";
 import { archiveProjectAction } from "@/features/projects/actions";
+import { formatDate } from "@/lib/dates";
 import { ProjectDetailHeader, type ProjectDetailHeaderProps } from "./project-detail-header";
 
 vi.mock("@/features/projects/actions", () => ({
@@ -58,6 +59,17 @@ function renderHeader(props: Partial<ProjectDetailHeaderProps>) {
     </NextIntlClientProvider>,
   );
 }
+
+describe("ProjectDetailHeader dates (m6)", () => {
+  it("shows the start and end dates formatted for the locale, never as raw ISO", () => {
+    const { container } = renderHeader({ startDate: "2026-07-01", endDate: "2026-12-15" });
+    const text = container.textContent ?? "";
+    expect(text).toContain(formatDate("2026-07-01", "en"));
+    expect(text).toContain(formatDate("2026-12-15", "en"));
+    expect(text).not.toContain("2026-07-01");
+    expect(text).not.toContain("2026-12-15");
+  });
+});
 
 describe("ProjectDetailHeader role gating", () => {
   it("Viewer sees the record without Edit, status change or More actions", () => {

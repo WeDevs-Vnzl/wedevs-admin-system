@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArchivedBanner } from "@/components/patterns/archived-banner";
+import { DateText } from "@/components/patterns/date-text";
 import { DetailHeader } from "@/components/patterns/detail-header";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { Button } from "@/components/ui/button";
@@ -87,8 +88,9 @@ export function ProjectDetailHeader({
         meta={
           startDate || endDate ? (
             <span className="tabular-nums">
-              {t("detail.startDate")}: {startDate ?? t("detail.notSet")} · {t("detail.endDate")}:{" "}
-              {endDate ?? t("detail.notSet")}
+              {t("detail.startDate")}:{" "}
+              {startDate ? <DateText value={startDate} /> : t("detail.notSet")} ·{" "}
+              {t("detail.endDate")}: {endDate ? <DateText value={endDate} /> : t("detail.notSet")}
             </span>
           ) : null
         }
