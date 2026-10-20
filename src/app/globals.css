@@ -57,43 +57,44 @@
 }
 
 /*
- * Brand = the wireframes (DT-51, frontend-patterns.md section 1): monochrome ink primary, soft canvas,
- * white surfaces, light strokes. Status colors are used only in badges and alerts.
+ * Brand = brand manual v1 (Tinta, Papel, Cobalto, Grafito, Niebla) with the 80/15/5 rule: ink primary on a
+ * paper canvas, graphite and mist for secondary text and strokes, cobalt only for focus, info and the lead
+ * chart series. Status colors are used only in badges and alerts.
  */
 :root {
-  --background: #f3f4f8;
-  --foreground: #0e0e12;
+  --background: #f6f5f2;
+  --foreground: #0e0f12;
   --card: #ffffff;
-  --card-foreground: #0e0e12;
+  --card-foreground: #0e0f12;
   --popover: #ffffff;
-  --popover-foreground: #0e0e12;
-  --primary: #0e0e12;
-  --primary-foreground: #ffffff;
-  --secondary: #ececf2;
-  --secondary-foreground: #55555f;
-  --muted: #ececf2;
-  --muted-foreground: #8e8e9a;
+  --popover-foreground: #0e0f12;
+  --primary: #0e0f12;
+  --primary-foreground: #f6f5f2;
+  --secondary: #ecebe6;
+  --secondary-foreground: #5a5c63;
+  --muted: #ecebe6;
+  --muted-foreground: #5a5c63;
   /* Tertiary surface between the card and muted: table heads and pinned columns. */
-  --table-head: #e9eaf1;
-  --accent: #ececf2;
-  --accent-foreground: #0e0e12;
+  --table-head: #efeeea;
+  --accent: #ecebe6;
+  --accent-foreground: #0e0f12;
   --destructive: #c2362f;
-  --border: #e8e8ee;
-  --input: #e8e8ee;
-  --ring: #8e8e9a;
+  --border: #d9d8d3;
+  --input: #d9d8d3;
+  --ring: #2f4bff;
   --success: #e3f4ea;
   --success-foreground: #1c6b3c;
   --warning: #fdf0d9;
   --warning-foreground: #8a5a0b;
   --danger: #fbe4e2;
   --danger-foreground: #a3271f;
-  --info: #e1ecfb;
-  --info-foreground: #1f4f9a;
-  --chart-1: #0e0e12;
-  --chart-2: #55555f;
-  --chart-3: #8e8e9a;
-  --chart-4: #b9b9c4;
-  --chart-5: #dcdce4;
+  --info: #e6eaff;
+  --info-foreground: #1a2fcc;
+  --chart-1: #2f4bff;
+  --chart-2: #0e0f12;
+  --chart-3: #5a5c63;
+  --chart-4: #a9aab0;
+  --chart-5: #d9d8d3;
   --radius: 0.75rem;
   /* Card vertical padding and gap between header, content and footer (default and size="sm"). */
   --card-padding: 1rem;
@@ -102,56 +103,60 @@
   --card-padding-x: 1rem;
   --card-padding-x-sm: 0.6rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #0e0e12;
-  --sidebar-primary: #0e0e12;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f3f4f8;
-  --sidebar-accent-foreground: #0e0e12;
-  --sidebar-border: #e8e8ee;
-  --sidebar-ring: #8e8e9a;
+  --sidebar-foreground: #0e0f12;
+  --sidebar-primary: #0e0f12;
+  --sidebar-primary-foreground: #f6f5f2;
+  --sidebar-accent: #f6f5f2;
+  --sidebar-accent-foreground: #0e0f12;
+  --sidebar-border: #d9d8d3;
+  --sidebar-ring: #2f4bff;
+  /* Fixed logo colors: the mark always sits on its ink tile, in both themes. */
+  --brand-ink: #0e0f12;
+  --brand-paper: #f6f5f2;
+  --brand-cobalt: #6b80ff;
 }
 
 .dark {
-  --background: #0b0b0f;
-  --foreground: #f3f4f8;
-  --card: #15151b;
-  --card-foreground: #f3f4f8;
-  --popover: #15151b;
-  --popover-foreground: #f3f4f8;
-  --primary: #f3f4f8;
-  --primary-foreground: #0e0e12;
-  --secondary: #1f1f27;
-  --secondary-foreground: #b9b9c4;
-  --muted: #1f1f27;
-  --muted-foreground: #8e8e9a;
-  --table-head: #1c1c24;
-  --accent: #1f1f27;
-  --accent-foreground: #f3f4f8;
+  --background: #0e0f12;
+  --foreground: #f6f5f2;
+  --card: #17181c;
+  --card-foreground: #f6f5f2;
+  --popover: #17181c;
+  --popover-foreground: #f6f5f2;
+  --primary: #f6f5f2;
+  --primary-foreground: #0e0f12;
+  --secondary: #222329;
+  --secondary-foreground: #a9aab0;
+  --muted: #222329;
+  --muted-foreground: #a9aab0;
+  --table-head: #1d1e23;
+  --accent: #222329;
+  --accent-foreground: #f6f5f2;
   --destructive: #ef6a62;
-  --border: #26262f;
-  --input: #2e2e38;
-  --ring: #55555f;
+  --border: #2a2b31;
+  --input: #33343b;
+  --ring: #6b80ff;
   --success: #12301f;
   --success-foreground: #7fd9a2;
   --warning: #3a2a0a;
   --warning-foreground: #f0bf6a;
   --danger: #3b1613;
   --danger-foreground: #f19a94;
-  --info: #14264a;
-  --info-foreground: #8db4ee;
-  --chart-1: #f3f4f8;
-  --chart-2: #b9b9c4;
-  --chart-3: #8e8e9a;
-  --chart-4: #55555f;
-  --chart-5: #34343e;
-  --sidebar: #101015;
-  --sidebar-foreground: #f3f4f8;
-  --sidebar-primary: #f3f4f8;
-  --sidebar-primary-foreground: #0e0e12;
-  --sidebar-accent: #1f1f27;
-  --sidebar-accent-foreground: #f3f4f8;
-  --sidebar-border: #26262f;
-  --sidebar-ring: #55555f;
+  --info: #161d45;
+  --info-foreground: #9aa8ff;
+  --chart-1: #6b80ff;
+  --chart-2: #f6f5f2;
+  --chart-3: #a9aab0;
+  --chart-4: #5a5c63;
+  --chart-5: #33343b;
+  --sidebar: #131418;
+  --sidebar-foreground: #f6f5f2;
+  --sidebar-primary: #f6f5f2;
+  --sidebar-primary-foreground: #0e0f12;
+  --sidebar-accent: #222329;
+  --sidebar-accent-foreground: #f6f5f2;
+  --sidebar-border: #2a2b31;
+  --sidebar-ring: #6b80ff;
 }
 
 @layer base {
