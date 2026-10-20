@@ -2,7 +2,8 @@
 // screen over them and owns this file from then on. Dates are relative to the business day of the build, and the
 // installment periods come from `lib/finance` (C17). Derived fields (status, lock, totals, monthly amount, schedule
 // check) are left to the derive pass.
-import { addDays, todayInCaracas, type DateOnly } from "@/lib/dates";
+import { addDays, type DateOnly } from "@/lib/dates";
+import { SEED_DAY } from "./seed-day";
 import { dueRecurringPeriods, splitByTemplate, type RecurringSchedule } from "@/lib/finance";
 import type { BillingPlanDTO, InstallmentDTO, RecurringChargeDTO } from "@/lib/validators/billing";
 import { mockId } from "../ids";
@@ -10,7 +11,9 @@ import { mockId } from "../ids";
 /** A plan as stored, with the D1 snapshot of the contract in USD (C16). */
 type BillingPlanFixture = BillingPlanDTO;
 
-const today = todayInCaracas(new Date());
+// Fixed seed day, like the fixed dates of the payments and expenses fixtures: the derived figures stay the
+// same whatever day the store is built (the tests assert them at `FIXED_NOW`).
+const today: DateOnly = SEED_DAY;
 const stamp = (day: DateOnly) => `${day}T15:00:00.000Z`;
 
 const WEB_PROJECT = mockId("pry", "kairos_web");

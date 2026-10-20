@@ -1,9 +1,10 @@
 // MOCK — invoices fixtures of Hito 1 (data-rules.md §2, §3a Δ1). The invoices module package (H1-B3 T6) builds the
 // invoices screens over them and owns this file from then on. Fixtures store the inputs (lines with their rates
 // and discounts, the IVA adjustments, the withholdings); the derived fields, the tax lines and the statuses are
-// computed through `lib/finance` by the derive pass of the store (C17). Dates are relative to the business day of
-// the build. No payment or allocation is seeded here: the payments module (T7) allocates against these rows.
-import { addDays, todayInCaracas, type DateOnly } from "@/lib/dates";
+// computed through `lib/finance` by the derive pass of the store (C17). Dates are relative to `SEED_DAY`. No
+// payment or allocation is seeded here: the payments module (T7) allocates against these rows.
+import { addDays, type DateOnly } from "@/lib/dates";
+import { SEED_DAY } from "./seed-day";
 import type {
   InvoiceDetailDTO,
   InvoiceLineDTO,
@@ -26,7 +27,9 @@ export interface InvoiceTaxLineRow extends InvoiceTaxLineDTO {
  */
 export type InvoiceRow = InvoiceDetailDTO;
 
-const today: DateOnly = todayInCaracas(new Date());
+// Fixed seed day, like the fixed dates of the payments and expenses fixtures: the derived figures stay the
+// same whatever day the store is built (the tests assert them at `FIXED_NOW`).
+const today: DateOnly = SEED_DAY;
 const stamp = (day: DateOnly) => `${day}T15:00:00.000Z`;
 
 const ZERO = "0.00";

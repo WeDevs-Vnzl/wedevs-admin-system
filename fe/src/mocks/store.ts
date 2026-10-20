@@ -101,6 +101,8 @@ export interface PreferenceRow {
  * the DTOs of `src/lib/validators`, which their module packages may refine into stored rows.
  */
 export interface MockStore {
+  /** Fixed clock of a test store, so the derive pass after a mutation never reads the real day; `null` follows it. */
+  clock: Date | null;
   /** Last value handed out per entity-code prefix (`CLI`, `PRY`, `FAC`, `PAG`, `GAS`, `DOC`). */
   sequences: MockSequences;
   /** Counters behind `nextMockId` for runtime-created records. */
@@ -196,7 +198,7 @@ export function listDeriveHooks(): string[] {
 
 /** Runs every derive hook over the store. Mock services call it after each mutation. */
 export function deriveMockStore(store: MockStore = getMockStore()): void {
-  deriveFinance(store, todayInCaracas(new Date()));
+  deriveFinance(store, todayInCaracas(store.clock ?? new Date()));
   for (const hook of globalState().deriveHooks.values()) hook(store);
 }
 
@@ -220,12 +222,16 @@ function deriveSequences(store: MockStore): void {
  * (project deadlines, document expiry, the activity window); business "today" is the Caracas day (C11
  * allows the clock here: this is store infrastructure, not a service).
  */
-export function buildMockStore(now: Date = new Date()): MockStore {
+export function buildMockStore(
+  now: Date = new Date(),
+  options: { fixedClock?: boolean } = {},
+): MockStore {
   const catalogs = createCatalogFixtures(todayInCaracas(now));
   const documents = createDocumentFixtures(now);
   const clients = createClientFixtures(now);
   const shares = createShareFixtures(now, { documents, clients, users: catalogs.users });
   const store: MockStore = structuredClone({
+    clock: options.fixedClock ? now : null,
     sequences: createMockSequences(),
     idCounters: {},
 

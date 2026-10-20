@@ -27,13 +27,13 @@ export function makeSessionUser(role: UserRole = "OWNER", overrides: Partial<Ses
 
 /** A fresh, isolated store plus a context over it. */
 export function makeTestContext(role: UserRole = "OWNER", overrides: Partial<SessionUser> = {}) {
-  const db: MockStore = buildMockStore(FIXED_NOW);
+  const db: MockStore = buildMockStore(FIXED_NOW, { fixedClock: true });
   const user = makeSessionUser(role, overrides);
   return { db, user, ctx: createMockContext({ user, now: FIXED_NOW, db }) };
 }
 
 export function makeTestPublicContext() {
-  const db: MockStore = buildMockStore(FIXED_NOW);
+  const db: MockStore = buildMockStore(FIXED_NOW, { fixedClock: true });
   return { db, ctx: createMockPublicContext({ now: FIXED_NOW, db }) };
 }
 

@@ -9,6 +9,7 @@ vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) => `${namespace}:${key}`,
 }));
 
+import { addDays } from "@/lib/dates";
 import type { UserRole } from "@/lib/validators/enums";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -270,8 +271,12 @@ describe("exportProjectsCsvAction", () => {
 
   it("applies the delivery window facet and refuses unknown columns and non-readers", async () => {
     as("OWNER");
+    // The fixture dates are computed from today, so the window is built around one of them.
+    const target = getMockStore().projects.find(
+      (project) => project.archivedAt === null && project.targetEndDate !== null,
+    )!.targetEndDate!;
     const windowed = await exportProjectsCsvAction(
-      payload({ filters: { delivery: ["2026-10-10", "2026-10-30"] } }, [
+      payload({ filters: { delivery: [addDays(target, -10), addDays(target, 10)] } }, [
         "code",
         "targetEndDate",
         "stack",
