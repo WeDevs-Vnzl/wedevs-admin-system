@@ -15,10 +15,10 @@ ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
 | H1-B2 — Commercial core UI | Hito 1 UI batch | **Closed** 2026-10-13 (user approval; wave 3 `7d33c7d`, eval-01 fixes on `fix/eval-01-ui`; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B3 — Finance UI | Hito 1 UI batch | **In progress** — ODD feature `odd/tasks/h1-b3-finance-ui.md` (opened 2026-10-13; multi-rate invoices, DT-44) |
-| H1-B4 — Documents and portal UI | Hito 1 UI batch | Outline (access keys DT-45, pdf.js DT-50, brand DT-51) |
-| H1-B5 — Intelligence UI | Hito 1 UI batch | Outline |
-| H1-FX — Fix/change cycle | change batches | Placeholder; ends with the user's explicit "UI accepted" |
+| H1-B3 — Finance UI | Hito 1 UI batch | **Closed** 2026-10-14 (user approval; ODD `odd/tasks/h1-b3-finance-ui.md`, T1–T10; A1 decision open → H1-FX; local, push/PR at end of Hito 1 per DT-69) |
+| H1-B4 — Documents and portal UI | Hito 1 UI batch | **Closed** 2026-10-20 (user approval; ODD `odd/tasks/h1-b4-documents-portal-ui.md`, T1–T11, verifier B1 fixed `6a11636`; local, push/PR at end of Hito 1 per DT-69) |
+| H1-B5 — Intelligence UI | Hito 1 UI batch | **Closed** 2026-10-20 (user approval; ODD `odd/tasks/h1-b5-intelligence-ui.md`, T1–T9, verifier S1–S9 PASS, E2E 94 + 2 fixme (A5 → H1-FX); local, push/PR at end of Hito 1 per DT-69) |
+| H1-FX — Fix/change cycle | change batches | **Open** 2026-10-20 — consolidated backlog in § H1-FX; ends with the user's explicit "UI accepted" |
 | H2-B1 … H2-B7 | Hito 2 implementation blocks | Outline; each closes with the deploy-preview gate. No open blockers (P3/P6/P7 answered, DT-73…DT-75) |
 
 ---
@@ -3026,24 +3026,82 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
 
 🛑 **MANDATORY STOP** between every wave.
 
-## H1-FX — Fix/change cycle (placeholder)
+## H1-FX — Fix/change cycle
 
 - One or more **change batches** (`batch/fix-<topic>` or `batch/change-<topic>`) opened from the user's
   review of the Hito 1 UI. Each is usually one package in one wave; the Orchestrator asks the user before
   skipping the Planner for a trivial one.
-- **Backlog carried from H1-B2 (audit 2026-10-12)** — in addition to the items routed "→ H1-FX" in each wave close:
-  - D5: focus does not return to the contact dialog opener (`fe/tests/e2e/h1-b2-w3-notes-roles.spec.ts`, `test.fail`),
-    together with the kit `ConfirmDialog` focus item.
-  - `it.fails` in `country-combobox.keyboard.test.tsx`: fix the behavior and turn it into a passing test.
-  - Flaky jsdom timeouts in `phone-input` and `country-combobox` unit tests.
-  - D3 workaround: the global `[data-slot="combobox-content"] { pointer-events:auto }` style injected from feature
-    code moves into the kit or is removed.
-  - Restore the `/clients/list` and `/projects/list` loading skeletons.
-  - Shrink the RSC guard ALLOW_LIST (4 kit barrel re-exports).
-  - Project archive `INTEGRITY_LOCK` E2E (`h1-b2-w3-projects.spec.ts`, `test.skip`) once H1-B3 provides billing data.
-- **Suggestion carried from H1-B3 (2026-10-14, user: "registralo como sugerencia para el final del hito 1")**:
-  `ClientDetailDTO` embeds `financials` for every role; drop it for roles without `canSeeFinancials`
-  (`getClientFinancials` is already gated server-side, 5cf18e3).
+- **Consolidated backlog (2026-10-20).** Single source of truth for H1-FX: it merges the H1-B2 audit
+  (2026-10-12), the H1-B3 suggestion, every "→ H1-FX" routing in the wave closes above, and the H1-B5
+  feature doc (`odd/tasks/h1-b5-intelligence-ui.md`). The routings above stay as history; new items go here.
+  Origin in brackets.
+
+  **Bugs and behavior**
+  - [ ] Date bomb: the "delivery window" test in `features/projects/actions.test.ts` uses a fixed
+    2026-10-10..2026-10-30 window over data computed from today; the only failing unit test. [B5]
+  - [ ] A5: no `/payments/[id]/edit` and `/expenses/[id]/edit` routes (2 `test.fixme` in the B5 route sweep). [B5]
+  - [ ] A6/m4: archived records are still editable. [B5]
+  - [ ] Restoring a project or note whose client is archived returns no CONFLICT (only contacts do). [B5]
+  - [ ] Cmd+K exact-hit shortcut matches `code` only, not the fiscal `invoiceNumber`. [B5]
+  - [ ] `country-combobox` does not open on ArrowDown; turn the `it.fails` in
+    `country-combobox.keyboard.test.tsx` into a passing test. [B2 audit]
+  - [ ] D5: focus does not return to the contact dialog opener (`h1-b2-w3-notes-roles.spec.ts`,
+    `test.fail`), together with kit `ConfirmDialog` focus return and moving `useOpenerFocus` out of
+    `features/clients`. [B2 audit]
+  - [ ] m7: stale-response guard in tables. [B2]
+  - [ ] m6: raw ISO dates in the project header. [B2]
+  - [ ] CONTACT prefill; clearing a `DateField`. [B2]
+
+  **Accessibility**
+  - [ ] Kit `aria-describedby` forwarding in `PhoneInput`, `DateField`, `AsyncCombobox` and `Uploader`;
+    `mailto` helper. [B2]
+  - [ ] N1: `--muted-foreground` → `#686874` in `globals.css`, then drop the sign-in `text-foreground/70`
+    workaround. [B1]
+  - [ ] R14: `SidebarInset` renders a `<main>` that wraps the header and footer. [B1]
+  - [ ] R15: no per-page title template. [B1]
+  - [ ] N4: `aria-labelledby` on the preference radiogroups. [B1]
+  - [ ] Kit: m7 `aria-sort` and row label; m8 link ToggleGroup → ButtonGroup with `aria-current`;
+    m10 phone dial `aria-label`. [B1]
+  - [ ] Dark mode: subtle topbar focus ring; breadcrumb truncation at 820 px (also in Spanish). [B1]
+
+  **UI and small features**
+  - [ ] Dashboard: dark "Saldo en cuentas" card; KPI cards link to `/reports`. [B5]
+  - [ ] `AlertList` has no read/unread styling. [B5]
+  - [ ] Company logo preview in settings. [B5]
+  - [ ] N2: favicon `src/app/icon.svg` (today `/favicon.ico` renders the shell 404); user-supplied logo SVG. [B1]
+  - [ ] Restore the `/clients/list` and `/projects/list` loading skeletons. [B2 audit]
+  - [ ] m5: `MoneyInput` accepts extra decimals. [B1]
+  - [ ] F7: title concatenation; F9: page size of the client projects tab. [B2]
+  - [ ] N2: plural `archiveNeedsConfirm` for bulk; N3: one shared archive-with-lock dialog. [B2]
+  - [ ] Optional: restyle `window.confirm` as a kit dialog. [B1]
+
+  **Cleanup and debt**
+  - [ ] Unused: `shell.dashboardPlaceholder.*` keys, `forms.uploader.inputLabel` key,
+    `getShellData().alertCount`. [B1, B5]
+  - [ ] m4: date-only check duplicated in `common.ts` and `dates.ts`. [B1]
+  - [ ] D3 workaround: the global `[data-slot="combobox-content"] { pointer-events:auto }` style injected
+    from feature code moves into the kit or is removed. [B2 audit]
+  - [ ] Shrink the RSC guard ALLOW_LIST (4 kit barrel re-exports). [B2 audit]
+  - [ ] Nits: cast in `features/catalogs/rate-lookup.ts`; `withSortFields` comment wrongly lists
+    `.extend()`; stray blank line at `client-form.tsx:263` (N1). [B1, B2]
+  - [ ] `ClientDetailDTO` embeds `financials` for every role; drop it for roles without
+    `canSeeFinancials` (`getClientFinancials` is already gated server-side, 5cf18e3). User, 2026-10-14:
+    "registralo como sugerencia para el final del hito 1". [B3]
+
+  **Tests**
+  - [ ] Flaky jsdom timeouts in `phone-input` and `country-combobox`; flaky faceted-filter and documents
+    tests. [B2 audit, B2]
+  - [ ] Project archive `INTEGRITY_LOCK` E2E (`h1-b2-w3-projects.spec.ts`, `test.skip`). [B2 audit]
+  - [ ] `async-combobox` debounce test with fake timers; stable callback for the pagination clamp. [B1]
+  - [ ] Coverage below 90 %: `data-table.tsx`, `related-mini-table.tsx`, `use-unsaved-changes.ts`;
+    shell (user-menu, alerts-bell, app-footer, not-found-content, theme-provider, section-placeholder,
+    settings-nav, settings queries); rich-text toolbar (34 %); documents service (89.3 %). [B1, B2]
+
+  **Manual and CI**
+  - [ ] HU-25 CA3: ≥ 50 fps with 500 nodes, and the graph layout running in a worker, checked in a real
+    browser. [B5]
+  - [ ] Decide whether `SHARE_IP_SALT` / `SHARE_UNLOCK_SECRET` become GitHub Actions secrets for the CI
+    e2e job. [B5]
 - [ ] **User's explicit acceptance of the Hito 1 UI** (closes Hito 1; Hito 2 does not open without it).
 
 ---
