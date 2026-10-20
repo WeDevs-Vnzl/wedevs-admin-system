@@ -15,7 +15,7 @@ ticks **only its own** checkboxes. Process rules: `docs/rules/ADE/phase-gates.md
 | Batch 0 — Rules | rules | Approved |
 | H1-B1 — UI foundations | Hito 1 UI batch | **Closed** 2026-10-10 (user approval; local, push/PR at end of Hito 1 per DT-69) |
 | H1-B2 — Commercial core UI | Hito 1 UI batch | **Closed** 2026-10-13 (user approval; wave 3 `7d33c7d`, eval-01 fixes on `fix/eval-01-ui`; local, push/PR at end of Hito 1 per DT-69) |
-| H1-B3 — Finance UI | Hito 1 UI batch | **Closed** 2026-10-14 (user approval; ODD `odd/tasks/h1-b3-finance-ui.md`, T1–T10; A1 decision open → H1-FX; local, push/PR at end of Hito 1 per DT-69) |
+| H1-B3 — Finance UI | Hito 1 UI batch | **Closed** 2026-10-14 (user approval; ODD `odd/tasks/h1-b3-finance-ui.md`, T1–T10; A1 skip-on-resume for recurring expenses applied (L20); local, push/PR at end of Hito 1 per DT-69) |
 | H1-B4 — Documents and portal UI | Hito 1 UI batch | **Closed** 2026-10-20 (user approval; ODD `odd/tasks/h1-b4-documents-portal-ui.md`, T1–T11, verifier B1 fixed `6a11636`; local, push/PR at end of Hito 1 per DT-69) |
 | H1-B5 — Intelligence UI | Hito 1 UI batch | **Closed** 2026-10-20 (user approval; ODD `odd/tasks/h1-b5-intelligence-ui.md`, T1–T9, verifier S1–S9 PASS, E2E 94 + 2 fixme (A5 → H1-FX); local, push/PR at end of Hito 1 per DT-69) |
 | H1-FX — Fix/change cycle | change batches | **Open** 2026-10-20 — consolidated backlog in § H1-FX; ends with the user's explicit "UI accepted" |
