@@ -26,4 +26,5 @@ blob-report/
 *.log
 # Local AI runtime state
 .atl/
+.claude/
 .codegraph/
