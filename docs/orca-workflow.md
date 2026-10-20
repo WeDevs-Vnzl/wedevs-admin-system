@@ -9,7 +9,7 @@ How this project is built with the Orca agent fleet.
 
 ## Repo topology
 
-One git repo, `admin-system/`, holding the Next.js monolith (PRD §6) in `fe/`, the process docs in `docs/` and visual references in `resources/`. App paths in these docs (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun` command runs inside `fe/`. Orca sessions run from the repo root; each Developer works in its own Orca worktree of this same repo.
+One git repo, `wedevs-core/`, holding the Next.js monolith (PRD §6) in `fe/`, the process docs in `docs/` and visual references in `resources/`. App paths in these docs (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun` command runs inside `fe/`. Orca sessions run from the repo root; each Developer works in its own Orca worktree of this same repo.
 
 Packages are defined by the files they touch. The folder layout is the one in PRD §6.3:
 
