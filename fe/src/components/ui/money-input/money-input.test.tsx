@@ -54,6 +54,17 @@ describe("MoneyInput", () => {
     for (const [value] of onChange.mock.calls) expect(typeof value.amount).toBe("string");
   });
 
+  it("ignores a keystroke that would add a third decimal (m5)", async () => {
+    const onChange = vi.fn();
+    renderIntl(<Harness initial={{ amount: "", currency: "USD" }} onChange={onChange} />, "en");
+    const input = screen.getByRole("textbox", { name: "Amount" });
+
+    await userEvent.type(input, "12.345");
+
+    expect(input).toHaveValue("12.34");
+    expect(onChange).toHaveBeenLastCalledWith({ amount: "12.34", currency: "USD" });
+  });
+
   it("normalizes EN typing and reformats on blur", async () => {
     const onChange = vi.fn();
     renderIntl(<Harness initial={{ amount: "", currency: "USD" }} onChange={onChange} />, "en");

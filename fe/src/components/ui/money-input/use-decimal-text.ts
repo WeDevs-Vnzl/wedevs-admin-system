@@ -48,6 +48,9 @@ export function useDecimalText({
     text,
     invalid: text.trim() !== "" && parsed === null,
     onTextChange(next: string) {
+      // A keystroke past `maxDecimals` is dropped instead of being rounded away behind the user's back.
+      const unbounded = parseLocalizedDecimal(next, locale, { maxDecimals: 20, allowNegative });
+      if (unbounded !== null && unbounded !== parse(next)) return;
       setText(next);
       onValueChange(parse(next) ?? "");
     },
