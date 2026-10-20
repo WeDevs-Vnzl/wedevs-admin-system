@@ -114,6 +114,17 @@ describe("HU-28 CA2: restoring returns the record to its previous state and logs
     expect(db.activity).toHaveLength(before);
   });
 
+  it("a project or a note comes back even while its client stays archived (no CONFLICT, user 2026-10-20)", async () => {
+    const { ctx, db } = makeTestContext("OWNER");
+    const note = db.notes.find((row) => row.id === "note_borrada_prueba")!;
+    note.links = [{ entityType: "CLIENT", entityId: "cli_veredas_digital" }];
+    await restoreFromTrash(ctx, { entityType: "PROJECT", entityId: "pry_veredas_landing" });
+    await restoreFromTrash(ctx, { entityType: "NOTE", entityId: note.id });
+    expect(db.clients.find((row) => row.id === "cli_veredas_digital")?.archivedAt).not.toBeNull();
+    expect(db.projects.find((row) => row.id === "pry_veredas_landing")?.archivedAt).toBeNull();
+    expect(note.archivedAt).toBeNull();
+  });
+
   it("a live record, an unknown id or a non-archivable type is NOT_FOUND", async () => {
     const { ctx } = makeTestContext("OWNER");
     await expect(
