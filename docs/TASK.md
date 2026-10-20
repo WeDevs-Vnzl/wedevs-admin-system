@@ -3037,19 +3037,19 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
   Origin in brackets.
 
   **Bugs and behavior**
-  - [ ] Date bomb: the "delivery window" test in `features/projects/actions.test.ts` uses a fixed
+  - [x] Date bomb: the "delivery window" test in `features/projects/actions.test.ts` uses a fixed
     2026-10-10..2026-10-30 window over data computed from today; the only failing unit test. [B5]
   - [ ] A5: no `/payments/[id]/edit` and `/expenses/[id]/edit` routes (2 `test.fixme` in the B5 route sweep). [B5]
   - [ ] A6/m4: archived records are still editable. [B5]
-  - [ ] Restoring a project or note whose client is archived returns no CONFLICT (only contacts do). [B5]
-  - [ ] Cmd+K exact-hit shortcut matches `code` only, not the fiscal `invoiceNumber`. [B5]
+  - [x] Restoring a project or note whose client is archived returns no CONFLICT (only contacts do). [B5] *(No CONFLICT wanted, user 2026-10-20; pinned by a test.)*
+  - [x] Cmd+K exact-hit shortcut matches `code` only, not the fiscal `invoiceNumber`. [B5]
   - [ ] `country-combobox` does not open on ArrowDown; turn the `it.fails` in
     `country-combobox.keyboard.test.tsx` into a passing test. [B2 audit]
   - [ ] D5: focus does not return to the contact dialog opener (`h1-b2-w3-notes-roles.spec.ts`,
     `test.fail`), together with kit `ConfirmDialog` focus return and moving `useOpenerFocus` out of
     `features/clients`. [B2 audit]
   - [ ] m7: stale-response guard in tables. [B2]
-  - [ ] m6: raw ISO dates in the project header. [B2]
+  - [x] m6: raw ISO dates in the project header. [B2]
   - [ ] CONTACT prefill; clearing a `DateField`. [B2]
 
   **Accessibility**
@@ -3070,7 +3070,7 @@ Files: `src/app/(app)/{clients,projects}/**` (route layout of `page.tsx` / `load
   - [ ] Company logo preview in settings. [B5]
   - [ ] N2: favicon `src/app/icon.svg` (today `/favicon.ico` renders the shell 404); user-supplied logo SVG. [B1]
   - [ ] Restore the `/clients/list` and `/projects/list` loading skeletons. [B2 audit]
-  - [ ] m5: `MoneyInput` accepts extra decimals. [B1]
+  - [x] m5: `MoneyInput` accepts extra decimals. [B1]
   - [ ] F7: title concatenation; F9: page size of the client projects tab. [B2]
   - [ ] N2: plural `archiveNeedsConfirm` for bulk; N3: one shared archive-with-lock dialog. [B2]
   - [ ] Optional: restyle `window.confirm` as a kit dialog. [B1]
