@@ -15,11 +15,6 @@ permissions:
 env:
   NEXT_TELEMETRY_DISABLED: "1"
 
-# The Next.js app lives in fe/; every `run` step executes there.
-defaults:
-  run:
-    working-directory: fe
-
 jobs:
   verify:
     name: Lint, types, tests, i18n, build
@@ -31,17 +26,17 @@ jobs:
       # Node runs Next.js, Vitest and Playwright; bun only installs and runs the package scripts.
       - uses: actions/setup-node@v4
         with:
-          node-version-file: fe/.nvmrc
+          node-version-file: .nvmrc
 
       # Reads the bun version from `packageManager`.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: fe/package.json
+          bun-version-file: package.json
 
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('fe/bun.lock') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
 
       - run: bun install --frozen-lockfile
@@ -64,17 +59,17 @@ jobs:
       # Node runs Next.js, Vitest and Playwright; bun only installs and runs the package scripts.
       - uses: actions/setup-node@v4
         with:
-          node-version-file: fe/.nvmrc
+          node-version-file: .nvmrc
 
       # Reads the bun version from `packageManager`.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: fe/package.json
+          bun-version-file: package.json
 
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('fe/bun.lock') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
 
       - run: bun install --frozen-lockfile
@@ -119,6 +114,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: fe/playwright-report/
+          path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7

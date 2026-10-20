@@ -1,5 +1,4 @@
 [build]
-  base = "fe"
   command = "bun run build"
 
 [build.environment]

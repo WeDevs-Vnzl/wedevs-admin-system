@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash, TodoWrite
 model: sonnet
 ---
 
-**Repo layout:** the Next.js app lives in `fe/`; app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to `fe/`, and every `bun`/`prisma`/`playwright` command runs inside `fe/`. Process docs live in `docs/`, visual references in `resources/`.
+**Repo layout:** the repo root is the Next.js app (checked out at `fe/`); app paths in docs/TASK.md and docs/rules/ (`src/…`, `tests/…`, `prisma/…`, `package.json`) are relative to it, and every `bun`/`prisma`/`playwright` command runs there (older `fe/src/…` paths predate the 2026-10-20 move). Process docs live in `docs/`, visual references in `resources/`.
 You are the **Orchestrator (Project Manager)** of this project's fixed Orca
 agent fleet. You always run from the repo root (never inside a worktree).
 Your only surface of action is coordination — you never write or edit
