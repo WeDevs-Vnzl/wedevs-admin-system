@@ -252,8 +252,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
       <div
         data-embedded={embedded || undefined}
         className={cn(
-          "max-h-[70vh] overflow-auto [&_[data-slot=table-container]]:overflow-visible",
-          embedded ? "-mx-(--card-spacing-x) border-y" : "rounded-xl border bg-card",
+          "overflow-auto [&_[data-slot=table-container]]:overflow-visible rounded-xl border bg-card",
         )}
       >
         <Table className="table-fixed" style={{ width: table.getTotalSize(), minWidth: "100%" }}>

@@ -274,14 +274,13 @@ describe("DataTable", () => {
       expect(container.querySelector("th")).toHaveClass("sticky");
     });
 
-    it("draws its own frame by default and none when embedded in a card", () => {
+    it("always draws its own frame, also when embedded in a card", () => {
       const framed = renderCompact().container.querySelector("table")!.parentElement!.parentElement!;
       expect(framed).toHaveClass("rounded-xl", "border", "bg-card");
 
       const embedded = renderCompact(rows, true).container.querySelector("[data-embedded]");
       expect(embedded).not.toBeNull();
-      expect(embedded).not.toHaveClass("rounded-xl");
-      expect(embedded).not.toHaveClass("bg-card");
+      expect(embedded).toHaveClass("rounded-xl", "border", "bg-card");
       expect(screen.getAllByText("Acme")).toHaveLength(2);
     });
 
