@@ -55,7 +55,7 @@ Branch `batch/h1-fx-fixes` from `main` (`7acf26f`) · delivery `ask-on-risk` (fo
 ## Tasks
 | ID | Specs | Work | Route | Status |
 |---|---|---|---|---|
-| T1 | S1 | date bomb, restore CONFLICT, Cmd+K `invoiceNumber`, project header dates, `MoneyInput` decimals | inline | pending |
+| T1 | S1 | date bomb, restore CONFLICT, Cmd+K `invoiceNumber`, project header dates, `MoneyInput` decimals | inline | partial — done `884ce2f` (date bombs), `ac62b04` (Cmd+K), `94c612f` (m6), `b999286` (m5); restore CONFLICT waits for the user's rule (L3). Risk: item 3 (shared `useDecimalText` also drives `RateInput`; its tests pass) |
 | T2 | S2 | `/payments/[id]/edit`, `/expenses/[id]/edit`; un-fixme the 2 route-sweep cases | inline | pending |
 | T3 | S3 | archived records read-only (edit routes and actions) | inline | pending |
 | T4 | S4 | country-combobox ArrowDown, focus return (D5 + `ConfirmDialog`), stale-response guard, CONTACT prefill, `DateField` clear | inline | pending |
@@ -69,3 +69,4 @@ Branch `batch/h1-fx-fixes` from `main` (`7acf26f`) · delivery `ask-on-risk` (fo
 ## Log
 - **L1** (2026-10-20, user): "A1 si se deben saltar los periodos vencidos. incopora mis cambios y procede"
 - **L2** A1 was already applied on 2026-10-14 (`odd/tasks/h1-b3-finance-ui.md` L20; `nextOpenPeriod` in `fe/src/mocks/services/expenses.ts:287`); its test passes; the TASK.md status row was corrected (`79cfe73`). The user's uncommitted changes committed as `a77089f` (radii 1.2 → 0.8, `DataTable` frame kept inside cards; data-table and note-composer tests 81/81), `c0fc299`, `57f417f`.
+- **L3** T1 (2026-10-20). Date bomb: besides the projects window, `dashboard.test.ts` and `reports.test.ts` failed today (4 tests): `fixtures/invoices.ts` and `fixtures/billing.ts` anchored their dates to the real clock at module load while payments and expenses use fixed dates, and `deriveMockStore` re-derived with the real clock after each mutation. Fixed: `SEED_DAY = 2026-10-19` (`fixtures/seed-day.ts`, the day the B5 tests were written) and a `clock` on test stores (`buildMockStore(now, { fixedClock: true })`). Proof: full suite 313 files / 3590 passed + 1 expected fail; `src/mocks` + `src/lib` + projects actions 1696/1696 with the clock shifted +63 days. RED: search exact `KAI-0001` (6 groups → 1), m6 (raw ISO), m5 (`12.345` kept); the date fix has no separate RED beyond the 4 failing tests. tsc, eslint, prettier ok. Open: restoring a project or note whose client is archived — a project can have several clients and a note several links, so the CONFLICT rule needs the user.
