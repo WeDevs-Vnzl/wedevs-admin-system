@@ -39,3 +39,12 @@ Sistema interno de WeDevs para clientes, proyectos, facturas, pagos, cuentas, ga
 ## Variables de entorno
 
 Ver `.env.example`. En producción el portal público no arranca sin `SHARE_UNLOCK_SECRET` y `SHARE_IP_SALT`.
+
+## Deploy
+
+Cada push a `main` despliega a producción en Netlify con `.github/workflows/deploy.yml` (también se puede lanzar a mano con *Run workflow*). El workflow corre lint y typecheck, y luego `netlify deploy --build --prod` con la CLI; el build usa las variables de entorno configuradas en el sitio de Netlify.
+
+Configuración única:
+
+1. En el sitio de Netlify, desactivar los builds propios desde Git (*Site configuration → Build & deploy → Stop builds*) para no desplegar dos veces.
+2. En el repositorio de GitHub, crear los secrets `NETLIFY_AUTH_TOKEN` (token personal de Netlify) y `NETLIFY_SITE_ID` (*Project ID* del sitio).
