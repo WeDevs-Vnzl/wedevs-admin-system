@@ -1,9 +1,8 @@
 {
-  "name": "wedevs-be",
+  "name": "@wedevs/api",
   "version": "0.0.1",
   "private": true,
   "license": "UNLICENSED",
-  "packageManager": "bun@1.4.2",
   "engines": {
     "node": "24.21.0"
   },
@@ -24,7 +23,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "openapi:generate": "tsx scripts/openapi.ts generate",
     "openapi:check": "tsx scripts/openapi.ts check",
-    "check": "bash scripts/check.sh"
+    "check": "bash scripts/check.sh",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@clerk/backend": "3.26.2",

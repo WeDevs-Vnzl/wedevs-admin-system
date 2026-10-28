@@ -1,0 +1,33 @@
+{
+  "name": "wedevs-core-platform",
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:int": "turbo run test:int",
+    "test:e2e": "turbo run test:e2e",
+    "format:check": "turbo run format:check",
+    "i18n:check": "turbo run i18n:check",
+    "openapi:check": "turbo run openapi:check",
+    "api:check": "turbo run api:check",
+    "infra:up": "podman compose up -d postgres redis",
+    "infra:down": "podman compose down",
+    "db:migrate": "bun run --cwd apps/api db:migrate",
+    "db:reset": "bun run --cwd apps/api db:reset",
+    "db:seed": "bun run --cwd apps/api db:seed"
+  },
+  "devDependencies": {
+    "turbo": "2.11.10"
+  }
+}

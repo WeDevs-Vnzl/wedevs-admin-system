@@ -1,9 +1,8 @@
 {
-  "name": "wedevs-admin-system",
+  "name": "@wedevs/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.4.2",
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@clerk/nextjs": "7.9.21",
@@ -73,6 +72,7 @@
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.7",
     "@types/d3-force": "3.0.10",
+    "@types/hast": "3.0.5",
     "@types/node": "24.19.2",
     "@types/qrcode": "1.5.6",
     "@types/react": "19.3.0",
@@ -104,7 +104,8 @@
     "test:e2e": "playwright test",
     "i18n:check": "tsx scripts/check-i18n.ts",
     "api:gen": "openapi-typescript src/lib/api/openapi.json -o src/lib/api/schema.d.ts",
-    "api:check": "tsx scripts/api-check.ts"
+    "api:check": "tsx scripts/api-check.ts",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=24 <25"

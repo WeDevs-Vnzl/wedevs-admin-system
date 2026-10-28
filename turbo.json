@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "envMode": "loose",
+  "tasks": {
+    "prisma:generate": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build", "prisma:generate"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build", "prisma:generate"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build", "prisma:generate"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "prisma:generate"]
+    },
+    "test": {
+      "dependsOn": ["^build", "prisma:generate"]
+    },
+    "test:int": {
+      "dependsOn": ["prisma:generate"],
+      "cache": false
+    },
+    "test:e2e": {
+      "dependsOn": ["prisma:generate"],
+      "cache": false
+    },
+    "format:check": {},
+    "i18n:check": {},
+    "openapi:check": {
+      "dependsOn": ["prisma:generate"]
+    },
+    "api:check": {
+      "cache": false
+    }
+  }
+}
