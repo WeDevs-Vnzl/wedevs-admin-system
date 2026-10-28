@@ -42,11 +42,15 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
 
       - run: bun install --frozen-lockfile
+      # Netlify base is apps/web (its netlify.toml); the api is not deployed here (VPS, HARD-1).
       - run: bun run lint
+        working-directory: apps/web
       - run: bun run typecheck
+        working-directory: apps/web
 
       - name: Build and deploy
         id: deploy
+        working-directory: apps/web
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

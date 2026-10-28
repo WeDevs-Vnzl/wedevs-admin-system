@@ -1,0 +1,201 @@
+name: CI
+
+# One workflow for the monorepo (DT-115). Each job runs only when Turborepo reports its package as affected:
+# pull requests compare against the base branch, pushes against the previous tip (`turbo ls --affected`
+# reads both from the GitHub Actions environment). A change to this file, bun.lock or turbo.json affects
+# every package (turbo.json globalDependencies).
+on:
+  pull_request:
+  push:
+    branches: [main, 'batch/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  api:
+    name: api (lint, types, tests, migrations, int, e2e, openapi)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Job-local throwaway value for the service container; not a secret.
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: core
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:dev@localhost:5432/core
+      DIRECT_URL: postgresql://postgres:dev@localhost:5432/core
+      # Literal placeholders, not secrets: no job touches Clerk or Cloudinary.
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+      CLERK_JWT_KEY: ci-placeholder-jwt-key
+      CLERK_WEBHOOK_SECRET: whsec_ci_placeholder
+      CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      # actions/checkout v7.0.1; full history so turbo can diff against the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      # oven-sh/setup-bun v2.2.0 (version read from packageManager)
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      # actions/setup-node v7.1.0 (version read from .nvmrc)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - run: bun install --frozen-lockfile
+        working-directory: .
+      # The api also owns the contract it writes (packages/api-contract).
+      - name: Check whether the api is affected
+        id: affected
+        working-directory: .
+        run: |
+          affected=$(bunx turbo ls --affected --output json | jq '[.packages.items[].name] | any(. == "@wedevs/api" or . == "@wedevs/api-contract")')
+          echo "run=$affected" >> "$GITHUB_OUTPUT"
+          echo "api affected: $affected" >> "$GITHUB_STEP_SUMMARY"
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run prisma:generate
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run lint
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run typecheck
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run test:cov
+      - name: Apply migrations and seed on the fresh service database
+        if: steps.affected.outputs.run == 'true'
+        run: |
+          bunx prisma migrate deploy
+          bun run db:seed
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run test:int
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run test:e2e
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run openapi:check
+      # Build only: no push, no registry login. Build context is the repository root (compose.yaml).
+      - name: Build the api image
+        if: steps.affected.outputs.run == 'true'
+        working-directory: .
+        run: docker build -f apps/api/Dockerfile -t wedevs-api:ci .
+
+  web:
+    name: web (lint, types, tests, api, i18n, build, e2e)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PORT: "3000"
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      # actions/checkout v7.0.1; full history so turbo can diff against the base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      # oven-sh/setup-bun v2.2.0 (version read from packageManager)
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      # actions/setup-node v7.1.0 (version read from .nvmrc); Node runs Next.js, Vitest and Playwright.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - run: bun install --frozen-lockfile
+        working-directory: .
+      # Affected also covers contract changes: the web depends on @wedevs/api-contract.
+      - name: Check whether the web is affected
+        id: affected
+        working-directory: .
+        run: |
+          affected=$(bunx turbo ls --affected --output json | jq '[.packages.items[].name] | any(. == "@wedevs/web")')
+          echo "run=$affected" >> "$GITHUB_OUTPUT"
+          echo "web affected: $affected" >> "$GITHUB_STEP_SUMMARY"
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run lint
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run typecheck
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run test:coverage
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run api:check
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run i18n:check
+      - if: steps.affected.outputs.run == 'true'
+        run: bun run build
+
+      - name: Install Playwright Chromium
+        if: steps.affected.outputs.run == 'true'
+        run: bun x playwright install --with-deps chromium
+
+      - name: Start app, run E2E, stop app
+        if: steps.affected.outputs.run == 'true'
+        run: |
+          bun run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for _ in $(seq 1 60); do
+            if curl --silent --fail --output /dev/null "$PLAYWRIGHT_BASE_URL"; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" -ne 1 ]; then
+            echo "::error::Server did not become ready within 60 s"
+            cat "$RUNNER_TEMP/next-start.log"
+            exit 1
+          fi
+
+          bun run test:e2e --pass-with-no-tests
+
+      - name: Stop app (safety net)
+        if: always()
+        run: pkill -f "next start" || pkill -f "next-server" || true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
