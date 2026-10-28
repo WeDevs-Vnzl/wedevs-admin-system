@@ -1,0 +1,119 @@
+# Local infrastructure and the VPS stack (DT-90, DT-115). Build context is the repository root.
+#   bun run infra:up                 postgres + redis only (tests, `bun run dev`)
+#   podman compose up -d             + migrate (one-shot), api and caddy
+#   podman compose --profile web up -d   + the Next.js standalone web
+# apps/api/.env and apps/web/.env are the user's uncommitted env files. Inside this network the API reaches
+# the `postgres` service; DATABASE_URL/DIRECT_URL below override the .env values for that reason.
+# The production database (Neon replacement) is decided in HARD-1. Host ports are overridable
+# (POSTGRES_PORT, REDIS_PORT, HTTP_PORT, HTTPS_PORT, WEB_PORT) when another stack already uses them.
+
+x-api-database: &api-database
+  DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-dev}@postgres:5432/core
+  DIRECT_URL: postgresql://postgres:${POSTGRES_PASSWORD:-dev}@postgres:5432/core
+
+services:
+  postgres:
+    image: docker.io/library/postgres:17
+    environment:
+      # Local default, matching CI; set POSTGRES_PASSWORD in the shell for anything shared.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
+      POSTGRES_DB: core
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'core']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [app]
+
+  # BullMQ backend (DT-116). AOF so queued jobs survive a restart.
+  redis:
+    image: docker.io/library/redis:7
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [app]
+
+  # Release step: `api` starts only after the migrations apply.
+  migrate:
+    image: wedevs-api:latest
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
+    env_file: apps/api/.env
+    environment: *api-database
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    networks: [app]
+
+  api:
+    image: wedevs-api:latest
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: apps/api/.env
+    environment: *api-database
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app]
+
+  caddy:
+    image: docker.io/library/caddy:2.10.2
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-localhost}
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks: [app]
+
+  # Production hosting of the web stays on Netlify until the VPS (deploy.yml); this is the local image.
+  web:
+    profiles: [web]
+    image: wedevs-web:latest
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://localhost}
+    env_file: apps/web/.env
+    ports:
+      - '127.0.0.1:${WEB_PORT:-3000}:3000'
+    restart: unless-stopped
+    networks: [app]
+
+# One bridge network: only caddy (and the local web/postgres/redis ports on 127.0.0.1) are published;
+# api needs outbound access to Clerk and Cloudinary, so the network is not `internal: true`.
+networks:
+  app:
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

@@ -43,6 +43,8 @@ export const APP_SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Self-contained server for apps/web/Dockerfile; the tracing root is inferred from the monorepo bun.lock.
+  output: "standalone",
   // Public portal (PRD §8.11, C22): never indexed, never cached, no referrer — the generic 404 included.
   async headers() {
     const headers = Object.entries(PORTAL_SECURITY_HEADERS).map(([key, value]) => ({ key, value }));

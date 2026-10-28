@@ -1,0 +1,16 @@
+# Build context is the repository root (compose.yaml); each Dockerfile copies only what it needs.
+**/.env*
+**/node_modules
+**/dist
+**/coverage
+**/.next
+**/.turbo
+**/test-results
+**/playwright-report
+.git
+.github
+apps/api/src/generated
+apps/api/test
+compose.yaml
+**/Dockerfile
+.dockerignore

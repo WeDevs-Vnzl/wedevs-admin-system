@@ -1,0 +1,6 @@
+# API_DOMAIN comes from compose.yaml (default `localhost`, served with Caddy's internal CA). Set it to the
+# real API domain on the VPS (user-owned) and Caddy obtains a public certificate automatically.
+{$API_DOMAIN:localhost} {
+	encode zstd gzip
+	reverse_proxy api:3000
+}
