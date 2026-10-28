@@ -1,0 +1,90 @@
+{
+  "moneyInput": {
+    "amountLabel": "Amount",
+    "currencyLabel": "Currency",
+    "placeholder": "0.00",
+    "usdEquivalent": "≈ {amount}"
+  },
+  "rateInput": {
+    "label": "Exchange rate",
+    "sourceLabel": "Rate source",
+    "usdLocked": "The US dollar is always 1",
+    "loading": "Looking up rate…",
+    "usingRateFrom": "Using rate from {date}",
+    "manual": "No rate on record. Enter it manually.",
+    "deviationWarning": "This rate differs by more than {percent}% from the reference rate ({rate}). Check the value."
+  },
+  "asyncCombobox": {
+    "placeholder": "Search…",
+    "loading": "Searching…",
+    "empty": "No results",
+    "create": "Create \"{query}\"",
+    "clear": "Clear selection",
+    "remove": "Remove {label}",
+    "secondaryLabel": "{label}: {option}",
+    "label": "Search",
+    "createFailed": "Could not create the item"
+  },
+  "countryCombobox": {
+    "placeholder": "Select country",
+    "search": "Search country…",
+    "empty": "No country matches",
+    "dialLabel": "Phone prefix country"
+  },
+  "phoneInput": {
+    "numberLabel": "Phone number",
+    "placeholder": "412 123 4567"
+  },
+  "dateField": {
+    "placeholder": "Select date",
+    "label": "Date",
+    "valueLabel": "Date: {value}"
+  },
+  "uploader": {
+    "dropTitle": "Drag files here",
+    "dropActive": "Drop the files to upload them",
+    "hint": "Up to {max} MB per file. Formats: {types}.",
+    "browse": "Choose files",
+    "inputLabel": "Select files",
+    "listLabel": "Files",
+    "remove": "Remove {name}",
+    "uploading": "Uploading {name}",
+    "done": "Done",
+    "failed": "The file could not be uploaded"
+  },
+  "richText": {
+    "placeholder": "Write here…",
+    "editorLabel": "Content",
+    "viewLabel": "Note content",
+    "invalid": "The content cannot be displayed.",
+    "imagePlaceholder": "Attached image: {name}",
+    "imageUnnamed": "unnamed",
+    "uploadRejected": "{name}: file type not allowed or too large.",
+    "uploadFailed": "Could not upload {name}.",
+    "toolbar": {
+      "label": "Text formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "taskList": "Task list",
+      "blockquote": "Quote",
+      "codeBlock": "Code block",
+      "horizontalRule": "Divider",
+      "table": "Insert table",
+      "link": "Link",
+      "linkUrl": "Link address",
+      "linkPlaceholder": "https://…",
+      "linkInvalid": "Use an http, https or mailto address.",
+      "linkApply": "Apply",
+      "unlink": "Remove link",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
+  }
+}

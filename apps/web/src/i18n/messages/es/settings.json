@@ -1,0 +1,151 @@
+{
+  "validation": {
+    "duplicateIvaRate": "La alícuota está repetida",
+    "defaultIvaRateNotAllowed": "La alícuota por defecto debe estar entre las permitidas"
+  },
+  "nav": {
+    "label": "Configuración",
+    "company": "Empresa",
+    "users": "Usuarios",
+    "preferences": "Preferencias",
+    "currencies": "Monedas",
+    "rates": "Tasas de cambio",
+    "fiscal": "Fiscal",
+    "paymentMethods": "Métodos de pago",
+    "technologies": "Tecnologías",
+    "documentTypes": "Documentos",
+    "expenseCategories": "Categorías de gasto",
+    "tags": "Etiquetas",
+    "trash": "Papelera"
+  },
+  "placeholder": {
+    "title": "Próximamente",
+    "description": "Esta sección llegará en una próxima entrega."
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "description": "Idioma, tema y zona horaria de tu cuenta.",
+    "language": {
+      "label": "Idioma",
+      "description": "Idioma de la interfaz.",
+      "es": "Español",
+      "en": "English"
+    },
+    "theme": {
+      "label": "Tema",
+      "description": "Claro, oscuro o según el sistema.",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "timezone": {
+      "label": "Zona horaria",
+      "description": "Se usa para mostrar fechas y horas. Por defecto, America/Caracas."
+    },
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "saved": "Preferencias guardadas",
+    "saveError": "No se pudieron guardar las preferencias"
+  },
+  "fiscal": {
+    "title": "Fiscal",
+    "description": "Alícuotas de IVA, IGTF y vencimiento por defecto de las facturas. Son parámetros a validar con el contador.",
+    "iva": {
+      "title": "IVA",
+      "description": "Alícuotas que pueden elegir las líneas de factura, además de “Exento”.",
+      "rates": "Alícuotas permitidas",
+      "newRate": "Nueva alícuota (%)",
+      "add": "Agregar",
+      "remove": "Quitar {rate} %",
+      "default": "Alícuota por defecto",
+      "defaultHint": "Se preselecciona en cada línea nueva."
+    },
+    "igtf": {
+      "title": "IGTF",
+      "description": "El IGTF se propone en un pago cuando su método propone IGTF o su moneda está en esta lista.",
+      "rate": "Alícuota de IGTF (%)",
+      "currencies": "Monedas que proponen IGTF",
+      "methods": "Métodos que proponen IGTF",
+      "methodsNone": "Ningún método propone IGTF.",
+      "manageMethods": "Gestionar métodos de pago"
+    },
+    "invoices": {
+      "title": "Facturas",
+      "dueDays": "Días de vencimiento por defecto",
+      "dueDaysHint": "Se suman a la fecha de emisión para proponer el vencimiento."
+    },
+    "save": "Guardar",
+    "saved": "Configuración fiscal guardada"
+  },
+  "company": {
+    "title": "Empresa",
+    "description": "Nombre, razón social, RIF, dirección y logo, usados por el portal de clientes y la impresión.",
+    "profile": {
+      "title": "Perfil"
+    },
+    "name": "Nombre",
+    "legalName": "Razón social",
+    "taxId": "RIF",
+    "address": "Dirección",
+    "logo": {
+      "label": "Logo",
+      "description": "Se muestra en el portal de clientes y en los documentos impresos.",
+      "current": "Hay un logo cargado. Sube uno nuevo para reemplazarlo.",
+      "none": "Aún no hay logo.",
+      "remove": "Quitar logo",
+      "uploadLabel": "Subir el logo de la empresa"
+    },
+    "save": "Guardar",
+    "saved": "Perfil de la empresa guardado"
+  },
+  "users": {
+    "page": {
+      "title": "Usuarios",
+      "description": "Personas con acceso a WeDevs Core, su rol e invitaciones pendientes. Las invitaciones se envían por correo."
+    },
+    "columns": {
+      "name": "Nombre",
+      "email": "Correo",
+      "role": "Rol",
+      "status": "Estado",
+      "createdAt": "Desde",
+      "actions": "Acciones"
+    },
+    "facets": {
+      "role": "Rol",
+      "status": "Estado"
+    },
+    "status": {
+      "ACTIVE": "Activo",
+      "INVITED": "Invitado"
+    },
+    "search": {
+      "placeholder": "Buscar usuarios…"
+    },
+    "empty": {
+      "title": "Sin usuarios",
+      "description": "Invita a la primera persona de tu equipo."
+    },
+    "roleOf": "Rol de {name}",
+    "revoke": "Revocar la invitación de {email}",
+    "invite": {
+      "open": "Invitar usuario",
+      "title": "Invitar usuario",
+      "description": "La persona recibe un correo para unirse con el rol elegido.",
+      "email": "Correo",
+      "role": "Rol",
+      "cancel": "Cancelar",
+      "submit": "Enviar invitación",
+      "sending": "Enviando…"
+    },
+    "toast": {
+      "invited": "Invitación enviada a {email}",
+      "roleChanged": "Rol de {name} actualizado",
+      "revoked": "Invitación revocada"
+    },
+    "errors": {
+      "emailTaken": "Este correo ya tiene un usuario o una invitación pendiente",
+      "lastOwner": "No se puede degradar al último Owner"
+    }
+  }
+}

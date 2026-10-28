@@ -1,0 +1,64 @@
+{
+  "search": {
+    "label": "Buscar en la tabla",
+    "placeholder": "Buscar…"
+  },
+  "facet": {
+    "add": "{field}",
+    "searchPlaceholder": "Buscar {field}…",
+    "empty": "Sin resultados",
+    "loading": "Cargando…",
+    "clear": "Quitar filtro",
+    "searchLabel": "Buscar {field}",
+    "error": "No se pudieron cargar las opciones",
+    "retry": "Reintentar"
+  },
+  "filters": {
+    "remove": "Quitar filtro {field}",
+    "clear": "Limpiar",
+    "chipLabel": "{field}:",
+    "range": "{from} – {to}"
+  },
+  "archived": {
+    "toggle": "Mostrar archivados"
+  },
+  "columns": {
+    "label": "Columnas",
+    "width": "Ancho de {column}",
+    "moveUp": "Mover {column} hacia arriba",
+    "moveDown": "Mover {column} hacia abajo",
+    "reset": "Restablecer columnas",
+    "resize": "Redimensionar la columna {column}"
+  },
+  "export": {
+    "label": "Exportar",
+    "success": "{count, plural, one {Se exportó # fila} other {Se exportaron # filas}}",
+    "truncated": "La exportación se cortó en {max} filas; ajusta los filtros para acotarla"
+  },
+  "bulk": {
+    "region": "Acciones en lote",
+    "selected": "{count} seleccionados",
+    "clear": "Deseleccionar"
+  },
+  "pagination": {
+    "range": "{from}–{to} de {total}",
+    "pageSize": "Filas por página",
+    "perPage": "{size} por página",
+    "page": "Página {page} de {pageCount}",
+    "previous": "Página anterior",
+    "next": "Página siguiente"
+  },
+  "select": {
+    "column": "Selección",
+    "all": "Seleccionar todas las filas de la página",
+    "row": "Seleccionar la fila {id}"
+  },
+  "sort": {
+    "by": "Ordenar por {column}"
+  },
+  "empty": {
+    "title": "Sin resultados",
+    "description": "Ajusta los filtros o la búsqueda."
+  },
+  "loading": "Cargando"
+}

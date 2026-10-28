@@ -1,0 +1,77 @@
+{
+  "page": {
+    "title": "Editar contenido"
+  },
+  "header": {
+    "history": "Historial",
+    "back": "Volver a {code}",
+    "current": "Vigente: v{number}",
+    "noVersion": "Sin publicar",
+    "publish": "Publicar versión v{number}",
+    "save": "Guardar borrador"
+  },
+  "saveState": {
+    "idle": "Sin cambios",
+    "dirty": "Cambios sin guardar",
+    "saving": "Guardando…",
+    "saved": "Guardado",
+    "error": "Borrador no guardado"
+  },
+  "view": {
+    "label": "Disposición",
+    "editor": "Editor",
+    "split": "Dividido",
+    "preview": "Vista previa"
+  },
+  "toolbar": {
+    "label": "Formato",
+    "h1": "Título 1",
+    "h2": "Título 2",
+    "h3": "Título 3",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "strike": "Tachado",
+    "code": "Código en línea",
+    "link": "Enlace",
+    "bulletList": "Lista con viñetas",
+    "orderedList": "Lista numerada",
+    "taskList": "Lista de verificación",
+    "table": "Tabla",
+    "quote": "Cita",
+    "codeBlock": "Bloque de código"
+  },
+  "source": {
+    "label": "Fuente markdown",
+    "format": "Markdown GFM"
+  },
+  "preview": {
+    "label": "Vista previa",
+    "empty": "Aún no hay nada que mostrar."
+  },
+  "statusBar": {
+    "format": "Markdown",
+    "words": "{count, plural, one {# palabra} other {# palabras}}",
+    "position": "Ln {line}, Col {column}"
+  },
+  "publish": {
+    "title": "Publicar versión v{number}",
+    "description": "El texto actual pasa a ser una versión inmutable y la vigente. El borrador se descarta.",
+    "changelog": "Nota de cambios (opcional)",
+    "changelogHint": "Qué cambió en esta versión. Hasta 500 caracteres.",
+    "confirm": "Publicar",
+    "publishing": "Publicando…",
+    "success": "Versión v{number} publicada",
+    "failed": "No se pudo publicar la versión",
+    "empty": "Escriba contenido antes de publicar."
+  },
+  "locked": {
+    "title": "Este documento está firmado",
+    "description": "Un documento firmado no admite nuevas versiones. Su contenido se muestra en solo lectura."
+  },
+  "notMarkdown": {
+    "title": "Este documento no se edita en markdown",
+    "description": "Su contenido es un archivo o un enlace. Suba una nueva versión o actualice el enlace desde el documento.",
+    "back": "Volver al documento"
+  },
+  "unsaved": "Hay cambios sin guardar. ¿Salir del editor?"
+}

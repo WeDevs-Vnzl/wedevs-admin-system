@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+src/generated
+bun.lock
+openapi.json
+test/boundaries/fixtures
+test-output/

@@ -1,0 +1,64 @@
+{
+  "search": {
+    "label": "Search the table",
+    "placeholder": "Search…"
+  },
+  "facet": {
+    "add": "{field}",
+    "searchPlaceholder": "Search {field}…",
+    "empty": "No results",
+    "loading": "Loading…",
+    "clear": "Remove filter",
+    "searchLabel": "Search {field}",
+    "error": "Could not load the options",
+    "retry": "Retry"
+  },
+  "filters": {
+    "remove": "Remove {field} filter",
+    "clear": "Clear",
+    "chipLabel": "{field}:",
+    "range": "{from} – {to}"
+  },
+  "archived": {
+    "toggle": "Show archived"
+  },
+  "columns": {
+    "label": "Columns",
+    "width": "Width of {column}",
+    "moveUp": "Move {column} up",
+    "moveDown": "Move {column} down",
+    "reset": "Reset columns",
+    "resize": "Resize the {column} column"
+  },
+  "export": {
+    "label": "Export",
+    "success": "{count, plural, one {Exported # row} other {Exported # rows}}",
+    "truncated": "The export was cut at {max} rows; narrow the filters to export the rest"
+  },
+  "bulk": {
+    "region": "Bulk actions",
+    "selected": "{count} selected",
+    "clear": "Clear selection"
+  },
+  "pagination": {
+    "range": "{from}–{to} of {total}",
+    "pageSize": "Rows per page",
+    "perPage": "{size} per page",
+    "page": "Page {page} of {pageCount}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "select": {
+    "column": "Selection",
+    "all": "Select all rows on this page",
+    "row": "Select row {id}"
+  },
+  "sort": {
+    "by": "Sort by {column}"
+  },
+  "empty": {
+    "title": "No results",
+    "description": "Adjust the filters or the search."
+  },
+  "loading": "Loading"
+}

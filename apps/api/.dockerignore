@@ -1,0 +1,17 @@
+.env*
+node_modules
+dist
+coverage
+.git
+.github
+test
+**/*.test.ts
+**/*.spec.ts
+**/*.int.test.ts
+**/*.e2e-spec.ts
+src/generated
+*.md
+!prisma/README.md
+docker-compose.yml
+Dockerfile
+.dockerignore

@@ -1,0 +1,1269 @@
+generator client {
+  provider     = "prisma-client" // Prisma 7
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql" // las URLs viven en prisma.config.ts
+}
+
+// ───────────────────────────── ENUMS ─────────────────────────────
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum ClientKind {
+  PERSONA
+  EMPRESA
+}
+
+enum ClientStatus {
+  PROSPECTO
+  ACTIVO
+  INACTIVO
+}
+
+enum ProjectStatus {
+  PROPUESTA
+  EN_CURSO
+  PAUSADO
+  ENTREGADO
+  MANTENIMIENTO
+  CANCELADO
+}
+
+enum ProjectLinkGroup {
+  REPOSITORIO
+  ENTORNO
+  DISENO
+  GESTION
+  DOCUMENTACION
+  INFRAESTRUCTURA
+  COMUNICACION
+  OTRO
+}
+
+enum TechCategory {
+  LENGUAJE
+  FRONTEND
+  BACKEND
+  BASE_DE_DATOS
+  INFRAESTRUCTURA
+  MOBILE
+  IA
+  TESTING
+  HERRAMIENTA
+  OTRO
+}
+
+enum BillingModel {
+  PRECIO_FIJO
+  RECURRENTE
+  MIXTO
+}
+
+enum InstallmentKind {
+  ANTICIPO
+  HITO
+  CUOTA
+  FINAL
+  RECURRENTE
+  AJUSTE
+}
+
+enum InstallmentStatus {
+  PENDIENTE
+  FACTURADA
+  COBRADA_PARCIAL
+  COBRADA
+  CANCELADA
+}
+
+enum Frequency {
+  MENSUAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+enum RecurringStatus {
+  ACTIVO
+  PAUSADO
+  FINALIZADO
+}
+
+enum InvoiceStatus {
+  BORRADOR
+  EMITIDA
+  PARCIAL
+  PAGADA
+  VENCIDA
+  ANULADA
+}
+
+enum PaymentStatus {
+  PENDIENTE_VERIFICACION
+  CONFIRMADO
+  ANULADO
+}
+
+enum AccountType {
+  BANCO_NACIONAL
+  BANCO_INTERNACIONAL
+  BILLETERA_DIGITAL
+  WALLET_CRIPTO
+  EFECTIVO
+}
+
+enum AccountMovementType {
+  APORTE_CAPITAL
+  RETIRO_SOCIO
+  AJUSTE
+}
+
+enum ExpenseStatus {
+  PENDIENTE
+  PAGADO
+  ANULADO
+}
+
+enum DocumentStatus {
+  BORRADOR
+  EN_REVISION
+  APROBADO
+  ENVIADO
+  FIRMADO
+  VENCIDO
+  ANULADO
+}
+
+enum DocumentFormat {
+  MARKDOWN
+  ARCHIVO
+  ENLACE
+}
+
+enum FileStatus {
+  PENDING
+  READY
+}
+
+enum RateSource {
+  MANUAL
+  BCV
+  OTRA
+}
+
+enum ShareEvent {
+  VIEW
+  DOWNLOAD
+  UNLOCK
+  UNLOCK_FAILED
+}
+
+enum FinanceFactKind {
+  BILLED
+  COLLECTED
+  EXPENSE_PAID
+  TRANSFER_IN
+  TRANSFER_OUT
+  MOVEMENT_IN
+  MOVEMENT_OUT
+  IVA
+  WITHHELD_IVA
+  WITHHELD_ISLR
+  WITHHELD_OTHER
+  IGTF
+}
+
+enum FinanceFactSource {
+  INVOICE
+  PAYMENT
+  EXPENSE
+  TRANSFER
+  MOVEMENT
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  PUBLIC
+}
+
+enum EntityType {
+  CLIENT
+  CONTACT
+  PROJECT
+  INVOICE
+  PAYMENT
+  EXPENSE
+  RECURRING_EXPENSE
+  ACCOUNT
+  TRANSFER
+  ACCOUNT_MOVEMENT
+  DOCUMENT
+  NOTE
+  FILE
+  SHARE_LINK
+  BILLING_PLAN
+  INSTALLMENT
+  RECURRING_CHARGE
+  TAG
+  SETTING
+  USER
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  STATUS_CHANGE
+  LINK
+  UNLINK
+  UPLOAD
+  VERSION_PUBLISH
+  SHARE_CREATE
+  SHARE_REVOKE
+  ALLOCATE
+  DEALLOCATE
+  EXPORT
+  LOGIN
+  SETTINGS_CHANGE
+  SYSTEM_JOB
+  PORTAL_ACCESS
+}
+
+// ───────────────────────────── USUARIOS ─────────────────────────────
+
+model User {
+  id        String    @id @default(cuid())
+  clerkId   String    @unique
+  email     String    @unique
+  name      String
+  imageUrl  String?
+  role      UserRole  @default(ADMIN)
+  locale    String    @default("es")
+  theme     String    @default("system")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  notes       Note[]
+  files       File[]
+  preferences UserPreference[]
+  dismissals  AlertState[]
+  activity    ActivityLog[]
+  movements   AccountMovement[]
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String
+  key    String // p. ej. "table:clients:columns"
+  value  Json
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+}
+
+model AlertState {
+  id             String    @id @default(cuid())
+  userId         String
+  alertKey       String // p. ej. "INVOICE_OVERDUE:<invoiceId>"
+  dismissedUntil DateTime?
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, alertKey])
+}
+
+// ───────────────────────────── CLIENTES ─────────────────────────────
+
+model Client {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  kind        ClientKind
+  tradeName   String
+  legalName   String
+  taxId       String
+  country     String       @db.Char(2)
+  address     String
+  phone       String
+  email       String?
+  website     String?
+  status      ClientStatus @default(PROSPECTO)
+  activatedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdById String?
+  updatedById String?
+  deletedAt   DateTime?
+  deletedById String?
+
+  contacts      Contact[]
+  projects      ProjectClient[]
+  invoices      Invoice[]
+  payments      Payment[]
+  documentLinks DocumentLink[]
+  noteLinks     NoteLink[]
+  tags          TagAssignment[]
+  shareLinks    ShareLink[]
+  metrics       ClientMetrics?
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Contact {
+  id        String    @id @default(cuid())
+  clientId  String
+  fullName  String
+  position  String?
+  email     String?
+  phone     String?
+  isPrimary Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  client        Client          @relation(fields: [clientId], references: [id])
+  documentLinks DocumentLink[]
+  noteLinks     NoteLink[]
+  tags          TagAssignment[]
+
+  @@index([clientId])
+}
+
+// ───────────────────────────── PROYECTOS ─────────────────────────────
+
+model Project {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String
+  summary         String        @db.VarChar(280)
+  description     Json? // Tiptap JSON
+  descriptionText String? // texto plano para la búsqueda
+  status          ProjectStatus @default(PROPUESTA)
+  startDate       DateTime?     @db.Date
+  targetEndDate   DateTime?     @db.Date
+  endDate         DateTime?     @db.Date
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdById     String?
+  updatedById     String?
+  deletedAt       DateTime?
+  deletedById     String?
+
+  clients           ProjectClient[]
+  links             ProjectLink[]
+  technologies      ProjectTechnology[]
+  billingPlan       BillingPlan?
+  installments      BillingInstallment[]
+  recurringCharges  RecurringCharge[]
+  invoiceLines      InvoiceLine[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+  documentLinks     DocumentLink[]
+  noteLinks         NoteLink[]
+  tags              TagAssignment[]
+  metrics           ProjectMetrics?
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model ProjectClient {
+  projectId String
+  clientId  String
+  role      String?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  @@id([projectId, clientId])
+  @@index([clientId])
+}
+
+model ProjectLink {
+  id        String           @id @default(cuid())
+  projectId String
+  group     ProjectLinkGroup
+  label     String
+  url       String
+  order     Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, group, order])
+}
+
+model Technology {
+  id       String              @id @default(cuid())
+  name     String              @unique
+  nameEn   String?
+  slug     String              @unique
+  category TechCategory
+  iconSlug String?
+  color    String?
+  active   Boolean             @default(true)
+  projects ProjectTechnology[]
+}
+
+model ProjectTechnology {
+  projectId    String
+  technologyId String
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technology   Technology @relation(fields: [technologyId], references: [id])
+
+  @@id([projectId, technologyId])
+  @@index([technologyId])
+}
+
+// ───────────────────────────── ESQUEMA DE COBRO ─────────────────────────────
+
+model BillingPlan {
+  id             String               @id @default(cuid())
+  projectId      String               @unique
+  model          BillingModel
+  currency       String
+  contractAmount Decimal?             @db.Decimal(18, 2)
+  notes          String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  project        Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  currencyRef    Currency             @relation(fields: [currency], references: [code])
+  installments   BillingInstallment[]
+}
+
+model BillingInstallment {
+  id                String            @id @default(cuid())
+  projectId         String
+  billingPlanId     String?
+  recurringChargeId String?
+  kind              InstallmentKind
+  label             String
+  amount            Decimal           @db.Decimal(18, 2)
+  currency          String
+  percentage        Decimal?          @db.Decimal(5, 2)
+  dueDate           DateTime?         @db.Date
+  trigger           String?
+  periodStart       DateTime?         @db.Date
+  periodEnd         DateTime?         @db.Date
+  order             Int               @default(0)
+  status            InstallmentStatus @default(PENDIENTE)
+  cancelledAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  billingPlan     BillingPlan?     @relation(fields: [billingPlanId], references: [id])
+  recurringCharge RecurringCharge? @relation(fields: [recurringChargeId], references: [id])
+  currencyRef     Currency         @relation(fields: [currency], references: [code])
+  invoiceLines    InvoiceLine[]
+
+  @@unique([recurringChargeId, periodStart])
+  @@index([projectId, status])
+  @@index([dueDate])
+}
+
+model RecurringCharge {
+  id                       String          @id @default(cuid())
+  projectId                String
+  label                    String
+  amount                   Decimal         @db.Decimal(18, 2)
+  currency                 String
+  frequency                Frequency
+  startDate                DateTime        @db.Date
+  endDate                  DateTime?       @db.Date
+  billingDay               Int // 1..28
+  leadDays                 Int             @default(7)
+  status                   RecurringStatus @default(ACTIVO)
+  lastGeneratedPeriodStart DateTime?       @db.Date
+  usdRate                  Decimal         @db.Decimal(20, 8)
+  monthlyAmountUsd         Decimal         @db.Decimal(18, 2)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  currencyRef  Currency             @relation(fields: [currency], references: [code])
+  installments BillingInstallment[]
+
+  @@index([status])
+  @@index([projectId])
+}
+
+// ───────────────────────────── FACTURAS ─────────────────────────────
+
+model Invoice {
+  id                String        @id @default(cuid())
+  code              String        @unique
+  clientId          String
+  invoiceNumber     String
+  controlNumber     String?
+  issueDate         DateTime      @db.Date
+  dueDate           DateTime      @db.Date
+  currency          String
+  usdRate           Decimal       @db.Decimal(20, 8)
+  bcvRate           Decimal?      @db.Decimal(20, 8)
+  subtotal          Decimal       @db.Decimal(18, 2)
+  discount          Decimal       @default(0) @db.Decimal(18, 2)
+  exemptAmount      Decimal       @default(0) @db.Decimal(18, 2)
+  taxBase           Decimal       @db.Decimal(18, 2)
+  ivaAmount         Decimal       @db.Decimal(18, 2)
+  total             Decimal       @db.Decimal(18, 2)
+  ivaWithheld       Decimal       @default(0) @db.Decimal(18, 2)
+  islrWithheld      Decimal       @default(0) @db.Decimal(18, 2)
+  otherWithheld     Decimal       @default(0) @db.Decimal(18, 2)
+  otherWithheldNote String?
+  receivable        Decimal       @db.Decimal(18, 2)
+  totalUsd          Decimal       @db.Decimal(18, 2)
+  receivableUsd     Decimal       @db.Decimal(18, 2)
+  paidAmount        Decimal       @default(0) @db.Decimal(18, 2) // caché
+  balance           Decimal       @db.Decimal(18, 2) // caché
+  isDraft           Boolean       @default(false)
+  status            InvoiceStatus @default(EMITIDA)
+  voidedAt          DateTime?
+  voidReason        String?
+  fileId            String?       @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  createdById       String?
+  updatedById       String?
+  deletedAt         DateTime?
+  deletedById       String?
+
+  client        Client              @relation(fields: [clientId], references: [id])
+  currencyRef   Currency            @relation(fields: [currency], references: [code])
+  file          File?               @relation("InvoiceFile", fields: [fileId], references: [id])
+  lines         InvoiceLine[]
+  taxLines      InvoiceTaxLine[]
+  allocations   PaymentAllocation[]
+  documentLinks DocumentLink[]
+  noteLinks     NoteLink[]
+  tags          TagAssignment[]
+  // Unicidad de invoiceNumber entre las no archivadas: índice parcial en la migración SQL (§10.3)
+
+  @@index([clientId, status])
+  @@index([dueDate])
+  @@index([issueDate])
+}
+
+model InvoiceLine {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  projectId     String?
+  installmentId String?
+  description   String
+  quantity      Decimal  @default(1) @db.Decimal(12, 2)
+  unitPrice     Decimal  @db.Decimal(18, 2)
+  amount        Decimal  @db.Decimal(18, 2)
+  discount      Decimal  @default(0) @db.Decimal(18, 2)
+  netAmount     Decimal  @db.Decimal(18, 2) // amount − discount
+  ivaRate       Decimal? @db.Decimal(5, 2) // null = exempt; 0 = taxable at 0 % (export)
+  order         Int      @default(0)
+
+  invoice     Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  project     Project?            @relation(fields: [projectId], references: [id])
+  installment BillingInstallment? @relation(fields: [installmentId], references: [id])
+
+  @@index([projectId])
+  @@index([installmentId])
+}
+
+model InvoiceTaxLine {
+  id        String  @id @default(cuid())
+  invoiceId String
+  ivaRate   Decimal @db.Decimal(5, 2)
+  taxBase   Decimal @db.Decimal(18, 2)
+  ivaAmount Decimal @db.Decimal(18, 2) // computed, adjustable ±0.01 to match the document
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, ivaRate])
+}
+
+// ───────────────────────────── PAGOS ─────────────────────────────
+
+model PaymentMethod {
+  id                String    @id @default(cuid())
+  code              String    @unique // ZELLE, PAGO_MOVIL, ...
+  name              String
+  nameEn            String?
+  requiresReference Boolean   @default(true)
+  suggestsIgtf      Boolean   @default(false)
+  active            Boolean   @default(true)
+  payments          Payment[]
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  clientId      String
+  date          DateTime      @db.Date
+  accountId     String
+  methodId      String
+  currency      String
+  amount        Decimal       @db.Decimal(18, 2)
+  igtfAmount    Decimal       @default(0) @db.Decimal(18, 2)
+  feeAmount     Decimal       @default(0) @db.Decimal(18, 2)
+  netCredited   Decimal       @db.Decimal(18, 2)
+  allocatable   Decimal       @db.Decimal(18, 2)
+  unallocated   Decimal       @db.Decimal(18, 2) // caché
+  usdRate       Decimal       @db.Decimal(20, 8)
+  amountUsd     Decimal       @db.Decimal(18, 2)
+  reference     String?
+  status        PaymentStatus @default(CONFIRMADO)
+  receiptFileId String?       @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdById   String?
+  updatedById   String?
+  deletedAt     DateTime?
+  deletedById   String?
+
+  client        Client              @relation(fields: [clientId], references: [id])
+  account       Account             @relation(fields: [accountId], references: [id])
+  method        PaymentMethod       @relation(fields: [methodId], references: [id])
+  currencyRef   Currency            @relation(fields: [currency], references: [code])
+  receiptFile   File?               @relation("PaymentReceipt", fields: [receiptFileId], references: [id])
+  allocations   PaymentAllocation[]
+  documentLinks DocumentLink[]
+  noteLinks     NoteLink[]
+  tags          TagAssignment[]
+
+  @@index([clientId, date])
+  @@index([accountId, date])
+  @@index([reference])
+}
+
+model PaymentAllocation {
+  id                    String    @id @default(cuid())
+  paymentId             String
+  invoiceId             String
+  amountPaymentCurrency Decimal   @db.Decimal(18, 2)
+  amountInvoiceCurrency Decimal   @db.Decimal(18, 2)
+  amountUsd             Decimal   @db.Decimal(18, 2)
+  createdAt             DateTime  @default(now())
+  createdById           String?
+  deletedAt             DateTime?
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  // Unicidad (paymentId, invoiceId) entre las no anuladas: índice parcial (§10.3)
+
+  @@index([invoiceId])
+  @@index([paymentId])
+}
+
+// ───────────────────────────── CUENTAS ─────────────────────────────
+
+model Account {
+  id               String      @id @default(cuid())
+  name             String
+  type             AccountType
+  institution      String?
+  currency         String
+  identifierMasked String?
+  holderName       String?
+  openingBalance   Decimal     @default(0) @db.Decimal(18, 2)
+  openingDate      DateTime    @db.Date
+  balance          Decimal     @default(0) @db.Decimal(18, 2)
+  balanceAt        DateTime?
+  active           Boolean     @default(true)
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  currencyRef       Currency                @relation(fields: [currency], references: [code])
+  payments          Payment[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+  transfersOut      AccountTransfer[]       @relation("TransferFrom")
+  transfersIn       AccountTransfer[]       @relation("TransferTo")
+  movements         AccountMovement[]
+  reconciliations   AccountReconciliation[]
+}
+
+model AccountTransfer {
+  id            String    @id @default(cuid())
+  date          DateTime  @db.Date
+  fromAccountId String
+  toAccountId   String
+  amountFrom    Decimal   @db.Decimal(18, 2)
+  amountTo      Decimal   @db.Decimal(18, 2)
+  feeAmount     Decimal   @default(0) @db.Decimal(18, 2)
+  rate          Decimal?  @db.Decimal(20, 8)
+  amountUsd     Decimal   @db.Decimal(18, 2)
+  reference     String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  deletedAt     DateTime?
+
+  fromAccount Account @relation("TransferFrom", fields: [fromAccountId], references: [id])
+  toAccount   Account @relation("TransferTo", fields: [toAccountId], references: [id])
+}
+
+model AccountMovement {
+  id          String              @id @default(cuid())
+  accountId   String
+  type        AccountMovementType
+  date        DateTime            @db.Date
+  amount      Decimal             @db.Decimal(18, 2) // con signo
+  amountUsd   Decimal             @db.Decimal(18, 2)
+  partnerId   String? // socio, en APORTE y RETIRO
+  description String
+  createdAt   DateTime            @default(now())
+  createdById String?
+  deletedAt   DateTime?
+
+  account Account @relation(fields: [accountId], references: [id])
+  partner User?   @relation(fields: [partnerId], references: [id])
+}
+
+model AccountReconciliation {
+  id               String   @id @default(cuid())
+  accountId        String
+  date             DateTime @db.Date
+  statementBalance Decimal  @db.Decimal(18, 2)
+  systemBalance    Decimal  @db.Decimal(18, 2)
+  difference       Decimal  @db.Decimal(18, 2)
+  notes            String?
+  createdAt        DateTime @default(now())
+  createdById      String?
+  account          Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, date])
+}
+
+// ───────────────────────────── GASTOS ─────────────────────────────
+
+model ExpenseCategory {
+  id        String             @id @default(cuid())
+  name      String
+  nameEn    String?
+  color     String?
+  parentId  String?
+  active    Boolean            @default(true)
+  parent    ExpenseCategory?   @relation("CategoryTree", fields: [parentId], references: [id])
+  children  ExpenseCategory[]  @relation("CategoryTree")
+  expenses  Expense[]
+  recurring RecurringExpense[]
+}
+
+model Expense {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  date               DateTime      @db.Date
+  dueDate            DateTime?     @db.Date
+  paidAt             DateTime?     @db.Date
+  description        String
+  vendor             String?
+  categoryId         String
+  accountId          String?
+  projectId          String?
+  currency           String
+  amount             Decimal       @db.Decimal(18, 2)
+  accountAmount      Decimal?      @db.Decimal(18, 2) // monto debitado en la moneda de la cuenta
+  usdRate            Decimal       @db.Decimal(20, 8)
+  amountUsd          Decimal       @db.Decimal(18, 2)
+  status             ExpenseStatus @default(PAGADO)
+  receiptFileId      String?       @unique
+  recurringExpenseId String?
+  periodStart        DateTime?     @db.Date
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  createdById        String?
+  updatedById        String?
+  deletedAt          DateTime?
+  deletedById        String?
+
+  category      ExpenseCategory   @relation(fields: [categoryId], references: [id])
+  account       Account?          @relation(fields: [accountId], references: [id])
+  project       Project?          @relation(fields: [projectId], references: [id])
+  currencyRef   Currency          @relation(fields: [currency], references: [code])
+  receiptFile   File?             @relation("ExpenseReceipt", fields: [receiptFileId], references: [id])
+  recurring     RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
+  documentLinks DocumentLink[]
+  noteLinks     NoteLink[]
+  tags          TagAssignment[]
+
+  @@unique([recurringExpenseId, periodStart])
+  @@index([date])
+  @@index([status, dueDate])
+  @@index([projectId])
+}
+
+model RecurringExpense {
+  id                       String          @id @default(cuid())
+  name                     String
+  vendor                   String?
+  categoryId               String
+  accountId                String?
+  projectId                String?
+  currency                 String
+  amount                   Decimal         @db.Decimal(18, 2)
+  frequency                Frequency
+  dayOfPeriod              Int // 1..28
+  leadDays                 Int             @default(5)
+  startDate                DateTime        @db.Date
+  endDate                  DateTime?       @db.Date
+  status                   RecurringStatus @default(ACTIVO)
+  lastGeneratedPeriodStart DateTime?       @db.Date
+  usdRate                  Decimal         @db.Decimal(20, 8)
+  monthlyAmountUsd         Decimal         @db.Decimal(18, 2)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  deletedAt                DateTime?
+
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  account     Account?        @relation(fields: [accountId], references: [id])
+  project     Project?        @relation(fields: [projectId], references: [id])
+  currencyRef Currency        @relation(fields: [currency], references: [code])
+  expenses    Expense[]
+}
+
+// ───────────────────────────── DOCUMENTOS ─────────────────────────────
+
+model DocumentCategory {
+  id     String         @id @default(cuid())
+  name   String
+  nameEn String?
+  color  String?
+  order  Int            @default(0)
+  types  DocumentType[]
+}
+
+model DocumentType {
+  id                String           @id @default(cuid())
+  categoryId        String
+  name              String
+  nameEn            String?
+  requiresSignature Boolean          @default(false)
+  hasExpiration     Boolean          @default(false)
+  defaultFormat     DocumentFormat   @default(ARCHIVO)
+  active            Boolean          @default(true)
+  category          DocumentCategory @relation(fields: [categoryId], references: [id])
+  documents         Document[]
+}
+
+model Document {
+  id               String         @id @default(cuid())
+  code             String         @unique
+  title            String
+  typeId           String
+  summary          String?
+  status           DocumentStatus @default(BORRADOR)
+  draftContent     String? // autoguardado markdown
+  draftUpdatedAt   DateTime?
+  currentVersionId String?        @unique
+  effectiveDate    DateTime?      @db.Date
+  signedAt         DateTime?      @db.Date
+  expiresAt        DateTime?      @db.Date
+  alertDaysBefore  Int            @default(30)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  createdById      String?
+  updatedById      String?
+  deletedAt        DateTime?
+  deletedById      String?
+
+  type           DocumentType        @relation(fields: [typeId], references: [id])
+  currentVersion DocumentVersion?    @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  versions       DocumentVersion[]   @relation("DocumentVersions")
+  links          DocumentLink[]
+  noteLinks      NoteLink[]
+  tags           TagAssignment[]
+  shares         ShareLinkDocument[]
+
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model DocumentVersion {
+  id            String         @id @default(cuid())
+  documentId    String
+  versionNumber Int
+  format        DocumentFormat
+  content       String? // markdown
+  fileId        String?        @unique
+  url           String?
+  changelog     String?
+  createdAt     DateTime       @default(now())
+  createdById   String
+
+  document  Document            @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentOf Document?           @relation("CurrentVersion")
+  file      File?               @relation("VersionFile", fields: [fileId], references: [id])
+  sharedIn  ShareLinkDocument[]
+
+  @@unique([documentId, versionNumber])
+}
+
+model DocumentLink {
+  id          String   @id @default(cuid())
+  documentId  String
+  clientId    String?
+  contactId   String?
+  projectId   String?
+  invoiceId   String?
+  paymentId   String?
+  expenseId   String?
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  client   Client?  @relation(fields: [clientId], references: [id])
+  contact  Contact? @relation(fields: [contactId], references: [id])
+  project  Project? @relation(fields: [projectId], references: [id])
+  invoice  Invoice? @relation(fields: [invoiceId], references: [id])
+  payment  Payment? @relation(fields: [paymentId], references: [id])
+  expense  Expense? @relation(fields: [expenseId], references: [id])
+  // CHECK num_nonnulls(...) = 1  (§10.3)
+
+  @@unique([documentId, clientId])
+  @@unique([documentId, contactId])
+  @@unique([documentId, projectId])
+  @@unique([documentId, invoiceId])
+  @@unique([documentId, paymentId])
+  @@unique([documentId, expenseId])
+  @@index([clientId])
+  @@index([projectId])
+  @@index([invoiceId])
+}
+
+// ───────────────────────────── NOTAS ─────────────────────────────
+
+model Note {
+  id          String    @id @default(cuid())
+  title       String?
+  content     Json // Tiptap JSON
+  contentText String // texto plano
+  authorId    String
+  pinned      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  deletedById String?
+
+  author      User             @relation(fields: [authorId], references: [id])
+  links       NoteLink[]
+  attachments NoteAttachment[]
+  tags        TagAssignment[]
+
+  @@index([authorId, createdAt])
+}
+
+model NoteLink {
+  id         String   @id @default(cuid())
+  noteId     String
+  clientId   String?
+  contactId  String?
+  projectId  String?
+  documentId String?
+  invoiceId  String?
+  paymentId  String?
+  expenseId  String?
+  createdAt  DateTime @default(now())
+
+  note     Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  client   Client?   @relation(fields: [clientId], references: [id])
+  contact  Contact?  @relation(fields: [contactId], references: [id])
+  project  Project?  @relation(fields: [projectId], references: [id])
+  document Document? @relation(fields: [documentId], references: [id])
+  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
+  payment  Payment?  @relation(fields: [paymentId], references: [id])
+  expense  Expense?  @relation(fields: [expenseId], references: [id])
+
+  @@unique([noteId, clientId])
+  @@unique([noteId, contactId])
+  @@unique([noteId, projectId])
+  @@unique([noteId, documentId])
+  @@unique([noteId, invoiceId])
+  @@unique([noteId, paymentId])
+  @@unique([noteId, expenseId])
+  @@index([clientId])
+  @@index([projectId])
+  @@index([documentId])
+}
+
+model NoteAttachment {
+  noteId String
+  fileId String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  file   File   @relation(fields: [fileId], references: [id])
+
+  @@id([noteId, fileId])
+}
+
+// ───────────────────────────── ARCHIVOS ─────────────────────────────
+
+model File {
+  id           String     @id @default(cuid())
+  storageKey   String     @unique // p. ej. "documents/2026/10/<cuid>-contrato.pdf"
+  bucket       String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  sha256       String?
+  status       FileStatus @default(PENDING)
+  uploadedById String
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+
+  uploadedBy      User             @relation(fields: [uploadedById], references: [id])
+  invoice         Invoice?         @relation("InvoiceFile")
+  paymentReceipt  Payment?         @relation("PaymentReceipt")
+  expenseReceipt  Expense?         @relation("ExpenseReceipt")
+  documentVersion DocumentVersion? @relation("VersionFile")
+  noteAttachments NoteAttachment[]
+
+  @@index([status, createdAt])
+}
+
+// ───────────────────────────── ETIQUETAS ─────────────────────────────
+
+model Tag {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  color       String
+  createdAt   DateTime        @default(now())
+  assignments TagAssignment[]
+}
+
+model TagAssignment {
+  id         String   @id @default(cuid())
+  tagId      String
+  clientId   String?
+  contactId  String?
+  projectId  String?
+  invoiceId  String?
+  paymentId  String?
+  expenseId  String?
+  documentId String?
+  noteId     String?
+  createdAt  DateTime @default(now())
+
+  tag      Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  client   Client?   @relation(fields: [clientId], references: [id])
+  contact  Contact?  @relation(fields: [contactId], references: [id])
+  project  Project?  @relation(fields: [projectId], references: [id])
+  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
+  payment  Payment?  @relation(fields: [paymentId], references: [id])
+  expense  Expense?  @relation(fields: [expenseId], references: [id])
+  document Document? @relation(fields: [documentId], references: [id])
+  note     Note?     @relation(fields: [noteId], references: [id])
+
+  @@unique([tagId, clientId])
+  @@unique([tagId, contactId])
+  @@unique([tagId, projectId])
+  @@unique([tagId, invoiceId])
+  @@unique([tagId, paymentId])
+  @@unique([tagId, expenseId])
+  @@unique([tagId, documentId])
+  @@unique([tagId, noteId])
+}
+
+// ───────────────────────────── PORTAL ─────────────────────────────
+
+model ShareLink {
+  id             String    @id @default(cuid())
+  token          String    @unique
+  title          String
+  message        String?
+  clientId       String?
+  locale         String    @default("es")
+  allowDownload  Boolean   @default(true)
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  viewCount      Int       @default(0)
+  downloadCount  Int       @default(0)
+  lastAccessedAt DateTime?
+  createdAt      DateTime  @default(now())
+  createdById    String
+
+  client    Client?             @relation(fields: [clientId], references: [id])
+  documents ShareLinkDocument[]
+  accessLog ShareAccessLog[]
+}
+
+model ShareLinkDocument {
+  shareLinkId        String
+  documentId         String
+  versionId          String? // null = siempre la versión vigente
+  order              Int       @default(0)
+  accessKeyHash      String? // scrypt hash "scrypt$N$r$p$<salt>$<hash>"; null = no key required
+  accessKeyUpdatedAt DateTime?
+
+  shareLink ShareLink        @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+  document  Document         @relation(fields: [documentId], references: [id])
+  version   DocumentVersion? @relation(fields: [versionId], references: [id])
+
+  @@id([shareLinkId, documentId])
+}
+
+model ShareAccessLog {
+  id          String     @id @default(cuid())
+  shareLinkId String
+  documentId  String?
+  event       ShareEvent
+  ipHash      String
+  userAgent   String?
+  createdAt   DateTime   @default(now())
+  shareLink   ShareLink  @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+
+  @@index([shareLinkId, createdAt])
+  @@index([shareLinkId, documentId, ipHash, createdAt])
+}
+
+// ───────────────────────────── TRANSVERSALES ─────────────────────────────
+
+model Currency {
+  code     String  @id // ISO 4217 o "USDT"
+  name     String
+  symbol   String
+  decimals Int     @default(2)
+  active   Boolean @default(true)
+
+  rates             ExchangeRate[]
+  billingPlans      BillingPlan[]
+  installments      BillingInstallment[]
+  recurringCharges  RecurringCharge[]
+  invoices          Invoice[]
+  payments          Payment[]
+  accounts          Account[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+}
+
+model ExchangeRate {
+  id          String     @id @default(cuid())
+  date        DateTime   @db.Date
+  currency    String
+  usdRate     Decimal    @db.Decimal(20, 8)
+  source      RateSource @default(MANUAL)
+  createdAt   DateTime   @default(now())
+  createdById String?
+  currencyRef Currency   @relation(fields: [currency], references: [code])
+
+  @@unique([date, currency, source])
+  @@index([currency, date])
+}
+
+model ActivityLog {
+  id          String         @id @default(cuid())
+  actorType   ActorType
+  actorId     String?
+  action      ActivityAction
+  entityType  EntityType
+  entityId    String
+  entityLabel String
+  clientId    String?
+  changes     Json?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime       @default(now())
+  actor       User?          @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+  @@index([actorType, createdAt])
+  @@index([clientId, createdAt(sort: Desc)])
+}
+
+model SearchEntry {
+  id         String     @id @default(cuid())
+  entityType EntityType
+  entityId   String
+  code       String?
+  title      String
+  subtitle   String?
+  body       String?
+  status     String?
+  archived   Boolean    @default(false)
+  updatedAt  DateTime   @updatedAt
+
+  // columna tsvector generada + índices GIN en la migración SQL (§10.3)
+  @@unique([entityType, entityId])
+  @@index([entityType, archived])
+}
+
+model Sequence {
+  name  String @id // "CLI", "PRY", "FAC", "PAG", "GAS", "DOC"
+  value Int    @default(0)
+}
+
+model Setting {
+  key       String   @id // "company", "fiscal", "invoice.defaultDueDays", ...
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ───────────────────────────── READ MODELS (data-rules §3b) ─────────────────────────────
+
+model FinanceFact {
+  id         String            @id @default(cuid())
+  kind       FinanceFactKind
+  date       DateTime          @db.Date // issue date (BILLED, taxes), payment date (COLLECTED, IGTF), paid date (EXPENSE_PAID), transfer/movement date
+  amountUsd  Decimal           @db.Decimal(18, 2) // signed only for MOVEMENT_* adjustments; otherwise positive
+  clientId   String?
+  projectId  String? // COLLECTED and BILLED are split per project line, proportional to netAmount
+  accountId  String?
+  categoryId String? // expense category (root resolved at read time)
+  methodId   String? // payment method
+  invoiceId  String?
+  ivaRate    Decimal?          @db.Decimal(5, 2) // IVA facts only
+  dueDate    DateTime?         @db.Date // BILLED only: aging and overdue at a close date
+  sourceType FinanceFactSource
+  sourceId   String
+  createdAt  DateTime          @default(now())
+
+  @@index([kind, date])
+  @@index([clientId, kind, date])
+  @@index([projectId, kind, date])
+  @@index([accountId, date])
+  @@index([invoiceId])
+  @@index([sourceType, sourceId])
+}
+
+model ClientMetrics {
+  clientId       String    @id
+  invoicedUsd    Decimal   @default(0) @db.Decimal(18, 2) // non-draft, non-voided invoices
+  collectedUsd   Decimal   @default(0) @db.Decimal(18, 2)
+  receivableUsd  Decimal   @default(0) @db.Decimal(18, 2) // EMITIDA | PARCIAL | VENCIDA balances
+  overdueUsd     Decimal   @default(0) @db.Decimal(18, 2) // VENCIDA balances
+  creditUsd      Decimal   @default(0) @db.Decimal(18, 2) // unallocated confirmed payments
+  projectCount   Int       @default(0)
+  lastActivityAt DateTime?
+  updatedAt      DateTime  @updatedAt
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([receivableUsd])
+  @@index([lastActivityAt])
+}
+
+model ProjectMetrics {
+  projectId           String   @id
+  contractedUsd       Decimal  @default(0) @db.Decimal(18, 2)
+  invoicedUsd         Decimal  @default(0) @db.Decimal(18, 2)
+  collectedUsd        Decimal  @default(0) @db.Decimal(18, 2)
+  toInvoiceUsd        Decimal  @default(0) @db.Decimal(18, 2) // ≥ 0; PRECIO_FIJO | MIXTO only
+  receivableUsd       Decimal  @default(0) @db.Decimal(18, 2)
+  expensesUsd         Decimal  @default(0) @db.Decimal(18, 2) // PAGADO expenses of the project
+  marginUsd           Decimal  @default(0) @db.Decimal(18, 2)
+  monthlyRecurringUsd Decimal  @default(0) @db.Decimal(18, 2)
+  updatedAt           DateTime @updatedAt
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([toInvoiceUsd])
+}

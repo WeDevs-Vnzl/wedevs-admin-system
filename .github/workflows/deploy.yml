@@ -1,0 +1,80 @@
+name: Deploy
+
+# Production deploy to Netlify on every push to main. The Netlify site has its own Git builds disabled; this
+# workflow builds and uploads with the CLI, so the build reads the site's own Netlify environment variables.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  deploy:
+    name: Netlify production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node runs Next.js and the Netlify CLI; bun only installs and runs the package scripts.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Reads the bun version from `packageManager`.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+
+      - name: Build and deploy
+        id: deploy
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          COMMIT_REF: ${{ github.sha }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "::error::Missing repository secrets NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID"
+            exit 1
+          fi
+
+          bun x -p netlify-cli@27.10.1 netlify deploy --build --prod \
+            --site "$NETLIFY_SITE_ID" \
+            --message "main $GITHUB_SHA" \
+            --json > "$RUNNER_TEMP/deploy.json"
+
+          site_url=$(jq -r '.url' "$RUNNER_TEMP/deploy.json")
+          echo "url=$site_url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $site_url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check the deployed site responds
+        env:
+          SITE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          for _ in $(seq 1 20); do
+            if curl --silent --fail --location --output /dev/null "$SITE_URL"; then
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::$SITE_URL did not respond after the deploy"
+          exit 1

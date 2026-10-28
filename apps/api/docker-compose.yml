@@ -1,0 +1,44 @@
+# DT-90: API + reverse proxy with automatic TLS on the user's VPS. No database service (DT-08):
+# the database is external; its URLs come from the user's uncommitted .env file.
+# Release: `docker compose up -d` runs `migrate` first; `api` starts only if it succeeds.
+services:
+  migrate:
+    image: core-api:latest
+    build: .
+    command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
+    env_file: .env
+    restart: 'no'
+    networks: [app]
+
+  api:
+    image: core-api:latest
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [app]
+
+  caddy:
+    image: docker.io/library/caddy:2.10.2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    networks: [app]
+
+# Single bridge network: api/migrate publish no ports (only caddy does) but need outbound access
+# to the external database, Clerk and Cloudinary, so the network is not `internal: true`.
+networks:
+  app:
+
+volumes:
+  caddy_data:
+  caddy_config:

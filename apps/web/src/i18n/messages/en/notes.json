@@ -1,0 +1,128 @@
+{
+  "page": {
+    "title": "Notes",
+    "description": "Notes across clients, contacts, projects and documents.",
+    "newNote": "New note"
+  },
+  "columns": {
+    "title": "Title",
+    "excerpt": "Content",
+    "author": "Author",
+    "links": "Linked to",
+    "tags": "Tags",
+    "attachments": "Attachments",
+    "pinned": "Pinned",
+    "createdAt": "Created",
+    "updatedAt": "Updated"
+  },
+  "table": {
+    "search": "Search notes…",
+    "actions": "Actions",
+    "archive": "Archive {title}",
+    "bulkTag": "Add tags",
+    "bulkTagged": "Tags added to {count, plural, one {# note} other {# notes}}",
+    "bulkTagFailed": "Some notes could not be tagged.",
+    "facets": {
+      "author": "Author",
+      "tag": "Tag",
+      "linkedEntityType": "Linked to",
+      "createdAt": "Created"
+    },
+    "empty": {
+      "title": "No notes match these filters",
+      "description": "Change the filters or the search to see other notes."
+    }
+  },
+  "linkPicker": {
+    "type": "Record type",
+    "record": "Record",
+    "search": "Search…",
+    "empty": "No links",
+    "remove": "Remove {label}"
+  },
+  "detail": {
+    "back": "All notes",
+    "linksTitle": "Linked to",
+    "readOnly": "You can read this note but not edit it."
+  },
+  "errors": {
+    "alreadyLinked": "The note is already linked to this record.",
+    "lastLink": "A note must stay linked to at least one record."
+  },
+  "untitled": "Untitled note",
+  "feed": {
+    "label": "Notes",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "loadFailed": "Could not load the notes.",
+    "emptyTitle": "No notes yet",
+    "emptyDescription": "Notes you write about this record will show up here.",
+    "emptyDescriptionReadOnly": "There are no notes about this record yet."
+  },
+  "card": {
+    "pinned": "Pinned",
+    "expand": "Show more",
+    "collapse": "Show less",
+    "loadingContent": "Loading content…",
+    "loadContentFailed": "Could not load the note.",
+    "actions": "Note actions",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "edit": "Edit",
+    "archive": "Archive",
+    "attachmentCount": "{count, plural, one {# attachment} other {# attachments}}"
+  },
+  "attachments": {
+    "label": "Attachments",
+    "size": "{name} · {size}"
+  },
+  "composer": {
+    "createTitle": "New note",
+    "editTitle": "Edit note",
+    "description": "Write a note and link it to records.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g. Kickoff agreements",
+    "contentLabel": "Content",
+    "contentInvalid": "The content is not valid or is too long to save.",
+    "attachmentsLabel": "Attachments",
+    "pinnedLabel": "Pin to the top of the list",
+    "tagsLabel": "Tags",
+    "linksLabel": "Linked to",
+    "noLinks": "No links",
+    "submit": "Save note",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "unsaved": "You have unsaved changes. Leave anyway?",
+    "titleHint": "When empty, the first words of the content are used.",
+    "pinnedHint": "Pinned notes show before the rest.",
+    "tagsHint": "Group notes so you can filter them in the list.",
+    "sections": {
+      "note": {
+        "title": "Note",
+        "description": "The title, the body and the files that go with it."
+      },
+      "links": {
+        "title": "Where it appears",
+        "description": "The records the note belongs to. It needs at least one."
+      },
+      "organization": {
+        "title": "Organization",
+        "description": "How it is grouped and ordered in the notes list."
+      }
+    }
+  },
+  "toast": {
+    "created": "Note created",
+    "updated": "Note updated",
+    "pinned": "Note pinned",
+    "unpinned": "Note unpinned",
+    "archived": "Note archived",
+    "linkAdded": "Link added",
+    "linkRemoved": "Link removed",
+    "error": "The action could not be completed"
+  },
+  "tab": {
+    "title": "Notes",
+    "newNote": "New note"
+  }
+}

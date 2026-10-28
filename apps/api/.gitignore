@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+src/generated/
+.env*
+!.env.example
+
+# Local check report (scripts/check.sh)
+test-output/

@@ -1,0 +1,66 @@
+/*
+ * Print stylesheet of `PrintRegion` (PRD §8.9.5). Only applies while printing and only on pages that render a
+ * region (`body:has(...)`), so other pages print as before. App chrome is hidden by visibility, which works
+ * whatever the layout nesting is; the region is then lifted to the top-left of the page.
+ */
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  body:has([data-print-region]) {
+    background: #fff;
+  }
+
+  body:has([data-print-region]) * {
+    visibility: hidden;
+  }
+
+  [data-print-region],
+  [data-print-region] * {
+    visibility: visible;
+  }
+
+  [data-print-region] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    /* Always print light, also when the app is in dark mode. */
+    color-scheme: light;
+    --background: #fff;
+    --foreground: #0e0e12;
+    --primary: #0e0e12;
+    --muted: #ececf2;
+    --muted-foreground: #5c5c66;
+    --border: #d4d4dc;
+    background: #fff;
+    color: #0e0e12;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-print-region] [data-print-hide],
+  body:has([data-print-region]) [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Keep logical blocks whole across pages. */
+  [data-print-region] :is(pre, table, blockquote, img) {
+    break-inside: avoid;
+  }
+
+  [data-print-region] :is(h1, h2, h3, h4) {
+    break-after: avoid;
+  }
+
+  /* Code blocks wrap instead of being clipped by their scroll container. */
+  [data-print-region] pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+
+  [data-print-region] table {
+    display: table;
+    overflow: visible;
+  }
+}

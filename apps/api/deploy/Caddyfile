@@ -1,0 +1,5 @@
+# Replace api.example.com with the real API domain before deploying (user-owned).
+api.example.com {
+	encode zstd gzip
+	reverse_proxy api:3000
+}

@@ -1,0 +1,184 @@
+{
+  "UserRole": {
+    "OWNER": "Propietario",
+    "ADMIN": "Administrador",
+    "MEMBER": "Miembro",
+    "VIEWER": "Lector"
+  },
+  "ClientKind": {
+    "PERSONA": "Persona",
+    "EMPRESA": "Empresa"
+  },
+  "ClientStatus": {
+    "PROSPECTO": "Prospecto",
+    "ACTIVO": "Activo",
+    "INACTIVO": "Inactivo"
+  },
+  "ProjectStatus": {
+    "PROPUESTA": "Propuesta",
+    "EN_CURSO": "En curso",
+    "PAUSADO": "Pausado",
+    "ENTREGADO": "Entregado",
+    "MANTENIMIENTO": "Mantenimiento",
+    "CANCELADO": "Cancelado"
+  },
+  "ProjectLinkGroup": {
+    "REPOSITORIO": "Repositorio",
+    "ENTORNO": "Entorno",
+    "DISENO": "Diseño",
+    "GESTION": "Gestión",
+    "DOCUMENTACION": "Documentación",
+    "INFRAESTRUCTURA": "Infraestructura",
+    "COMUNICACION": "Comunicación",
+    "OTRO": "Otro"
+  },
+  "TechCategory": {
+    "LENGUAJE": "Lenguaje",
+    "FRONTEND": "Frontend",
+    "BACKEND": "Backend",
+    "BASE_DE_DATOS": "Base de datos",
+    "INFRAESTRUCTURA": "Infraestructura",
+    "MOBILE": "Móvil",
+    "IA": "IA",
+    "TESTING": "Pruebas",
+    "HERRAMIENTA": "Herramienta",
+    "OTRO": "Otro"
+  },
+  "BillingModel": {
+    "PRECIO_FIJO": "Precio fijo",
+    "RECURRENTE": "Recurrente",
+    "MIXTO": "Mixto"
+  },
+  "InstallmentKind": {
+    "ANTICIPO": "Anticipo",
+    "HITO": "Hito",
+    "CUOTA": "Cuota",
+    "FINAL": "Final",
+    "RECURRENTE": "Recurrente",
+    "AJUSTE": "Ajuste"
+  },
+  "InstallmentStatus": {
+    "PENDIENTE": "Pendiente",
+    "FACTURADA": "Facturada",
+    "COBRADA_PARCIAL": "Cobrada parcialmente",
+    "COBRADA": "Cobrada",
+    "CANCELADA": "Cancelada"
+  },
+  "Frequency": {
+    "MENSUAL": "Mensual",
+    "TRIMESTRAL": "Trimestral",
+    "SEMESTRAL": "Semestral",
+    "ANUAL": "Anual"
+  },
+  "RecurringStatus": {
+    "ACTIVO": "Activo",
+    "PAUSADO": "Pausado",
+    "FINALIZADO": "Finalizado"
+  },
+  "InvoiceStatus": {
+    "BORRADOR": "Borrador",
+    "EMITIDA": "Emitida",
+    "PARCIAL": "Parcial",
+    "PAGADA": "Pagada",
+    "VENCIDA": "Vencida",
+    "ANULADA": "Anulada"
+  },
+  "PaymentStatus": {
+    "PENDIENTE_VERIFICACION": "Pendiente de verificación",
+    "CONFIRMADO": "Confirmado",
+    "ANULADO": "Anulado"
+  },
+  "AccountType": {
+    "BANCO_NACIONAL": "Banco nacional",
+    "BANCO_INTERNACIONAL": "Banco internacional",
+    "BILLETERA_DIGITAL": "Billetera digital",
+    "WALLET_CRIPTO": "Wallet cripto",
+    "EFECTIVO": "Efectivo"
+  },
+  "AccountMovementType": {
+    "APORTE_CAPITAL": "Aporte de capital",
+    "RETIRO_SOCIO": "Retiro de socio",
+    "AJUSTE": "Ajuste"
+  },
+  "ExpenseStatus": {
+    "PENDIENTE": "Pendiente",
+    "PAGADO": "Pagado",
+    "ANULADO": "Anulado"
+  },
+  "DocumentStatus": {
+    "BORRADOR": "Borrador",
+    "EN_REVISION": "En revisión",
+    "APROBADO": "Aprobado",
+    "ENVIADO": "Enviado",
+    "FIRMADO": "Firmado",
+    "VENCIDO": "Vencido",
+    "ANULADO": "Anulado"
+  },
+  "DocumentFormat": {
+    "MARKDOWN": "Markdown",
+    "ARCHIVO": "Archivo",
+    "ENLACE": "Enlace"
+  },
+  "FileStatus": {
+    "PENDING": "Pendiente",
+    "READY": "Listo"
+  },
+  "RateSource": {
+    "MANUAL": "Manual",
+    "BCV": "BCV",
+    "OTRA": "Otra"
+  },
+  "ShareEvent": {
+    "VIEW": "Vista",
+    "DOWNLOAD": "Descarga",
+    "UNLOCK": "Desbloqueo",
+    "UNLOCK_FAILED": "Desbloqueo fallido"
+  },
+  "ActorType": {
+    "USER": "Usuario",
+    "SYSTEM": "Sistema",
+    "PUBLIC": "Público"
+  },
+  "EntityType": {
+    "CLIENT": "Cliente",
+    "CONTACT": "Contacto",
+    "PROJECT": "Proyecto",
+    "INVOICE": "Factura",
+    "PAYMENT": "Pago",
+    "EXPENSE": "Gasto",
+    "RECURRING_EXPENSE": "Gasto recurrente",
+    "ACCOUNT": "Cuenta",
+    "TRANSFER": "Transferencia",
+    "ACCOUNT_MOVEMENT": "Movimiento de cuenta",
+    "DOCUMENT": "Documento",
+    "NOTE": "Nota",
+    "FILE": "Archivo",
+    "SHARE_LINK": "Enlace compartido",
+    "BILLING_PLAN": "Plan de facturación",
+    "INSTALLMENT": "Cuota",
+    "RECURRING_CHARGE": "Cargo recurrente",
+    "TAG": "Etiqueta",
+    "SETTING": "Configuración",
+    "USER": "Usuario"
+  },
+  "ActivityAction": {
+    "CREATE": "Creó",
+    "UPDATE": "Actualizó",
+    "DELETE": "Eliminó",
+    "RESTORE": "Restauró",
+    "STATUS_CHANGE": "Cambio de estado",
+    "LINK": "Vinculó",
+    "UNLINK": "Desvinculó",
+    "UPLOAD": "Subió",
+    "VERSION_PUBLISH": "Publicó versión",
+    "SHARE_CREATE": "Compartió",
+    "SHARE_REVOKE": "Revocó compartir",
+    "ALLOCATE": "Asignó",
+    "DEALLOCATE": "Desasignó",
+    "EXPORT": "Exportó",
+    "LOGIN": "Inicio de sesión",
+    "SETTINGS_CHANGE": "Cambio de configuración",
+    "SYSTEM_JOB": "Tarea del sistema",
+    "PORTAL_ACCESS": "Acceso al portal"
+  }
+}

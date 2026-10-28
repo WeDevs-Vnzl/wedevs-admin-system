@@ -1,0 +1,264 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import enDocuments from "@/i18n/messages/en/documents.json";
+import enEnums from "@/i18n/messages/en/enums.json";
+import enPatterns from "@/i18n/messages/en/patterns.json";
+import esDocuments from "@/i18n/messages/es/documents.json";
+import esEnums from "@/i18n/messages/es/enums.json";
+import esPatterns from "@/i18n/messages/es/patterns.json";
+import esTable from "@/i18n/messages/es/table.json";
+import enTable from "@/i18n/messages/en/table.json";
+import type { DocumentListRowDTO } from "@/lib/validators/documents";
+
+const queries = vi.hoisted(() => ({
+  listEntityDocuments: vi.fn(),
+  listDocumentCategories: vi.fn(),
+  getDocumentPermissions: vi.fn(),
+}));
+const shareQueries = vi.hoisted(() => ({
+  getSharePermissions: vi.fn(),
+  getShareableDocuments: vi.fn(),
+}));
+const locale = vi.hoisted(() => ({ value: "en" as "en" | "es" }));
+
+vi.mock("../queries", () => queries);
+vi.mock("@/features/shares/queries", () => shareQueries);
+vi.mock("@/features/shares/components/create-share-dialog", () => ({
+  CreateShareDialog: ({
+    origin,
+    documents,
+  }: {
+    origin: { type: string };
+    documents: unknown[];
+  }) => (
+    <button type="button">
+      share-dialog {origin.type} {documents.length}
+    </button>
+  ),
+}));
+vi.mock("./attach-document-sheet", () => ({
+  AttachDocumentSheet: () => <button type="button">attach-sheet</button>,
+}));
+vi.mock("./document-row-actions", () => ({
+  DocumentRowActions: () => <button type="button">row-unlink</button>,
+}));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl");
+  const messages = () => ({
+    documents: locale.value === "es" ? esDocuments : enDocuments,
+    enums: locale.value === "es" ? esEnums : enEnums,
+  });
+  return {
+    getTranslations: async (namespace: string) =>
+      // The mock accepts any namespace of the messages it is given.
+      createTranslator({
+        locale: locale.value,
+        messages: messages() as never,
+        namespace: namespace as never,
+      }),
+    getLocale: async () => locale.value,
+  };
+});
+
+import { EntityDocumentsTab } from "./entity-documents-tab";
+
+const clientRow: DocumentListRowDTO = {
+  id: "doc_0001",
+  code: "DOC-0001",
+  title: "Contrato marco",
+  category: { id: "dcat_legal", name: "Legal", nameEn: "Legal", color: null },
+  type: {
+    id: "dtyp_contrato",
+    name: "Contrato",
+    nameEn: "Contract",
+    defaultFormat: "ARCHIVO",
+    requiresSignature: false,
+    hasExpiration: false,
+  },
+  status: "APROBADO",
+  currentFormat: "ARCHIVO",
+  currentVersionNumber: 2,
+  links: [{ id: "cli_0001", label: "Cliente", type: "CLIENT", code: "CLI-0001" }],
+  expiresAt: null,
+  isShared: false,
+  tags: [],
+  updatedAt: "2026-10-01T12:00:00.000Z",
+  archivedAt: null,
+};
+
+const categories = [
+  {
+    id: "dcat_legal",
+    name: "Legal",
+    nameEn: "Legal",
+    color: null,
+    order: 1,
+    types: [
+      {
+        id: "dtyp_contrato",
+        name: "Contrato",
+        nameEn: "Contract",
+        defaultFormat: "ARCHIVO",
+        requiresSignature: false,
+        hasExpiration: false,
+        active: true,
+        documentCount: 1,
+      },
+    ],
+  },
+  {
+    id: "dcat_finanzas",
+    name: "Finanzas",
+    nameEn: "Finance",
+    color: null,
+    order: 2,
+    types: [],
+  },
+];
+
+async function renderTab(loc: "en" | "es" = "en") {
+  locale.value = loc;
+  const messages = {
+    documents: loc === "es" ? esDocuments : enDocuments,
+    enums: loc === "es" ? esEnums : enEnums,
+    patterns: loc === "es" ? esPatterns : enPatterns,
+    table: loc === "es" ? esTable : enTable,
+  };
+  const tab = await EntityDocumentsTab({ entity: clientRef });
+  return render(
+    <NextIntlClientProvider locale={loc} messages={messages}>
+      {tab}
+    </NextIntlClientProvider>,
+  );
+}
+
+const clientRef = { type: "CLIENT" as const, id: "cli_0001", code: "CLI-0001", label: "Acme" };
+
+beforeEach(() => {
+  queries.listEntityDocuments
+    .mockReset()
+    .mockResolvedValue({ items: [clientRow], total: 1, page: 1, pageSize: 100 });
+  queries.listDocumentCategories.mockReset().mockResolvedValue(categories);
+  queries.getDocumentPermissions
+    .mockReset()
+    .mockResolvedValue({ canCreate: true, canUpdate: true });
+  shareQueries.getSharePermissions.mockReset().mockResolvedValue({ canCreate: true });
+  shareQueries.getShareableDocuments.mockReset().mockResolvedValue([{ id: "doc_0001" }]);
+});
+
+describe("EntityDocumentsTab", () => {
+  it("lists the linked documents with code, title, type, status, version and a link to the document", async () => {
+    await renderTab();
+    const row = screen.getByRole("row", { name: /DOC-0001/ });
+    expect(within(row).getByRole("link", { name: "Contrato marco" })).toHaveAttribute(
+      "href",
+      "/documents/doc_0001",
+    );
+    expect(within(row).getByText("Contract")).toBeInTheDocument();
+    expect(within(row).getByText("v2")).toBeInTheDocument();
+    expect(queries.listEntityDocuments).toHaveBeenCalledWith(clientRef);
+  });
+
+  it("serves a project the same way", async () => {
+    const projectRef = { type: "PROJECT" as const, id: "prj_0001", code: "PRJ-0001", label: "Web" };
+    const tab = await EntityDocumentsTab({ entity: projectRef });
+    render(
+      <NextIntlClientProvider
+        locale="en"
+        messages={{ documents: enDocuments, enums: enEnums, patterns: enPatterns }}
+      >
+        {tab}
+      </NextIntlClientProvider>,
+    );
+    expect(queries.listEntityDocuments).toHaveBeenCalledWith(projectRef);
+  });
+
+  it("renders nothing for an entity the tab does not serve", async () => {
+    const contactRef = { type: "CONTACT" as const, id: "ctc_0001", label: "Ana" };
+    expect(await EntityDocumentsTab({ entity: contactRef })).toBeNull();
+    expect(queries.listEntityDocuments).not.toHaveBeenCalledWith(contactRef);
+  });
+
+  it("shows the category chips with their counts, from the catalog", async () => {
+    await renderTab();
+    expect(screen.getByText("Legal · 1")).toBeInTheDocument();
+    expect(screen.getByText("Finance · 0")).toBeInTheDocument();
+  });
+
+  it("filters the rows by category with a chip and goes back to every document with All", async () => {
+    const financeRow: DocumentListRowDTO = {
+      ...clientRow,
+      id: "doc_0002",
+      code: "DOC-0002",
+      title: "Presupuesto",
+      category: { id: "dcat_finanzas", name: "Finanzas", nameEn: "Finance", color: null },
+    };
+    queries.listEntityDocuments.mockResolvedValue({
+      items: [clientRow, financeRow],
+      total: 2,
+      page: 1,
+      pageSize: 100,
+    });
+    await renderTab();
+    const all = screen.getByRole("button", { name: "All · 2" });
+    const finance = screen.getByRole("button", { name: "Finance · 1" });
+    expect(all).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(finance);
+    expect(finance).toHaveAttribute("aria-pressed", "true");
+    expect(all).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("row", { name: /DOC-0002/ })).toBeInTheDocument();
+    expect(screen.queryByRole("row", { name: /DOC-0001/ })).not.toBeInTheDocument();
+
+    await userEvent.click(all);
+    expect(screen.getByRole("row", { name: /DOC-0001/ })).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /DOC-0002/ })).toBeInTheDocument();
+  });
+
+  it("gives Owner, Admin and Member the attach sheet and the unlink control", async () => {
+    await renderTab();
+    expect(screen.getByText("attach-sheet")).toBeInTheDocument();
+    expect(screen.getByText("row-unlink")).toBeInTheDocument();
+  });
+
+  it("gives a Viewer a read-only table: no attach, no unlink", async () => {
+    queries.getDocumentPermissions.mockResolvedValue({ canCreate: false, canUpdate: false });
+    await renderTab();
+    expect(screen.queryByText("attach-sheet")).not.toBeInTheDocument();
+    expect(screen.queryByText("row-unlink")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Contrato marco" })).toBeInTheDocument();
+  });
+
+  it("offers sharing the record's documents to roles with the share grant", async () => {
+    await renderTab();
+    expect(screen.getByText("share-dialog CLIENT 1")).toBeInTheDocument();
+    expect(shareQueries.getShareableDocuments).toHaveBeenCalledWith(["doc_0001"]);
+  });
+
+  it("hides sharing without the share grant or without documents", async () => {
+    shareQueries.getSharePermissions.mockResolvedValue({ canCreate: false });
+    const { unmount } = await renderTab();
+    expect(screen.queryByText(/share-dialog/)).not.toBeInTheDocument();
+    unmount();
+    shareQueries.getSharePermissions.mockResolvedValue({ canCreate: true });
+    queries.listEntityDocuments.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
+    await renderTab();
+    expect(screen.queryByText(/share-dialog/)).not.toBeInTheDocument();
+  });
+
+  it("shows the empty state when the record has no documents", async () => {
+    queries.listEntityDocuments.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 100 });
+    await renderTab();
+    expect(screen.getByText("This record has no linked documents.")).toBeInTheDocument();
+  });
+
+  it("renders in Spanish", async () => {
+    await renderTab("es");
+    expect(screen.getByRole("heading", { name: /Documentos/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Código/ })).toBeInTheDocument();
+    expect(screen.getByText("Legal · 1")).toBeInTheDocument();
+  });
+});

@@ -1,0 +1,90 @@
+/*
+ * Syntax highlighting for `MarkdownView` (rehype-highlight / highlight.js tokens). Scoped to the component's
+ * data slot so it never leaks into other code blocks; light by default, `.dark` mirrors the theme provider.
+ */
+[data-slot="markdown-view"] .hljs {
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-title: #8250df;
+  --hl-type: #953800;
+  --hl-comment: #6e7781;
+  --hl-attr: #116329;
+  color: inherit;
+}
+
+.dark [data-slot="markdown-view"] .hljs {
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-comment: #8b949e;
+  --hl-attr: #7ee787;
+}
+
+[data-slot="markdown-view"] .hljs-keyword,
+[data-slot="markdown-view"] .hljs-meta .hljs-keyword,
+[data-slot="markdown-view"] .hljs-doctag,
+[data-slot="markdown-view"] .hljs-template-tag,
+[data-slot="markdown-view"] .hljs-template-variable,
+[data-slot="markdown-view"] .hljs-variable.language_ {
+  color: var(--hl-keyword);
+}
+
+[data-slot="markdown-view"] .hljs-string,
+[data-slot="markdown-view"] .hljs-regexp,
+[data-slot="markdown-view"] .hljs-meta .hljs-string {
+  color: var(--hl-string);
+}
+
+[data-slot="markdown-view"] .hljs-number,
+[data-slot="markdown-view"] .hljs-literal,
+[data-slot="markdown-view"] .hljs-symbol,
+[data-slot="markdown-view"] .hljs-variable,
+[data-slot="markdown-view"] .hljs-operator,
+[data-slot="markdown-view"] .hljs-attr,
+[data-slot="markdown-view"] .hljs-selector-attr,
+[data-slot="markdown-view"] .hljs-selector-class,
+[data-slot="markdown-view"] .hljs-selector-id {
+  color: var(--hl-number);
+}
+
+[data-slot="markdown-view"] .hljs-title,
+[data-slot="markdown-view"] .hljs-title.function_,
+[data-slot="markdown-view"] .hljs-section {
+  color: var(--hl-title);
+}
+
+[data-slot="markdown-view"] .hljs-type,
+[data-slot="markdown-view"] .hljs-built_in,
+[data-slot="markdown-view"] .hljs-title.class_,
+[data-slot="markdown-view"] .hljs-params {
+  color: var(--hl-type);
+}
+
+[data-slot="markdown-view"] .hljs-comment,
+[data-slot="markdown-view"] .hljs-quote,
+[data-slot="markdown-view"] .hljs-code {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+
+[data-slot="markdown-view"] .hljs-name,
+[data-slot="markdown-view"] .hljs-tag,
+[data-slot="markdown-view"] .hljs-selector-tag,
+[data-slot="markdown-view"] .hljs-addition {
+  color: var(--hl-attr);
+}
+
+[data-slot="markdown-view"] .hljs-deletion {
+  color: var(--hl-keyword);
+}
+
+[data-slot="markdown-view"] .hljs-emphasis {
+  font-style: italic;
+}
+
+[data-slot="markdown-view"] .hljs-strong {
+  font-weight: 600;
+}

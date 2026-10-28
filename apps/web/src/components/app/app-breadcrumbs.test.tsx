@@ -1,0 +1,147 @@
+import { act, render, screen, within } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import enCommon from "@/i18n/messages/en/common.json";
+import enNav from "@/i18n/messages/en/nav.json";
+import enReports from "@/i18n/messages/en/reports.json";
+import enSettings from "@/i18n/messages/en/settings.json";
+import enShell from "@/i18n/messages/en/shell.json";
+import esCommon from "@/i18n/messages/es/common.json";
+import esNav from "@/i18n/messages/es/nav.json";
+import esReports from "@/i18n/messages/es/reports.json";
+import esSettings from "@/i18n/messages/es/settings.json";
+import esShell from "@/i18n/messages/es/shell.json";
+import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
+import { AppBreadcrumbs } from "./app-breadcrumbs";
+
+const mocks = vi.hoisted(() => ({ pathname: "/dashboard" }));
+
+vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
+
+function renderAt(pathname: string, locale: "es" | "en" = "es", registration?: React.ReactNode) {
+  mocks.pathname = pathname;
+  const messages =
+    locale === "es"
+      ? { common: esCommon, nav: esNav, settings: esSettings, shell: esShell, reports: esReports }
+      : { common: enCommon, nav: enNav, settings: enSettings, shell: enShell, reports: enReports };
+  return render(
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <BreadcrumbLabelProvider>
+        <AppBreadcrumbs />
+        {registration}
+      </BreadcrumbLabelProvider>
+    </NextIntlClientProvider>,
+  );
+}
+
+describe("AppBreadcrumbs", () => {
+  beforeEach(() => {
+    mocks.pathname = "/dashboard";
+  });
+
+  it("labels the settings section from settings.nav (m1)", () => {
+    renderAt("/settings/preferences");
+    expect(screen.getByRole("link", { name: "Configuración" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
+    expect(screen.getByText("Preferencias")).toHaveAttribute("aria-current", "page");
+    const trail = screen.getByRole("navigation", { name: esShell.breadcrumbs.label });
+    expect(within(trail).getByRole("link", { name: esCommon.app.name })).toBeInTheDocument();
+  });
+
+  it("labels an unregistered id segment with nav.segments.detail", () => {
+    renderAt("/clients/cli_123", "en");
+    expect(screen.getByText("Detail", { selector: "[aria-current='page']" })).toBeInTheDocument();
+    expect(screen.queryByText("cli_123")).not.toBeInTheDocument();
+  });
+
+  it("shows the label a detail page registered for its id segment", () => {
+    renderAt(
+      "/clients/cli_123",
+      "es",
+      <BreadcrumbLabel segment="cli_123" label="CLI-0007 · Kairos Studio" />,
+    );
+    expect(
+      screen.getByText("CLI-0007 · Kairos Studio", { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(esNav.segments.detail)).not.toBeInTheDocument();
+  });
+
+  it("does not use a label registered for another segment", () => {
+    renderAt("/clients/cli_123", "es", <BreadcrumbLabel segment="cli_999" label="Otro" />);
+    expect(
+      screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Otro")).not.toBeInTheDocument();
+  });
+
+  // Carried from H1-B2 (TASK.md:1989): a report page showed "Detalle" instead of its name.
+  it("names a report or KPI page after the report, not Detalle", () => {
+    renderAt("/reports/taxes-registered");
+    expect(screen.getByRole("link", { name: esNav.items.reports })).toHaveAttribute(
+      "href",
+      "/reports",
+    );
+    expect(
+      screen.getByText(esReports.items.reports.TAXES_REGISTERED.title, {
+        selector: "[aria-current='page']",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(esNav.segments.detail)).not.toBeInTheDocument();
+  });
+
+  it("names a KPI page after the KPI, in the current locale", () => {
+    renderAt("/reports/collection-rate", "en");
+    expect(
+      screen.getByText(enReports.items.kpis.COLLECTION_RATE.title, {
+        selector: "[aria-current='page']",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps Detalle for the same slug under any other section", () => {
+    renderAt("/clients/taxes-registered");
+    expect(
+      screen.getByText(esNav.segments.detail, { selector: "[aria-current='page']" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(esReports.items.reports.TAXES_REGISTERED.title),
+    ).not.toBeInTheDocument();
+  });
+
+  // D2 (wave 5 Tester): the separator <li> sat inside the item <li>; the HTML parser closes the outer item, so the
+  // server markup no longer matched the client tree and React threw hydration error #418 on every shell page.
+  it("keeps separators as siblings of the items, never nested inside an <li>", () => {
+    const { container } = renderAt("/settings/preferences");
+    expect(container.querySelectorAll("li li")).toHaveLength(0);
+    expect(container.querySelectorAll("ol > li")).toHaveLength(5);
+  });
+
+  it("hydrates the server markup without a mismatch", async () => {
+    mocks.pathname = "/settings/preferences";
+    const tree = (
+      <NextIntlClientProvider
+        locale="es"
+        messages={{ common: esCommon, nav: esNav, settings: esSettings, shell: esShell }}
+      >
+        <AppBreadcrumbs />
+      </NextIntlClientProvider>
+    );
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(tree);
+    document.body.appendChild(host);
+
+    const problems: unknown[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((...args) => problems.push(args));
+    await act(async () => {
+      hydrateRoot(host, tree, { onRecoverableError: (error) => problems.push(error) });
+    });
+    spy.mockRestore();
+    host.remove();
+
+    expect(problems).toEqual([]);
+  });
+});

@@ -1,0 +1,121 @@
+import { describe, expect, it } from "vitest";
+import {
+  EXPORT_ENTITY_VALUES,
+  EXPORT_MAX_ROWS,
+  exportCsvResultSchema,
+  MAX_EXPORT_COLUMNS,
+  exportCsvInputSchema,
+  exportColumnSchema,
+  exportEntitySchema,
+} from "./export";
+import { columnIdSchema } from "./preferences";
+
+const valid = { entity: "CLIENT", query: {}, columns: ["code", "name", "client.label"] };
+
+describe("exportCsvInputSchema", () => {
+  it("accepts entity, a list query and the visible columns in order", () => {
+    const parsed = exportCsvInputSchema.parse({
+      ...valid,
+      query: {
+        q: " acme ",
+        sort: "name:asc",
+        filters: { status: ["ACTIVO"] },
+        includeArchived: "true",
+      },
+    });
+    expect(parsed.columns).toEqual(["code", "name", "client.label"]);
+    expect(parsed.query).toMatchObject({
+      q: "acme",
+      sort: "name:asc",
+      page: 1,
+      includeArchived: true,
+    });
+  });
+
+  it("defaults the list query like the table does", () => {
+    expect(exportCsvInputSchema.parse(valid).query).toMatchObject({
+      page: 1,
+      pageSize: 25,
+      filters: {},
+      includeArchived: false,
+    });
+  });
+
+  it("uses the same column id schema as the column preferences (dashes included)", () => {
+    expect(exportColumnSchema).toBe(columnIdSchema);
+    expect(
+      exportCsvInputSchema.safeParse({ ...valid, columns: ["tax-id", "totals.usd"] }).success,
+    ).toBe(true);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["1bad"] }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a".repeat(65)] }).success).toBe(
+      false,
+    );
+  });
+
+  it("requires at least one column and no repeats", () => {
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: [] }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: ["a", "b", "a"] }).success).toBe(
+      false,
+    );
+    const repeated = exportCsvInputSchema.safeParse({ ...valid, columns: ["a", "a"] });
+    expect(repeated.error?.issues[0]?.message).toBe("validation.invalidOption");
+  });
+
+  it("bounds the number of columns", () => {
+    const many = Array.from({ length: MAX_EXPORT_COLUMNS + 1 }, (_, index) => `c${index}`);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: many }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, columns: many.slice(1) }).success).toBe(true);
+  });
+
+  it("accepts only column ids that look like property paths", () => {
+    for (const column of ["", "1abc", "a b", "-a", "=cmd", "a".repeat(65), 7]) {
+      expect(
+        exportCsvInputSchema.safeParse({ ...valid, columns: [column] }).success,
+        String(column),
+      ).toBe(false);
+    }
+  });
+
+  it("rejects an unknown entity and a malformed query", () => {
+    expect(exportCsvInputSchema.safeParse({ ...valid, entity: "WIDGET" }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, entity: undefined }).success).toBe(false);
+    expect(exportCsvInputSchema.safeParse({ ...valid, query: { pageSize: 7 } }).success).toBe(
+      false,
+    );
+    expect(exportCsvInputSchema.safeParse({ ...valid, query: undefined }).success).toBe(false);
+  });
+
+  it("lists exportable entities without repeats", () => {
+    expect(new Set(EXPORT_ENTITY_VALUES).size).toBe(EXPORT_ENTITY_VALUES.length);
+    expect(exportEntitySchema.safeParse("INVOICE").success).toBe(true);
+  });
+
+  it("covers the tables of PRD §7.3, §8.4 and §8.15", () => {
+    for (const entity of [
+      "TECHNOLOGY",
+      "DOCUMENT_TYPE",
+      "CURRENCY",
+      "PAYMENT_METHOD",
+      "EXPENSE_CATEGORY",
+      "INSTALLMENT",
+      "RECURRING_CHARGE",
+      "USER",
+      "TRASH",
+    ]) {
+      expect(exportEntitySchema.safeParse(entity).success, entity).toBe(true);
+    }
+  });
+
+  it("caps an export at 10,000 rows and shapes its result", () => {
+    expect(EXPORT_MAX_ROWS).toBe(10_000);
+    expect(
+      exportCsvResultSchema.safeParse({
+        filename: "a.csv",
+        content: "",
+        rowCount: 0,
+        truncated: false,
+      }).success,
+    ).toBe(true);
+    expect(exportCsvResultSchema.safeParse({ filename: "a.csv", content: "" }).success).toBe(false);
+  });
+});

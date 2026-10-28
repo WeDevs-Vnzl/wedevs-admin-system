@@ -1,0 +1,395 @@
+{
+  "validation": {
+    "rateCurrencyIsUsd": "USD is always 1: it takes no exchange rate",
+    "duplicateRateCurrency": "The currency is repeated",
+    "invalidColor": "Invalid color (use #RRGGBB format)",
+    "invalidCode": "Invalid code (uppercase letters, digits and underscore)",
+    "usdRateMustBeOne": "For USD transactions the rate must be 1",
+    "categoryParentIsSelf": "A category cannot be its own parent"
+  },
+  "technologies": {
+    "page": {
+      "title": "Technologies",
+      "description": "Catalog of the project stack. A technology in use is not deleted: it is deactivated."
+    },
+    "table": {
+      "new": "New technology",
+      "search": "Search by name or identifier",
+      "usage": "{count, plural, =0 {No projects} one {# project} other {# projects}}",
+      "activate": "Activate {name}",
+      "deactivate": "Deactivate {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "columns": {
+        "icon": "Icon",
+        "name": "Name",
+        "nameEn": "English name",
+        "slug": "Identifier",
+        "iconSlug": "Icon (Simple Icons)",
+        "color": "Colour",
+        "category": "Category",
+        "usageCount": "Projects",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "facets": {
+        "category": "Category",
+        "active": "Status",
+        "activeOn": "Active",
+        "activeOff": "Inactive"
+      },
+      "empty": {
+        "title": "No technologies",
+        "description": "Add the technologies your projects use."
+      }
+    },
+    "form": {
+      "createTitle": "New technology",
+      "editTitle": "Edit technology",
+      "description": "Name, category and icon of a technology in the catalog.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "slug": "Identifier",
+        "slugHint": "Generated from the name when created; it does not change when edited.",
+        "category": "Category",
+        "iconSlug": "Simple Icons icon (optional)",
+        "iconSlugHint": "Icon identifier on simpleicons.org, for example nextdotjs.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB. Without a colour the brand colour of the icon is used.",
+        "active": "Active"
+      },
+      "iconNotFound": "No icon has that identifier.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Create"
+    },
+    "delete": {
+      "description": "“{name}” will be removed from the catalog.",
+      "cancel": "Cancel",
+      "inUseTitle": "Technology in use",
+      "inUseDescription": "Projects use “{name}”, so it cannot be deleted. Deactivate it so it stops being offered; existing projects keep their stack.",
+      "deactivate": "Deactivate"
+    },
+    "toast": {
+      "created": "Technology created",
+      "updated": "Technology updated",
+      "activated": "Technology activated",
+      "deactivated": "Technology deactivated",
+      "deleted": "Technology deleted"
+    },
+    "picker": {
+      "placeholder": "Select technologies",
+      "search": "Search technology",
+      "empty": "No results",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "nameTaken": "A technology with that name already exists",
+      "slugTaken": "A technology with that identifier already exists",
+      "inUse": "The technology is in use by projects"
+    }
+  },
+  "shared": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "currencies": {
+    "page": {
+      "title": "Currencies",
+      "description": "Currencies used to invoice, collect and record expenses. A currency in use is deactivated, not deleted."
+    },
+    "table": {
+      "new": "New currency",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "symbol": "Symbol",
+        "decimals": "Decimals",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No currencies",
+        "description": "Add the currencies you work with."
+      }
+    },
+    "form": {
+      "createTitle": "New currency",
+      "editTitle": "Edit currency",
+      "description": "Code, name, symbol and decimals of a currency.",
+      "fields": {
+        "code": "Code",
+        "codeHint": "Upper-case ISO code, for example USD. It does not change once created.",
+        "name": "Name",
+        "symbol": "Symbol",
+        "decimals": "Decimals",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Currency created",
+      "updated": "Currency updated",
+      "activated": "Currency activated",
+      "deactivated": "Currency deactivated"
+    },
+    "errors": {
+      "codeTaken": "A currency with that code already exists",
+      "usdAlwaysActive": "USD is the reference currency and cannot be deactivated"
+    }
+  },
+  "rates": {
+    "page": {
+      "title": "Exchange rates",
+      "description": "Units of each currency per 1 USD, by date and source. A date holds one rate per source; forms prefill the BCV one."
+    },
+    "table": {
+      "search": "Search by currency or date",
+      "columns": {
+        "date": "Date",
+        "currency": "Currency",
+        "usdRate": "Rate per USD",
+        "source": "Source",
+        "createdAt": "Recorded"
+      },
+      "facets": {
+        "currency": "Currency",
+        "source": "Source"
+      },
+      "empty": {
+        "title": "No rates",
+        "description": "Load today's rates or import them from a CSV."
+      }
+    },
+    "quickLoad": {
+      "open": "Quick load",
+      "title": "Quick daily load",
+      "description": "Type the rate of each currency for the chosen date and source. Currencies left empty are not saved.",
+      "date": "Date",
+      "source": "Source",
+      "sourceHint": "If the date already has a rate from this source, it is replaced.",
+      "rate": "{currency} rate per USD",
+      "lastRate": "Last: {rate} ({date})",
+      "noLastRate": "No previous rate",
+      "deviation": "Differs by more than {percent}% from the last rate. Check it before saving.",
+      "noRates": "Type at least one rate",
+      "noCurrencies": "There are no active currencies besides USD.",
+      "submit": "Save rates"
+    },
+    "import": {
+      "open": "Import CSV",
+      "title": "Import rates from CSV",
+      "description": "Columns: date (YYYY-MM-DD), currency, usdRate and source (optional: MANUAL, BCV or OTRA). One row per rate.",
+      "file": "CSV file",
+      "overwrite": "Replace rates that already exist",
+      "overwriteHint": "Unchecked, a rate with the same date, currency and source is skipped.",
+      "submit": "Import",
+      "invalidHeader": "The file does not have the date, currency and usdRate columns.",
+      "empty": "The file has no rows.",
+      "tooManyRows": "The file exceeds the maximum of {max} rows.",
+      "noValidRows": "No row is valid.",
+      "ready": "{count, plural, one {# row ready to import} other {# rows ready to import}}",
+      "summary": "{created} created, {updated} updated, {skipped} skipped",
+      "errorsTitle": "Rows with errors",
+      "errorRow": "Row {row}: {message}"
+    },
+    "toast": {
+      "saved": "{count, plural, one {# rate saved} other {# rates saved}}",
+      "imported": "Import finished"
+    },
+    "errors": {
+      "unknownCurrency": "The currency is not in the catalog"
+    }
+  },
+  "paymentMethods": {
+    "page": {
+      "title": "Payment methods",
+      "description": "Methods used to record payments. A method in use is deactivated, not deleted."
+    },
+    "table": {
+      "new": "New method",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "requiresReference": "Requires reference",
+        "suggestsIgtf": "Proposes IGTF",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No payment methods",
+        "description": "Add the methods you get paid with."
+      }
+    },
+    "form": {
+      "createTitle": "New payment method",
+      "editTitle": "Edit payment method",
+      "description": "Name, code and behaviour of a payment method.",
+      "fields": {
+        "code": "Code",
+        "codeHint": "Upper case, digits and underscore, for example PAGO_MOVIL. It does not change once created.",
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "requiresReference": "Requires reference",
+        "suggestsIgtf": "Proposes IGTF",
+        "suggestsIgtfHint": "A payment with this method proposes the IGTF of the fiscal settings.",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Payment method created",
+      "updated": "Payment method updated",
+      "activated": "Payment method activated",
+      "deactivated": "Payment method deactivated"
+    },
+    "errors": {
+      "codeTaken": "A method with that code already exists",
+      "nameTaken": "A method with that name already exists"
+    }
+  },
+  "expenseCategories": {
+    "page": {
+      "title": "Expense categories",
+      "description": "Two-level catalog: categories and subcategories. A category in use is deactivated, not deleted."
+    },
+    "tree": {
+      "new": "New category",
+      "addChild": "Add a subcategory to {name}",
+      "edit": "Edit {name}",
+      "toggle": "Activate or deactivate {name}",
+      "children": "{count, plural, =0 {No subcategories} one {# subcategory} other {# subcategories}}",
+      "empty": {
+        "title": "No expense categories",
+        "description": "Add the categories you classify your expenses with."
+      }
+    },
+    "form": {
+      "createTitle": "New category",
+      "createChildTitle": "New subcategory",
+      "editTitle": "Edit category",
+      "description": "Name, colour and parent category.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB.",
+        "parent": "Parent category",
+        "parentNone": "None (main category)",
+        "active": "Active"
+      },
+      "create": "Create"
+    },
+    "toast": {
+      "created": "Category created",
+      "updated": "Category updated",
+      "activated": "Category activated",
+      "deactivated": "Category deactivated"
+    },
+    "errors": {
+      "nameTaken": "A category with that name already exists at the same level",
+      "parentNotRoot": "The parent must be a main category",
+      "hasChildren": "A category with subcategories cannot have a parent"
+    }
+  },
+  "documentTypes": {
+    "page": {
+      "title": "Document types",
+      "description": "Document categories and the types inside each one. A type in use is not deleted: it is deactivated."
+    },
+    "categories": {
+      "new": "New category",
+      "typeCount": "{count, plural, =0 {No types} one {# type} other {# types}}",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "addType": "Add a type to {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "noTypes": "No types in this category yet.",
+      "empty": {
+        "title": "No document categories",
+        "description": "Add the categories you classify your documents with, then the types inside each one."
+      }
+    },
+    "types": {
+      "signature": "Signature",
+      "expiration": "Expiration",
+      "documents": "{count, plural, =0 {No documents} one {# document} other {# documents}}",
+      "toggle": "Activate or deactivate {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}"
+    },
+    "categoryForm": {
+      "createTitle": "New category",
+      "editTitle": "Edit category",
+      "description": "Name and colour of a document category.",
+      "fields": {
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "color": "Colour (optional)",
+        "colorHint": "Format #RRGGBB."
+      },
+      "create": "Create"
+    },
+    "typeForm": {
+      "createTitle": "New document type",
+      "editTitle": "Edit document type",
+      "description": "Category, name, default format and what documents of this type carry.",
+      "fields": {
+        "category": "Category",
+        "name": "Name",
+        "nameEn": "English name (optional)",
+        "nameEnHint": "If empty, the name is shown in English.",
+        "defaultFormat": "Default format",
+        "requiresSignature": "Requires signature",
+        "requiresSignatureHint": "Enables the Signed status and the signature date.",
+        "hasExpiration": "Has expiration",
+        "hasExpirationHint": "Enables the expiry date and its alerts.",
+        "active": "Active",
+        "activeHint": "Inactive types cannot be picked for new documents."
+      },
+      "create": "Create"
+    },
+    "delete": {
+      "categoryDescription": "“{name}” will be removed from the catalog.",
+      "typeDescription": "“{name}” will be removed from the catalog.",
+      "categoryLockedTitle": "Category with types",
+      "categoryLockedDescription": "“{name}” still has types, so it cannot be deleted. Move its types to another category or delete them first.",
+      "typeInUseTitle": "Document type in use",
+      "typeInUseDescription": "Documents use “{name}”, so it cannot be deleted. Deactivate it so it stops being offered; existing documents keep their type.",
+      "close": "Close",
+      "cancel": "Cancel",
+      "deactivate": "Deactivate"
+    },
+    "toast": {
+      "categoryCreated": "Category created",
+      "categoryUpdated": "Category updated",
+      "categoryDeleted": "Category deleted",
+      "reordered": "Order updated",
+      "typeCreated": "Document type created",
+      "typeUpdated": "Document type updated",
+      "typeActivated": "Document type activated",
+      "typeDeactivated": "Document type deactivated",
+      "typeDeleted": "Document type deleted"
+    },
+    "errors": {
+      "categoryNameTaken": "A category with that name already exists",
+      "categoryHasTypes": "The category still has types",
+      "reorderMismatch": "The order must include every category once",
+      "unknownCategory": "The category does not exist",
+      "typeNameTaken": "A type with that name already exists in this category",
+      "typeInUse": "The document type is in use by documents"
+    }
+  }
+}

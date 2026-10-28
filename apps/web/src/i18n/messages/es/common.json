@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "WeDevs Core"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "retry": "Reintentar"
+  },
+  "states": {
+    "loading": "Cargando…",
+    "empty": "Sin resultados",
+    "error": "Algo salió mal"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o fue movida.",
+    "back": "Volver al inicio"
+  },
+  "errors": {
+    "UNAUTHENTICATED": "Debes iniciar sesión para continuar",
+    "FORBIDDEN": "No tienes permiso para realizar esta acción",
+    "VALIDATION": "Revisa los campos marcados",
+    "NOT_FOUND": "No se encontró el registro solicitado",
+    "CONFLICT": "Este cambio entra en conflicto con los datos actuales",
+    "INTEGRITY_LOCK": "Este registro está vinculado a otros registros y no puede modificarse de esta forma",
+    "ACCESS_KEY_INVALID": "La clave de acceso no es válida",
+    "ACCESS_KEY_LOCKED": "Esta clave de acceso está bloqueada tras demasiados intentos fallidos",
+    "RATE_LIMITED": "Demasiadas solicitudes. Inténtalo de nuevo en un momento",
+    "INTERNAL": "Algo salió mal de nuestro lado. Inténtalo de nuevo"
+  },
+  "pdfViewer": {
+    "label": "Visor de PDF",
+    "toolbar": "Controles del visor",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "pageIndicator": "{page} / {total}",
+    "pageLabel": "Página {page} de {total}",
+    "zoomOut": "Reducir zoom",
+    "zoomIn": "Ampliar zoom",
+    "zoomReset": "Restablecer zoom al 100 %",
+    "zoomValue": "{percent} %",
+    "download": "Descargar",
+    "fullscreen": "Pantalla completa",
+    "loading": "Cargando documento…",
+    "error": "No se pudo mostrar el documento"
+  }
+}

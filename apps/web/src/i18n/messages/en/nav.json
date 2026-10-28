@@ -1,0 +1,38 @@
+{
+  "groups": {
+    "commercial": "Commercial",
+    "finance": "Finance",
+    "knowledge": "Knowledge",
+    "analysis": "Analysis"
+  },
+  "items": {
+    "dashboard": "Home",
+    "clients": "Clients",
+    "projects": "Projects",
+    "invoices": "Invoices",
+    "payments": "Payments",
+    "expenses": "Expenses",
+    "accounts": "Accounts",
+    "documents": "Documents",
+    "shares": "Portal links",
+    "notes": "Notes",
+    "graph": "Graph",
+    "reports": "Reports",
+    "activity": "Activity",
+    "settings": "Settings"
+  },
+  "segments": {
+    "list": "List",
+    "new": "New",
+    "edit": "Edit",
+    "graph": "Graph",
+    "billing": "Billing",
+    "recurring": "Recurring",
+    "editor": "Editor",
+    "versions": "Versions",
+    "shares": "Shares",
+    "transfers": "Transfers",
+    "movements": "Movements",
+    "detail": "Detail"
+  }
+}

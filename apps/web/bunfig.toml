@@ -1,0 +1,3 @@
+[install]
+# Exact pins (docs/rules/stack.md): `bun add` never writes ^ or ~.
+exact = true
