@@ -79,6 +79,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "@vitest/coverage-v8": "5.0.3",
+    "@wedevs/api-contract": "workspace:*",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.0",
     "eslint-config-prettier": "10.1.8",
@@ -103,7 +104,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "i18n:check": "tsx scripts/check-i18n.ts",
-    "api:gen": "openapi-typescript src/lib/api/openapi.json -o src/lib/api/schema.d.ts",
+    "api:gen": "openapi-typescript node_modules/@wedevs/api-contract/openapi.json -o src/lib/api/schema.d.ts",
     "api:check": "tsx scripts/api-check.ts",
     "format:check": "prettier --check ."
   },

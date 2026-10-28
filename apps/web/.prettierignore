@@ -8,3 +8,4 @@ bun.lock
 public
 src/components/ui
 graphify-out
+src/lib/api/schema.d.ts

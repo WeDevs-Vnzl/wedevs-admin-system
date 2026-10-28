@@ -42,15 +42,17 @@ uninvited person who registers fires `user.created` and is mirrored locally as a
 
 ## OpenAPI contract
 
-`openapi.json` (OpenAPI 3.1) is generated from the code and committed; the FE consumes it.
+`packages/api-contract/openapi.json` (OpenAPI 3.1, package `@wedevs/api-contract`) is generated from
+the code and committed; `apps/web` generates its `schema.d.ts` from it.
 
 ```
-bun run openapi:generate   # rewrite openapi.json deterministically
+bun run openapi:generate   # rewrite packages/api-contract/openapi.json deterministically
 bun run openapi:check      # fails with a short diff when the committed file is stale
 ```
 
-Drift procedure: after any controller, DTO or schema change, run `bun run openapi:generate`, review the
-diff and commit `openapi.json` together with the code. CI runs `openapi:check`. In non-production the
+Drift procedure: after any controller, DTO or schema change, run `bun run api:gen` from the repo root
+(it regenerates the contract, then `apps/web/src/lib/api/schema.d.ts`), review the diff and commit both
+together with the code. CI runs `openapi:check`. In non-production the
 live document is also served at `GET /api/openapi.json`.
 
 ## Fresh clone

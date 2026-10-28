@@ -20,7 +20,12 @@ const apiClientMessage =
 
 const openapiFetchImports = { name: "openapi-fetch", message: apiClientMessage };
 const apiSchemaImports = {
-  group: ["@/lib/api/schema", "@/lib/api/schema.d.ts"],
+  group: [
+    "@/lib/api/schema",
+    "@/lib/api/schema.d.ts",
+    "@wedevs/api-contract",
+    "@wedevs/api-contract/*",
+  ],
   message: apiClientMessage,
 };
 const apiImports = [openapiFetchImports, apiSchemaImports];

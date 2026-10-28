@@ -33,8 +33,20 @@
     },
     "format:check": {},
     "i18n:check": {},
+    "openapi:generate": {
+      "dependsOn": ["prisma:generate"],
+      "cache": false
+    },
     "openapi:check": {
-      "dependsOn": ["prisma:generate"]
+      "dependsOn": ["prisma:generate"],
+      "cache": false
+    },
+    "api:gen": {
+      "cache": false
+    },
+    "@wedevs/web#api:gen": {
+      "dependsOn": ["@wedevs/api#openapi:generate"],
+      "cache": false
     },
     "api:check": {
       "cache": false

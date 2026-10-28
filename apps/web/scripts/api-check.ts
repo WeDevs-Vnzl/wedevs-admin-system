@@ -1,12 +1,12 @@
 // Fails when src/lib/api/schema.d.ts differs from what `openapi-typescript` generates from the committed
-// src/lib/api/openapi.json (the BE contract copy). CI has no be/, so this never reads ../be.
+// contract in the @wedevs/api-contract workspace package.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
-const contract = join(root, "src/lib/api/openapi.json");
+const contract = join(root, "node_modules/@wedevs/api-contract/openapi.json");
 const committed = join(root, "src/lib/api/schema.d.ts");
 
 const tmp = mkdtempSync(join(tmpdir(), "api-check-"));

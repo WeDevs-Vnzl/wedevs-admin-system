@@ -7,7 +7,8 @@ import { AppModule } from '../src/app.module';
 import { buildOpenApiDocument, configureApp } from '../src/app.setup';
 import { parseEnv } from '../src/config/env.schema';
 
-const OUTPUT = resolve(__dirname, '..', 'openapi.json');
+// The contract lives in its own workspace package so apps/web reads it without copying (DT-115).
+const OUTPUT = resolve(__dirname, '..', '..', '..', 'packages', 'api-contract', 'openapi.json');
 
 function sortKeys(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortKeys);
@@ -64,7 +65,7 @@ async function main(): Promise<void> {
   const fresh = await render();
   if (mode === 'generate') {
     writeFileSync(OUTPUT, fresh);
-    console.log('openapi.json written');
+    console.log('packages/api-contract/openapi.json written');
     return;
   }
   if (mode === 'check') {
@@ -75,10 +76,12 @@ async function main(): Promise<void> {
       /* missing file counts as drift */
     }
     if (committed === fresh) {
-      console.log('openapi.json is up to date');
+      console.log('packages/api-contract/openapi.json is up to date');
       return;
     }
-    console.error('openapi.json is stale. Run `bun run openapi:generate` and commit it.');
+    console.error(
+      'packages/api-contract/openapi.json is stale. Run `bun run openapi:generate` and commit it.',
+    );
     console.error(summarize(committed, fresh));
     process.exitCode = 1;
     return;
