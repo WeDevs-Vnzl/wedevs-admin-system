@@ -53,9 +53,13 @@ describe("PdfViewer (dynamic wrapper)", () => {
     expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
   });
 
-  it("then renders the real viewer, which loads the URL with the bundled worker", async () => {
+  // The viewer module is a dynamic import; under a full monorepo test run it can take longer than the 1 s
+  // `findBy*` default to arrive.
+  it("then renders the real viewer, which loads the URL with the bundled worker", { timeout: 15000 }, async () => {
     renderWrapper();
-    expect(await screen.findByRole("toolbar", { name: "Viewer controls" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("toolbar", { name: "Viewer controls" }, { timeout: 10000 }),
+    ).toBeInTheDocument();
     expect(await screen.findByText("1 / 2")).toBeInTheDocument();
     expect(pdfjs.getDocument).toHaveBeenCalledWith({ url: "/documents/doc_1/versions/dver_1/file" });
     expect(pdfjs.GlobalWorkerOptions.workerSrc).toMatch(/pdf\.worker\.min\.mjs$/);

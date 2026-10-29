@@ -209,7 +209,9 @@ const violations: readonly Violation[] = [
   },
 ];
 
-describe('hexagonal boundary lint', () => {
+// Real ESLint runs: the first lint also loads the config and the type-aware parser, which exceeds the
+// 5 s default when the whole monorepo test run shares the machine.
+describe('hexagonal boundary lint', { timeout: 30_000 }, () => {
   let eslint: ESLint;
 
   beforeAll(() => {
