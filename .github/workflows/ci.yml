@@ -24,23 +24,9 @@ jobs:
     name: api (lint, types, tests, migrations, int, e2e, openapi)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          # Job-local throwaway value for the service container; not a secret.
-          POSTGRES_PASSWORD: dev
-          POSTGRES_DB: core
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
+    # No Postgres service: test:int and test:e2e start their own postgres:17 with Testcontainers on the runner's
+    # Docker, migrating and seeding a template database that every spec file clones (DT-117).
     env:
-      DATABASE_URL: postgresql://postgres:dev@localhost:5432/core
-      DIRECT_URL: postgresql://postgres:dev@localhost:5432/core
       # Literal placeholders, not secrets: no job touches Clerk or Cloudinary.
       CLERK_SECRET_KEY: sk_test_ci_placeholder
       CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
@@ -88,11 +74,7 @@ jobs:
         run: bun run typecheck
       - if: steps.affected.outputs.run == 'true'
         run: bun run test:cov
-      - name: Apply migrations and seed on the fresh service database
-        if: steps.affected.outputs.run == 'true'
-        run: |
-          bunx prisma migrate deploy
-          bun run db:seed
+      # Also proves every migration and the seed apply to an empty database (global setup's template).
       - if: steps.affected.outputs.run == 'true'
         run: bun run test:int
       - if: steps.affected.outputs.run == 'true'
