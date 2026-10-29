@@ -16,6 +16,8 @@
     "test": "vitest run --project unit",
     "test:int": "vitest run --project int",
     "test:e2e": "vitest run --project e2e",
+    "test:int:affected": "bash scripts/test-affected.sh int",
+    "test:e2e:affected": "bash scripts/test-affected.sh e2e",
     "test:cov": "vitest run --project unit --coverage",
     "prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
