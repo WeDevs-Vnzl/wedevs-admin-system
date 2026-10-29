@@ -1,6 +1,14 @@
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
+// `int` and `e2e` start their own PostgreSQL (Testcontainers): Docker or the podman socket is required. One
+// server per project run, one database per spec file cloned from a migrated and seeded template (DT-117).
+const withDatabase = {
+  globalSetup: ['./test/support/global-setup.ts'],
+  setupFiles: ['./test/support/spec-database.ts'],
+  hookTimeout: 120_000,
+};
+
 export default defineConfig({
   plugins: [
     swc.vite({
@@ -15,6 +23,23 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
+    // With --changed (`test:int:affected`, `test:e2e:affected`), a diff touching any of these runs every spec:
+    // the import graph does not see SQL, the seed, config, dependencies or the kernel the specs share.
+    forceRerunTriggers: [
+      '**/package.json/**',
+      '**/bun.lock/**',
+      '**/turbo.json/**',
+      '**/vitest.config.*/**',
+      '**/tsconfig*.json/**',
+      '**/compose.yaml/**',
+      '**/apps/api/prisma.config.ts/**',
+      '**/apps/api/prisma/**',
+      '**/apps/api/src/shared/**',
+      '**/apps/api/src/config/**',
+      '**/apps/api/test/support/**',
+      '**/apps/api/test/db/helpers.ts/**',
+      '**/packages/api-contract/**',
+    ],
     coverage: {
       provider: 'v8',
       include: ['src/shared/domain/money.ts', 'src/shared/domain/business-date.ts'],
@@ -43,7 +68,7 @@ export default defineConfig({
           name: 'int',
           include: ['**/*.int.test.ts'],
           exclude: ['node_modules/**'],
-          fileParallelism: false,
+          ...withDatabase,
         },
       },
       {
@@ -51,7 +76,7 @@ export default defineConfig({
         test: {
           name: 'e2e',
           include: ['test/**/*.e2e-spec.ts'],
-          fileParallelism: false,
+          ...withDatabase,
         },
       },
     ],

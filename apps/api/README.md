@@ -11,8 +11,8 @@ bun run lint             # eslint (incl. layer boundary rules)
 bun run format           # prettier --write
 bun run typecheck        # tsc --noEmit
 bun run test             # unit project
-bun run test:int         # adapter tests (needs local Postgres)
-bun run test:e2e         # Supertest e2e (needs local Postgres)
+bun run test:int         # adapter tests (starts its own Postgres container)
+bun run test:e2e         # Supertest e2e (starts its own Postgres container)
 bun run test:cov         # unit + coverage thresholds
 bun run prisma:generate
 bun run db:migrate       # prisma migrate dev
@@ -60,7 +60,16 @@ live document is also served at `GET /api/openapi.json`.
 ```
 bun install --frozen-lockfile
 bun run prisma:generate          # src/generated is gitignored
-# local podman Postgres (never a remote database), then set DATABASE_URL/DIRECT_URL in your local env
-bunx prisma migrate deploy && bun run db:seed
+systemctl --user start podman.socket   # podman-only machines; Docker works as is
 bun run test && bun run test:int && bun run test:e2e
 ```
+
+## Integration and e2e databases (DT-117)
+
+`test:int` and `test:e2e` need no running database and ignore any `DATABASE_URL` in your env. Each project run
+starts one throwaway `postgres:17` with Testcontainers, migrates and seeds a template database once, and gives
+every spec file its own database cloned from it (`test/support/global-setup.ts`, `test/support/spec-database.ts`),
+so spec files run in parallel. On a podman-only machine the setup points Testcontainers at the rootless podman
+socket and disables Ryuk itself; set `DOCKER_HOST` to override. The container is stopped when the run ends.
+
+`bun run db:reset` / `db:seed` still need a local podman Postgres in `DATABASE_URL` for running the app.
