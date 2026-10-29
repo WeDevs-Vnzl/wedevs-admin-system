@@ -34,10 +34,10 @@ infrastructure (sna TSD DT-19) in wedevs-core. Branch `batch/fix-test-infra` (fr
 
 | ID | Specs | Route | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | S2, S4 | inline | pending | |
-| T2 | S3 | inline | pending | |
-| T3 | S5 | inline | pending | |
-| T4 | S6 | inline | pending | not versioned (wedevs-core root is not a git repo) |
+| T1 | S2, S4 | inline | done | `9dd566f` (chore: testcontainers), `49e5d3e`; int 29/260, e2e 14/157 green, no leftover container |
+| T2 | S3 | inline | done | `3cf788a`; probes: unknown ref exit 1, empty diff runs none, one spec → 1 file, `src/shared` → all |
+| T3 | S5 | inline | done | `721ebab`; YAML lint ok; not run on GitHub (no remote) |
+| T4 | S6 | inline | done | not versioned (wedevs-core root is not a git repo): conventions, decisions DT-117 (+DT-89 note), stack, safeguards, data-rules, orca-workflow, 4 agent prompts |
 
 Route evidence: no writer trigger (no parallel disjoint units, context below backstop). High risk: item 5 (CI,
 dependencies) and item 6 (test infrastructure) → independent verifier at the end.
@@ -50,3 +50,12 @@ dependencies) and item 6 (test infrastructure) → independent verifier at the e
 - **L3** Mapping: sna uses Drizzle + `runMigrations()`; wedevs uses Prisma 7, so the template step shells out to
   `prisma migrate deploy` and seeds (specs depend on seeded catalogs). wedevs specs read `DATABASE_URL` at module load,
   so the per-file clone is set from a `setupFiles` module with top-level await. Next free decision: DT-117.
+- **L4** Baseline (sequential, manual podman DB, `54701e2`): int 28 files / 257 tests 126 s; e2e 14 / 157 87 s, green.
+- **L5** tsconfig is CommonJS (no top-level await): the setup file sets the URL synchronously and clones in the first
+  `beforeAll`; specs cannot query at module load either. After: int 29 / 260 (~70–100 s), e2e 14 / 157 (~68–75 s).
+- **L6** One unit run had 1 failure that did not reproduce in 4 later runs with and without the change (pre-existing
+  flake, unit project untouched). A `pg` "client.query() while executing" deprecation warning comes from existing specs,
+  not the new helpers.
+- **L7** Rule conflict resolved: sna assesses review per commit; wedevs phase-gates 4a keeps one Code Reviewer round per
+  batch. Per-commit assessment applies only to native gentle-ai review; 4a unchanged.
+- **L8** Independent verifier: S2-S6 pass, no blockers; advisories: remote DOCKER_HOST briefly creates a container before the guard throws; SIGKILL on rootless podman leaves the container (Ryuk off); forceRerunTriggers drops the vite.config default (no vite config in api).
