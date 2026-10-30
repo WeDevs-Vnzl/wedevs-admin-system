@@ -50,3 +50,13 @@ export async function readClientDetail(
     contacts: toContactViews(live, chips.slice(1)),
   };
 }
+
+// What the interface layer may know about the client domain (it imports the application layer only).
+export {
+  CLIENT_LIMITS,
+  CLIENT_SORT_FIELDS,
+  COUNTRY_CODE_VALUES,
+  type ClientDetailView,
+  type ClientListRow,
+} from '../../domain/client';
+export { TAG_IDS_MAX } from '../../domain/client-fields';

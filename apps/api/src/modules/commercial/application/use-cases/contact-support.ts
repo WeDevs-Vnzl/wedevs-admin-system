@@ -41,3 +41,6 @@ export async function demoteOtherPrimaries(
     });
   }
 }
+
+// What the interface layer may know about the contact domain (it imports the application layer only).
+export { CONTACT_LIMITS, CONTACT_SORT_FIELDS, type ContactView } from '../../domain/contact';
