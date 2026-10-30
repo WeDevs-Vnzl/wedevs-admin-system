@@ -81,6 +81,35 @@ describe('route inventory (full AppModule)', () => {
     expect(publicRoutes.sort()).toEqual(['GET /api/v1/health', 'POST /api/v1/webhooks/clerk']);
   });
 
+  it('inventories every BE-2 handler with exactly one grant, the note archive as @Authenticated()', () => {
+    const routes = inventory(app);
+    const byRoute = new Map(routes.map((r) => [r.route, r.grant]));
+    for (const route of [
+      'GET /api/v1/clients',
+      'POST /api/v1/clients/{id}/contacts',
+      'GET /api/v1/projects',
+      'PUT /api/v1/projects/{id}/links',
+      'GET /api/v1/notes',
+      'POST /api/v1/notes/{id}/restore',
+      'GET /api/v1/technologies',
+      'POST /api/v1/tags/assign',
+      'GET /api/v1/trash',
+      'POST /api/v1/trash/restore',
+      'GET /api/v1/activity',
+    ]) {
+      expect(byRoute.has(route), route).toBe(true);
+    }
+    expect(byRoute.get('POST /api/v1/notes/{id}/archive')).toBe('authenticated');
+    expect(byRoute.get('GET /api/v1/projects')).toBe('grant');
+  });
+
+  it('exposes no PATCH, PUT or DELETE under /activity (the log is append-only, HU-29 CA2)', () => {
+    const mutating = inventory(app).filter((r) =>
+      /^(PATCH|PUT|DELETE) \/api\/v1\/activity/.test(r.route),
+    );
+    expect(mutating).toEqual([]);
+  });
+
   it('every inventoried route is a real route of the OpenAPI document and vice versa', async () => {
     const res = await request(app.getHttpServer()).get('/api/openapi.json').expect(200);
     const documented = Object.entries(
