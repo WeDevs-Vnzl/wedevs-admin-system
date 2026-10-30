@@ -717,7 +717,8 @@ describe('projects (e2e)', { timeout: 120_000 }, () => {
   });
 
   it('documents every project EntityRef as the shared EntityRef schema (api-contract.md §2)', () => {
-    const schemas = (buildOpenApiDocument(app).components?.schemas ?? {}) as Record<
+    const document = buildOpenApiDocument(app);
+    const schemas = (document.components?.schemas ?? {}) as Record<
       string,
       {
         properties?: Record<
@@ -727,7 +728,13 @@ describe('projects (e2e)', { timeout: 120_000 }, () => {
       }
     >;
     const ref = '#/components/schemas/EntityRef';
-    const restored = Object.values(schemas).find((s) => s.properties?.restoredAt);
+    const restoreResponse = document.paths?.[`${BASE}/{id}/restore`]?.post?.responses?.[
+      '200'
+    ] as unknown as {
+      content: { 'application/json': { schema: { $ref: string } } };
+    };
+    const restored =
+      schemas[restoreResponse.content['application/json'].schema.$ref.split('/').pop() ?? ''];
     expect(restored?.properties?.entity?.$ref).toBe(ref);
     const detail = Object.values(schemas).filter(
       (s) => s.properties?.clients?.items?.properties?.client,

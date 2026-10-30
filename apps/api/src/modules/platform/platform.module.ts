@@ -33,6 +33,8 @@ import { CloudinaryFileStorage } from './infrastructure/cloudinary-file-storage.
 import { FileTypeSniffer } from './infrastructure/file-type-sniffer.adapter';
 import { PrismaFileRepository } from './infrastructure/prisma-file.repository';
 import { PrismaHealthProbe } from './infrastructure/prisma-health-probe.adapter';
+import { ActivityModule } from './activity.module';
+import { TrashModule } from './trash.module';
 import { FilesController } from './interface/http/files.controller';
 import { HealthController } from './interface/http/health.controller';
 
@@ -45,7 +47,7 @@ const logCleanupFailure =
     );
 
 @Module({
-  imports: [SharedInterfaceModule],
+  imports: [SharedInterfaceModule, ActivityModule, TrashModule],
   controllers: [HealthController, FilesController],
   providers: [
     { provide: HEALTH_PROBE, useClass: PrismaHealthProbe },

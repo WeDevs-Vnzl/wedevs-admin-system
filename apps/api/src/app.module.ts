@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AppConfigModule } from './config/config.module';
+import { CommercialModule } from './modules/commercial/commercial.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -20,6 +21,7 @@ import { SharedInterfaceModule } from './shared/interface/shared-interface.modul
     IdentityModule,
     PlatformModule,
     SettingsModule,
+    CommercialModule,
   ],
   providers: [{ provide: APP_GUARD, useExisting: AuthGuard }],
 })
