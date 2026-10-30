@@ -151,4 +151,17 @@ describe('OpenAPI document reflects the route metadata (committed packages/api-c
     });
     expect(missing).toEqual([]);
   });
+
+  it('types the nullable imageUrl of the user DTOs identically, as string | null (Q-FEINT-1)', () => {
+    type Schemas = Record<string, { properties?: Record<string, unknown> }>;
+    const schemas = (DOCUMENT as unknown as { components: { schemas: Schemas } }).components
+      .schemas;
+    const row = (
+      schemas.UserListResponseDto?.properties?.items as {
+        items: { properties: Record<string, unknown> };
+      }
+    ).items.properties.imageUrl;
+    expect(row).toEqual({ type: ['string', 'null'] });
+    expect(schemas.UserDetailDto?.properties?.imageUrl).toEqual(row);
+  });
 });

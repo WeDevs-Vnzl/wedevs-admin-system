@@ -609,10 +609,10 @@
             "type": "string"
           },
           "email": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -672,10 +672,10 @@
             "type": "string"
           },
           "website": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -881,31 +881,31 @@
       "CompanySettingsResponseDto": {
         "properties": {
           "address": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "legalName": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "logoFileId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
             "type": "string"
           },
           "taxId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1098,10 +1098,10 @@
             "type": "string"
           },
           "email": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "fullName": {
             "type": "string"
@@ -1113,16 +1113,16 @@
             "type": "boolean"
           },
           "phone": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "position": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "tags": {
             "items": {
@@ -1353,25 +1353,25 @@
             "type": "boolean"
           },
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "parentId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1470,10 +1470,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "requiresReference": {
             "type": "boolean"
@@ -1528,10 +1528,10 @@
             ]
           },
           "endDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "links": {
             "default": [],
@@ -1586,10 +1586,10 @@
             "type": "string"
           },
           "startDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "status": {
             "default": "PROPUESTA",
@@ -1619,10 +1619,10 @@
             "type": "array"
           },
           "targetEndDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "technologyIds": {
             "default": [],
@@ -1814,10 +1814,10 @@
       "DocumentCategoryResponseDto": {
         "properties": {
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -1826,10 +1826,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "order": {
             "maximum": 9007199254740991,
@@ -2007,10 +2007,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "requiresSignature": {
             "type": "boolean"
@@ -2194,10 +2194,10 @@
       "EntityRefDto": {
         "properties": {
           "code": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -2358,10 +2358,10 @@
             "type": "array"
           },
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -2370,16 +2370,16 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "parentId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -2399,10 +2399,10 @@
             "type": "boolean"
           },
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -2411,16 +2411,16 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "parentId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -2765,10 +2765,10 @@
             "type": "array"
           },
           "title": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "updatedAt": {
             "format": "date-time",
@@ -2979,10 +2979,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "requiresReference": {
             "type": "boolean"
@@ -3052,16 +3052,16 @@
             "type": "string"
           },
           "collectedUsd": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "contractedValueUsd": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "format": "date-time",
@@ -3092,10 +3092,10 @@
             ]
           },
           "endDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "hasBillingPlan": {
             "type": "boolean"
@@ -3104,10 +3104,10 @@
             "type": "string"
           },
           "invoicedUsd": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "links": {
             "items": {
@@ -3210,10 +3210,10 @@
             "type": "array"
           },
           "startDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "status": {
             "enum": [
@@ -3252,16 +3252,16 @@
             "type": "array"
           },
           "targetEndDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "toInvoiceUsd": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "updatedAt": {
             "format": "date-time",
@@ -4457,16 +4457,16 @@
             "type": "string"
           },
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "iconSlug": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"
@@ -4475,10 +4475,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "slug": {
             "type": "string"
@@ -4888,25 +4888,25 @@
             "type": "boolean"
           },
           "color": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "parentId": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -4982,10 +4982,10 @@
             "type": "string"
           },
           "nameEn": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "requiresReference": {
             "type": "boolean"
@@ -5039,20 +5039,20 @@
             ]
           },
           "endDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
             "maxLength": 500,
             "type": "string"
           },
           "startDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "summary": {
             "maxLength": 5000,
@@ -5070,10 +5070,10 @@
             "type": "array"
           },
           "targetEndDate": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "technologyIds": {
             "default": [],
@@ -5288,10 +5288,10 @@
             "type": "string"
           },
           "imageUrl": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "locale": {
             "type": "string"
