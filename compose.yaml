@@ -104,6 +104,18 @@ services:
     env_file: apps/web/.env
     ports:
       - '127.0.0.1:${WEB_PORT:-3000}:3000'
+    # Here and not in the Dockerfile: podman drops HEALTHCHECK when building the default OCI format.
+    # redirect: manual, because `/` redirects to sign-in (Clerk) and following it would depend on the network.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/', { redirect: 'manual' }).then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     restart: unless-stopped
     networks: [app]
 

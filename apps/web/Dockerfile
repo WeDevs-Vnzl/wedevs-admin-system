@@ -32,7 +32,4 @@ COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/
 # apps/web has no public/ directory; copy it here if one is ever added.
 USER node
 EXPOSE 3000
-# redirect: manual — `/` redirects to sign-in (Clerk); following it would make the check depend on the network.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/', { redirect: 'manual' }).then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
 CMD ["node", "apps/web/server.js"]
