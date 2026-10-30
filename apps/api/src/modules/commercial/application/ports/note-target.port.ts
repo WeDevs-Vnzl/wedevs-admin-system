@@ -3,6 +3,9 @@ import type { NoteLinkTarget } from '../../domain/note-link';
 
 export const NOTE_TARGET = Symbol('NOTE_TARGET');
 
+/** Re-exported for the interface layer, which may not import the domain. */
+export { NOTE_LINK_ENTITY_TYPE_VALUES } from '../../domain/note-link';
+
 /** A record a note can hang from, as the registry and the note views see it. */
 export interface ResolvedNoteTarget {
   readonly ref: EntityRef;
