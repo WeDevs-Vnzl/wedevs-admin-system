@@ -62,8 +62,14 @@ jobs:
       - name: Check whether the api is affected
         id: affected
         working-directory: .
+        # Explicit bash adds pipefail: a failing `turbo ls` must fail the job, not skip every check.
+        shell: bash
         run: |
           affected=$(bunx turbo ls --affected --output json | jq '[.packages.items[].name] | any(. == "@wedevs/api" or . == "@wedevs/api-contract")')
+          case "$affected" in
+            true|false) ;;
+            *) echo "::error::turbo ls --affected returned '$affected'"; exit 1 ;;
+          esac
           echo "run=$affected" >> "$GITHUB_OUTPUT"
           echo "api affected: $affected" >> "$GITHUB_STEP_SUMMARY"
       - if: steps.affected.outputs.run == 'true'
@@ -121,8 +127,14 @@ jobs:
       - name: Check whether the web is affected
         id: affected
         working-directory: .
+        # Explicit bash adds pipefail: a failing `turbo ls` must fail the job, not skip every check.
+        shell: bash
         run: |
           affected=$(bunx turbo ls --affected --output json | jq '[.packages.items[].name] | any(. == "@wedevs/web")')
+          case "$affected" in
+            true|false) ;;
+            *) echo "::error::turbo ls --affected returned '$affected'"; exit 1 ;;
+          esac
           echo "run=$affected" >> "$GITHUB_OUTPUT"
           echo "web affected: $affected" >> "$GITHUB_STEP_SUMMARY"
       - if: steps.affected.outputs.run == 'true'
