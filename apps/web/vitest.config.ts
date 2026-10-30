@@ -12,6 +12,10 @@ export default defineConfig({
   test: {
     globals: true,
     passWithNoTests: true,
+    // Leaves CPU for the other turbo tasks (build, lint, api tests) running alongside.
+    maxWorkers: "50%",
+    // Headroom over the default 5s when turbo runs every workspace's tests at once.
+    testTimeout: 15_000,
     setupFiles: ["./tests/setup.ts"],
     coverage: {
       provider: "v8",

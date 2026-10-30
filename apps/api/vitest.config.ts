@@ -23,6 +23,8 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
+    // Leaves CPU for the other turbo tasks (build, lint, web tests) running alongside.
+    maxWorkers: '50%',
     // With --changed (`test:int:affected`, `test:e2e:affected`), a diff touching any of these runs every spec:
     // the import graph does not see SQL, the seed, config, dependencies or the kernel the specs share.
     forceRerunTriggers: [
