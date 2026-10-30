@@ -174,6 +174,31 @@ describe('notes (e2e)', () => {
     expect(await prisma.tagAssignment.count({ where: { noteId: res.body.id } })).toBe(1);
   });
 
+  it('serializes every EntityRef with code null when absent and a typed enum (api-contract.md §2)', async () => {
+    const contact = await prisma.contact.create({
+      data: { clientId, fullName: 'Ana Pérez', email: 'ana@example.test' },
+    });
+    const res = await create('member', {
+      links: [
+        { entityType: 'CLIENT', entityId: clientId },
+        { entityType: 'CONTACT', entityId: contact.id },
+        { entityType: 'PROJECT', entityId: projectId },
+      ],
+    }).expect(201);
+    const byType = Object.fromEntries(
+      res.body.links.map((l: { type: string; code: unknown }) => [l.type, l.code]),
+    );
+    expect(byType).toEqual({ CLIENT: 'CLI-0001', CONTACT: null, PROJECT: 'PRY-0001' });
+    const listed = await get(`${BASE}?clientId=${clientId}`, 'member').expect(200);
+    const contactRef = listed.body.items[0].links.find(
+      (l: { type: string }) => l.type === 'CONTACT',
+    );
+    expect(contactRef).toHaveProperty('code', null);
+    const doc = buildOpenApiDocument(app);
+    const refs = JSON.stringify(doc.paths?.[`${BASE}/{id}/restore`]);
+    expect(refs).toContain('#/components/schemas/EntityRef');
+  });
+
   it('links a note to a client and a project at once (CA2) and lists it under both feeds', async () => {
     const res = await create('member', {
       links: [
@@ -331,6 +356,7 @@ describe('notes (e2e)', () => {
     await post(`${BASE}/${a.id}/restore`, 'member', {}).expect(403);
     const restored = await post(`${BASE}/${a.id}/restore`, 'admin', {}).expect(200);
     expect(restored.body).toMatchObject({ type: 'NOTE', id: a.id, label: 'Alcance' });
+    expect(restored.body.code).toBeNull();
     await post(`${BASE}/${a.id}/restore`, 'admin', {}).expect(404);
 
     const trash = await get('/api/v1/trash?entityType=NOTE', 'admin').expect(200);

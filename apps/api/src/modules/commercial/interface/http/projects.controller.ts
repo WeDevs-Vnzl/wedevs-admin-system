@@ -53,6 +53,7 @@ import {
   UpdateProjectDto,
   UpsertProjectLinksDto,
 } from './dto/projects.dto';
+import { toEntityRefResponse } from './dto/contacts.dto';
 
 /**
  * Projects (PRD §8.3, HU-05…HU-08). Every handler declares its grant; the use case runs `can()` as the
@@ -299,12 +300,7 @@ export class ProjectsController {
   ): Promise<RestoredProjectDto> {
     const restored = await this.restoreProject.execute(user, params.id);
     return {
-      entity: {
-        type: 'PROJECT',
-        id: restored.entity.id,
-        label: restored.entity.label,
-        ...(restored.entity.code !== undefined ? { code: restored.entity.code } : {}),
-      },
+      entity: toEntityRefResponse(restored.entity),
       restoredAt: restored.restoredAt.toISOString(),
     };
   }
@@ -326,12 +322,7 @@ function toRow(row: ProjectListRowView) {
     code: row.code,
     name: row.name,
     clients: row.clients.map((item) => ({
-      client: {
-        type: item.client.type,
-        id: item.client.id,
-        label: item.client.label,
-        ...(item.client.code !== undefined ? { code: item.client.code } : {}),
-      },
+      client: toEntityRefResponse(item.client),
       role: item.role,
     })),
     status: row.status,
