@@ -2,8 +2,8 @@ name: CI
 
 # One workflow for the monorepo (DT-115). Each job runs only when Turborepo reports its package as affected:
 # pull requests compare against the base branch, pushes against the previous tip (`turbo ls --affected`
-# reads both from the GitHub Actions environment). A change to this file, bun.lock or turbo.json affects
-# every package (turbo.json globalDependencies).
+# reads both from the GitHub Actions environment). A change to this file affects every package (turbo.json
+# globalDependencies); turbo maps bun.lock changes to the packages whose dependencies changed.
 on:
   pull_request:
   push:
