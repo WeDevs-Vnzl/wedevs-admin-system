@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { entityRefResponseSchema } from '../../../../../shared/interface/error-envelope';
 import { NOTE_LINK_ENTITY_TYPE_VALUES } from '../../../application/ports/note-target.port';
 import { NOTE_SORT_FIELDS } from '../../../application/ports/note.repository.port';
 import {
@@ -12,7 +13,6 @@ import {
   createListQuerySchema,
 } from '../../../../../shared/interface/list-query.dto';
 import { nonEmptyRichTextDocSchema } from '../../../../../shared/interface/rich-text.schema';
-import { ENTITY_TYPE_VALUES } from '../../../../../shared/domain/enums';
 
 /**
  * Request and response shapes of `/notes` (the FE `notes` validators, shape and length only). Rich text
@@ -96,13 +96,6 @@ export const noteTagChipSchema = z.object({
   color: z.string(),
 });
 
-export const noteEntityRefSchema = z.object({
-  id: z.string(),
-  type: z.enum(ENTITY_TYPE_VALUES),
-  code: z.string().optional(),
-  label: z.string(),
-});
-
 export const noteFileSchema = z.object({
   id: z.string(),
   originalName: z.string(),
@@ -119,7 +112,7 @@ const noteCommonShape = {
   author: noteAuthorSchema,
   pinned: z.boolean(),
   tags: z.array(noteTagChipSchema),
-  links: z.array(noteEntityRefSchema),
+  links: z.array(entityRefResponseSchema),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
@@ -153,5 +146,3 @@ export class NoteListResponseDto extends createZodDto(noteListResponseSchema) {}
 
 export const archivedNoteSchema = z.object({ id: z.string(), archivedAt: timestampSchema });
 export class ArchivedNoteDto extends createZodDto(archivedNoteSchema) {}
-
-export class RestoredNoteDto extends createZodDto(noteEntityRefSchema) {}

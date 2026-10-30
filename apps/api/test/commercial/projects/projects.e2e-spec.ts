@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { buildOpenApiDocument } from '../../../src/app.setup';
 import { TechnologyUsageQueries } from '../../../src/modules/commercial/application/technology-usage.queries';
 import { ProjectsModule } from '../../../src/modules/commercial/projects.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
@@ -713,6 +714,28 @@ describe('projects (e2e)', { timeout: 120_000 }, () => {
       id,
       tags: [{ id: tag.id, name: 'E2E tag proyecto', color: '#112233' }],
     });
+  });
+
+  it('documents every project EntityRef as the shared EntityRef schema (api-contract.md §2)', () => {
+    const schemas = (buildOpenApiDocument(app).components?.schemas ?? {}) as Record<
+      string,
+      {
+        properties?: Record<
+          string,
+          { $ref?: string; items?: { properties?: Record<string, { $ref?: string }> } }
+        >;
+      }
+    >;
+    const ref = '#/components/schemas/EntityRef';
+    const restored = Object.values(schemas).find((s) => s.properties?.restoredAt);
+    expect(restored?.properties?.entity?.$ref).toBe(ref);
+    const detail = Object.values(schemas).filter(
+      (s) => s.properties?.clients?.items?.properties?.client,
+    );
+    expect(detail.length).toBeGreaterThan(0);
+    for (const schema of detail) {
+      expect(schema.properties?.clients?.items?.properties?.client?.$ref).toBe(ref);
+    }
   });
 
   it('keeps the first project listed under both clients after all the traffic', async () => {

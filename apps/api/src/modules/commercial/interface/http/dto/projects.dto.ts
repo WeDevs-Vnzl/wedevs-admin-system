@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { entityRefResponseSchema } from '../../../../../shared/interface/error-envelope';
 import {
   PROJECT_LINK_GROUP_VALUES,
   PROJECT_STATUS_VALUES,
@@ -167,13 +168,6 @@ export class ListProjectsQueryDto extends createListQueryDto(projectListOptions)
 
 // ───────────────────────────── Responses ─────────────────────────────
 
-const entityRefSchema = z.object({
-  type: z.string(),
-  id: z.string(),
-  code: z.string().optional(),
-  label: z.string(),
-});
-
 const technologyChipSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -185,7 +179,10 @@ const technologyChipSchema = z.object({
 
 const tagChipSchema = z.object({ id: z.string(), name: z.string(), color: z.string() });
 
-const projectClientSchema = z.object({ client: entityRefSchema, role: z.string().nullable() });
+const projectClientSchema = z.object({
+  client: entityRefResponseSchema,
+  role: z.string().nullable(),
+});
 
 export const projectLinkSchema = z.object({
   id: z.string(),
@@ -256,12 +253,7 @@ export const archivedProjectsSchema = z.object({ archived: z.array(archivedProje
 export class ArchivedProjectsDto extends createZodDto(archivedProjectsSchema) {}
 
 export const restoredProjectSchema = z.object({
-  entity: z.object({
-    type: z.literal('PROJECT'),
-    id: z.string(),
-    code: z.string().optional(),
-    label: z.string(),
-  }),
+  entity: entityRefResponseSchema,
   restoredAt: timestampSchema,
 });
 export class RestoredProjectDto extends createZodDto(restoredProjectSchema) {}

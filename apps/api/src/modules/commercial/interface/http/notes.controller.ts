@@ -26,16 +26,9 @@ import {
   NoteLinkTargetDto,
   NoteListResponseDto,
   PinNoteDto,
-  RestoredNoteDto,
   UpdateNoteDto,
 } from './dto/notes.dto';
-
-const refOf = (ref: NoteDetail['links'][number]) => ({
-  id: ref.id,
-  type: ref.type,
-  label: ref.label,
-  ...(ref.code !== undefined ? { code: ref.code } : {}),
-});
+import { EntityRefDto, toEntityRefResponse } from './dto/contacts.dto';
 
 const commonOf = (note: NoteDetail | NoteListRow) => ({
   id: note.id,
@@ -43,7 +36,7 @@ const commonOf = (note: NoteDetail | NoteListRow) => ({
   author: note.author,
   pinned: note.pinned,
   tags: note.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
-  links: note.links.map(refOf),
+  links: note.links.map(toEntityRefResponse),
   createdAt: note.createdAt.toISOString(),
   updatedAt: note.updatedAt.toISOString(),
   archivedAt: note.archivedAt ? note.archivedAt.toISOString() : null,
@@ -250,12 +243,12 @@ export class NotesController {
   @HttpCode(200)
   @RequiresGrant('note', 'restore')
   @ApiOperation({ operationId: 'restoreNote', summary: 'Restore an archived note (trash roles)' })
-  @ApiOkResponse({ type: RestoredNoteDto })
+  @ApiOkResponse({ type: EntityRefDto })
   @ApiErrorResponses('UNAUTHENTICATED', 'FORBIDDEN', 'VALIDATION', 'NOT_FOUND', 'INTERNAL')
   async restore(
     @CurrentUser() user: CurrentUserModel,
     @Param() params: NoteIdParamsDto,
-  ): Promise<RestoredNoteDto> {
-    return refOf(await this.restoreNote.execute(user, { id: params.id }));
+  ): Promise<EntityRefDto> {
+    return toEntityRefResponse(await this.restoreNote.execute(user, { id: params.id }));
   }
 }
