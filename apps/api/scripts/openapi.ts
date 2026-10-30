@@ -1,11 +1,34 @@
 import 'reflect-metadata';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { NestFactory } from '@nestjs/core';
+import Module from 'node:module';
+import { resolve, sep } from 'node:path';
+import { transformSync } from '@swc/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { AppModule } from '../src/app.module';
-import { buildOpenApiDocument, configureApp } from '../src/app.setup';
-import { parseEnv } from '../src/config/env.schema';
+
+// tsx (esbuild) does not emit `design:paramtypes`, so @nestjs/swagger could not describe `@Param`, `@Query` and
+// `@Body` DTOs. The app sources are compiled with swc and decorator metadata instead, the same transform the
+// vitest projects use, so the document is generated from the metadata `nest build` (tsc) ships.
+const SRC = resolve(__dirname, '..', 'src') + sep;
+type Extension = (module: NodeJS.Module, filename: string) => void;
+const extensions = (Module as unknown as { _extensions: Record<string, Extension> })._extensions;
+const defaultTs = extensions['.ts'] as Extension;
+extensions['.ts'] = (module, filename) => {
+  if (!filename.startsWith(SRC)) return defaultTs(module, filename);
+  const { code } = transformSync(readFileSync(filename, 'utf8'), {
+    filename,
+    sourceMaps: 'inline',
+    module: { type: 'commonjs' },
+    jsc: {
+      target: 'es2023',
+      parser: { syntax: 'typescript', decorators: true },
+      transform: { legacyDecorator: true, decoratorMetadata: true },
+    },
+  });
+  (module as unknown as { _compile(code: string, filename: string): void })._compile(
+    code,
+    filename,
+  );
+};
 
 // The contract lives in its own workspace package so apps/web reads it without copying (DT-115).
 const OUTPUT = resolve(__dirname, '..', '..', '..', 'packages', 'api-contract', 'openapi.json');
@@ -36,6 +59,10 @@ async function render(): Promise<string> {
   process.env.CLOUDINARY_CLOUD_NAME ??= 'openapi-placeholder';
   process.env.CLOUDINARY_API_KEY ??= 'openapi-placeholder';
   process.env.CLOUDINARY_API_SECRET ??= 'openapi-placeholder';
+  const { NestFactory } = await import('@nestjs/core');
+  const { AppModule } = await import('../src/app.module.js');
+  const { buildOpenApiDocument, configureApp } = await import('../src/app.setup.js');
+  const { parseEnv } = await import('../src/config/env.schema.js');
   const config = { ...parseEnv(process.env), SENTRY_DSN: undefined, NODE_ENV: 'test' as const };
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
   try {

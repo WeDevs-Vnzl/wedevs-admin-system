@@ -1262,8 +1262,18 @@ export interface components {
                 id: string;
             }[];
         };
+        AssignTagsDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE";
+            tagIds: string[];
+        };
         AttachNoteFileDto: {
             fileId: string;
+        };
+        ChangeUserRoleDto: {
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
         };
         ClerkWebhookResponseDto: {
             /** @enum {string} */
@@ -1304,7 +1314,7 @@ export interface components {
             country: string;
             /** Format: date-time */
             createdAt: string;
-            email: string[];
+            email: string | null;
             id: string;
             /** @enum {string} */
             kind: "PERSONA" | "EMPRESA";
@@ -1321,7 +1331,7 @@ export interface components {
             tradeName: string;
             /** Format: date-time */
             updatedAt: string;
-            website: string[];
+            website: string | null;
         };
         ClientListResponseDto: {
             items: {
@@ -1358,11 +1368,14 @@ export interface components {
             }[];
         };
         CompanySettingsResponseDto: {
-            address: string[];
-            legalName: string[];
-            logoFileId: string[];
+            address: string | null;
+            legalName: string | null;
+            logoFileId: string | null;
             name: string;
-            taxId: string[];
+            taxId: string | null;
+        };
+        ConfirmUploadDto: {
+            fileId: string;
         };
         ContactArchivedDto: {
             /** Format: date-time */
@@ -1399,12 +1412,12 @@ export interface components {
             clientId: string;
             /** Format: date-time */
             createdAt: string;
-            email: string[];
+            email: string | null;
             fullName: string;
             id: string;
             isPrimary: boolean;
-            phone: string[];
-            position: string[];
+            phone: string | null;
+            position: string | null;
             tags: {
                 color: string;
                 id: string;
@@ -1451,10 +1464,10 @@ export interface components {
         };
         CreateExpenseCategoryDto: {
             active?: boolean;
-            color?: string[];
+            color?: string | null;
             name: string;
-            nameEn?: string[];
-            parentId?: string[];
+            nameEn?: string | null;
+            parentId?: string | null;
         };
         CreateNoteDto: {
             /** @default [] */
@@ -1475,7 +1488,7 @@ export interface components {
             active?: boolean;
             code: string;
             name: string;
-            nameEn?: string[];
+            nameEn?: string | null;
             requiresReference?: boolean;
             suggestsIgtf?: boolean;
         };
@@ -1485,7 +1498,7 @@ export interface components {
                 role?: string | null;
             }[];
             description?: unknown | null;
-            endDate?: string[];
+            endDate?: string | null;
             /** @default [] */
             links: {
                 /** @enum {string} */
@@ -1497,7 +1510,7 @@ export interface components {
                 url: string;
             }[];
             name: string;
-            startDate?: string[];
+            startDate?: string | null;
             /**
              * @default PROPUESTA
              * @enum {string}
@@ -1506,9 +1519,13 @@ export interface components {
             summary: string;
             /** @default [] */
             tagIds: string[];
-            targetEndDate?: string[];
+            targetEndDate?: string | null;
             /** @default [] */
             technologyIds: string[];
+        };
+        CreateTagDto: {
+            color: string;
+            name: string;
         };
         CreateTechnologyDto: {
             /** @default true */
@@ -1537,10 +1554,10 @@ export interface components {
             nameEn?: string | null;
         };
         DocumentCategoryResponseDto: {
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             order: number;
             types: {
                 active: boolean;
@@ -1584,7 +1601,7 @@ export interface components {
             hasExpiration: boolean;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             requiresSignature: boolean;
         };
         DocumentTypeListResponseDto: {
@@ -1618,7 +1635,7 @@ export interface components {
             type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
         };
         EntityRefDto: {
-            code: string[];
+            code: string | null;
             id: string;
             label: string;
             /** @enum {string} */
@@ -1646,19 +1663,19 @@ export interface components {
                 nameEn: string | null;
                 parentId: string | null;
             }[];
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
-            parentId: string[];
+            nameEn: string | null;
+            parentId: string | null;
         };
         ExpenseCategoryResponseDto: {
             active: boolean;
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
-            parentId: string[];
+            nameEn: string | null;
+            parentId: string | null;
         };
         FileResponseDto: {
             /** Format: date-time */
@@ -1704,6 +1721,15 @@ export interface components {
                 role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
             }[];
         };
+        InviteUserDto: {
+            /** Format: email */
+            email: string;
+            /**
+             * @default ADMIN
+             * @enum {string}
+             */
+            role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+        };
         NoteDetailDto: {
             archivedAt: string | null;
             attachments: {
@@ -1735,7 +1761,7 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            title: string[];
+            title: string | null;
             /** Format: date-time */
             updatedAt: string;
         };
@@ -1778,7 +1804,7 @@ export interface components {
             code: string;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             requiresReference: boolean;
             suggestsIgtf: boolean;
         };
@@ -1792,8 +1818,8 @@ export interface components {
                 role: string | null;
             }[];
             code: string;
-            collectedUsd: string[];
-            contractedValueUsd: string[];
+            collectedUsd: string | null;
+            contractedValueUsd: string | null;
             /** Format: date-time */
             createdAt: string;
             description: {
@@ -1801,10 +1827,10 @@ export interface components {
                 /** @constant */
                 type: "doc";
             } | null;
-            endDate: string[];
+            endDate: string | null;
             hasBillingPlan: boolean;
             id: string;
-            invoicedUsd: string[];
+            invoicedUsd: string | null;
             links: {
                 /** @enum {string} */
                 group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
@@ -1823,7 +1849,7 @@ export interface components {
                 name: string;
                 nameEn: string | null;
             }[];
-            startDate: string[];
+            startDate: string | null;
             /** @enum {string} */
             status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
             summary: string;
@@ -1832,8 +1858,8 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            targetEndDate: string[];
-            toInvoiceUsd: string[];
+            targetEndDate: string | null;
+            toInvoiceUsd: string | null;
             /** Format: date-time */
             updatedAt: string;
         };
@@ -1948,6 +1974,18 @@ export interface components {
             group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
             orderedLinkIds: string[];
         };
+        RequestUploadDto: {
+            /** @enum {string} */
+            context: "general" | "payment_receipt";
+            mime: string;
+            name: string;
+            size: number;
+        };
+        RestoreFromTrashDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE";
+        };
         RestoredProjectDto: {
             entity: components["schemas"]["EntityRef"];
             /** Format: date-time */
@@ -1973,6 +2011,9 @@ export interface components {
         };
         SetDocumentTypeActiveDto: {
             active: boolean;
+        };
+        SetPreferenceDto: {
+            value: unknown;
         };
         SetProjectClientsDto: {
             clients: {
@@ -2052,11 +2093,11 @@ export interface components {
             active: boolean;
             /** @enum {string} */
             category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
-            color: string[];
-            iconSlug: string[];
+            color: string | null;
+            iconSlug: string | null;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             slug: string;
             usageCount: number;
         };
@@ -2082,6 +2123,12 @@ export interface components {
             pageCount: number;
             pageSize: number;
             total: number;
+        };
+        UnassignTagDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE";
+            tagId: string;
         };
         UpdateClientDto: {
             address: string;
@@ -2122,10 +2169,10 @@ export interface components {
         };
         UpdateExpenseCategoryDto: {
             active?: boolean;
-            color?: string[];
+            color?: string | null;
             name: string;
-            nameEn?: string[];
-            parentId?: string[];
+            nameEn?: string | null;
+            parentId?: string | null;
         };
         UpdateFiscalSettingsDto: {
             igtfCurrencies?: string[];
@@ -2143,7 +2190,7 @@ export interface components {
         UpdatePaymentMethodDto: {
             active?: boolean;
             name: string;
-            nameEn?: string[];
+            nameEn?: string | null;
             requiresReference?: boolean;
             suggestsIgtf?: boolean;
         };
@@ -2153,15 +2200,19 @@ export interface components {
                 role?: string | null;
             }[];
             description?: unknown | null;
-            endDate?: string[];
+            endDate?: string | null;
             name: string;
-            startDate?: string[];
+            startDate?: string | null;
             summary: string;
             /** @default [] */
             tagIds: string[];
-            targetEndDate?: string[];
+            targetEndDate?: string | null;
             /** @default [] */
             technologyIds: string[];
+        };
+        UpdateTagDto: {
+            color?: string;
+            name?: string;
         };
         UpdateTechnologyDto: {
             /** @default true */
@@ -2199,7 +2250,7 @@ export interface components {
             createdAt: string;
             email: string;
             id: string;
-            imageUrl: string[];
+            imageUrl: string | null;
             locale: string;
             name: string;
             /** @enum {string} */
@@ -2253,7 +2304,20 @@ export type $defs = Record<string, never>;
 export interface operations {
     listActivity: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                actorId?: string | string[];
+                actorType?: ("USER" | "SYSTEM" | "PUBLIC") | ("USER" | "SYSTEM" | "PUBLIC")[];
+                action?: ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS") | ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS")[];
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER")[];
+                entityId?: string | string[];
+                from?: string | string[];
+                to?: string | string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2308,7 +2372,20 @@ export interface operations {
     };
     listClients: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PROSPECTO" | "ACTIVO" | "INACTIVO") | ("PROSPECTO" | "ACTIVO" | "INACTIVO")[];
+                kind?: ("PERSONA" | "EMPRESA") | ("PERSONA" | "EMPRESA")[];
+                country?: ("AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW") | ("AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW")[];
+                tagId?: string | string[];
+                createdFrom?: string | string[];
+                createdTo?: string | string[];
+                hasOverdue?: ("true" | "false") | ("true" | "false")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2508,7 +2585,10 @@ export interface operations {
     };
     searchClients: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2565,7 +2645,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -2629,7 +2711,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -2706,7 +2790,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -2781,9 +2867,17 @@ export interface operations {
     };
     listContacts: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+            };
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -2847,7 +2941,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -2924,7 +3020,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -2997,7 +3095,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3063,7 +3163,11 @@ export interface operations {
     };
     searchContacts: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string;
+                clientId?: string;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3120,7 +3224,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3197,7 +3303,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3261,7 +3369,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3332,7 +3442,9 @@ export interface operations {
     };
     listCurrencies: {
         parameters: {
-            query?: never;
+            query?: {
+                includeInactive?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3450,7 +3562,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                code: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3683,7 +3797,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3747,7 +3863,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -3822,7 +3940,16 @@ export interface operations {
     };
     listDocumentTypes: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                categoryId?: string | string[];
+                active?: string;
+                requiresSignature?: string;
+                hasExpiration?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3938,7 +4065,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3984,7 +4113,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -4048,7 +4179,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -4125,7 +4258,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -4191,7 +4326,9 @@ export interface operations {
     };
     listExpenseCategories: {
         parameters: {
-            query?: never;
+            query?: {
+                includeInactive?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4309,7 +4446,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -4390,7 +4529,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmUploadDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -4454,7 +4597,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestUploadDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -4506,7 +4653,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -4560,7 +4709,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -4708,10 +4859,16 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                key: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPreferenceDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -4754,7 +4911,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                key: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -4798,7 +4957,21 @@ export interface operations {
     };
     listNotes: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                authorId?: string | string[];
+                tagId?: string | string[];
+                linkedEntityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE") | ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE")[];
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE") | ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE")[];
+                entityId?: string | string[];
+                pinned?: ("true" | "false") | ("true" | "false")[];
+                createdFrom?: string | string[];
+                createdTo?: string | string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4923,7 +5096,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -4987,7 +5162,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5055,7 +5232,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5119,7 +5298,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5187,7 +5368,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5264,7 +5447,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5332,7 +5517,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5396,7 +5583,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5471,7 +5660,9 @@ export interface operations {
     };
     listPaymentMethods: {
         parameters: {
-            query?: never;
+            query?: {
+                includeInactive?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5589,7 +5780,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5665,7 +5858,19 @@ export interface operations {
     };
     listProjects: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO") | ("PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO")[];
+                clientId?: string | string[];
+                technologyId?: string | string[];
+                tagId?: string | string[];
+                deliveryFrom?: string | string[];
+                deliveryTo?: string | string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5858,7 +6063,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5922,7 +6129,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5990,7 +6199,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6067,7 +6278,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6135,7 +6348,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6203,7 +6418,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6271,7 +6488,10 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -6335,7 +6555,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -6399,7 +6621,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6467,7 +6691,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -6729,7 +6955,14 @@ export interface operations {
     };
     listTags: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6780,7 +7013,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTagDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -6844,7 +7081,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignTagsDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -6908,7 +7149,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnassignTagDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -6969,7 +7214,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7015,10 +7262,16 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -7086,7 +7339,15 @@ export interface operations {
     };
     listTechnologies: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                category?: ("LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO") | ("LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO")[];
+                active?: ("true" | "false") | ("true" | "false")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7202,7 +7463,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7257,7 +7520,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7321,7 +7586,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -7398,7 +7665,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -7464,7 +7733,17 @@ export interface operations {
     };
     listTrash: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE")[];
+                deletedById?: string | string[];
+                deletedFrom?: string | string[];
+                deletedTo?: string | string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7524,7 +7803,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreFromTrashDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -7592,7 +7875,14 @@ export interface operations {
     };
     listUsers: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                sort?: string;
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                role?: ("OWNER" | "ADMIN" | "MEMBER" | "VIEWER") | ("OWNER" | "ADMIN" | "MEMBER" | "VIEWER")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7698,7 +7988,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteUserDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -7759,7 +8053,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7814,7 +8110,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7869,10 +8167,16 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeUserRoleDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

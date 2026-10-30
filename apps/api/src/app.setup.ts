@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/node';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import type { AppConfig } from './config/env.schema';
 import { CorrelationIdMiddleware } from './shared/interface/correlation-id.middleware';
+import { restoreNullableTypes } from './shared/interface/openapi-nullable';
 import { HttpErrorFilter } from './shared/interface/http-error.filter';
 import { RequestContextMiddleware } from './shared/interface/request-context.middleware';
 import { AppZodValidationPipe } from './shared/interface/zod-validation';
@@ -23,7 +24,7 @@ export function buildOpenApiDocument(app: NestExpressApplication): OpenAPIObject
     .addSecurityRequirements('bearer')
     .build();
   const document = SwaggerModule.createDocument(app, options);
-  return cleanupOpenApiDoc(document, { version: '3.1' });
+  return cleanupOpenApiDoc(restoreNullableTypes(document), { version: '3.1' });
 }
 
 /**
