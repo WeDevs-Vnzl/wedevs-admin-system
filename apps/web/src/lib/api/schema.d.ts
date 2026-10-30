@@ -1314,7 +1314,7 @@ export interface components {
             country: string;
             /** Format: date-time */
             createdAt: string;
-            email: string[];
+            email: string | null;
             id: string;
             /** @enum {string} */
             kind: "PERSONA" | "EMPRESA";
@@ -1331,7 +1331,7 @@ export interface components {
             tradeName: string;
             /** Format: date-time */
             updatedAt: string;
-            website: string[];
+            website: string | null;
         };
         ClientListResponseDto: {
             items: {
@@ -1368,11 +1368,11 @@ export interface components {
             }[];
         };
         CompanySettingsResponseDto: {
-            address: string[];
-            legalName: string[];
-            logoFileId: string[];
+            address: string | null;
+            legalName: string | null;
+            logoFileId: string | null;
             name: string;
-            taxId: string[];
+            taxId: string | null;
         };
         ConfirmUploadDto: {
             fileId: string;
@@ -1412,12 +1412,12 @@ export interface components {
             clientId: string;
             /** Format: date-time */
             createdAt: string;
-            email: string[];
+            email: string | null;
             fullName: string;
             id: string;
             isPrimary: boolean;
-            phone: string[];
-            position: string[];
+            phone: string | null;
+            position: string | null;
             tags: {
                 color: string;
                 id: string;
@@ -1464,10 +1464,10 @@ export interface components {
         };
         CreateExpenseCategoryDto: {
             active?: boolean;
-            color?: string[];
+            color?: string | null;
             name: string;
-            nameEn?: string[];
-            parentId?: string[];
+            nameEn?: string | null;
+            parentId?: string | null;
         };
         CreateNoteDto: {
             /** @default [] */
@@ -1488,7 +1488,7 @@ export interface components {
             active?: boolean;
             code: string;
             name: string;
-            nameEn?: string[];
+            nameEn?: string | null;
             requiresReference?: boolean;
             suggestsIgtf?: boolean;
         };
@@ -1498,7 +1498,7 @@ export interface components {
                 role?: string | null;
             }[];
             description?: unknown | null;
-            endDate?: string[];
+            endDate?: string | null;
             /** @default [] */
             links: {
                 /** @enum {string} */
@@ -1510,7 +1510,7 @@ export interface components {
                 url: string;
             }[];
             name: string;
-            startDate?: string[];
+            startDate?: string | null;
             /**
              * @default PROPUESTA
              * @enum {string}
@@ -1519,7 +1519,7 @@ export interface components {
             summary: string;
             /** @default [] */
             tagIds: string[];
-            targetEndDate?: string[];
+            targetEndDate?: string | null;
             /** @default [] */
             technologyIds: string[];
         };
@@ -1554,10 +1554,10 @@ export interface components {
             nameEn?: string | null;
         };
         DocumentCategoryResponseDto: {
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             order: number;
             types: {
                 active: boolean;
@@ -1601,7 +1601,7 @@ export interface components {
             hasExpiration: boolean;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             requiresSignature: boolean;
         };
         DocumentTypeListResponseDto: {
@@ -1635,7 +1635,7 @@ export interface components {
             type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
         };
         EntityRefDto: {
-            code: string[];
+            code: string | null;
             id: string;
             label: string;
             /** @enum {string} */
@@ -1663,19 +1663,19 @@ export interface components {
                 nameEn: string | null;
                 parentId: string | null;
             }[];
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
-            parentId: string[];
+            nameEn: string | null;
+            parentId: string | null;
         };
         ExpenseCategoryResponseDto: {
             active: boolean;
-            color: string[];
+            color: string | null;
             id: string;
             name: string;
-            nameEn: string[];
-            parentId: string[];
+            nameEn: string | null;
+            parentId: string | null;
         };
         FileResponseDto: {
             /** Format: date-time */
@@ -1761,7 +1761,7 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            title: string[];
+            title: string | null;
             /** Format: date-time */
             updatedAt: string;
         };
@@ -1804,7 +1804,7 @@ export interface components {
             code: string;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             requiresReference: boolean;
             suggestsIgtf: boolean;
         };
@@ -1818,8 +1818,8 @@ export interface components {
                 role: string | null;
             }[];
             code: string;
-            collectedUsd: string[];
-            contractedValueUsd: string[];
+            collectedUsd: string | null;
+            contractedValueUsd: string | null;
             /** Format: date-time */
             createdAt: string;
             description: {
@@ -1827,10 +1827,10 @@ export interface components {
                 /** @constant */
                 type: "doc";
             } | null;
-            endDate: string[];
+            endDate: string | null;
             hasBillingPlan: boolean;
             id: string;
-            invoicedUsd: string[];
+            invoicedUsd: string | null;
             links: {
                 /** @enum {string} */
                 group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
@@ -1849,7 +1849,7 @@ export interface components {
                 name: string;
                 nameEn: string | null;
             }[];
-            startDate: string[];
+            startDate: string | null;
             /** @enum {string} */
             status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
             summary: string;
@@ -1858,8 +1858,8 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            targetEndDate: string[];
-            toInvoiceUsd: string[];
+            targetEndDate: string | null;
+            toInvoiceUsd: string | null;
             /** Format: date-time */
             updatedAt: string;
         };
@@ -2093,11 +2093,11 @@ export interface components {
             active: boolean;
             /** @enum {string} */
             category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
-            color: string[];
-            iconSlug: string[];
+            color: string | null;
+            iconSlug: string | null;
             id: string;
             name: string;
-            nameEn: string[];
+            nameEn: string | null;
             slug: string;
             usageCount: number;
         };
@@ -2169,10 +2169,10 @@ export interface components {
         };
         UpdateExpenseCategoryDto: {
             active?: boolean;
-            color?: string[];
+            color?: string | null;
             name: string;
-            nameEn?: string[];
-            parentId?: string[];
+            nameEn?: string | null;
+            parentId?: string | null;
         };
         UpdateFiscalSettingsDto: {
             igtfCurrencies?: string[];
@@ -2190,7 +2190,7 @@ export interface components {
         UpdatePaymentMethodDto: {
             active?: boolean;
             name: string;
-            nameEn?: string[];
+            nameEn?: string | null;
             requiresReference?: boolean;
             suggestsIgtf?: boolean;
         };
@@ -2200,13 +2200,13 @@ export interface components {
                 role?: string | null;
             }[];
             description?: unknown | null;
-            endDate?: string[];
+            endDate?: string | null;
             name: string;
-            startDate?: string[];
+            startDate?: string | null;
             summary: string;
             /** @default [] */
             tagIds: string[];
-            targetEndDate?: string[];
+            targetEndDate?: string | null;
             /** @default [] */
             technologyIds: string[];
         };
@@ -2250,7 +2250,7 @@ export interface components {
             createdAt: string;
             email: string;
             id: string;
-            imageUrl: string[];
+            imageUrl: string | null;
             locale: string;
             name: string;
             /** @enum {string} */
