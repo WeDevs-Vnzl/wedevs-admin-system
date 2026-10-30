@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { TechnologyUsageQueries } from '../commercial/application/technology-usage.queries';
 import {
   ACTIVITY_LOG,
   AUTHORIZATION,
@@ -24,35 +26,29 @@ import {
   TECHNOLOGY_USAGE,
   type TechnologyUsagePort,
 } from './application/ports/technology-usage.port';
+import { CommercialTechnologyUsageAdapter } from './infrastructure/commercial-technology-usage.adapter';
 import { PrismaTechnologyRepository } from './infrastructure/prisma-technology.repository';
 import { TechnologiesController } from './interface/http/technologies.controller';
 
 /**
- * Placeholder bound to `TECHNOLOGY_USAGE` until package 4.1 binds it to commercial's exported
- * `technology-usage.queries.ts`. It fails closed: a list or delete reaching it errors instead of reading
- * "no projects", so an unbound catalog can never delete a technology a project still uses. No route of
- * this module is in `AppModule` before 4.1, so the placeholder is never reached in production.
- */
-class UnboundTechnologyUsage implements TechnologyUsagePort {
-  countLiveProjects(): Promise<number> {
-    return Promise.reject(new Error('TechnologyUsagePort is not bound (package 4.1)'));
-  }
-
-  detachFromArchivedProjects(): Promise<void> {
-    return Promise.reject(new Error('TechnologyUsagePort is not bound (package 4.1)'));
-  }
-}
-
-/**
  * Settings → Tecnologías (PRD §8.15, HU-06): the catalog reads and writes, and the exported
- * `TechnologyCatalog` that commercial's stack check consumes. Writes run `can()` in their use case under
+ * `TechnologyCatalog` that commercial's stack check consumes. `TECHNOLOGY_USAGE` is bound to commercial's
+ * `TechnologyUsageQueries` through a lazy `ModuleRef` lookup: `ProjectsModule` imports this module, so a
+ * module import back would be circular. Writes run `can()` in their use case under
  * the `settings` grant; reads are for every signed-in role (DT-71).
  */
 @Module({
   controllers: [TechnologiesController],
   providers: [
     { provide: TECHNOLOGY_REPOSITORY, useClass: PrismaTechnologyRepository },
-    { provide: TECHNOLOGY_USAGE, useClass: UnboundTechnologyUsage },
+    {
+      provide: TECHNOLOGY_USAGE,
+      useFactory: (moduleRef: ModuleRef) =>
+        new CommercialTechnologyUsageAdapter(() =>
+          moduleRef.get(TechnologyUsageQueries, { strict: false }),
+        ),
+      inject: [ModuleRef],
+    },
     {
       provide: ListTechnologies,
       useFactory: (technologies: TechnologyRepository, usage: TechnologyUsagePort) =>
@@ -115,6 +111,6 @@ class UnboundTechnologyUsage implements TechnologyUsagePort {
       inject: [TECHNOLOGY_REPOSITORY],
     },
   ],
-  exports: [TechnologyCatalog],
+  exports: [TechnologyCatalog, TECHNOLOGY_USAGE],
 })
 export class TechnologiesModule {}
