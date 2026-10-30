@@ -2,7 +2,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import type { PrismaClient } from '../src/generated/prisma/client';
 import { createTestPrisma } from './support/db';
-import { TEMPLATE_DATABASE, withDatabase } from './support/test-database';
+import { asAdmin, TEMPLATE_DATABASE, withDatabase } from './support/test-database';
 
 let prisma: PrismaClient;
 
@@ -31,17 +31,22 @@ describe('test database per spec file (DT-117)', () => {
 
   it('keeps its writes out of the template', async () => {
     await prisma.$executeRawUnsafe('CREATE TABLE isolation_probe (id int)');
-    const template = new pg.Client({
-      connectionString: withDatabase(inject('postgresUrl'), TEMPLATE_DATABASE),
+    const serverUrl = inject('postgresUrl');
+    // Holds the clone lock: a session on the template makes a concurrent spec's clone fail.
+    await asAdmin(serverUrl, async (admin) => {
+      await admin.query('SELECT pg_advisory_lock(hashtext($1))', [TEMPLATE_DATABASE]);
+      const template = new pg.Client({
+        connectionString: withDatabase(serverUrl, TEMPLATE_DATABASE),
+      });
+      await template.connect();
+      try {
+        const { rows } = await template.query(
+          "SELECT to_regclass('public.isolation_probe') AS probe",
+        );
+        expect(rows[0].probe).toBeNull();
+      } finally {
+        await template.end();
+      }
     });
-    await template.connect();
-    try {
-      const { rows } = await template.query(
-        "SELECT to_regclass('public.isolation_probe') AS probe",
-      );
-      expect(rows[0].probe).toBeNull();
-    } finally {
-      await template.end();
-    }
   });
 });
