@@ -43,6 +43,13 @@ export interface ClientListEntry {
 export interface ClientRepository {
   findById(id: string): Promise<ClientRecord | null>;
   /**
+   * `findById` after taking the row lock (`FOR UPDATE`), held until the unit of work ends. Archive takes
+   * it (ascending id for a bulk), and so does everything that attaches to a client (a contact created or
+   * restored under it): the two cannot interleave, and the one that waits reads what the other committed.
+   * Lock order of the commercial context: project rows → client rows (ascending id). Needs a unit of work.
+   */
+  findByIdForUpdate(id: string): Promise<ClientRecord | null>;
+  /**
    * The live client that already holds this (tax id, country), comparing the normalized key (no case,
    * spaces, dots or dashes), other than `exceptId`.
    */

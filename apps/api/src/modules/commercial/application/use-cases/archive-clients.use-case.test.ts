@@ -2,6 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { createWorld, nth, rejection } from '../../../../../test/commercial/clients/world';
 
 describe('ArchiveClients (C19)', () => {
+  it('locks the clients in ascending id order whatever the order of the selection (M1)', async () => {
+    const w = createWorld();
+    const b = w.seedClient({ id: 'cli_b' }).client;
+    const a = w.seedClient({ id: 'cli_a' }).client;
+    const results = await w.archiveClients.execute(w.owner, {
+      ids: [b.id, a.id, b.id],
+      confirm: true,
+    });
+    expect(w.clients.lockedIds).toEqual(['cli_a', 'cli_b']);
+    // The result keeps the order of the selection, duplicates dropped.
+    expect(results.map((r) => r.id)).toEqual(['cli_b', 'cli_a']);
+  });
+
   it('answers INTEGRITY_LOCK with a live project in progress and no confirm; nothing changes', async () => {
     const w = createWorld();
     const { client } = w.seedClient({ id: 'cli_kairos', tradeName: 'Kairos Studio' }, 2);

@@ -44,7 +44,8 @@ export class RestoreContact {
     return this.uow.run(async () => {
       const archived = await this.contacts.findById(input.id);
       if (!archived?.deletedAt) throw new NotFoundError();
-      const client = await this.clients.findById(archived.clientId);
+      // Locked, like CreateContact: the client cannot be archived between this check and the write.
+      const client = await this.clients.findByIdForUpdate(archived.clientId);
       if (!client) throw new NotFoundError();
       if (client.deletedAt) {
         throw new ConflictError({
