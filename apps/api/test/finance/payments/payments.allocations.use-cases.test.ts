@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { LockSetChangedError } from '../../../src/modules/finance/application/use-cases/payments/payment-support';
 import {
   ACC_USD,
   ACC_VES,
@@ -261,5 +262,80 @@ describe('deallocatePayment: the amount goes back to the credit', () => {
     );
     expect(error.code).toBe('FORBIDDEN');
     expect(world.payments.allAllocations[0]?.deletedAt).toBeNull();
+  });
+});
+
+describe('a lock set that changed between the unlocked read and the lock', () => {
+  /** Makes `plan` read the state and then commit one more live allocation, like a concurrent writer would. */
+  function interleaveAllocations(paymentId: string, invoiceIds: string[]) {
+    const plan = world.support.plan.bind(world.support);
+    let calls = 0;
+    world.support.plan = async (args) => {
+      const result = await plan(args);
+      // Only the unlocked read before the unit of work races; the re-read after the lock is the committed state.
+      if (world.uow.isActive) return result;
+      const invoiceId = invoiceIds[calls];
+      calls += 1;
+      if (invoiceId) {
+        world.payments.seed((await world.payments.findById(paymentId)) as never, [
+          {
+            id: `alo_race_${calls}`,
+            paymentId,
+            invoiceId,
+            amountPaymentCurrency: '50.00',
+            amountInvoiceCurrency: '50.00',
+            amountUsd: '50.00',
+            createdAt: '2026-10-09T15:00:00.000Z',
+            createdById: null,
+            deletedAt: null,
+          },
+        ]);
+      }
+      return result;
+    };
+    return () => calls;
+  }
+
+  it('plans again and applies the allocation with the rows the concurrent commit added', async () => {
+    world.addInvoice('inv_a', '300.00');
+    world.addInvoice('inv_b', '300.00', { projectId: WEB });
+    const payment = await credit300();
+    const plans = interleaveAllocations(payment.id, ['inv_b']);
+
+    const allocation = await world.allocate.execute(
+      world.owner,
+      draft(payment.id, 'inv_a', '10.00'),
+    );
+
+    expect(plans()).toBe(2);
+    expect(allocation.invoice.id).toBe('inv_a');
+    expect(world.payments.allAllocations.filter((row) => row.deletedAt === null)).toHaveLength(2);
+    expect(world.locks.acquired.map((row) => row.id)).toEqual([
+      WEB,
+      KAIROS,
+      'inv_a',
+      'inv_b',
+      payment.id,
+      ACC_USD,
+    ]);
+    expect(await world.get.execute(world.owner, payment.id)).toMatchObject({
+      unallocated: '240.00',
+    });
+  });
+
+  it('reports a CONFLICT once the lock set keeps changing, and writes nothing', async () => {
+    for (const id of ['inv_a', 'inv_x1', 'inv_x2', 'inv_x3']) world.addInvoice(id, '300.00');
+    const payment = await credit300();
+    const plans = interleaveAllocations(payment.id, ['inv_x1', 'inv_x2', 'inv_x3']);
+
+    const error = await rejection(
+      world.allocate.execute(world.owner, draft(payment.id, 'inv_a', '10.00')),
+    );
+
+    expect(error.code).toBe('CONFLICT');
+    expect(plans()).toBe(3);
+    expect(world.payments.allAllocations.some((row) => row.invoiceId === 'inv_a')).toBe(false);
+    expect(world.activity.entries).toHaveLength(1);
+    expect(error).toBeInstanceOf(LockSetChangedError);
   });
 });

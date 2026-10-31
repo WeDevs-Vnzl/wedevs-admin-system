@@ -50,78 +50,74 @@ export class UpdatePayment {
     const values = normalizePaymentFields(input);
     if (!(await this.support.payments.findById(input.id))) throw new NotFoundError();
 
-    const plan = await this.support.plan({
+    const planArgs = {
       paymentId: input.id,
       clientIds: [values.clientId],
       accountIds: [values.accountId],
+    };
+
+    await this.support.withLocks(this.uow, planArgs, async () => {
+      const before = await this.support.payments.findById(input.id);
+      if (!before) throw new NotFoundError();
+      if (before.status === 'ANULADO') {
+        throw new ConflictError({ message: PAYMENT_MESSAGES.voided });
+      }
+      const live = await this.support.payments.liveAllocations(before.id);
+
+      await this.support.requireClient(values.clientId);
+      await this.support.requireAccount(
+        values.accountId,
+        values.currency,
+        values.accountId !== before.accountId,
+      );
+      await this.support.requireMethod(values.methodId, values.reference);
+      if (
+        live.length > 0 &&
+        (values.clientId !== before.clientId || values.currency !== before.currency)
+      ) {
+        throw new IntegrityLockedError({ message: PAYMENT_MESSAGES.clientLocked });
+      }
+      const amounts = derivedColumns(values, live);
+      if (compareMoney(amounts.unallocated, '0') < 0) {
+        throw new IntegrityLockedError({ message: PAYMENT_MESSAGES.allocatableBelowAllocated });
+      }
+
+      let receiptFileId = before.receiptFileId;
+      if (values.receiptFileId !== undefined) {
+        if (values.receiptFileId !== null && values.receiptFileId !== before.receiptFileId) {
+          await this.support.reserveReceipt(actor, values.receiptFileId);
+        }
+        receiptFileId = values.receiptFileId;
+      }
+
+      const after: PaymentRecord = {
+        ...before,
+        clientId: values.clientId,
+        date: values.date,
+        accountId: values.accountId,
+        methodId: values.methodId,
+        currency: values.currency,
+        amount: values.amount,
+        igtfAmount: values.igtfAmount,
+        feeAmount: values.feeAmount,
+        ...amounts,
+        usdRate: values.usdRate,
+        amountUsd: toUsd(values.amount, values.usdRate),
+        reference: values.reference,
+        receiptFileId,
+        updatedAt: this.support.nowIso(),
+        updatedById: actor.userId,
+      };
+      await this.support.payments.update(after);
+      await this.support.settle({
+        actor: actorOf(actor),
+        action: 'UPDATE',
+        before,
+        after,
+        invoiceIds: [],
+        changes: diffFields({ ...before }, { ...after }, { fields: PAYMENT_ACTIVITY_FIELDS }),
+      });
     });
-
-    await this.uow.run(
-      async () => {
-        await this.support.lockPlan(plan);
-        const before = await this.support.payments.findById(input.id);
-        if (!before) throw new NotFoundError();
-        if (before.status === 'ANULADO') {
-          throw new ConflictError({ message: PAYMENT_MESSAGES.voided });
-        }
-        const live = await this.support.payments.liveAllocations(before.id);
-
-        await this.support.requireClient(values.clientId);
-        await this.support.requireAccount(
-          values.accountId,
-          values.currency,
-          values.accountId !== before.accountId,
-        );
-        await this.support.requireMethod(values.methodId, values.reference);
-        if (
-          live.length > 0 &&
-          (values.clientId !== before.clientId || values.currency !== before.currency)
-        ) {
-          throw new IntegrityLockedError({ message: PAYMENT_MESSAGES.clientLocked });
-        }
-        const amounts = derivedColumns(values, live);
-        if (compareMoney(amounts.unallocated, '0') < 0) {
-          throw new IntegrityLockedError({ message: PAYMENT_MESSAGES.allocatableBelowAllocated });
-        }
-
-        let receiptFileId = before.receiptFileId;
-        if (values.receiptFileId !== undefined) {
-          if (values.receiptFileId !== null && values.receiptFileId !== before.receiptFileId) {
-            await this.support.reserveReceipt(actor, values.receiptFileId);
-          }
-          receiptFileId = values.receiptFileId;
-        }
-
-        const after: PaymentRecord = {
-          ...before,
-          clientId: values.clientId,
-          date: values.date,
-          accountId: values.accountId,
-          methodId: values.methodId,
-          currency: values.currency,
-          amount: values.amount,
-          igtfAmount: values.igtfAmount,
-          feeAmount: values.feeAmount,
-          ...amounts,
-          usdRate: values.usdRate,
-          amountUsd: toUsd(values.amount, values.usdRate),
-          reference: values.reference,
-          receiptFileId,
-          updatedAt: this.support.nowIso(),
-          updatedById: actor.userId,
-        };
-        await this.support.payments.update(after);
-        await this.support.settle({
-          actor: actorOf(actor),
-          action: 'UPDATE',
-          before,
-          after,
-          invoiceIds: [],
-          changes: diffFields({ ...before }, { ...after }, { fields: PAYMENT_ACTIVITY_FIELDS }),
-        });
-      },
-      { isolation: 'Serializable' },
-    );
     return this.support.output(input.id);
   }
 }

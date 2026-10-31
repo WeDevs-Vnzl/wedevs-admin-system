@@ -51,59 +51,54 @@ export class SetPaymentStatus {
     const reason = input.reason?.trim();
     if (!(await this.support.payments.findById(input.id))) throw new NotFoundError();
 
-    const plan = await this.support.plan({ paymentId: input.id });
-    await this.uow.run(
-      async () => {
-        const locked = await this.support.lockPlan(plan);
-        const before = await this.support.payments.findById(input.id);
-        if (!before) throw new NotFoundError();
-        if (before.status === 'ANULADO') {
-          throw new ConflictError({ message: PAYMENT_MESSAGES.voided });
-        }
-        if (!TRANSITIONS[before.status].includes(input.status)) {
-          throw new ConflictError({ message: PAYMENT_MESSAGES.invalidTransition });
-        }
-        const live = await this.support.payments.liveAllocations(before.id);
+    await this.support.withLocks(this.uow, { paymentId: input.id }, async (locked) => {
+      const before = await this.support.payments.findById(input.id);
+      if (!before) throw new NotFoundError();
+      if (before.status === 'ANULADO') {
+        throw new ConflictError({ message: PAYMENT_MESSAGES.voided });
+      }
+      if (!TRANSITIONS[before.status].includes(input.status)) {
+        throw new ConflictError({ message: PAYMENT_MESSAGES.invalidTransition });
+      }
+      const live = await this.support.payments.liveAllocations(before.id);
 
-        let remaining = live;
-        if (input.status === 'CONFIRMADO' && live.length > 0) {
-          await this.support.checkAllocations(
-            {
-              clientId: before.clientId,
-              currency: before.currency,
-              allocatable: before.allocatable,
-            },
-            live,
-            [],
-          );
-        }
-        if (input.status === 'ANULADO') {
-          const now = this.support.nowIso();
-          await this.support.payments.softDeleteAllocations(
-            live.map((allocation) => allocation.id),
-            now,
-          );
-          remaining = [];
-        }
-        const after: PaymentRecord = {
-          ...before,
-          ...derivedColumns(before, remaining),
-          status: input.status,
-          updatedAt: this.support.nowIso(),
-          updatedById: actor.userId,
-        };
-        await this.support.payments.update(after);
-        await this.support.settle({
-          actor: actorOf(actor),
-          action: 'STATUS_CHANGE',
-          before,
-          after,
-          invoiceIds: locked.invoiceIds,
-          metadata: { from: before.status, to: after.status, ...(reason ? { reason } : {}) },
-        });
-      },
-      { isolation: 'Serializable' },
-    );
+      let remaining = live;
+      if (input.status === 'CONFIRMADO' && live.length > 0) {
+        await this.support.checkAllocations(
+          {
+            clientId: before.clientId,
+            currency: before.currency,
+            allocatable: before.allocatable,
+          },
+          live,
+          [],
+        );
+      }
+      if (input.status === 'ANULADO') {
+        const now = this.support.nowIso();
+        await this.support.payments.softDeleteAllocations(
+          live.map((allocation) => allocation.id),
+          now,
+        );
+        remaining = [];
+      }
+      const after: PaymentRecord = {
+        ...before,
+        ...derivedColumns(before, remaining),
+        status: input.status,
+        updatedAt: this.support.nowIso(),
+        updatedById: actor.userId,
+      };
+      await this.support.payments.update(after);
+      await this.support.settle({
+        actor: actorOf(actor),
+        action: 'STATUS_CHANGE',
+        before,
+        after,
+        invoiceIds: locked.invoiceIds,
+        metadata: { from: before.status, to: after.status, ...(reason ? { reason } : {}) },
+      });
+    });
     return this.support.output(input.id);
   }
 }

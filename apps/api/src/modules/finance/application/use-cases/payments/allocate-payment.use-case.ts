@@ -45,13 +45,10 @@ export class AllocatePayment {
     throwIfAny(errors);
     if (!(await this.support.payments.findById(input.paymentId))) throw new NotFoundError();
 
-    const plan = await this.support.plan({
-      paymentId: input.paymentId,
-      invoiceIds: [input.invoiceId],
-    });
-    const allocationId = await this.uow.run(
+    const allocationId = await this.support.withLocks(
+      this.uow,
+      { paymentId: input.paymentId, invoiceIds: [input.invoiceId] },
       async () => {
-        await this.support.lockPlan(plan);
         const before = await this.support.payments.findById(input.paymentId);
         if (!before) throw new NotFoundError();
         if (before.status !== 'CONFIRMADO') {
@@ -94,7 +91,6 @@ export class AllocatePayment {
         });
         return row.id;
       },
-      { isolation: 'Serializable' },
     );
     const payment = await this.support.output(input.paymentId);
     const created = payment.allocations.find((row) => row.id === allocationId);
@@ -120,42 +116,37 @@ export class DeallocatePayment {
     const first = await this.support.payments.findAllocation(input.allocationId);
     if (!first || first.deletedAt !== null) throw new NotFoundError();
 
-    const plan = await this.support.plan({ paymentId: first.paymentId });
-    await this.uow.run(
-      async () => {
-        await this.support.lockPlan(plan);
-        const allocation = await this.support.payments.findAllocation(input.allocationId);
-        if (!allocation || allocation.deletedAt !== null) throw new NotFoundError();
-        const before = await this.support.payments.findById(allocation.paymentId);
-        if (!before) throw new NotFoundError();
+    await this.support.withLocks(this.uow, { paymentId: first.paymentId }, async () => {
+      const allocation = await this.support.payments.findAllocation(input.allocationId);
+      if (!allocation || allocation.deletedAt !== null) throw new NotFoundError();
+      const before = await this.support.payments.findById(allocation.paymentId);
+      if (!before) throw new NotFoundError();
 
-        await this.support.payments.softDeleteAllocations([allocation.id], this.support.nowIso());
-        const remaining = (await this.support.payments.liveAllocations(before.id)).filter(
-          (row) => row.id !== allocation.id,
-        );
-        const after: PaymentRecord = {
-          ...before,
-          ...derivedColumns(before, remaining),
-          updatedAt: this.support.nowIso(),
-          updatedById: actor.userId,
-        };
-        await this.support.payments.update(after);
-        await this.support.settle({
-          actor: actorOf(actor),
-          action: 'DEALLOCATE',
-          before,
-          after,
-          invoiceIds: [allocation.invoiceId],
-          metadata: {
-            allocationId: allocation.id,
-            invoiceId: allocation.invoiceId,
-            amountPaymentCurrency: allocation.amountPaymentCurrency,
-            amountInvoiceCurrency: allocation.amountInvoiceCurrency,
-          },
-        });
-      },
-      { isolation: 'Serializable' },
-    );
+      await this.support.payments.softDeleteAllocations([allocation.id], this.support.nowIso());
+      const remaining = (await this.support.payments.liveAllocations(before.id)).filter(
+        (row) => row.id !== allocation.id,
+      );
+      const after: PaymentRecord = {
+        ...before,
+        ...derivedColumns(before, remaining),
+        updatedAt: this.support.nowIso(),
+        updatedById: actor.userId,
+      };
+      await this.support.payments.update(after);
+      await this.support.settle({
+        actor: actorOf(actor),
+        action: 'DEALLOCATE',
+        before,
+        after,
+        invoiceIds: [allocation.invoiceId],
+        metadata: {
+          allocationId: allocation.id,
+          invoiceId: allocation.invoiceId,
+          amountPaymentCurrency: allocation.amountPaymentCurrency,
+          amountInvoiceCurrency: allocation.amountInvoiceCurrency,
+        },
+      });
+    });
     return this.support.output(first.paymentId);
   }
 }

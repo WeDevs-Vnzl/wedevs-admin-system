@@ -58,76 +58,72 @@ export class CreatePayment {
     throwIfAny(errors);
     const values = normalizePaymentFields(input);
 
-    const plan = await this.support.plan({
+    const planArgs = {
       clientIds: [values.clientId],
       accountIds: [values.accountId],
       invoiceIds: allocations.map((allocation) => allocation.invoiceId),
-    });
+    };
 
-    const id = await this.uow.run(
-      async () => {
-        await this.support.lockPlan(plan);
-        await this.support.requireClient(values.clientId);
-        await this.support.requireAccount(values.accountId, values.currency, true);
-        await this.support.requireMethod(values.methodId, values.reference);
-        if (values.receiptFileId) await this.support.reserveReceipt(actor, values.receiptFileId);
+    const id = await this.support.withLocks(this.uow, planArgs, async () => {
+      await this.support.requireClient(values.clientId);
+      await this.support.requireAccount(values.accountId, values.currency, true);
+      await this.support.requireMethod(values.methodId, values.reference);
+      if (values.receiptFileId) await this.support.reserveReceipt(actor, values.receiptFileId);
 
-        const amounts = derivedColumns(values, []);
-        await this.support.checkAllocations(
-          {
-            clientId: values.clientId,
-            currency: values.currency,
-            allocatable: amounts.allocatable,
-          },
-          allocations,
-          [],
-        );
-
-        const now = this.support.nowIso();
-        const record: PaymentRecord = {
-          id: this.ids.next(),
-          code: await this.sequence.next('PAG'),
+      const amounts = derivedColumns(values, []);
+      await this.support.checkAllocations(
+        {
           clientId: values.clientId,
-          date: values.date,
-          accountId: values.accountId,
-          methodId: values.methodId,
           currency: values.currency,
-          amount: values.amount,
-          igtfAmount: values.igtfAmount,
-          feeAmount: values.feeAmount,
-          ...amounts,
-          usdRate: values.usdRate,
-          amountUsd: toUsd(values.amount, values.usdRate),
-          reference: values.reference,
-          status,
-          receiptFileId: values.receiptFileId ?? null,
-          createdAt: now,
-          updatedAt: now,
-          createdById: actor.userId,
-          updatedById: null,
-        };
-        await this.support.payments.insert(record);
-        const rows = allocations.map((draft) =>
-          this.support.allocationRecord(record, draft, this.ids.next(), actor.userId),
-        );
-        for (const row of rows) await this.support.payments.insertAllocation(row);
-        const stored = {
-          ...record,
-          ...derivedColumns(values, rows),
-        };
-        if (rows.length > 0) await this.support.payments.update(stored);
+          allocatable: amounts.allocatable,
+        },
+        allocations,
+        [],
+      );
 
-        await this.support.settle({
-          actor: actorOf(actor),
-          action: 'CREATE',
-          before: null,
-          after: stored,
-          invoiceIds: rows.map((row) => row.invoiceId),
-        });
-        return record.id;
-      },
-      { isolation: 'Serializable' },
-    );
+      const now = this.support.nowIso();
+      const record: PaymentRecord = {
+        id: this.ids.next(),
+        code: await this.sequence.next('PAG'),
+        clientId: values.clientId,
+        date: values.date,
+        accountId: values.accountId,
+        methodId: values.methodId,
+        currency: values.currency,
+        amount: values.amount,
+        igtfAmount: values.igtfAmount,
+        feeAmount: values.feeAmount,
+        ...amounts,
+        usdRate: values.usdRate,
+        amountUsd: toUsd(values.amount, values.usdRate),
+        reference: values.reference,
+        status,
+        receiptFileId: values.receiptFileId ?? null,
+        createdAt: now,
+        updatedAt: now,
+        createdById: actor.userId,
+        updatedById: null,
+      };
+      await this.support.payments.insert(record);
+      const rows = allocations.map((draft) =>
+        this.support.allocationRecord(record, draft, this.ids.next(), actor.userId),
+      );
+      for (const row of rows) await this.support.payments.insertAllocation(row);
+      const stored = {
+        ...record,
+        ...derivedColumns(values, rows),
+      };
+      if (rows.length > 0) await this.support.payments.update(stored);
+
+      await this.support.settle({
+        actor: actorOf(actor),
+        action: 'CREATE',
+        before: null,
+        after: stored,
+        invoiceIds: rows.map((row) => row.invoiceId),
+      });
+      return record.id;
+    });
     return this.support.output(id);
   }
 }

@@ -7,6 +7,7 @@ import type {
   RowLocksPort,
 } from '../../../../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../../../../shared/application/ports/search-index.port';
+import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { todayInCaracas, type DateOnly } from '../../../../../shared/domain/business-date';
 import {
   ConflictError,
@@ -89,6 +90,16 @@ const isSubset = (inner: readonly string[], outer: readonly string[]): boolean =
 export function todayOf(clock: ClockPort): DateOnly {
   return todayInCaracas(clock.now());
 }
+
+/**
+ * The rows a mutation planned to lock are no longer the rows it needs (a concurrent commit added an allocation or
+ * moved an invoice line). `withLocks` plans again; only an exhausted retry reaches the caller, as a plain
+ * `CONFLICT` the client may retry.
+ */
+export class LockSetChangedError extends ConflictError {}
+
+/** Attempts `withLocks` makes before the lock set that keeps changing is reported as a `CONFLICT`. */
+export const MAX_PLAN_ATTEMPTS = 3;
 
 /** What a mutation may touch, read before the unit of work to know which rows to lock. */
 export interface PlanArgs {
@@ -223,9 +234,31 @@ export class PaymentSupport {
       !isSubset(fresh.installmentIds, plan.installmentIds) ||
       !isSubset(fresh.invoiceIds, plan.invoiceIds)
     ) {
-      throw new ConflictError();
+      throw new LockSetChangedError();
     }
     return fresh;
+  }
+
+  /**
+   * Runs `work` in a `Serializable` unit of work after one lock call for everything the plan names. When the
+   * lock set changed between the unlocked read and the lock, the unit of work rolled back and the plan is read
+   * again (the rows then include what the concurrent commit added), up to `MAX_PLAN_ATTEMPTS` times.
+   */
+  async withLocks<T>(
+    uow: UnitOfWorkPort,
+    args: PlanArgs,
+    work: (locked: LockPlan) => Promise<T>,
+  ): Promise<T> {
+    for (let attempt = 1; ; attempt += 1) {
+      const plan = await this.plan(args);
+      try {
+        return await uow.run(async () => work(await this.lockPlan(plan)), {
+          isolation: 'Serializable',
+        });
+      } catch (error) {
+        if (!(error instanceof LockSetChangedError) || attempt >= MAX_PLAN_ATTEMPTS) throw error;
+      }
+    }
   }
 
   // ───────────────────────────── Reference rules ─────────────────────────────
