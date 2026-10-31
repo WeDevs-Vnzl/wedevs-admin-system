@@ -4,6 +4,7 @@ import type { EntityRef } from '../../../shared/domain/entity-ref';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import { FinanceLookups } from '../../commercial/application/finance-lookups';
 import type { ReserveFileForAttachment } from '../../platform/application/use-cases/reserve-file-for-attachment.use-case';
+import { PaymentMethodCatalogQuery } from '../../settings/application/payment-method-catalog.query';
 import type {
   PaymentAccountRef,
   PaymentMethodRule,
@@ -14,15 +15,14 @@ import type {
 
 /**
  * What a payment points at. The client goes through commercial's exported `FinanceLookups` (rule (e)). The account
- * is finance's own table. The method is a read-only select of settings' `PaymentMethod` (`id`, `requiresReference`,
- * `active`): settings exports no query for it, and DT-118 does not cover it yet (open decision of package 5.1).
- * Swapping this class for a settings query changes nothing else.
+ * is finance's own table. The method goes through settings' exported `PaymentMethodCatalogQuery` (rule (e)).
  */
 @Injectable()
 export class PrismaPaymentReferences implements PaymentReferencesPort {
   constructor(
     @Inject(TransactionHost) private readonly host: TransactionHost,
     @Inject(FinanceLookups) private readonly lookups: FinanceLookups,
+    @Inject(PaymentMethodCatalogQuery) private readonly methods: PaymentMethodCatalogQuery,
   ) {}
 
   liveClient(id: string): Promise<EntityRef | null> {
@@ -36,11 +36,8 @@ export class PrismaPaymentReferences implements PaymentReferencesPort {
     });
   }
 
-  async activeMethod(id: string): Promise<PaymentMethodRule | null> {
-    return this.host.db.paymentMethod.findFirst({
-      where: { id, active: true },
-      select: { id: true, requiresReference: true },
-    });
+  activeMethod(id: string): Promise<PaymentMethodRule | null> {
+    return this.methods.activeMethod(id);
   }
 }
 

@@ -16,6 +16,8 @@ import {
 import { PaymentSupport } from '../../../src/modules/finance/application/use-cases/payments/payment-support';
 import { SetPaymentStatus } from '../../../src/modules/finance/application/use-cases/payments/set-payment-status.use-case';
 import { UpdatePayment } from '../../../src/modules/finance/application/use-cases/payments/update-payment.use-case';
+import { PaymentMethodCatalogQuery } from '../../../src/modules/settings/application/payment-method-catalog.query';
+import { PrismaPaymentMethodRepository } from '../../../src/modules/settings/infrastructure/prisma-payment-method.repository';
 import { PrismaPaymentReferences } from '../../../src/modules/finance/infrastructure/payment-references.adapter';
 import { PrismaPaymentRepository } from '../../../src/modules/finance/infrastructure/prisma-payment.repository';
 import type { PrismaReadModelWriter } from '../../../src/modules/finance/infrastructure/prisma-read-model-writer';
@@ -74,6 +76,7 @@ export function buildPaymentWorld(service: PrismaService, hooks: PaymentWorldHoo
   const references = new PrismaPaymentReferences(
     host,
     new FinanceLookups(new PrismaFinanceLookups(host)),
+    new PaymentMethodCatalogQuery(new PrismaPaymentMethodRepository(host)),
   );
   const support = new PaymentSupport(
     payments,

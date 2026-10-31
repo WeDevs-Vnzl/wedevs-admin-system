@@ -187,7 +187,7 @@ const contains = (value: string) => ({ contains: value, mode: 'insensitive' as c
 /**
  * `Payment` and `PaymentAllocation` rows through the current transaction. The list and detail labels join
  * `Client` (commercial), `Account` and `PaymentMethod` (settings) and the tag assignments as read-only selects
- * (DT-118; the `PaymentMethod` join is an open decision of package 5.1). Payments are never archived (Q-BE3-4), so
+ * (DT-118). Payments are never archived (Q-BE3-4), so
  * no read filters `deletedAt`. Allocations are soft-deleted (contract choice 3): the live ones have `deletedAt`
  * null, and `allocation_unique_active` allows one live row per payment and invoice.
  */

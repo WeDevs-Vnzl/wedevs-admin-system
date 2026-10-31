@@ -72,6 +72,7 @@ import { PrismaPaymentRepository } from './infrastructure/prisma-payment.reposit
 import { PaymentsController } from './interface/http/payments.controller';
 import { InvoicesModule } from './invoices.module';
 import { ReadModelsModule } from './read-models.module';
+import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
 
 /**
  * Finance → payments and allocations (PRD §8.6, HU-13, HU-14, §9.5, §9.6). A payment mutation writes the payment,
@@ -88,6 +89,7 @@ import { ReadModelsModule } from './read-models.module';
     TagsModule,
     NotesModule,
     FinanceLookupsModule,
+    FinanceCatalogsModule,
     ReadModelsModule,
     InvoicesModule,
   ],
