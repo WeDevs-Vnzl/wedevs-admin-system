@@ -15,6 +15,7 @@ import {
   seedInvoice,
   seedPayment,
   seedProject,
+  seedSearchEntry,
 } from '../read-models/world';
 import { buildPaymentWorld, type PaymentWorld } from './int-world';
 
@@ -293,11 +294,46 @@ describe('PrismaPaymentRepository: reads', () => {
     expect(await codes({ currency: ['VES'] })).toEqual([]);
     expect(await codes({ dateFrom: '2026-09-10', dateTo: '2026-09-30' })).toEqual(['pay_b']);
     expect(await codes({ hasUnallocated: true })).toEqual(['pay_c', 'pay_b', 'pay_a']);
-    expect(await codes({ q: 'ZL-0001' })).toEqual(['pay_c', 'pay_a']);
-    expect(await codes({ q: 'cli_b' })).toEqual(['pay_b']);
-    expect(await codes({ q: 'acc_b' })).toEqual(['pay_b']);
     const tag = await admin.tag.findFirstOrThrow();
     expect(await codes({ tagId: [tag.id] })).toEqual(['pay_c']);
+  });
+
+  it('resolves q through SearchEntry: accent-folded client name, code and reference, with filters, sort and paging', async () => {
+    const entry = (id: string, subtitle: string, reference: string) =>
+      world.uow.run(() =>
+        seedSearchEntry(world.host.db, {
+          entityType: 'PAYMENT',
+          entityId: id,
+          code: id.toUpperCase(),
+          title: reference,
+          subtitle,
+          body: reference,
+        }),
+      );
+    await entry('pay_a', 'José Pérez', 'ZL-0001');
+    await entry('pay_b', 'Zafiro', 'ZL-0002');
+    await entry('pay_c', 'José Pérez', 'ZL-0001');
+    expect(await codes({ q: 'jose' })).toEqual(['pay_c', 'pay_a']);
+    expect(await codes({ q: 'ZL-0002' })).toEqual(['pay_b']);
+    expect(await codes({ q: 'PAY_B' })).toEqual(['pay_b']);
+    expect(await codes({ q: 'jose', clientId: ['cli_b'] })).toEqual([]);
+    expect(await codes({ q: 'zl', status: ['PENDIENTE_VERIFICACION'] })).toEqual(['pay_b']);
+    expect(await codes({ q: 'zl', sort: { field: 'allocated', direction: 'desc' } })).toEqual([
+      'pay_a',
+      'pay_b',
+      'pay_c',
+    ]);
+    const tag = await admin.tag.findFirstOrThrow();
+    expect(await codes({ q: 'jose', tagId: [tag.id] })).toEqual(['pay_c']);
+    const paged = await world.uow.run(() =>
+      world.payments.list({
+        sort: { field: 'date', direction: 'desc' },
+        q: 'zl',
+        page: 2,
+        pageSize: 25,
+      } as never),
+    );
+    expect(paged).toMatchObject({ items: [], total: 3 });
   });
 
   it('sorts by a column, by the derived allocated amount, and pages with the total', async () => {

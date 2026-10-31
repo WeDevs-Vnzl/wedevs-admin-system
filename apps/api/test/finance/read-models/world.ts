@@ -1,3 +1,4 @@
+import type { PrismaClient } from '../../../src/generated/prisma/client';
 import { FinanceProjector } from '../../../src/modules/finance/application/finance-projector';
 import { computePaymentAmounts } from '../../../src/modules/finance/domain/payments';
 import { toUsd } from '../../../src/shared/domain/money';
@@ -298,6 +299,33 @@ export async function seedExpense(db: DbClient, spec: ExpenseSpec) {
       amountUsd: dec(toUsd(spec.amount, usdRate)),
       status: spec.status ?? 'PAGADO',
       deletedAt: spec.archived ? new Date('2026-02-16') : null,
+    },
+  });
+}
+
+/** One `SearchEntry` row, the way a use case's `SearchIndexPort.upsert` would leave it (the list `q` reads these). */
+export async function seedSearchEntry(
+  client: Pick<DbClient, 'searchEntry'> | Pick<PrismaClient, 'searchEntry'>,
+  entry: {
+    entityType: 'INVOICE' | 'PAYMENT' | 'EXPENSE';
+    entityId: string;
+    code?: string | null;
+    title: string;
+    subtitle?: string | null;
+    body?: string | null;
+    archived?: boolean;
+  },
+) {
+  const db = client as Pick<DbClient, 'searchEntry'>;
+  await db.searchEntry.create({
+    data: {
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      code: entry.code ?? null,
+      title: entry.title,
+      subtitle: entry.subtitle ?? null,
+      body: entry.body ?? null,
+      archived: entry.archived ?? false,
     },
   });
 }

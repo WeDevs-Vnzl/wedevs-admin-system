@@ -6,6 +6,7 @@ import {
   seedClient,
   seedPayment,
   seedProject,
+  seedSearchEntry,
 } from '../../../../test/finance/read-models/world';
 import { createTestPrisma, truncateBusinessTables } from '../../../../test/support/db';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service';
@@ -398,7 +399,7 @@ describe('list', () => {
     expect(paged).toMatchObject({ items: [], total: 2 });
   });
 
-  it('filters by status, client, project, currency, issue date range and search', async () => {
+  it('filters by status, client, project, currency and issue date range', async () => {
     await seedMany();
     const ids = async (extra: object) =>
       (await uow.run(() => invoices.list({ ...base, ...page, ...extra } as never))).items.map(
@@ -409,8 +410,46 @@ describe('list', () => {
     expect(await ids({ projectId: ['pry_a'] })).toEqual(['inv_a']);
     expect(await ids({ currency: ['VES'] })).toEqual([]);
     expect(await ids({ dateFrom: '2026-10-03', dateTo: '2026-10-31' })).toEqual(['inv_b']);
-    expect(await ids({ q: 'zaf-2' })).toEqual(['inv_b']);
-    expect(await ids({ q: 'FAC-inv_a' })).toEqual(['inv_a']);
+  });
+
+  it('resolves q through SearchEntry: accent-folded client name, line text, archived mode, with filters and paging', async () => {
+    await seedMany();
+    const entry = (id: string, subtitle: string, body: string, archived = false) =>
+      uow.run(() =>
+        seedSearchEntry(host.db, {
+          entityType: 'INVOICE',
+          entityId: id,
+          code: `FAC-${id}`,
+          title: `N-${id}`,
+          subtitle,
+          body,
+          archived,
+        }),
+      );
+    await entry('inv_a', 'José Pérez', 'Hosting anual');
+    await entry('inv_b', 'Zafiro', 'Diseño de logotipo');
+    await entry('inv_c', 'José Antiguo', 'Hosting viejo', true);
+    const ids = async (extra: object) =>
+      (await uow.run(() => invoices.list({ ...base, ...page, ...extra } as never))).items.map(
+        (r) => r.id,
+      );
+    expect(await ids({ q: 'jose' })).toEqual(['inv_a']);
+    expect(await ids({ q: 'FAC-inv_b' })).toEqual(['inv_b']);
+    expect(await ids({ q: 'n-inv_a' })).toEqual(['inv_a']);
+    expect(await ids({ q: 'LOGOTIPO' })).toEqual(['inv_b']);
+    expect(await ids({ q: 'hosting' })).toEqual(['inv_a']);
+    expect(await ids({ q: 'hosting', archived: 'only' })).toEqual(['inv_c']);
+    expect((await ids({ q: 'hosting', archived: 'include' })).sort()).toEqual(['inv_a', 'inv_c']);
+    expect(await ids({ q: 'jose', status: ['PAGADA'] })).toEqual([]);
+    expect(await ids({ q: 'jose', clientId: ['cli_a'], projectId: ['pry_a'] })).toEqual(['inv_a']);
+    expect(await ids({ q: 'n-inv', sort: { field: 'balanceUsd', direction: 'asc' } })).toEqual([
+      'inv_b',
+      'inv_a',
+    ]);
+    const second = await uow.run(() =>
+      invoices.list({ ...base, q: 'n-inv', page: 2, pageSize: 25 } as never),
+    );
+    expect(second).toMatchObject({ items: [], total: 2 });
   });
 
   it('filters by tag', async () => {

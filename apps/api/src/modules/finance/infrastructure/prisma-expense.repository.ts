@@ -9,7 +9,7 @@ import {
   stringToDecimal,
 } from '../../../shared/infrastructure/prisma/decimal-mapper';
 import { isUniqueViolation } from '../../../shared/infrastructure/prisma/unique-violation';
-import type { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
+import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type {
   ExpenseCategoryView,
@@ -19,6 +19,7 @@ import type {
   ExpenseView,
 } from '../application/ports/expense.repository.port';
 import { EXPENSE_ERRORS } from '../domain/errors';
+import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
 
 const VIEW_INCLUDE = {
   category: { include: { parent: true } },
@@ -115,8 +116,6 @@ function data(record: ExpenseRecord) {
   };
 }
 
-const contains = (value: string) => ({ contains: value, mode: 'insensitive' as const });
-
 /**
  * `Expense` rows through the current transaction. List labels join `ExpenseCategory` (settings), `Account`,
  * `Project` (commercial) and the tag assignments as read-only selects (DT-118). Expenses are never archived (Q-BE3-4), so no read filters `deletedAt`.
@@ -165,7 +164,54 @@ export class PrismaExpenseRepository implements ExpenseRepository {
     return row ? toView(row) : null;
   }
 
+  /** The filters of `list` as SQL conditions, for the search path (the page is selected by Postgres). */
+  private conditions(filter: ExpenseFilter): Prisma.Sql[] {
+    const sql: Prisma.Sql[] = [Prisma.sql`"deletedAt" IS NULL`];
+    if (filter.status) sql.push(anyOf('status', filter.status));
+    if (filter.categoryId) {
+      const ids = [...filter.categoryId];
+      sql.push(
+        Prisma.sql`("categoryId" = ANY(${ids}::text[]) OR "categoryId" IN (SELECT c."id" FROM "ExpenseCategory" c WHERE c."parentId" = ANY(${ids}::text[])))`,
+      );
+    }
+    if (filter.accountId) sql.push(anyOf('accountId', filter.accountId));
+    if (filter.projectId) sql.push(anyOf('projectId', filter.projectId));
+    if (filter.currency) sql.push(anyOf('currency', filter.currency));
+    if (filter.tagId) {
+      sql.push(
+        Prisma.sql`EXISTS (SELECT 1 FROM "TagAssignment" t WHERE t."expenseId" = "Expense"."id" AND t."tagId" = ANY(${[...filter.tagId]}::text[]))`,
+      );
+    }
+    if (filter.dateFrom) sql.push(dateBound('date', '>=', dateOnlyToDbDate(filter.dateFrom)));
+    if (filter.dateTo) sql.push(dateBound('date', '<=', dateOnlyToDbDate(filter.dateTo)));
+    if (filter.recurringOnly) sql.push(Prisma.sql`"recurringExpenseId" IS NOT NULL`);
+    return sql;
+  }
+
+  /** A list with a `q`: Postgres resolves it through `SearchEntry` and pages and counts the match. */
+  private async searchList(filter: ExpenseFilter & { q: string }): Promise<Paginated<ExpenseView>> {
+    const { skip, take } = pageWindow(filter.page, filter.pageSize);
+    const { ids, total } = await searchPage(this.host.db, 'EXPENSE', filter.q, {
+      table: 'Expense',
+      conditions: this.conditions(filter),
+      order: orderBy(filter.sort.field, filter.sort.direction),
+      skip,
+      take,
+    });
+    const rows = await this.host.db.expense.findMany({
+      where: { id: { in: ids } },
+      include: VIEW_INCLUDE,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return paginated(
+      ids.flatMap((id) => (byId.has(id) ? [toView(byId.get(id) as ExpenseViewRow)] : [])),
+      total,
+      filter,
+    );
+  }
+
   async list(filter: ExpenseFilter): Promise<Paginated<ExpenseView>> {
+    if (hasSearchText(filter.q)) return this.searchList({ ...filter, q: filter.q });
     const and: Prisma.ExpenseWhereInput[] = [];
     if (filter.status) and.push({ status: { in: [...filter.status] } });
     if (filter.categoryId) {
@@ -183,19 +229,6 @@ export class PrismaExpenseRepository implements ExpenseRepository {
     if (filter.dateFrom) and.push({ date: { gte: dateOnlyToDbDate(filter.dateFrom) } });
     if (filter.dateTo) and.push({ date: { lte: dateOnlyToDbDate(filter.dateTo) } });
     if (filter.recurringOnly) and.push({ recurringExpenseId: { not: null } });
-    if (filter.q) {
-      const q = filter.q;
-      and.push({
-        OR: [
-          { code: contains(q) },
-          { description: contains(q) },
-          { vendor: contains(q) },
-          { category: { name: contains(q) } },
-          { account: { name: contains(q) } },
-          { project: { name: contains(q) } },
-        ],
-      });
-    }
     const where: Prisma.ExpenseWhereInput = and.length > 0 ? { AND: and } : {};
     const { skip, take } = pageWindow(filter.page, filter.pageSize);
     const rows = await this.host.db.expense.findMany({

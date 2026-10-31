@@ -6,7 +6,10 @@ import type { FileAccessRegistry } from '../../../src/modules/platform/applicati
 import { FILE_ACCESS_REGISTRY } from '../../../src/modules/platform/application/ports/file-access.port';
 import { TAGGABLE_TARGET_REGISTRY } from '../../../src/modules/settings/application/ports/taggable-target.port';
 import type { TaggableTargetRegistry } from '../../../src/modules/settings/application/taggable-target.registry';
-import { GENERATION_ACTOR, GenerateRecurringExpenses } from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
+import {
+  GENERATION_ACTOR,
+  GenerateRecurringExpenses,
+} from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
 import { ExpensesModule } from '../../../src/modules/finance/expenses.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';

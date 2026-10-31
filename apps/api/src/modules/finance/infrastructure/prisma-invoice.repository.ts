@@ -10,7 +10,7 @@ import {
   decimalToString,
   stringToDecimal,
 } from '../../../shared/infrastructure/prisma/decimal-mapper';
-import type { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
+import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { archivedWhere } from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import { isUniqueViolation } from '../../../shared/infrastructure/prisma/unique-violation';
@@ -28,6 +28,7 @@ import type {
   OpenInvoiceView,
 } from '../application/ports/invoice.repository.port';
 import { INVOICE_ERRORS } from '../domain/errors';
+import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
 
 const NUMBER_INDEX = 'invoice_number_active';
 /** An invoice that still binds an installment: not voided and not archived (drafts count). */
@@ -293,8 +294,6 @@ function data(record: InvoiceRecord) {
   };
 }
 
-const contains = (value: string) => ({ contains: value, mode: 'insensitive' as const });
-
 /** Direct (column) sorts of the table; `balanceUsd` is computed and `daysOverdue` follows the due date. */
 const COLUMN_SORTS: Readonly<Record<string, string>> = {
   code: 'code',
@@ -461,19 +460,68 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
     if (filter.tagId) and.push({ tags: { some: { tagId: { in: [...filter.tagId] } } } });
     if (filter.dateFrom) and.push({ issueDate: { gte: dateOnlyToDbDate(filter.dateFrom) } });
     if (filter.dateTo) and.push({ issueDate: { lte: dateOnlyToDbDate(filter.dateTo) } });
-    if (filter.q) {
-      and.push({
-        OR: [
-          { code: contains(filter.q) },
-          { invoiceNumber: contains(filter.q) },
-          { client: { tradeName: contains(filter.q) } },
-        ],
-      });
-    }
     return { ...archivedWhere(filter.archived), ...(and.length > 0 ? { AND: and } : {}) };
   }
 
+  /** The filters of `where` as SQL conditions, for the search path (the page is selected by Postgres). */
+  private conditions(filter: InvoiceFilter): Prisma.Sql[] {
+    const sql: Prisma.Sql[] = [];
+    if (filter.archived === 'exclude') sql.push(Prisma.sql`"deletedAt" IS NULL`);
+    if (filter.archived === 'only') sql.push(Prisma.sql`"deletedAt" IS NOT NULL`);
+    if (filter.status) sql.push(anyOf('status', filter.status));
+    if (filter.clientId) sql.push(anyOf('clientId', filter.clientId));
+    if (filter.currency) sql.push(anyOf('currency', filter.currency));
+    if (filter.projectId) {
+      sql.push(
+        Prisma.sql`EXISTS (SELECT 1 FROM "InvoiceLine" l WHERE l."invoiceId" = "Invoice"."id" AND l."projectId" = ANY(${[...filter.projectId]}::text[]))`,
+      );
+    }
+    if (filter.tagId) {
+      sql.push(
+        Prisma.sql`EXISTS (SELECT 1 FROM "TagAssignment" t WHERE t."invoiceId" = "Invoice"."id" AND t."tagId" = ANY(${[...filter.tagId]}::text[]))`,
+      );
+    }
+    if (filter.dateFrom) sql.push(dateBound('issueDate', '>=', dateOnlyToDbDate(filter.dateFrom)));
+    if (filter.dateTo) sql.push(dateBound('issueDate', '<=', dateOnlyToDbDate(filter.dateTo)));
+    return sql;
+  }
+
+  /** `ORDER BY` of the search path, the same order the Prisma path gives. */
+  private searchOrder(sort: InvoiceFilter['sort']): Prisma.Sql {
+    if (sort.field === 'balanceUsd') {
+      const dir = sort.direction === 'asc' ? Prisma.raw('ASC') : Prisma.raw('DESC');
+      return Prisma.sql`round("balance" / "usdRate", 2) ${dir}, "id" ASC`;
+    }
+    // Days overdue grow as the due date goes back, so the order of the days is the reverse of the due date.
+    if (sort.field === 'daysOverdue') {
+      return orderBy('dueDate', sort.direction === 'asc' ? 'desc' : 'asc');
+    }
+    return orderBy(COLUMN_SORTS[sort.field] ?? 'issueDate', sort.direction);
+  }
+
+  /** A list with a `q`: Postgres resolves it through `SearchEntry` and pages and counts the match. */
+  private async searchList(
+    filter: InvoiceFilter & { q: string },
+  ): Promise<Paginated<InvoiceListRowView>> {
+    const { skip, take } = pageWindow(filter.page, filter.pageSize);
+    const { ids, total } = await searchPage(this.host.db, 'INVOICE', filter.q, {
+      table: 'Invoice',
+      conditions: this.conditions(filter),
+      order: this.searchOrder(filter.sort),
+      skip,
+      take,
+    });
+    const rows = await this.host.db.invoice.findMany({
+      where: { id: { in: ids }, ...archivedWhere('include') },
+      include: ROW_INCLUDE,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const page = ids.flatMap((id) => (byId.has(id) ? [toListRow(byId.get(id) as ListRow)] : []));
+    return paginated(page, total, filter);
+  }
+
   async list(filter: InvoiceFilter): Promise<Paginated<InvoiceListRowView>> {
+    if (hasSearchText(filter.q)) return this.searchList({ ...filter, q: filter.q });
     const where = this.where(filter);
     const { skip, take } = pageWindow(filter.page, filter.pageSize);
     const direction = filter.sort.direction;

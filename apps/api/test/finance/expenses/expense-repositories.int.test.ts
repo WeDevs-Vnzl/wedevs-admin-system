@@ -3,7 +3,7 @@ import type { ExpenseRecord } from '../../../src/modules/finance/application/por
 import type { RecurringExpenseRecord } from '../../../src/modules/finance/application/ports/expense-recurring.repository.port';
 import { PrismaService } from '../../../src/shared/infrastructure/prisma/prisma.service';
 import { createTestPrisma, truncateBusinessTables } from '../../support/db';
-import { seedAccount, seedClient, seedProject } from '../read-models/world';
+import { seedAccount, seedClient, seedProject, seedSearchEntry } from '../read-models/world';
 import { buildExpenseWorld, type ExpenseWorld } from './int-world';
 
 const admin = createTestPrisma();
@@ -216,11 +216,39 @@ describe('PrismaExpenseRepository', () => {
       expect(await codes({ categoryId: [childId] })).toEqual(['GAS-0001', 'GAS-0003']);
     });
 
-    it('searches code, description, vendor and labels without case', async () => {
+    it('resolves q through SearchEntry: code, description and vendor, accent- and case-folded, with filters and paging', async () => {
+      const entry = (id: string, code: string, title: string, vendor: string | null) =>
+        seedSearchEntry(admin, {
+          entityType: 'EXPENSE',
+          entityId: id,
+          code,
+          title,
+          subtitle: vendor,
+          body: vendor,
+        });
+      await entry('exp_a', 'GAS-0001', 'Hosting Vercel', 'Vercel');
+      await entry('exp_b', 'GAS-0002', 'Dominio', 'Registrador José');
+      await entry('exp_c', 'GAS-0003', 'Anulado', 'Vercel');
       expect(await codes({ q: 'gas-0002' })).toEqual(['GAS-0002']);
       expect(await codes({ q: 'DOMINIO' })).toEqual(['GAS-0002']);
+      expect(await codes({ q: 'jose' })).toEqual(['GAS-0002']);
       expect(await codes({ q: 'vercel' })).toEqual(['GAS-0001', 'GAS-0003']);
-      expect(await codes({ q: 'acc_usd' })).toEqual(['GAS-0002']);
+      expect(await codes({ q: 'vercel', status: ['ANULADO'] })).toEqual(['GAS-0003']);
+      expect(await codes({ q: 'vercel', categoryId: [parentId] })).toEqual([
+        'GAS-0001',
+        'GAS-0003',
+      ]);
+      expect(await codes({ q: 'vercel', categoryId: [childId], currency: ['VES'] })).toEqual([]);
+      const tag = await admin.tag.findFirstOrThrow();
+      expect(await codes({ q: 'o', tagId: [tag.id] })).toEqual(['GAS-0002']);
+      const second = await world.expenses.list({ ...base, q: 'vercel', page: 2 });
+      expect(second).toMatchObject({ total: 2, page: 2, items: [] });
+      const sorted = await world.expenses.list({
+        ...base,
+        q: 'vercel',
+        sort: { field: 'amountUsd', direction: 'desc' },
+      });
+      expect(sorted.items.map((row) => row.code)).toEqual(['GAS-0001', 'GAS-0003']);
     });
 
     it('sorts, pages and counts', async () => {

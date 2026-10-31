@@ -9,7 +9,7 @@ import {
   decimalToString,
   stringToDecimal,
 } from '../../../shared/infrastructure/prisma/decimal-mapper';
-import type { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
+import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import { isUniqueViolation } from '../../../shared/infrastructure/prisma/unique-violation';
 import type {
@@ -25,6 +25,7 @@ import type {
   PaymentRepository,
   PaymentView,
 } from '../application/ports/payment.repository.port';
+import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
 
 /** Key of a receipt file that is already another payment's (`receiptFileId` is unique). */
 const RECEIPT_UNAVAILABLE = 'payments.validation.receiptUnavailable';
@@ -196,8 +197,6 @@ function data(record: PaymentRecord) {
   };
 }
 
-const contains = (value: string) => ({ contains: value, mode: 'insensitive' as const });
-
 /**
  * `Payment` and `PaymentAllocation` rows through the current transaction. The list and detail labels join
  * `Client` (commercial), `Account`, `PaymentMethod` (settings), the receipt's `File` metadata (platform, seven
@@ -309,21 +308,59 @@ export class PrismaPaymentRepository implements PaymentRepository {
     if (filter.dateFrom) and.push({ date: { gte: dateOnlyToDbDate(filter.dateFrom) } });
     if (filter.dateTo) and.push({ date: { lte: dateOnlyToDbDate(filter.dateTo) } });
     if (filter.hasUnallocated) and.push({ unallocated: { gt: 0 } });
-    if (filter.q) {
-      const q = filter.q;
-      and.push({
-        OR: [
-          { code: contains(q) },
-          { reference: contains(q) },
-          { client: { tradeName: contains(q) } },
-          { account: { name: contains(q) } },
-        ],
-      });
-    }
     return and.length > 0 ? { AND: and } : {};
   }
 
+  /** The filters of `where` as SQL conditions, for the search path (the page is selected by Postgres). */
+  private conditions(filter: PaymentFilter): Prisma.Sql[] {
+    const sql: Prisma.Sql[] = [Prisma.sql`"deletedAt" IS NULL`];
+    if (filter.status) sql.push(anyOf('status', filter.status));
+    if (filter.clientId) sql.push(anyOf('clientId', filter.clientId));
+    if (filter.accountId) sql.push(anyOf('accountId', filter.accountId));
+    if (filter.methodId) sql.push(anyOf('methodId', filter.methodId));
+    if (filter.currency) sql.push(anyOf('currency', filter.currency));
+    if (filter.tagId) {
+      sql.push(
+        Prisma.sql`EXISTS (SELECT 1 FROM "TagAssignment" t WHERE t."paymentId" = "Payment"."id" AND t."tagId" = ANY(${[...filter.tagId]}::text[]))`,
+      );
+    }
+    if (filter.dateFrom) sql.push(dateBound('date', '>=', dateOnlyToDbDate(filter.dateFrom)));
+    if (filter.dateTo) sql.push(dateBound('date', '<=', dateOnlyToDbDate(filter.dateTo)));
+    if (filter.hasUnallocated) sql.push(Prisma.sql`"unallocated" > 0`);
+    return sql;
+  }
+
+  /** A list with a `q`: Postgres resolves it through `SearchEntry` and pages and counts the match. */
+  private async searchList(
+    filter: PaymentFilter & { q: string },
+  ): Promise<Paginated<PaymentListRowView>> {
+    const { skip, take } = pageWindow(filter.page, filter.pageSize);
+    const { sort } = filter;
+    const order =
+      sort.field === 'allocated'
+        ? Prisma.sql`("allocatable" - "unallocated") ${Prisma.raw(sort.direction === 'asc' ? 'ASC' : 'DESC')}, "id" ASC`
+        : orderBy(sort.field, sort.direction);
+    const { ids, total } = await searchPage(this.host.db, 'PAYMENT', filter.q, {
+      table: 'Payment',
+      conditions: this.conditions(filter),
+      order,
+      skip,
+      take,
+    });
+    const rows = await this.host.db.payment.findMany({
+      where: { id: { in: ids } },
+      include: ROW_INCLUDE,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const page = ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [toListRow(row)] : [];
+    });
+    return paginated(page, total, filter);
+  }
+
   async list(filter: PaymentFilter): Promise<Paginated<PaymentListRowView>> {
+    if (hasSearchText(filter.q)) return this.searchList({ ...filter, q: filter.q });
     const where = this.where(filter);
     const { skip, take } = pageWindow(filter.page, filter.pageSize);
     const total = await this.host.db.payment.count({ where });
