@@ -16861,7 +16861,12 @@
             "required": false,
             "schema": {
               "default": 25,
-              "type": "number"
+              "enum": [
+                25,
+                50,
+                100
+              ],
+              "type": "integer"
             }
           },
           {
@@ -16869,6 +16874,16 @@
             "name": "sort",
             "required": false,
             "schema": {
+              "enum": [
+                "name:asc",
+                "name:desc",
+                "category:asc",
+                "category:desc",
+                "documentCount:asc",
+                "documentCount:desc",
+                "active:asc",
+                "active:desc"
+              ],
               "type": "string"
             }
           },
@@ -23297,6 +23312,30 @@
                 },
                 {
                   "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "withoutBillingPlan",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "enum": [
+                      "true"
+                    ],
                     "type": "string"
                   },
                   "type": "array"

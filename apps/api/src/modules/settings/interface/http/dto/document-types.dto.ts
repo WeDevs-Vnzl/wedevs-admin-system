@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { DOCUMENT_FORMAT_VALUES } from '../../../../../shared/domain/enums';
 import { parseSort, type SortSpec } from '../../../../../shared/domain/list-query';
-import { DEFAULT_PAGE_SIZE } from '../../../../../shared/domain/pagination';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_VALUES } from '../../../../../shared/domain/pagination';
 import { idSchema, VALIDATION_MESSAGES } from '../../../../../shared/interface/common.schemas';
 import {
   DOCUMENT_TYPE_SORT_FIELDS,
@@ -96,10 +96,14 @@ export const documentTypeListQuerySchema = z
     pageSize: z.coerce
       .number()
       .pipe(z.union([z.literal(25), z.literal(50), z.literal(100)]))
+      .meta({ type: 'integer', enum: [...PAGE_SIZE_VALUES] })
       .default(DEFAULT_PAGE_SIZE),
     sort: z
       .string()
       .optional()
+      .meta({
+        enum: DOCUMENT_TYPE_SORT_FIELDS.flatMap((field) => [`${field}:asc`, `${field}:desc`]),
+      })
       .transform((value, ctx): SortSpec => {
         if (value === undefined || value === '') return DEFAULT_SORT;
         const parsed = parseSort(value);

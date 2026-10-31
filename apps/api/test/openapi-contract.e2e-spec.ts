@@ -300,31 +300,23 @@ describe('finance contract: money is a decimal string, never a JSON number (less
     expect(lists.filter(({ where }) => FINANCE_PATH.test(where.split(' ')[1] ?? '')).length).toBe(
       7,
     );
-    const weak = lists
-      .filter(({ where }) => !KNOWN_UNMIGRATED_LISTS.includes(where))
-      .flatMap(({ where, op }) => {
-        const params = op.parameters as { name: string; schema: JsonSchema }[];
-        const pageSize = params.find((p) => p.name === 'pageSize')?.schema;
-        const sort = params.find((p) => p.name === 'sort')?.schema;
-        return [
-          ...(pageSize?.type === 'integer' &&
-          JSON.stringify(pageSize.enum) === JSON.stringify([25, 50, 100])
-            ? []
-            : [`${where}: pageSize is not the 25|50|100 integer enum`]),
-          ...(sort && Array.isArray(sort.enum) && sort.enum.length > 0
-            ? []
-            : [`${where}: sort is not the whitelisted enum`]),
-        ];
-      });
+    const weak = lists.flatMap(({ where, op }) => {
+      const params = op.parameters as { name: string; schema: JsonSchema }[];
+      const pageSize = params.find((p) => p.name === 'pageSize')?.schema;
+      const sort = params.find((p) => p.name === 'sort')?.schema;
+      return [
+        ...(pageSize?.type === 'integer' &&
+        JSON.stringify(pageSize.enum) === JSON.stringify([25, 50, 100])
+          ? []
+          : [`${where}: pageSize is not the 25|50|100 integer enum`]),
+        ...(sort && Array.isArray(sort.enum) && sort.enum.length > 0
+          ? []
+          : [`${where}: sort is not the whitelisted enum`]),
+      ];
+    });
     expect(weak).toEqual([]);
   });
 });
-
-/**
- * Lists that build their own query schema instead of `createListQueryDto`, so the shared m3 fix does not
- * reach them (`settings` document-types DTO, not owned by the finance wave).
- */
-const KNOWN_UNMIGRATED_LISTS: readonly string[] = ['GET /api/v1/document-types'];
 
 describe('OpenAPI document reflects the route metadata (committed packages/api-contract/openapi.json)', () => {
   let routes: ExpectedRoute[];

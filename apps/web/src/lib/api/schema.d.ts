@@ -6789,8 +6789,8 @@ export interface operations {
         parameters: {
             query?: {
                 page?: number;
-                pageSize?: number;
-                sort?: string;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "category:asc" | "category:desc" | "documentCount:asc" | "documentCount:desc" | "active:asc" | "active:desc";
                 q?: string;
                 categoryId?: string | string[];
                 active?: string;
@@ -10780,6 +10780,7 @@ export interface operations {
                 tagId?: string | string[];
                 deliveryFrom?: string | string[];
                 deliveryTo?: string | string[];
+                withoutBillingPlan?: "true" | "true"[];
             };
             header?: never;
             path?: never;
