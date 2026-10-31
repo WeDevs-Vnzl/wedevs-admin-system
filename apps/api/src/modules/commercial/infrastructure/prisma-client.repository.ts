@@ -120,6 +120,13 @@ export class PrismaClientRepository implements ClientRepository {
     return row ? toRecord(row) : null;
   }
 
+  async findByIdForUpdate(id: string): Promise<ClientRecord | null> {
+    const tx = this.host.requireTransaction('ClientRepository.findByIdForUpdate');
+    // Blocks while another transaction holds the row; the read after it sees what that one committed.
+    await tx.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ${id} FOR UPDATE`;
+    return this.findById(id);
+  }
+
   async findTaxIdHolder(
     taxId: string,
     country: string,

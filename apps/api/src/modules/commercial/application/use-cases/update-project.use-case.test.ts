@@ -38,6 +38,27 @@ const updates = (w: ReturnType<typeof world>) =>
   w.activity.entries.filter((e) => e.action === 'UPDATE');
 
 describe('UpdateProject (mock updateProject)', () => {
+  it('sanitizes the description even when the DTO is bypassed (B2)', async () => {
+    const w = world();
+    await expect(
+      w.updateProject.execute(
+        actor('OWNER'),
+        input({
+          description: {
+            type: 'doc',
+            content: [
+              {
+                type: 'text',
+                text: 'x',
+                marks: [{ type: 'link', attrs: { href: 'javascript:1' } }],
+              },
+            ],
+          } as never,
+        }),
+      ),
+    ).rejects.toMatchObject({ fieldErrors: { description: ['validation.invalidFormat'] } });
+  });
+
   it('updates the fields, logs an UPDATE diff and keeps long text as "changed"', async () => {
     const w = world();
     const detail = await w.updateProject.execute(

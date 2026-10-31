@@ -68,9 +68,15 @@ export class ProjectSync {
     });
   }
 
-  /** Sets `ClientMetrics.projectCount` of each client to its live project count. */
+  /**
+   * Sets `ClientMetrics.projectCount` of each client to its live project count. The client rows are
+   * locked first (ascending id), so two recounts of one client run one after the other and the second
+   * counts what the first committed; a use case that already locked them (project → clients) waits for
+   * nothing here.
+   */
   async recount(clientIds: readonly string[]): Promise<void> {
-    for (const clientId of new Set(clientIds)) {
+    await this.projects.lockClients(clientIds);
+    for (const clientId of [...new Set(clientIds)].sort()) {
       await this.clientMetrics.setProjectCount(
         clientId,
         await this.projects.countLiveProjectsOfClient(clientId),

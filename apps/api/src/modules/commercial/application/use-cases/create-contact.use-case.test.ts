@@ -91,6 +91,13 @@ describe('CreateContact', () => {
     expect(w.contacts.rows).toHaveLength(1);
   });
 
+  it('locks the client row before it attaches the contact (M1)', async () => {
+    const w = createWorld();
+    const { client } = w.seedClient();
+    await w.createContact.execute(w.owner, { ...contactInput(), clientId: client.id });
+    expect(w.clients.lockedIds).toEqual([client.id]);
+  });
+
   it('answers NOT_FOUND on an unknown or archived client (live client required)', async () => {
     const w = createWorld();
     const archived = w.seedClient({ deletedAt: new Date() }).client;

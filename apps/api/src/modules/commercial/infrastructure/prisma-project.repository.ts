@@ -61,18 +61,20 @@ const dbDate = (value: string | null): Date | null => (value ? dateOnlyToDbDate(
 const json = (doc: RichTextDoc | null): Prisma.InputJsonValue | typeof Prisma.JsonNull =>
   doc ? (doc as unknown as Prisma.InputJsonValue) : Prisma.JsonNull;
 
-function scalars(record: ProjectRecord) {
+/** The editable columns; `status` is written on insert and by `updateStatus` only. */
+function fieldScalars(record: ProjectRecord) {
   return {
     name: record.name,
     summary: record.summary,
     description: json(record.description),
     descriptionText: record.descriptionText,
-    status: record.status,
     startDate: dbDate(record.startDate),
     targetEndDate: dbDate(record.targetEndDate),
     endDate: dbDate(record.endDate),
   };
 }
+
+const scalars = (record: ProjectRecord) => ({ ...fieldScalars(record), status: record.status });
 
 /** `ORDER BY` expressions of the sortable columns: trusted fragments, never user text. */
 const SORT_SQL: Readonly<Record<string, { sql: Prisma.Sql; nullable?: boolean }>> = {
@@ -157,6 +159,13 @@ export class PrismaProjectRepository implements ProjectRepository {
     return row ? toRecord(row) : null;
   }
 
+  async findByIdForUpdate(id: string): Promise<ProjectRecord | null> {
+    const tx = this.host.requireTransaction('ProjectRepository.findByIdForUpdate');
+    // Blocks while another transaction holds the row; the read after it sees what that one committed.
+    await tx.$queryRaw`SELECT "id" FROM "Project" WHERE "id" = ${id} FOR UPDATE`;
+    return this.findById(id);
+  }
+
   async insert(record: ProjectRecord, actorId: string): Promise<void> {
     const tx = this.host.requireTransaction('ProjectRepository.insert');
     await tx.project.create({
@@ -192,7 +201,23 @@ export class PrismaProjectRepository implements ProjectRepository {
     const tx = this.host.requireTransaction('ProjectRepository.updateFields');
     await tx.project.update({
       where: { id: record.id },
-      data: { ...scalars(record), updatedById: actorId },
+      data: { ...fieldScalars(record), updatedById: actorId },
+    });
+  }
+
+  async updateStatus(
+    record: Pick<ProjectRecord, 'id' | 'status' | 'startDate' | 'endDate'>,
+    actorId: string,
+  ): Promise<void> {
+    const tx = this.host.requireTransaction('ProjectRepository.updateStatus');
+    await tx.project.update({
+      where: { id: record.id },
+      data: {
+        status: record.status,
+        startDate: dbDate(record.startDate),
+        endDate: dbDate(record.endDate),
+        updatedById: actorId,
+      },
     });
   }
 
@@ -305,6 +330,16 @@ export class PrismaProjectRepository implements ProjectRepository {
         },
       ]),
     );
+  }
+
+  async lockClients(ids: readonly string[]): Promise<void> {
+    const tx = this.host.requireTransaction('ProjectRepository.lockClients');
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return;
+    // ORDER BY runs before the row locks (LockRows sits above Sort), so the locks are taken in id order;
+    // COLLATE "C" is the byte order every caller of this method agrees on.
+    await tx.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ANY(${unique}::text[])
+      ORDER BY "id" COLLATE "C" FOR UPDATE`;
   }
 
   async liveClientIds(ids: readonly string[]): Promise<string[]> {

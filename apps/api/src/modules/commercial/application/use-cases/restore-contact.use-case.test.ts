@@ -20,6 +20,14 @@ describe('RestoreContact', () => {
     expect(w.search.get('CONTACT', nth(contacts, 0).id)).toMatchObject({ archived: false });
   });
 
+  it('locks the client row before it restores the contact under it (M1)', async () => {
+    const w = createWorld();
+    const { client, contacts } = w.seedClient({}, 1);
+    w.contacts.seed({ ...nth(contacts, 0), deletedAt: new Date() });
+    await w.restoreContact.execute(w.owner, { id: nth(contacts, 0).id });
+    expect(w.clients.lockedIds).toEqual([client.id]);
+  });
+
   it('answers CONFLICT trash.errors.clientArchived pointing at the client when the client is still archived', async () => {
     const w = createWorld();
     const { client, contacts } = w.seedClient(

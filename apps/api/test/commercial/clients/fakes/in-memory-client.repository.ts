@@ -60,6 +60,15 @@ export class InMemoryClientRepository implements ClientRepository, TransactionPa
     return this.source.get(id) ?? null;
   }
 
+  /** Ids passed to `findByIdForUpdate`, in call order (the fake has no real locks). */
+  readonly lockedIds: string[] = [];
+
+  async findByIdForUpdate(id: string): Promise<ClientRecord | null> {
+    this.uow.assertActive('ClientRepository.findByIdForUpdate');
+    this.lockedIds.push(id);
+    return this.findById(id);
+  }
+
   async findTaxIdHolder(
     taxId: string,
     country: string,

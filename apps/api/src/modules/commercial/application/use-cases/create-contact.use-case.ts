@@ -49,7 +49,8 @@ export class CreateContact {
     const { values, tagIds } = normalizeContact(input);
 
     return this.uow.run(async () => {
-      const client = await this.clients.findById(input.clientId);
+      // Locked: an archive of the client in flight finishes first, and then this is NOT_FOUND.
+      const client = await this.clients.findByIdForUpdate(input.clientId);
       if (!client || client.deletedAt) throw new NotFoundError();
 
       const now = this.clock.now();

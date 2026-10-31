@@ -76,8 +76,8 @@ export class SetProjectStatus {
         throw invalid('confirm', PROJECT_KEYS.required);
       }
 
-      await this.projects.updateFields(
-        { ...before, status: input.status, startDate, endDate },
+      await this.projects.updateStatus(
+        { id: before.id, status: input.status, startDate, endDate },
         actor.userId,
       );
       const cancelled =

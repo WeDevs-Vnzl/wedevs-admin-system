@@ -81,6 +81,25 @@ describe('PrismaClientRepository (int)', () => {
     expect(restored).toMatchObject({ deletedAt: null, deletedById: null });
   });
 
+  it('findByIdForUpdate needs a unit of work, holds the row until it ends and still reads archived rows', async () => {
+    const record = await insert();
+    await expect(clients.findByIdForUpdate(record.id)).rejects.toThrow(/unit of work/);
+    const tryLock = () =>
+      admin.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ${record.id} FOR UPDATE NOWAIT`;
+    await uow.run(async () => {
+      expect(await clients.findByIdForUpdate(record.id)).toMatchObject({ id: record.id });
+      await expect(tryLock()).rejects.toThrow();
+    });
+    await expect(tryLock()).resolves.toHaveLength(1);
+    expect(await uow.run(() => clients.findByIdForUpdate('unknown'))).toBeNull();
+
+    const user = await admin.user.create({
+      data: { clerkId: 'u2', email: 'u2@example.test', name: 'U2' },
+    });
+    await uow.run(() => clients.archive(record.id, new Date('2026-02-01T10:00:00.000Z'), user.id));
+    expect((await uow.run(() => clients.findByIdForUpdate(record.id)))?.deletedAt).not.toBeNull();
+  });
+
   describe('tax id uniqueness', () => {
     it('finds the live holder comparing the normalized key within the country', async () => {
       const kairos = await insert({ taxId: 'J-30123456-7', country: 'VE' });

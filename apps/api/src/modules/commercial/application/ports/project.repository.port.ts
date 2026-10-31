@@ -42,10 +42,21 @@ export interface ProjectMetricsRow {
  */
 export interface ProjectRepository {
   findById(id: string): Promise<ProjectRecord | null>;
+  /**
+   * `findById` after taking the row lock (`FOR UPDATE`), held until the unit of work ends: every mutation
+   * of a project loads it this way, so two of them on one project run one after the other and the second
+   * reads what the first committed. Needs the caller's unit of work.
+   */
+  findByIdForUpdate(id: string): Promise<ProjectRecord | null>;
   /** Inserts the project with its clients, stack and links. */
   insert(record: ProjectRecord, actorId: string): Promise<void>;
-  /** Writes the scalar columns (name…endDate, status). */
+  /** Writes the editable scalar columns (name…endDate). Never `status`: only `updateStatus` moves it. */
   updateFields(record: ProjectRecord, actorId: string): Promise<void>;
+  /** Writes `status` with the dates a status change may set (HU-08); the caller checked the transition. */
+  updateStatus(
+    record: Pick<ProjectRecord, 'id' | 'status' | 'startDate' | 'endDate'>,
+    actorId: string,
+  ): Promise<void>;
   /** Bumps `updatedAt` after a change of clients, stack or links. */
   touch(id: string, actorId: string): Promise<void>;
   /** Makes `clients` the exact client set: removes, re-roles and adds. */
@@ -60,6 +71,14 @@ export interface ProjectRepository {
   /** `ProjectMetrics` rows by project id; absent rows are absent from the map. */
   metricsFor(ids: readonly string[]): Promise<Map<string, ProjectMetricsRow>>;
 
+  /**
+   * Locks the `Client` rows (`FOR UPDATE`, ascending id) until the unit of work ends. Taken before a
+   * project is attached to a client and before `projectCount` is recounted: an archive of the client and
+   * two recounts of one client wait for each other instead of interleaving. Archived and unknown ids
+   * are fine (nothing to lock). Lock order of the commercial context: project rows (ascending id) →
+   * client rows (ascending id) → anything else; never a project after a client. Needs a unit of work.
+   */
+  lockClients(ids: readonly string[]): Promise<void>;
   /** The ids among `ids` that are live clients (exist and are not archived). */
   liveClientIds(ids: readonly string[]): Promise<string[]>;
   /** Display refs of clients, archived ones included; unknown ids are absent. */

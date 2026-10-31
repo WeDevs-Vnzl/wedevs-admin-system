@@ -53,9 +53,15 @@ export class ArchiveClients {
     assertCan(this.authorization, actor, 'delete', 'client');
 
     return this.uow.run(async () => {
+      // Locked in ascending id order (two overlapping bulks cannot wait on each other), and read after
+      // the lock: a second archive of the same client sees the first one's `deletedAt` and is NOT_FOUND
+      // instead of overwriting it and stranding the contacts the first one archived with it.
+      const ids = [...new Set(input.ids)];
+      const locked = new Map<string, ClientRecord | null>();
+      for (const id of [...ids].sort()) locked.set(id, await this.clients.findByIdForUpdate(id));
       const records: ClientRecord[] = [];
-      for (const id of new Set(input.ids)) {
-        const record = await this.clients.findById(id);
+      for (const id of ids) {
+        const record = locked.get(id);
         if (!record || record.deletedAt) throw new NotFoundError();
         records.push(record);
       }

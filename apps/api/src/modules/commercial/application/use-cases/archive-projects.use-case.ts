@@ -7,7 +7,7 @@ import type { ClockPort } from '../../../../shared/application/ports/clock.port'
 import type { SearchIndexPort } from '../../../../shared/application/ports/search-index.port';
 import type { UnitOfWorkPort } from '../../../../shared/application/ports/unit-of-work.port';
 import { IntegrityLockedError } from '../../../../shared/domain/domain-error';
-import { PROJECT_KEYS, type ArchivedProjectView } from '../../domain/project';
+import { PROJECT_KEYS, type ArchivedProjectView, type ProjectRecord } from '../../domain/project';
 import type { ProjectBillingPort } from '../ports/project-billing.port';
 import type { ProjectRepository } from '../ports/project.repository.port';
 import { loadLiveProject, reloadProject } from './project-references';
@@ -42,8 +42,12 @@ export class ArchiveProjects {
     const ids = [...new Set(input.ids)];
 
     return this.uow.run(async () => {
-      const records = [];
-      for (const id of ids) records.push(await loadLiveProject(this.projects, id));
+      // Locked in ascending id order, so two bulk archives that overlap cannot wait on each other.
+      const locked = new Map<string, ProjectRecord>();
+      for (const id of [...ids].sort()) locked.set(id, await loadLiveProject(this.projects, id));
+      const records = ids.flatMap((id) => locked.get(id) ?? []);
+      // Then the clients of all of them in one ascending batch (lock order: projects → clients).
+      await this.projects.lockClients(records.flatMap((r) => r.clients.map((l) => l.clientId)));
       if (!input.confirm) {
         for (const record of records) {
           if (await this.billing.hasActiveBilling(record.id)) {

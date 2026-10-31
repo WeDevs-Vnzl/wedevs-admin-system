@@ -172,11 +172,38 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
       name: 'Renombrado',
       description: null,
       startDate: null,
-      status: 'PAUSADO',
+      // `updateFields` never writes the status (B3): a stale PATCH cannot undo a status change.
+      status: 'PROPUESTA',
     });
     expect((await admin.project.findUnique({ where: { id: 'int_pry_1' } }))?.updatedById).toBe(
       'usr_other',
     );
+  });
+
+  it('updateStatus writes the status and its dates and nothing else', async () => {
+    await uow.run(() => repository.insert(record(1), ACTOR));
+    await uow.run(() =>
+      repository.updateStatus(
+        { id: 'int_pry_1', status: 'EN_CURSO', startDate: '2026-03-01', endDate: null },
+        'usr_other',
+      ),
+    );
+    expect(await repository.findById('int_pry_1')).toMatchObject({
+      name: 'Proyecto 1',
+      status: 'EN_CURSO',
+      startDate: '2026-03-01',
+      endDate: null,
+    });
+  });
+
+  it('findByIdForUpdate needs a unit of work and answers like findById', async () => {
+    await uow.run(() => repository.insert(record(1), ACTOR));
+    await expect(repository.findByIdForUpdate('int_pry_1')).rejects.toThrow(/unit of work/);
+    expect(await uow.run(() => repository.findByIdForUpdate('int_pry_1'))).toMatchObject({
+      id: 'int_pry_1',
+      status: 'PROPUESTA',
+    });
+    expect(await uow.run(() => repository.findByIdForUpdate('unknown'))).toBeNull();
   });
 
   it('replaces the clients: keeps the link instant of the ones kept, re-roles, removes and adds', async () => {
@@ -287,6 +314,18 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
     await uow.run(() => repository.setArchived(['int_pry_1'], T('2026-03-02Z'), ACTOR));
     await uow.run(() => repository.detachTechnologyFromArchived(tech.id));
     await expect(admin.technology.delete({ where: { id: tech.id } })).resolves.toBeDefined();
+  });
+
+  it('lockClients needs a unit of work and holds the client rows until it ends', async () => {
+    await expect(repository.lockClients([kairos.id])).rejects.toThrow(/unit of work/);
+    const tryLock = () =>
+      admin.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ${kairos.id} FOR UPDATE NOWAIT`;
+    await uow.run(async () => {
+      await repository.lockClients([tornillo.id, kairos.id, kairos.id, 'unknown']);
+      await expect(tryLock()).rejects.toThrow();
+    });
+    await expect(tryLock()).resolves.toHaveLength(1);
+    await uow.run(() => repository.lockClients([]));
   });
 
   it('answers live client ids without the archived ones, and refs with them', async () => {
