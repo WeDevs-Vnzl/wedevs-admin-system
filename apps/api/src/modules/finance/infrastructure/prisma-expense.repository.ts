@@ -119,8 +119,7 @@ const contains = (value: string) => ({ contains: value, mode: 'insensitive' as c
 
 /**
  * `Expense` rows through the current transaction. List labels join `ExpenseCategory` (settings), `Account`,
- * `Project` (commercial) and the tag assignments as read-only selects (DT-118 extension, reported at the
- * package close). Expenses are never archived (Q-BE3-4), so no read filters `deletedAt`.
+ * `Project` (commercial) and the tag assignments as read-only selects (DT-118). Expenses are never archived (Q-BE3-4), so no read filters `deletedAt`.
  */
 @Injectable()
 export class PrismaExpenseRepository implements ExpenseRepository {

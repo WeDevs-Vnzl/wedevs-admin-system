@@ -9,7 +9,7 @@ import type {
 /**
  * `AccountPartnersPort` over `commercial`'s exported `FinanceLookups` (a partner id sent by the caller is
  * never trusted, C14) plus a read-only list of the live users for the partner picker. The list is a read of
- * `User` that identity exports no application API for (reported against DT-118).
+ * `User` that identity exports no application API for (DT-118).
  */
 @Injectable()
 export class AccountPartnersAdapter implements AccountPartnersPort {

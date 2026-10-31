@@ -3,6 +3,7 @@ import type { CurrentUser } from '../../../shared/application/current-user';
 import type { EntityRef } from '../../../shared/domain/entity-ref';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import { FinanceLookups } from '../../commercial/application/finance-lookups';
+import { ExpenseCategoryCatalogQuery } from '../../settings/application/expense-category-catalog.query';
 import type { ReserveFileForAttachment } from '../../platform/application/use-cases/reserve-file-for-attachment.use-case';
 import type {
   ExpenseAccountRef,
@@ -12,22 +13,19 @@ import type {
 } from '../application/ports/expense-references.port';
 
 /**
- * What an expense points at. The project goes through commercial's exported `FinanceLookups` (rule (e)). The
- * account is finance's own table. The category is a read-only select of settings' `ExpenseCategory`: settings
- * exports no category query, so this is a new cross-context read reported for DT-118.
+ * What an expense points at. The project goes through commercial's exported `FinanceLookups` and the category
+ * through settings' exported `ExpenseCategoryCatalogQuery` (rule (e)). The account is finance's own table.
  */
 @Injectable()
 export class PrismaExpenseReferences implements ExpenseReferencesPort {
   constructor(
     @Inject(TransactionHost) private readonly host: TransactionHost,
     @Inject(FinanceLookups) private readonly lookups: FinanceLookups,
+    @Inject(ExpenseCategoryCatalogQuery) private readonly categories: ExpenseCategoryCatalogQuery,
   ) {}
 
-  async activeCategory(id: string): Promise<{ id: string } | null> {
-    return this.host.db.expenseCategory.findFirst({
-      where: { id, active: true },
-      select: { id: true },
-    });
+  activeCategory(id: string): Promise<{ id: string } | null> {
+    return this.categories.activeCategory(id);
   }
 
   async activeAccount(id: string): Promise<ExpenseAccountRef | null> {

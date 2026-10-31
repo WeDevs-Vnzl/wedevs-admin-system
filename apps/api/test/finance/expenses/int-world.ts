@@ -7,6 +7,8 @@ import { ExpenseSupport } from '../../../src/modules/finance/application/use-cas
 import { GenerateRecurringExpenses } from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
 import { MarkExpensePaid } from '../../../src/modules/finance/application/use-cases/expenses/mark-expense-paid.use-case';
 import { VoidExpense } from '../../../src/modules/finance/application/use-cases/expenses/void-expense.use-case';
+import { ExpenseCategoryCatalogQuery } from '../../../src/modules/settings/application/expense-category-catalog.query';
+import { PrismaExpenseCategoryRepository } from '../../../src/modules/settings/infrastructure/prisma-expense-category.repository';
 import { PrismaExpenseReferences } from '../../../src/modules/finance/infrastructure/expense-references.adapter';
 import { PrismaExpenseRecurringRepository } from '../../../src/modules/finance/infrastructure/prisma-expense-recurring.repository';
 import { PrismaExpenseRepository } from '../../../src/modules/finance/infrastructure/prisma-expense.repository';
@@ -59,6 +61,7 @@ export function buildExpenseWorld(service: PrismaService, hooks: ExpenseWorldHoo
   const references = new PrismaExpenseReferences(
     host,
     new FinanceLookups(new PrismaFinanceLookups(host)),
+    new ExpenseCategoryCatalogQuery(new PrismaExpenseCategoryRepository(host)),
   );
   const support = new ExpenseSupport(
     expenses,

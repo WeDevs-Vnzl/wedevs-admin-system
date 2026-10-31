@@ -23,6 +23,7 @@ import {
 } from './application/ports/payment-method.repository.port';
 import { SETTING_REPOSITORY, type SettingRepository } from './application/ports/setting.repository';
 import { CurrencyCatalogQuery } from './application/currency-catalog.query';
+import { ExpenseCategoryCatalogQuery } from './application/expense-category-catalog.query';
 import { FiscalSettingsQuery } from './application/fiscal-settings.query';
 import { CreateCurrency } from './application/use-cases/create-currency.use-case';
 import { CreateExpenseCategory } from './application/use-cases/create-expense-category.use-case';
@@ -49,7 +50,7 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
  * tree and the fiscal parameters. Every write runs `can(…, 'settings')` first and logs one `SETTINGS_CHANGE` in its
  * unit of work. The fiscal parameters are stored under the `fiscal` key of the shared `Setting` table through this
  * module's own binding of the existing `SettingRepository` adapter (the company settings module keeps its own).
- * `FiscalSettingsQuery` and `CurrencyCatalogQuery` are exported for BE-3. Exchange rates are BE-3.
+ * `FiscalSettingsQuery`, `CurrencyCatalogQuery` and `ExpenseCategoryCatalogQuery` are exported for BE-3. Exchange rates are BE-3.
  */
 @Module({
   controllers: [
@@ -67,6 +68,12 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
       provide: CurrencyCatalogQuery,
       useFactory: (currencies: CurrencyRepository) => new CurrencyCatalogQuery(currencies),
       inject: [CURRENCY_REPOSITORY],
+    },
+    {
+      provide: ExpenseCategoryCatalogQuery,
+      useFactory: (categories: ExpenseCategoryRepository) =>
+        new ExpenseCategoryCatalogQuery(categories),
+      inject: [EXPENSE_CATEGORY_REPOSITORY],
     },
     {
       provide: FiscalSettingsQuery,
@@ -173,6 +180,6 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
       inject: [AUTHORIZATION, UNIT_OF_WORK, SETTING_REPOSITORY, CURRENCY_REPOSITORY, ACTIVITY_LOG],
     },
   ],
-  exports: [FiscalSettingsQuery, CurrencyCatalogQuery],
+  exports: [FiscalSettingsQuery, CurrencyCatalogQuery, ExpenseCategoryCatalogQuery],
 })
 export class FinanceCatalogsModule {}
