@@ -54,7 +54,7 @@ export class MarkOverdueInvoices {
 
         await this.invoices.update({ ...after, updatedAt: this.support.nowIso() });
         await this.support.project(before, after, locked.paymentIds);
-        await this.support.logOnly(actor, 'SYSTEM_JOB', after, {
+        await this.support.record(actor, 'SYSTEM_JOB', before, after, {
           metadata: { from: before.status, to: after.status },
         });
         return true;

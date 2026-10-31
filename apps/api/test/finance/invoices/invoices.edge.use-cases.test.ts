@@ -386,6 +386,17 @@ describe('restore details', () => {
   });
 });
 
+describe('the overdue step search entry', () => {
+  it('keeps the search entry status in step with the invoice it marks', async () => {
+    const w = createWorld();
+    w.invoices.seed(invoiceRecord({ id: 'inv_a', dueDate: '2026-10-01' }));
+
+    await w.markOverdue.execute(SYSTEM_ACTOR);
+
+    expect(w.search.get('INVOICE', 'inv_a')).toMatchObject({ status: 'VENCIDA' });
+  });
+});
+
 describe('the overdue step skips what is not a candidate at its lock', () => {
   it('leaves archived, draft, already overdue and not-yet-due invoices untouched', async () => {
     const w = createWorld();

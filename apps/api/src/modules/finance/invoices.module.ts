@@ -239,7 +239,7 @@ const AUTHORIZED = [AUTHORIZATION, UNIT_OF_WORK, InvoiceSupport];
       inject: [UNIT_OF_WORK, INVOICE_REPOSITORY, InvoiceSupport, CLOCK],
     },
   ],
-  exports: [RecomputeInvoice, MarkOverdueInvoices],
+  exports: [RecomputeInvoice, MarkOverdueInvoices, InvoiceSupport, INVOICE_REPOSITORY],
 })
 export class InvoicesModule implements OnModuleInit {
   constructor(

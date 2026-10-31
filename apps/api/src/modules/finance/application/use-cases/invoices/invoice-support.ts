@@ -508,6 +508,12 @@ export class InvoiceSupport {
     after: InvoiceRecord,
     detail: { changes?: Record<string, unknown> | null; metadata?: Record<string, unknown> } = {},
   ): Promise<void> {
+    await this.reindex(after);
+    await this.logOnly(actor, action, after, detail, before?.clientId);
+  }
+
+  /** Writes the search entry. Exported for payments: a recompute changes the status it shows. */
+  async reindex(after: InvoiceRecord): Promise<void> {
     const view = await this.invoices.view(after.id);
     await this.search.upsert({
       entityType: 'INVOICE',
@@ -519,7 +525,6 @@ export class InvoiceSupport {
       status: after.status,
       archived: after.archivedAt !== null,
     });
-    await this.logOnly(actor, action, after, detail, before?.clientId);
   }
 
   /** The activity entry alone, for a change that neither feeds a read model nor shows in the search. */
