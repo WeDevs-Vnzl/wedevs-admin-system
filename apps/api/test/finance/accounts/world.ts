@@ -7,6 +7,8 @@ import type {
   AccountPartnersPort,
 } from '../../../src/modules/finance/application/ports/account-partners.port';
 import { CreateAccount } from '../../../src/modules/finance/application/use-cases/accounts/create-account.use-case';
+import { CreateMovement } from '../../../src/modules/finance/application/use-cases/accounts/create-movement.use-case';
+import { CreateTransfer } from '../../../src/modules/finance/application/use-cases/accounts/create-transfer.use-case';
 import { GetAccount } from '../../../src/modules/finance/application/use-cases/accounts/get-account.use-case';
 import { GetAccountBalance } from '../../../src/modules/finance/application/use-cases/accounts/get-account-balance.use-case';
 import { GetAccountLedger } from '../../../src/modules/finance/application/use-cases/accounts/get-account-ledger.use-case';
@@ -191,6 +193,27 @@ export function createWorld() {
       clock,
       ids,
     ),
+    createTransfer: new CreateTransfer(
+      authorization,
+      uow,
+      locks,
+      repository,
+      projector,
+      activity,
+      clock,
+      ids,
+    ),
+    createMovement: new CreateMovement(
+      authorization,
+      uow,
+      locks,
+      repository,
+      partners,
+      projector,
+      activity,
+      clock,
+      ids,
+    ),
     listPartners: new ListAccountPartners(authorization, partners),
     /** `Account.balance` the projector cached, and what the domain calculates from the sources. */
     balanceOf: (id: string) => repository.accounts.find((account) => account.id === id)?.balance,
@@ -200,3 +223,62 @@ export function createWorld() {
 }
 
 export type World = ReturnType<typeof createWorld>;
+
+/** The accounts of the mock fixtures: Zelle USD 1200, Binance USDT 99, Banco VES 3500 (HU-15 CA1). */
+export async function seedMockAccounts(
+  world: World,
+): Promise<{ zelle: string; binance: string; ves: string }> {
+  const { owner } = world;
+  const open = (
+    name: string,
+    type: 'BILLETERA_DIGITAL' | 'WALLET_CRIPTO' | 'BANCO_NACIONAL',
+    currency: string,
+    openingBalance: string,
+  ) =>
+    world.createAccount.execute(owner, {
+      name,
+      type,
+      currency,
+      openingBalance,
+      openingDate: '2026-01-01',
+    });
+  const zelle = await open('Zelle USD', 'BILLETERA_DIGITAL', 'USD', '1000.00');
+  const binance = await open('Binance USDT', 'WALLET_CRIPTO', 'USDT', '0.00');
+  const ves = await open('Banco nacional VES', 'BANCO_NACIONAL', 'VES', '5000.00');
+  await world.createMovement.execute(owner, {
+    accountId: zelle.id,
+    type: 'APORTE_CAPITAL',
+    date: '2026-02-01',
+    amount: '500.00',
+    usdRate: '1',
+    partnerId: 'usr_andres',
+    description: 'Aporte',
+  });
+  await world.createMovement.execute(owner, {
+    accountId: zelle.id,
+    type: 'RETIRO_SOCIO',
+    date: '2026-03-01',
+    amount: '200.00',
+    usdRate: '1',
+    partnerId: 'usr_laura',
+    description: 'Retiro',
+  });
+  await world.createTransfer.execute(owner, {
+    date: '2026-04-01',
+    fromAccountId: zelle.id,
+    toAccountId: binance.id,
+    amountFrom: '100.00',
+    amountTo: '99.00',
+    feeAmount: '0',
+    usdRate: '1',
+  });
+  await world.createMovement.execute(owner, {
+    accountId: ves.id,
+    type: 'AJUSTE',
+    date: '2026-05-01',
+    amount: '-1500.00',
+    usdRate: '755.16',
+    description: 'Ajuste',
+  });
+  return { zelle: zelle.id, binance: binance.id, ves: ves.id };
+}
