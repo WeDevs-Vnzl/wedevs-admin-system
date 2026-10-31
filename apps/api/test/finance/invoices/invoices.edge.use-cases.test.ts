@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   invoiceInputErrors,
   normalizeInvoiceInput,
@@ -332,6 +332,42 @@ describe('RecomputeInvoice and installments', () => {
     const out = await w.uow.run(() => w.recompute.execute('inv_a'));
     expect(out).toEqual(before);
     expect(w.recomputed).toEqual([]);
+  });
+});
+
+describe('RecomputeInvoice with several rates', () => {
+  it('does not rewrite a consistent multi-rate invoice whose lowest rate is on the first line', async () => {
+    const w = createWorld();
+    const line = (id: string, order: number, ivaRate: string) => ({
+      ...SEED_LINE,
+      id,
+      order,
+      ivaRate,
+    });
+    w.invoices.seed(
+      invoiceRecord({
+        id: 'inv_multi',
+        lines: [line('l1', 0, '8'), line('l2', 1, '16')],
+        subtotal: '200.00',
+        taxBase: '200.00',
+        ivaAmount: '24.00',
+        total: '224.00',
+        receivable: '224.00',
+        totalUsd: '224.00',
+        receivableUsd: '224.00',
+        balance: '224.00',
+        // The repository reads the tax lines highest rate first, whatever the order of the lines.
+        taxLines: [
+          { ivaRate: '16', taxBase: '100.00', ivaAmount: '16.00' },
+          { ivaRate: '8', taxBase: '100.00', ivaAmount: '8.00' },
+        ],
+      }),
+    );
+    const update = vi.spyOn(w.invoices, 'update');
+
+    await w.uow.run(() => w.recompute.execute('inv_multi'));
+
+    expect(update).not.toHaveBeenCalled();
   });
 });
 
