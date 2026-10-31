@@ -264,6 +264,13 @@ export class PrismaPaymentRepository implements PaymentRepository {
     }
   }
 
+  async updateAllocationUsd(id: string, amountUsd: string): Promise<void> {
+    await this.host.db.paymentAllocation.updateMany({
+      where: { id, deletedAt: null },
+      data: { amountUsd: stringToDecimal(amountUsd) },
+    });
+  }
+
   async softDeleteAllocations(ids: readonly string[], deletedAt: string): Promise<void> {
     if (ids.length === 0) return;
     await this.host.db.paymentAllocation.updateMany({

@@ -159,6 +159,18 @@ describe('PrismaPaymentRepository: allocations (soft delete, allocation_unique_a
     expect(await admin.paymentAllocation.count()).toBe(1);
   });
 
+  it('rewrites the USD snapshot of a live allocation only', async () => {
+    await inTx(() => world.payments.insertAllocation(allocation()));
+    await inTx(() => world.payments.updateAllocationUsd('alo_1', '45.63'));
+    expect((await inTx(() => world.payments.liveAllocations('pay_1')))[0]?.amountUsd).toBe('45.63');
+
+    await inTx(() => world.payments.softDeleteAllocations(['alo_1'], '2026-10-09T16:00:00.000Z'));
+    await inTx(() => world.payments.updateAllocationUsd('alo_1', '1.00'));
+    expect(await inTx(() => world.payments.findAllocation('alo_1'))).toMatchObject({
+      amountUsd: '45.63',
+    });
+  });
+
   it('soft-deletes: the row stays, the live list drops it and the same invoice is free again', async () => {
     await inTx(() => world.payments.insertAllocation(allocation()));
     await inTx(() => world.payments.softDeleteAllocations(['alo_1'], '2026-10-09T16:00:00.000Z'));

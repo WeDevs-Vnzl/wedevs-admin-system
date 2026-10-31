@@ -129,6 +129,11 @@ export class InMemoryPaymentRepository implements PaymentRepository, Transaction
     this.allocations.set(record.id, record);
   }
 
+  async updateAllocationUsd(id: string, amountUsd: string): Promise<void> {
+    const row = this.allocations.get(id);
+    if (row && row.deletedAt === null) this.allocations.set(id, { ...row, amountUsd });
+  }
+
   async softDeleteAllocations(ids: readonly string[], deletedAt: string): Promise<void> {
     for (const id of ids) {
       const row = this.allocations.get(id);

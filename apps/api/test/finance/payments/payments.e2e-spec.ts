@@ -524,6 +524,47 @@ describe('payments (e2e): HU-13, HU-14, HU-12 CA2-CA3', () => {
   });
 
   describe('DT-98: the facts and metrics of a payment', () => {
+    it('a rate edit moves the allocation snapshot, the collected facts and the metrics together', async () => {
+      const inv = await invoice('500.00');
+      const fields = {
+        accountId: 'acc_ves',
+        currency: 'VES',
+        amount: '3650.00',
+        reference: 'VES-RATE',
+      };
+      const payment = await create({
+        ...fields,
+        usdRate: '36.50',
+        allocations: [apply(inv.id, '1825.00', '50.00')],
+      });
+
+      const patched = await http()
+        .patch(`${BASE}/payments/${payment.body.id}`)
+        .set('Authorization', as('OWNER'))
+        .send(body({ ...fields, usdRate: '40.00' }))
+        .expect(200);
+
+      expect(patched.body.amountUsd).toBe('91.25');
+      expect(patched.body.allocations[0]).toMatchObject({
+        amountPaymentCurrency: '1825.00',
+        amountInvoiceCurrency: '50.00',
+        amountUsd: '45.63',
+      });
+      const collected = await admin.financeFact.findMany({
+        where: { sourceType: 'PAYMENT', sourceId: payment.body.id, kind: 'COLLECTED' },
+      });
+      expect(collected.map((fact) => fact.amountUsd.toFixed(2))).toEqual(['45.63']);
+      const metrics = await admin.clientMetrics.findUniqueOrThrow({
+        where: { clientId: 'cli_e2e' },
+      });
+      expect(metrics.collectedUsd.toFixed(2)).toBe('45.63');
+      expect(metrics.creditUsd.toFixed(2)).toBe('45.63');
+      expect((await invoiceBody(inv.id)).totals).toMatchObject({
+        paidAmount: '50.00',
+        balance: '450.00',
+      });
+    });
+
     it('splits the collected amount per project line at the payment rate and records the IGTF', async () => {
       const inv = await invoice(['60.00', '40.00']);
       const payment = await create({ igtfAmount: '3.00', allocations: [apply(inv.id, '97.00')] });

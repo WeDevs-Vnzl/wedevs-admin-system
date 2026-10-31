@@ -88,7 +88,7 @@ describe('updatePayment (Q-BE3-3)', () => {
     expect(world.search.get('PAYMENT', payment.id)).toMatchObject({ title: 'OP-NEW' });
   });
 
-  it('a new rate takes a new USD snapshot of the payment, the allocations keep theirs (C16)', async () => {
+  it('a new rate recomputes the USD snapshots of the payment and of its live allocations (C16, PRD:1235)', async () => {
     world.addInvoice('inv_r', '500.00');
     const payment = await created({
       accountId: ACC_VES,
@@ -104,6 +104,26 @@ describe('updatePayment (Q-BE3-3)', () => {
       fieldsOf(payment as never, { usdRate: '40.00' }),
     );
     expect(updated.amountUsd).toBe('91.25');
+    expect(updated.allocations[0]?.amountUsd).toBe('45.63');
+    expect(updated.allocations[0]?.amountPaymentCurrency).toBe('1825.00');
+    expect(updated.allocations[0]?.amountInvoiceCurrency).toBe('50.00');
+  });
+
+  it('keeps the allocation snapshot when the rate does not change', async () => {
+    world.addInvoice('inv_s', '500.00');
+    const payment = await created({
+      accountId: ACC_VES,
+      currency: 'VES',
+      amount: '3650.00',
+      usdRate: '36.50',
+      allocations: [
+        { invoiceId: 'inv_s', amountPaymentCurrency: '1825.00', amountInvoiceCurrency: '50.00' },
+      ],
+    });
+    const updated = await world.update.execute(
+      world.owner,
+      fieldsOf(payment as never, { reference: 'OP-SAME' }),
+    );
     expect(updated.allocations[0]?.amountUsd).toBe('50.00');
   });
 

@@ -32,10 +32,10 @@ export type UpdatePaymentInput = PaymentFields & { readonly id: string };
 /**
  * `updatePayment` (Q-BE3-3): the payment fields again; allocations change only through (de)allocate. A voided
  * payment is read-only. One with live allocations keeps its client and currency (`INTEGRITY_LOCK`) and its
- * allocatable amount cannot drop below what is allocated, mirroring `updateInvoice`. The payment gets a new USD
- * snapshot at its new rate; the allocations keep theirs (C16). The invoices are not recomputed: their paid
- * amounts are in the invoice currency and do not move, but they are locked with the payment so no allocation
- * runs against it meanwhile. An absent `receiptFileId` keeps the receipt and `null` detaches it.
+ * allocatable amount cannot drop below what is allocated, mirroring `updateInvoice`. An edit of the rate
+ * recomputes the USD snapshots of the payment and of its live allocations (C16, PRD:1235). The invoices are not
+ * recomputed: their paid amounts are in the invoice currency and do not move, but they are locked with the
+ * payment so no allocation runs against it meanwhile. An absent `receiptFileId` keeps the receipt and `null` detaches it.
  */
 export class UpdatePayment {
   constructor(
@@ -109,6 +109,14 @@ export class UpdatePayment {
         updatedById: actor.userId,
       };
       await this.support.payments.update(after);
+      if (values.usdRate !== before.usdRate) {
+        for (const allocation of live) {
+          await this.support.payments.updateAllocationUsd(
+            allocation.id,
+            toUsd(allocation.amountPaymentCurrency, values.usdRate),
+          );
+        }
+      }
       await this.support.settle({
         actor: actorOf(actor),
         action: 'UPDATE',

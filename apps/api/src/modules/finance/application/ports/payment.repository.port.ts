@@ -162,6 +162,8 @@ export interface PaymentRepository {
    * Throws `CONFLICT` (`allocation_unique_active`) when the payment already has a live allocation to the invoice.
    */
   insertAllocation(record: PaymentAllocationRecord): Promise<void>;
+  /** Rewrites the USD snapshot of a live allocation after an edit of its payment's rate (C16). */
+  updateAllocationUsd(id: string, amountUsd: string): Promise<void>;
   /** Marks the allocations deleted at `deletedAt` (ISO 8601 UTC). */
   softDeleteAllocations(ids: readonly string[], deletedAt: string): Promise<void>;
   view(id: string): Promise<PaymentView | null>;
