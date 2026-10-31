@@ -42,7 +42,7 @@ const invalid = (field: string, key: string): ValidationFailedError =>
  * work: live project, `canTransitionProject` (`status`: `projects.errors.invalidTransition`), `EN_CURSO`
  * needs a start date (CA1), `ENTREGADO` an end date (CA2), the end is not before the start,
  * `CANCELADO` needs `confirm`. Cancelling passes its options to `ProjectBillingPort.cancelForProject`
- * and records what was cancelled in the entry's metadata; the `STATUS_CHANGE` entry carries the
+ * (in a `Serializable` unit of work, Q-BE3-1) and records what was cancelled in the entry's metadata; the `STATUS_CHANGE` entry carries the
  * `[before, after]` diff of status and dates (CA4). The hints come from the billing port.
  */
 export class SetProjectStatus {
@@ -61,6 +61,9 @@ export class SetProjectStatus {
   ): Promise<ProjectStatusChangeView> {
     assertCan(this.authorization, actor, 'update', 'project');
 
+    // Cancelling rewrites billing rows and read models: it opens the outermost unit of work `Serializable`
+    // (Q-BE3-1; a nested run cannot ask for a stricter level later). Other changes keep the default level.
+    const options = input.status === 'CANCELADO' ? ({ isolation: 'Serializable' } as const) : {};
     const hints = await this.uow.run(async () => {
       const before = await loadLiveProject(this.projects, input.id);
       if (!canTransitionProject(before.status, input.status)) {
@@ -116,7 +119,7 @@ export class SetProjectStatus {
             : true,
       });
       return result;
-    });
+    }, options);
 
     const project = await this.views.detail(actor, await reloadProject(this.projects, input.id));
     return { project, hints };
