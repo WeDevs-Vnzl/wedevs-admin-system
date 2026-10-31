@@ -31,6 +31,8 @@ import { PrismaService } from '../../../src/shared/infrastructure/prisma/prisma.
 import { TransactionHost } from '../../../src/shared/infrastructure/prisma/transaction-host';
 import { SystemClock } from '../../../src/shared/infrastructure/system-clock.adapter';
 import type { PrismaClient } from '../../../src/generated/prisma/client';
+import type { ProjectBillingPort } from '../../../src/modules/commercial/application/ports/project-billing.port';
+import type { UnitOfWorkPort } from '../../../src/shared/application/ports/unit-of-work.port';
 import { FakeProjectBilling } from '../projects/fakes/fake-project-billing';
 import { FakeTechnologyCatalog } from '../projects/fakes/fake-technology-catalog';
 import { userOf } from '../clients/fixtures';
@@ -92,12 +94,16 @@ export interface Hooks {
   clients?: (repo: ClientRepository) => ClientRepository;
   contacts?: (repo: ContactRepository) => ContactRepository;
   metrics?: (writer: ClientMetricsWriterPort) => ClientMetricsWriterPort;
+  /** Decorates the unit of work, e.g. to force `ReadCommitted` (the unlocked behavior). */
+  uow?: (uow: UnitOfWorkPort) => UnitOfWorkPort;
+  /** Replaces the fake billing port (e.g. with finance's adapter) over this world's own host and unit of work. */
+  billing?: (ctx: { host: TransactionHost; uow: UnitOfWorkPort }) => ProjectBillingPort;
 }
 
 /** The commercial use cases over real repositories; `hooks` decorate a repository for one transaction under test. */
 export function buildWorld(service: PrismaService, hooks: Hooks = {}) {
   const host = new TransactionHost(service);
-  const uow = new PrismaUnitOfWork(host);
+  const uow = (hooks.uow ?? ((u) => u))(new PrismaUnitOfWork(host));
   const authorization = new MatrixAuthorization();
   const clock = new SystemClock();
   const ids = new CuidGenerator();
@@ -112,7 +118,7 @@ export function buildWorld(service: PrismaService, hooks: Hooks = {}) {
     new PrismaTagRepository(host),
     new PrismaTagAssignmentRepository(host),
   );
-  const billing = new FakeProjectBilling();
+  const billing = hooks.billing ? hooks.billing({ host, uow }) : new FakeProjectBilling();
   const catalog = new FakeTechnologyCatalog();
   const references = new ProjectReferences(projects, catalog);
   const sync = new ProjectSync(projects, searchIndex, metrics, activityLog);
