@@ -5,6 +5,7 @@ import {
   CLOCK,
   ID_GENERATOR,
   REQUEST_CONTEXT,
+  ROW_LOCKS,
   SEARCH_INDEX,
   SEQUENCE,
   UNIT_OF_WORK,
@@ -12,6 +13,7 @@ import {
 import { CuidGenerator } from './id-generator.adapter';
 import { PrismaActivityLog } from './prisma/prisma-activity-log';
 import { PrismaClientMetricsWriter } from './prisma/prisma-client-metrics-writer';
+import { PrismaRowLocks } from './prisma/prisma-row-locks';
 import { PrismaSearchIndex } from './prisma/prisma-search-index';
 import { PrismaSequence } from './prisma/prisma-sequence';
 import { PrismaService } from './prisma/prisma.service';
@@ -32,6 +34,7 @@ import { SystemClock } from './system-clock.adapter';
     { provide: SEQUENCE, useClass: PrismaSequence },
     { provide: SEARCH_INDEX, useClass: PrismaSearchIndex },
     { provide: CLIENT_METRICS_WRITER, useClass: PrismaClientMetricsWriter },
+    { provide: ROW_LOCKS, useClass: PrismaRowLocks },
     { provide: REQUEST_CONTEXT, useClass: AsyncLocalRequestContext },
   ],
   exports: [
@@ -44,6 +47,7 @@ import { SystemClock } from './system-clock.adapter';
     SEQUENCE,
     SEARCH_INDEX,
     CLIENT_METRICS_WRITER,
+    ROW_LOCKS,
     REQUEST_CONTEXT,
   ],
 })
