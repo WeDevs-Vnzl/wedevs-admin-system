@@ -211,7 +211,7 @@ describe('tags (e2e)', () => {
 
     it('answers 422 for an unregistered or unknown entity type, and for unknown tag ids', async () => {
       const tag = (await createTag('OWNER', 'Alpha')).body;
-      for (const entityType of ['INVOICE', 'NOT_A_TYPE']) {
+      for (const entityType of ['DOCUMENT', 'NOT_A_TYPE']) {
         const res = await assign('ADMIN', { entityType, entityId: 'x', tagIds: [tag.id] }).expect(
           422,
         );

@@ -10,6 +10,7 @@ import { makeClient, makeNote, makeProject } from '../db/helpers';
 import { createTestPrisma, truncateBusinessTables } from '../support/db';
 import { FakeAuthenticator } from '../support/fakes/fake-authenticator';
 import { CommercialModule } from '../../src/modules/commercial/commercial.module';
+import { FinanceModule } from '../../src/modules/finance/finance.module';
 import { createTestApp } from '../support/test-app';
 import { FakeRestoreHandler, trashPolicy } from './harness';
 
@@ -28,7 +29,7 @@ describe('trash (e2e)', () => {
     app = await createTestApp({
       modules: [TrashModule],
       // The real restore handlers would collide with the fakes registered below.
-      without: [CommercialModule],
+      without: [CommercialModule, FinanceModule],
       authenticator,
       authorization: trashPolicy,
     });
