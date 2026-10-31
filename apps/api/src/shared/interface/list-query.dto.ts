@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import {
   DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_VALUES,
   parseSort,
   type ListFilters,
   type ListQuery,
@@ -36,6 +37,7 @@ export function createListQuerySchema<
     Object.entries(filterSchemas).map(([name, item]) => [name, multi(item)]),
   );
   const filterNames = Object.keys(filterShape);
+  const sortTokens = options.sortFields.flatMap((field) => [`${field}:asc`, `${field}:desc`]);
 
   return z
     .object({
@@ -43,10 +45,13 @@ export function createListQuerySchema<
       pageSize: z.coerce
         .number()
         .pipe(z.union([z.literal(25), z.literal(50), z.literal(100)]))
+        // The pipe's JSON Schema is its input side (`number`); the meta restores the real contract (m3).
+        .meta({ type: 'integer', enum: [...PAGE_SIZE_VALUES] })
         .default(DEFAULT_PAGE_SIZE),
       sort: z
         .string()
         .optional()
+        .meta({ enum: sortTokens })
         .transform((value, ctx): SortSpec => {
           if (value === undefined || value === '') return options.defaultSort;
           const parsed = parseSort(value);
