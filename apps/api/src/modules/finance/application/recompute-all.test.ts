@@ -10,7 +10,7 @@ import { InMemoryUnitOfWork } from '../../../../test/support/fakes/in-memory-uni
 import { ForbiddenError } from '../../../shared/domain/domain-error';
 import { FinanceProjector } from './finance-projector';
 import type { InvoiceCacheSource } from './ports/finance-sources.port';
-import { RecomputeAll, SYSTEM_ACTOR } from './recompute-all';
+import { RECOMPUTE_ALL_TIMEOUT_MS, RecomputeAll, SYSTEM_ACTOR } from './recompute-all';
 
 const log: string[] = [];
 let uow: InMemoryUnitOfWork;
@@ -81,7 +81,10 @@ describe('RecomputeAll authorization', () => {
     sources.ids.recurringCharges = ['rch_1'];
     sources.ids.recurringExpenses = ['rex_1'];
     await run();
-    expect(uow.lastOptions).toEqual({ isolation: 'Serializable' });
+    expect(uow.lastOptions).toEqual({
+      isolation: 'Serializable',
+      timeoutMs: RECOMPUTE_ALL_TIMEOUT_MS,
+    });
     expect(locks.acquired.map((row) => row.rowClass)).toEqual([
       'Project',
       'Client',

@@ -70,7 +70,7 @@ export class PrismaUnitOfWork implements UnitOfWorkPort {
           {
             isolationLevel: isolation,
             maxWait: MAX_WAIT_MS,
-            timeout: TIMEOUT_MS,
+            timeout: options.timeoutMs ?? TIMEOUT_MS,
           },
         );
       } catch (error) {

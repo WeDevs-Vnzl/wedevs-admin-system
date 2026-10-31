@@ -31,6 +31,9 @@ import type { InvoiceCacheWrite, ReadModelWriterPort } from './ports/read-model-
  */
 export const SYSTEM_ACTOR: Actor = { actorType: 'SYSTEM', userId: null };
 
+/** The transaction budget of the rebuild; see `RecomputeAll`. */
+export const RECOMPUTE_ALL_TIMEOUT_MS = 1_800_000;
+
 export type RecomputeProblem = { entity: string; id: string; reason: string };
 
 export type RecomputeAllResult = {
@@ -140,7 +143,10 @@ export class RecomputeAll {
 
   async execute(actor: Actor): Promise<RecomputeAllResult> {
     if (actor.actorType !== 'SYSTEM') throw new ForbiddenError();
-    return this.uow.run(() => this.rebuild(actor), { isolation: 'Serializable' });
+    return this.uow.run(() => this.rebuild(actor), {
+      isolation: 'Serializable',
+      timeoutMs: RECOMPUTE_ALL_TIMEOUT_MS,
+    });
   }
 
   private async rebuild(actor: Actor): Promise<RecomputeAllResult> {
