@@ -821,6 +821,62 @@ describe('edit, drafts and archive', () => {
     });
   });
 
+  it('an archived draft cannot be issued, an archived invoice cannot be voided: VALIDATION like updateInvoice', async () => {
+    const w = createWorld();
+    w.invoices.seed(
+      invoiceRecord({ id: 'inv_a', isDraft: true, status: 'BORRADOR', archivedAt: NOW_ISO }),
+    );
+    w.invoices.seed(invoiceRecord({ id: 'inv_b', invoiceNumber: 'KAI-0002', archivedAt: NOW_ISO }));
+    const refused = { code: 'VALIDATION', fieldErrors: { id: ['invoices.errors.archived'] } };
+
+    expect(await rejection(w.issueDraft.execute(w.owner, { id: 'inv_a' }))).toMatchObject(refused);
+    expect(
+      await rejection(w.voidInvoice.execute(w.owner, { id: 'inv_b', reason: 'Duplicada' })),
+    ).toMatchObject(refused);
+
+    expect((await w.invoices.findById('inv_a'))?.isDraft).toBe(true);
+    expect((await w.invoices.findById('inv_b'))?.voidedAt).toBeNull();
+    expect(w.projector.calls).toEqual([]);
+  });
+
+  it('issueDraft rechecks the live client and the live projects of the lines', async () => {
+    const draft = (lineProject: string | null) =>
+      invoiceRecord({
+        id: 'inv_a',
+        isDraft: true,
+        status: 'BORRADOR',
+        lines: [{ ...SEED_LINE, projectId: lineProject }],
+      });
+
+    const clientGone = createWorld();
+    clientGone.invoices.seed(draft(null));
+    clientGone.clients.delete(KAIROS);
+    expect(
+      await rejection(clientGone.issueDraft.execute(clientGone.owner, { id: 'inv_a' })),
+    ).toMatchObject({ code: 'NOT_FOUND' });
+
+    const projectGone = createWorld();
+    projectGone.invoices.seed(draft(WEB));
+    projectGone.projects.delete(WEB);
+    expect(
+      await rejection(projectGone.issueDraft.execute(projectGone.owner, { id: 'inv_a' })),
+    ).toMatchObject({ code: 'NOT_FOUND' });
+
+    const otherClient = createWorld();
+    otherClient.invoices.seed(draft(LABS));
+    expect(
+      await rejection(otherClient.issueDraft.execute(otherClient.owner, { id: 'inv_a' })),
+    ).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: { 'lines.0.projectId': ['invoices.errors.projectOtherClient'] },
+    });
+    expect((await otherClient.invoices.findById('inv_a'))?.isDraft).toBe(true);
+
+    const fine = createWorld();
+    fine.invoices.seed(draft(WEB));
+    expect((await fine.issueDraft.execute(fine.owner, { id: 'inv_a' })).isDraft).toBe(false);
+  });
+
   it('a voided draft cannot be issued', async () => {
     const w = createWorld();
     w.invoices.seed(

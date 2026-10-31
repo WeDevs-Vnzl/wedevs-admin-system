@@ -8,11 +8,13 @@ import type { UnitOfWorkPort } from '../../../../../shared/application/ports/uni
 import { diffFields } from '../../../../../shared/domain/activity-diff';
 import { ConflictError, NotFoundError } from '../../../../../shared/domain/domain-error';
 import { INVOICE_ERRORS } from '../../../domain/errors';
+import { invalid } from './invoice-input';
 import type { InvoiceOutput, InvoiceSupport } from './invoice-support';
 
 /**
  * `issueDraft` (HU-11): turns a draft into an issued invoice, whose totals start to count for billing. Its
- * facts and metrics appear in the same unit of work (a draft produces none).
+ * facts and metrics appear in the same unit of work (a draft produces none). An archived draft is read-only
+ * (`VALIDATION`, like `updateInvoice`), and the client and projects are rechecked live like on create and update.
  */
 export class IssueDraft {
   constructor(
@@ -31,8 +33,10 @@ export class IssueDraft {
         const locked = await this.support.lockPlan(plan);
         const before = await this.support.invoices.findById(input.id);
         if (!before) throw new NotFoundError();
+        if (before.archivedAt !== null) throw invalid('id', INVOICE_ERRORS.archived);
         if (before.voidedAt !== null) throw new ConflictError({ message: INVOICE_ERRORS.voided });
         if (!before.isDraft) throw new ConflictError({ message: INVOICE_ERRORS.notDraft });
+        await this.support.assertLiveReferences(before.clientId, before.lines);
 
         const after = await this.support.rederive({
           ...before,

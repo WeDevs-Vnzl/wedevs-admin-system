@@ -311,6 +311,24 @@ export class InvoiceSupport {
     return client;
   }
 
+  /**
+   * The client and the projects of a stored invoice must still be live and the projects still the client's:
+   * the check of `resolveLines` for an invoice that is not rebuilt from input (`issueDraft`).
+   */
+  async assertLiveReferences(
+    clientId: string,
+    lines: readonly Pick<InvoiceLineRecord, 'projectId'>[],
+  ): Promise<void> {
+    await this.requireClient(clientId);
+    for (const [index, line] of lines.entries()) {
+      if (!line.projectId) continue;
+      if (!(await this.references.liveProject(line.projectId))) throw new NotFoundError();
+      if (!(await this.references.projectBelongsToClient(line.projectId, clientId))) {
+        throw invalid(`lines.${index}.projectId`, INVOICE_ERRORS.projectOtherClient);
+      }
+    }
+  }
+
   async assertNumberFree(invoiceNumber: string, selfId: string | null): Promise<void> {
     const holder = await this.invoices.numberHolder(invoiceNumber, selfId);
     if (!holder) return;

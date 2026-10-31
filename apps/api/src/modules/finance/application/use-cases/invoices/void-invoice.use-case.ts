@@ -21,7 +21,8 @@ export interface VoidInvoiceInput {
 }
 
 /**
- * `voidInvoice` (HU-12 CA5): annuls an invoice with a mandatory reason. Refused while a payment allocates to it
+ * `voidInvoice` (HU-12 CA5): annuls an invoice with a mandatory reason. An archived invoice is read-only
+ * (`VALIDATION`, like `updateInvoice`): restore it first. Refused while a payment allocates to it
  * (`INTEGRITY_LOCK`): those allocations are removed first, so the payments keep their credit balance. Its
  * installments are released, and its facts and metrics leave in the same unit of work.
  */
@@ -45,6 +46,7 @@ export class VoidInvoice {
         await this.support.lockPlan(plan);
         const before = await this.support.invoices.findById(input.id);
         if (!before) throw new NotFoundError();
+        if (before.archivedAt !== null) throw invalid('id', INVOICE_ERRORS.archived);
         if (before.voidedAt !== null) {
           throw new ConflictError({ message: INVOICE_ERRORS.alreadyVoided });
         }
