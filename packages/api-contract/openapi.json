@@ -622,9 +622,11 @@
       "AllocatePaymentDto": {
         "properties": {
           "amountInvoiceCurrency": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "amountPaymentCurrency": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "invoiceId": {
@@ -647,6 +649,7 @@
             "items": {
               "properties": {
                 "amount": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "currency": {
@@ -2501,6 +2504,7 @@
           },
           "openingBalance": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "openingDate": {
@@ -2740,9 +2744,14 @@
       "CreateExpenseDto": {
         "properties": {
           "accountAmount": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "accountId": {
@@ -2759,6 +2768,7 @@
             ]
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "categoryId": {
@@ -2825,6 +2835,7 @@
             "type": "string"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "vendor": {
@@ -2852,6 +2863,7 @@
       "CreateInstallmentDto": {
         "properties": {
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "currency": {
@@ -2919,9 +2931,14 @@
       "CreateInvoiceDto": {
         "properties": {
           "bcvRate": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "clientId": {
@@ -2962,12 +2979,14 @@
             "type": "boolean"
           },
           "islrWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "issueDate": {
             "type": "string"
           },
           "ivaWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "lines": {
@@ -2977,6 +2996,7 @@
                   "type": "string"
                 },
                 "discount": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "id": {
@@ -2999,9 +3019,14 @@
                   ]
                 },
                 "ivaRate": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "projectId": {
@@ -3018,9 +3043,11 @@
                   ]
                 },
                 "quantity": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "unitPrice": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -3034,6 +3061,7 @@
             "type": "array"
           },
           "otherWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "otherWithheldNote": {
@@ -3046,9 +3074,11 @@
             "items": {
               "properties": {
                 "adjustment": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "ivaRate": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -3061,6 +3091,7 @@
             "type": "array"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -3078,6 +3109,7 @@
       "CreateMovementDto": {
         "properties": {
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "date": {
@@ -3110,6 +3142,7 @@
             "type": "string"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -3214,9 +3247,11 @@
             "items": {
               "properties": {
                 "amountInvoiceCurrency": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "amountPaymentCurrency": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "invoiceId": {
@@ -3236,6 +3271,7 @@
             "type": "array"
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "clientId": {
@@ -3253,10 +3289,12 @@
           },
           "feeAmount": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "igtfAmount": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "methodId": {
@@ -3293,6 +3331,7 @@
             "type": "string"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -3495,6 +3534,7 @@
       "CreateRecurringChargeDto": {
         "properties": {
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "billingDay": {
@@ -3562,6 +3602,7 @@
             ]
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "categoryId": {
@@ -3740,9 +3781,11 @@
       "CreateTransferDto": {
         "properties": {
           "amountFrom": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "amountTo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "date": {
@@ -3750,6 +3793,7 @@
           },
           "feeAmount": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "fromAccountId": {
@@ -3770,9 +3814,14 @@
             ]
           },
           "rate": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "reference": {
@@ -3793,6 +3842,7 @@
             "type": "string"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -5613,6 +5663,7 @@
                   "type": "string"
                 },
                 "usdRate": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -6782,6 +6833,7 @@
                   "type": "string"
                 },
                 "usdRate": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -6833,9 +6885,14 @@
       "MarkExpensePaidDto": {
         "properties": {
           "accountAmount": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "accountId": {
@@ -6845,6 +6902,7 @@
             "type": "string"
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "currency": {
@@ -6868,6 +6926,7 @@
             ]
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -9056,6 +9115,7 @@
             ]
           },
           "statementBalance": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -10779,6 +10839,7 @@
             ]
           },
           "openingBalance": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "openingDate": {
@@ -11055,9 +11116,14 @@
       "UpdateExpenseDto": {
         "properties": {
           "accountAmount": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "accountId": {
@@ -11074,6 +11140,7 @@
             ]
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "categoryId": {
@@ -11126,6 +11193,7 @@
             ]
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "vendor": {
@@ -11181,6 +11249,7 @@
       "UpdateInstallmentDto": {
         "properties": {
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "currency": {
@@ -11231,9 +11300,14 @@
       "UpdateInvoiceDto": {
         "properties": {
           "bcvRate": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "clientId": {
@@ -11274,12 +11348,14 @@
             "type": "boolean"
           },
           "islrWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "issueDate": {
             "type": "string"
           },
           "ivaWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "lines": {
@@ -11289,6 +11365,7 @@
                   "type": "string"
                 },
                 "discount": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "id": {
@@ -11311,9 +11388,14 @@
                   ]
                 },
                 "ivaRate": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "projectId": {
@@ -11330,9 +11412,11 @@
                   ]
                 },
                 "quantity": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "unitPrice": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -11346,6 +11430,7 @@
             "type": "array"
           },
           "otherWithheld": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "otherWithheldNote": {
@@ -11358,9 +11443,11 @@
             "items": {
               "properties": {
                 "adjustment": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 },
                 "ivaRate": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
                   "type": "string"
                 }
               },
@@ -11373,6 +11460,7 @@
             "type": "array"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -11427,6 +11515,7 @@
             "type": "string"
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "clientId": {
@@ -11444,10 +11533,12 @@
           },
           "feeAmount": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "igtfAmount": {
             "default": "0",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "methodId": {
@@ -11476,6 +11567,7 @@
             ]
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },
@@ -11614,6 +11706,7 @@
       "UpdateRecurringChargeDto": {
         "properties": {
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "billingDay": {
@@ -11681,6 +11774,7 @@
             ]
           },
           "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           },
           "categoryId": {
@@ -11889,9 +11983,14 @@
       "UpsertBillingPlanDto": {
         "properties": {
           "contractAmount": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "currency": {
@@ -11943,6 +12042,7 @@
             "type": "string"
           },
           "usdRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": "string"
           }
         },

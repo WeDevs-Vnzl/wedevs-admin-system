@@ -4,6 +4,7 @@ import type { EntityRef } from '../../../../../shared/domain/entity-ref';
 import { INSTALLMENT_KIND_VALUES, INVOICE_STATUS_VALUES } from '../../../../../shared/domain/enums';
 import {
   dateOnlySchema,
+  decimalRequestSchema,
   decimalStringSchema,
   idSchema,
   timestampSchema,
@@ -33,7 +34,8 @@ const invoiceStatus = z.enum(INVOICE_STATUS_VALUES);
 const installmentKind = z.enum(INSTALLMENT_KIND_VALUES);
 const optionalId = idSchema.nullish();
 const text = z.string();
-const money = z.string();
+/** Request money, rate and percent: the shape is documented here and enforced by the use case (lesson B2). */
+const money = decimalRequestSchema;
 
 export const invoiceIdParamsSchema = z.object({ id: idSchema });
 export class InvoiceIdParamsDto extends createZodDto(invoiceIdParamsSchema) {}

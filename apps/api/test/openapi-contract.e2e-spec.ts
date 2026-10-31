@@ -104,6 +104,8 @@ const FINANCE_PATH =
 
 /** `decimalStringSchema` of the response DTOs (C8, C15). */
 const DECIMAL_PATTERN = '^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$';
+/** A percent in a request keeps its own, tighter pattern (0 to 999.99); its response is a plain decimal. */
+const PERCENT_PATTERN = '^\\d{1,3}(?:\\.\\d{1,2})?$';
 
 /**
  * The only integer properties finance may expose (counts, pages, days and ordinals, never an amount).
@@ -150,8 +152,8 @@ const typesOf = (schema: JsonSchema): string[] => [schema.type].flat().filter(Bo
 /**
  * Walks the request and response schemas of every finance operation and reports each money, rate or percent
  * property that is not a decimal string and each JSON number or non-allowlisted integer (lesson 4).
- * Request money fields are checked for `type: string` (their Zod refinements carry the format, so the JSON
- * Schema has no pattern); responses must also carry the decimal pattern. Nullable ones are `string | null`.
+ * Request and response money fields must be `type: string` with the decimal pattern (requests carry it as
+ * `.meta()`, their Zod refinements stay the only runtime check). Nullable ones are `string | null`.
  */
 function financeContractFindings(doc: FullDocument): string[] {
   const findings = new Set<string>();
@@ -188,13 +190,10 @@ function financeContractFindings(doc: FullDocument): string[] {
     if (money && scalar && !counter && !shape.every((t) => t === 'string' || t === 'null')) {
       findings.add(`${where}: ${name} is money but typed ${types.join('|')}`);
     }
-    if (
-      money &&
-      types.includes('string') &&
-      side === 'response' &&
-      node.pattern !== DECIMAL_PATTERN
-    ) {
-      findings.add(`${where}: ${name} misses the decimal pattern`);
+    const expected =
+      side === 'request' && name === 'percentage' ? PERCENT_PATTERN : DECIMAL_PATTERN;
+    if (money && types.includes('string') && node.pattern !== expected) {
+      findings.add(`${where}: ${name} misses the decimal pattern (${side})`);
     }
     for (const key of ['anyOf', 'oneOf', 'allOf'] as const) {
       for (const branch of (node[key] as JsonSchema[] | undefined) ?? [])
@@ -277,15 +276,21 @@ describe('finance contract: money is a decimal string, never a JSON number (less
     );
   });
 
-  it('flags a response money string that lost its decimal pattern, and a nullable one typed as an array', () => {
+  it('flags a request or response money string that lost its decimal pattern, and a nullable one typed as an array', () => {
     const doc = clone();
+    plant(doc, 'CreateAccountDto', 'openingBalance', { type: 'string' });
     plant(doc, 'InvoiceResponseDto', 'totalUsd', { type: 'string' });
     plant(doc, 'InvoiceResponseDto', 'discount', {
       type: 'array',
       items: { type: 'string' },
     });
     const findings = financeContractFindings(doc);
-    expect(findings).toContain('GET /api/v1/invoices/{id}: totalUsd misses the decimal pattern');
+    expect(findings).toContain(
+      'POST /api/v1/accounts: openingBalance misses the decimal pattern (request)',
+    );
+    expect(findings).toContain(
+      'GET /api/v1/invoices/{id}: totalUsd misses the decimal pattern (response)',
+    );
     expect(findings).toContain('GET /api/v1/invoices/{id}: discount is money but typed array');
   });
 

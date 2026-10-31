@@ -54,6 +54,16 @@ export const timestampSchema = z.iso.datetime({ message: VALIDATION_MESSAGES.inv
 
 const INTEGER_PART = '(?:0|[1-9]\\d*)';
 
+/**
+ * The decimal-string shape of money and rates, for the OpenAPI document only: the schemas that carry it
+ * enforce their rules in `superRefine` and answer with i18n keys, so the pattern is `.meta()` (no runtime
+ * check, no change to any error code or message). Responses use the same shape through `decimalStringSchema`.
+ */
+export const DECIMAL_STRING_PATTERN = '^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$';
+
+/** A request money or rate field that is validated elsewhere (use case) but still documents its shape. */
+export const decimalRequestSchema = z.string().meta({ pattern: DECIMAL_STRING_PATTERN });
+
 function isZeroString(value: string): boolean {
   return /^-?0(?:\.0+)?$/.test(value);
 }
@@ -72,25 +82,28 @@ const AMOUNT_DECIMALS = /^-?\d+(?:\.\d{1,2})?$/;
 /** Money amount as a decimal string, at most 2 decimals (C15). */
 export function moneyAmountSchema(options: MoneyAmountOptions = {}) {
   const sign: MoneySign = options.sign ?? 'positive';
-  return z.string().superRefine((value, ctx) => {
-    if (!AMOUNT_SHAPE.test(value) || (value.startsWith('-') && isZeroString(value))) {
-      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.invalidMoney });
-      return;
-    }
-    if (!AMOUNT_RANGE.test(value)) {
-      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyOutOfRange });
-      return;
-    }
-    if (!AMOUNT_DECIMALS.test(value)) {
-      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyTooManyDecimals });
-      return;
-    }
-    if (sign === 'positive' && (value.startsWith('-') || isZeroString(value))) {
-      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyMustBePositive });
-    } else if (sign === 'nonNegative' && value.startsWith('-')) {
-      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyMustBeNonNegative });
-    }
-  });
+  return z
+    .string()
+    .superRefine((value, ctx) => {
+      if (!AMOUNT_SHAPE.test(value) || (value.startsWith('-') && isZeroString(value))) {
+        ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.invalidMoney });
+        return;
+      }
+      if (!AMOUNT_RANGE.test(value)) {
+        ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyOutOfRange });
+        return;
+      }
+      if (!AMOUNT_DECIMALS.test(value)) {
+        ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyTooManyDecimals });
+        return;
+      }
+      if (sign === 'positive' && (value.startsWith('-') || isZeroString(value))) {
+        ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyMustBePositive });
+      } else if (sign === 'nonNegative' && value.startsWith('-')) {
+        ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.moneyMustBeNonNegative });
+      }
+    })
+    .meta({ pattern: DECIMAL_STRING_PATTERN });
 }
 
 const RATE_SHAPE = new RegExp(`^${INTEGER_PART}(?:\\.\\d+)?$`);
@@ -98,23 +111,26 @@ const RATE_RANGE = /^(?:0|[1-9]\d{0,11})(?:\.\d+)?$/; // Decimal(20, 8)
 const RATE_DECIMALS = /^\d+(?:\.\d{1,8})?$/;
 
 /** Exchange rate as a decimal string: strictly greater than 0, at most 8 decimals. */
-export const rateSchema = z.string().superRefine((value, ctx) => {
-  if (!RATE_SHAPE.test(value)) {
-    ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.invalidRate });
-    return;
-  }
-  if (!RATE_RANGE.test(value)) {
-    ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateOutOfRange });
-    return;
-  }
-  if (!RATE_DECIMALS.test(value)) {
-    ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateTooManyDecimals });
-    return;
-  }
-  if (isZeroString(value)) {
-    ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateMustBePositive });
-  }
-});
+export const rateSchema = z
+  .string()
+  .superRefine((value, ctx) => {
+    if (!RATE_SHAPE.test(value)) {
+      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.invalidRate });
+      return;
+    }
+    if (!RATE_RANGE.test(value)) {
+      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateOutOfRange });
+      return;
+    }
+    if (!RATE_DECIMALS.test(value)) {
+      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateTooManyDecimals });
+      return;
+    }
+    if (isZeroString(value)) {
+      ctx.addIssue({ code: 'custom', message: VALIDATION_MESSAGES.rateMustBePositive });
+    }
+  })
+  .meta({ pattern: DECIMAL_STRING_PATTERN });
 
 /**
  * Output side of money and rates: a decimal string (`"1250.00"`, `"-3.5"`). The `pattern` makes every

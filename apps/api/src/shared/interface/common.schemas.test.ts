@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DECIMAL_STRING_PATTERN,
   VALIDATION_MESSAGES,
   dateOnlySchema,
+  decimalRequestSchema,
   decimalStringSchema,
   idSchema,
   isValidDateOnly,
@@ -147,6 +149,29 @@ describe('decimalStringSchema (output)', () => {
     const json = z.toJSONSchema(decimalStringSchema) as { type?: string; pattern?: string };
     expect(json.type).toBe('string');
     expect(json.pattern).toBeTruthy();
+  });
+});
+
+describe('request money and rate contract metadata', () => {
+  const pattern = (schema: z.ZodType) =>
+    (z.toJSONSchema(schema, { io: 'input' }) as { pattern?: string }).pattern;
+
+  it('documents the decimal pattern on every request money and rate schema', () => {
+    expect(pattern(moneyAmountSchema())).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(moneyAmountSchema({ sign: 'any' }).default('0'))).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(rateSchema)).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(decimalRequestSchema)).toBe(DECIMAL_STRING_PATTERN);
+  });
+
+  it('is metadata only: the pattern checks nothing and the i18n keys are unchanged', () => {
+    expect(decimalRequestSchema.safeParse('not a number').success).toBe(true);
+    expect(messages(moneyAmountSchema().safeParse('abc'))).toEqual([
+      VALIDATION_MESSAGES.invalidMoney,
+    ]);
+    expect(messages(moneyAmountSchema().safeParse('1.234'))).toEqual([
+      VALIDATION_MESSAGES.moneyTooManyDecimals,
+    ]);
+    expect(messages(rateSchema.safeParse('0'))).toEqual([VALIDATION_MESSAGES.rateMustBePositive]);
   });
 });
 
