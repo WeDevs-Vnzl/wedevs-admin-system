@@ -130,4 +130,38 @@ describe('read models equal recompute-all after every money mutation', () => {
     const rebuilt = await takeSnapshot(world.db);
     expect(diffSnapshots(stateOf(incremental), stateOf(rebuilt))).toEqual([]);
   });
+  /** The step still writes the entry of an archived invoice, but without the client scope: no metric moves. */
+  it('archived invoice crossing its due date: ClientMetrics is untouched and the entry has no client scope', async () => {
+    const { uc, owner, clock, db } = world;
+    const today = world.today();
+    const created = await uc.createInvoice.execute(owner, {
+      clientId: 'cli_a',
+      invoiceNumber: 'DRIFT-2',
+      issueDate: today,
+      dueDate: addDays(today, 10),
+      currency: 'USD',
+      usdRate: '1',
+      lines: [{ description: 'Servicio', projectId: null, unitPrice: '100.00', ivaRate: null }],
+    });
+    await uc.archiveInvoice.execute(owner, { id: created.id });
+    const before = await db.clientMetrics.findUniqueOrThrow({ where: { clientId: 'cli_a' } });
+    clock.advance(20 * 86_400_000);
+
+    await uc.markOverdue.execute(SYSTEM_ACTOR);
+
+    const stored = await db.invoice.findFirst({ where: { id: created.id, deletedAt: undefined } });
+    expect(stored?.status).toBe('VENCIDA');
+    // Every column but `updatedAt`, which the projector's upsert bumps whatever it writes.
+    const { updatedAt: _after, ...after } = await db.clientMetrics.findUniqueOrThrow({
+      where: { clientId: 'cli_a' },
+    });
+    const { updatedAt: _before, ...kept } = before;
+    expect(after).toEqual(kept);
+    expect(after.lastActivityAt).not.toBeNull();
+    const entry = await db.activityLog.findFirstOrThrow({
+      where: { entityType: 'INVOICE', entityId: created.id, action: 'SYSTEM_JOB' },
+    });
+    expect(entry.clientId).toBeNull();
+    expect(entry.metadata).toMatchObject({ from: 'EMITIDA', to: 'VENCIDA' });
+  });
 });

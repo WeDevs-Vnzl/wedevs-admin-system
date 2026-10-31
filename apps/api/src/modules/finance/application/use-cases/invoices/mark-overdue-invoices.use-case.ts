@@ -15,7 +15,8 @@ export interface MarkOverdueResult {
  * `VENCIDA`, archived ones too (§9.4 has no archived branch, so `RecomputeAll` agrees). No route: BE-5 schedules it under a `SYSTEM` actor and anything else is `FORBIDDEN`. Each invoice
  * has its own `Serializable` unit of work that locks it with its client and projects first, recomputes its
  * status from its lines and allocations (a payment that landed meanwhile wins) and projects its client and
- * projects. Running it twice on the same day changes nothing the second time.
+ * projects. The entry of an archived invoice is written without the client scope, so the step moves no
+ * client metric and stays out of the client's activity. Running it twice on the same day changes nothing the second time.
  */
 export class MarkOverdueInvoices {
   constructor(
@@ -51,6 +52,7 @@ export class MarkOverdueInvoices {
         await this.support.project(before, after, locked.paymentIds);
         await this.support.record(actor, 'SYSTEM_JOB', before, after, {
           metadata: { from: before.status, to: after.status },
+          clientScope: after.archivedAt === null,
         });
         return true;
       },

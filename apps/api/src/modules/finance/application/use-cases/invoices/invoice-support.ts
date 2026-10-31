@@ -180,6 +180,17 @@ export interface InstallmentStatusRecomputer {
 const isSubset = (inner: readonly string[], outer: readonly string[]): boolean =>
   inner.every((id) => outer.includes(id));
 
+/** What an invoice activity entry carries besides the action. */
+export interface InvoiceActivityDetail {
+  readonly changes?: Record<string, unknown> | null;
+  readonly metadata?: Record<string, unknown>;
+  /**
+   * `false` writes the entry without the client scope: it neither shows in the client's activity nor moves
+   * `ClientMetrics.lastActivityAt`. For a system step on an archived invoice, which is not the client's activity.
+   */
+  readonly clientScope?: boolean;
+}
+
 /**
  * The pieces every invoice mutation shares: the lock plan, the reference checks, the line rules, the file claim
  * and the persist → recompute → project → search → activity tail of the global write order (Q-BE3-1). Valid only
@@ -510,7 +521,7 @@ export class InvoiceSupport {
     action: ActivityAction,
     before: InvoiceRecord | null,
     after: InvoiceRecord,
-    detail: { changes?: Record<string, unknown> | null; metadata?: Record<string, unknown> } = {},
+    detail: InvoiceActivityDetail = {},
   ): Promise<void> {
     await this.reindex(after);
     await this.logOnly(actor, action, after, detail, before?.clientId);
@@ -536,17 +547,19 @@ export class InvoiceSupport {
     actor: Actor,
     action: ActivityAction,
     after: InvoiceRecord,
-    detail: { changes?: Record<string, unknown> | null; metadata?: Record<string, unknown> } = {},
+    detail: InvoiceActivityDetail = {},
     previousClientId?: string | null,
   ): Promise<void> {
+    const scoped = detail.clientScope !== false;
     await this.activityLog.record({
       actor,
       action,
       entityType: 'INVOICE',
       entityId: after.id,
       entityLabel: after.invoiceNumber,
-      clientId: after.clientId,
-      touchClientIds: unique([previousClientId, after.clientId]),
+      ...(scoped
+        ? { clientId: after.clientId, touchClientIds: unique([previousClientId, after.clientId]) }
+        : {}),
       ...(detail.changes ? { changes: detail.changes } : {}),
       metadata: { code: after.code, ...detail.metadata },
     });
