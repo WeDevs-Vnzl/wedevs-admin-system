@@ -116,6 +116,13 @@ export const rateSchema = z.string().superRefine((value, ctx) => {
   }
 });
 
+/**
+ * Output side of money and rates: a decimal string (`"1250.00"`, `"-3.5"`). The `pattern` makes every
+ * finance DTO emit `type: string` with a pattern in the OpenAPI document, never `number`. Serializes
+ * Prisma `Decimal` values only after the adapter mapped them to strings (C15).
+ */
+export const decimalStringSchema = z.string().regex(/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/);
+
 /** Flattens a Zod error into `fieldErrors` keyed by dotted path (`""` -> `_form`). */
 export function zodFieldErrors(error: {
   issues: readonly z.core.$ZodIssue[];
