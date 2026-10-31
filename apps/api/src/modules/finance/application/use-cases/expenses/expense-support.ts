@@ -388,7 +388,12 @@ export class ExpenseSupport {
     await this.projector.projectExpense(after.id);
     const touchesMoney = after.status === 'PAGADO' || before?.status === 'PAGADO';
     if (touchesMoney) {
-      for (const accountId of ids(before?.accountId, after.accountId)) {
+      // A pending expense never fed its account's balance, and that account is not in the lock set.
+      const accounts = ids(
+        before?.status === 'PAGADO' ? before.accountId : null,
+        after.status === 'PAGADO' ? after.accountId : null,
+      );
+      for (const accountId of accounts) {
         await this.projector.projectAccount(accountId);
       }
       await this.projector.projectProjects(ids(before?.projectId, after.projectId));

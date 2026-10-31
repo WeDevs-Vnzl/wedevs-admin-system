@@ -210,6 +210,17 @@ describe('markExpensePaid (HU-17 CA2)', () => {
     });
   });
 
+  it('paying from another account recomputes only the paying account: a pending expense never fed the old one', async () => {
+    seedPending({ accountId: VES });
+
+    await world.markPaid.execute(world.owner, pay());
+
+    expect(world.projector.calls).toEqual(['expense:exp_seed', `account:${ZELLE}`, 'projects:']);
+    expect(world.locks.acquired.filter((row) => row.rowClass === 'Account')).toEqual([
+      expect.objectContaining({ id: ZELLE }),
+    ]);
+  });
+
   it('refuses to mark again an expense that is already paid', async () => {
     seedPending({ status: 'PAGADO', accountId: ZELLE, paidAt: '2026-10-01' });
 
