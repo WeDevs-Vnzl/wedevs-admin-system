@@ -9,6 +9,7 @@ import {
   rejection,
   type World,
 } from '../../../../../../test/finance/expenses/world';
+import { GENERATION_ACTOR } from './generate-recurring-expenses.use-case';
 import type { RecurringExpenseInput } from './recurring-expense-support';
 
 let world: World;
@@ -32,10 +33,17 @@ const generatedBy = (id: string) =>
   world.expenses.all.filter((item) => item.recurringExpenseId === id);
 
 describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
+  it('refuses a non-SYSTEM actor and generates nothing', async () => {
+    await world.createRecurring.execute(world.owner, input());
+
+    await expect(world.generate.execute({ actorType: 'USER', userId: world.owner.userId })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(world.expenses.all.filter((item) => item.recurringExpenseId !== null)).toHaveLength(0);
+  });
+
   it('generates one PENDIENTE expense per due period, with its due date and generation day', async () => {
     const schedule = await world.createRecurring.execute(world.owner, input());
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result).toEqual({ created: 1, periodStarts: ['2026-10-05'] });
     expect(generatedBy(schedule.id)[0]).toMatchObject({
@@ -63,16 +71,16 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
   it('a pending generated expense feeds no balance, fact or margin', async () => {
     await world.createRecurring.execute(world.owner, input());
 
-    await world.generate.execute();
+    await world.generate.execute(GENERATION_ACTOR);
 
     expect(world.projector.calls).toEqual([]);
   });
 
   it('running the job twice the same day creates no duplicate (CA2)', async () => {
     const schedule = await world.createRecurring.execute(world.owner, input());
-    await world.generate.execute();
+    await world.generate.execute(GENERATION_ACTOR);
 
-    const second = await world.generate.execute();
+    const second = await world.generate.execute(GENERATION_ACTOR);
 
     expect(second).toEqual({ created: 0, periodStarts: [] });
     expect(generatedBy(schedule.id)).toHaveLength(1);
@@ -84,7 +92,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
       input({ startDate: '2026-07-01' }),
     );
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result.periodStarts).toEqual(['2026-07-05', '2026-08-05', '2026-09-05', '2026-10-05']);
     expect(generatedBy(schedule.id)).toHaveLength(4);
@@ -97,7 +105,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     );
     await world.setRecurringStatus.execute(world.owner, { id: schedule.id, status: 'PAUSADO' });
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result).toEqual({ created: 0, periodStarts: [] });
     expect(generatedBy(schedule.id)).toHaveLength(0);
@@ -115,11 +123,11 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     });
 
     expect(resumed).toMatchObject({ resumedOn: '2026-10-09', nextDueDate: '2026-11-05' });
-    expect(await world.generate.execute()).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
 
     // The next period after the resume is generated as usual: 2026-11-05, on 2026-10-31.
     world.clock.set('2026-10-31T15:00:00.000Z');
-    await world.generate.execute();
+    await world.generate.execute(GENERATION_ACTOR);
     expect(generatedBy(schedule.id).map((item) => item.periodStart)).toEqual(['2026-11-05']);
   });
 
@@ -130,14 +138,14 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     );
     await world.setRecurringStatus.execute(world.owner, { id: schedule.id, status: 'ACTIVO' });
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result.periodStarts).toEqual(['2026-09-05', '2026-10-05']);
   });
 
   it('changing the amount affects only the periods not generated yet', async () => {
     const schedule = await world.createRecurring.execute(world.owner, input());
-    await world.generate.execute();
+    await world.generate.execute(GENERATION_ACTOR);
 
     await world.updateRecurring.execute(world.owner, {
       ...input({ amount: '200.00' }),
@@ -153,10 +161,10 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     const schedule = await world.createRecurring.execute(world.owner, input({ currency: 'EUR' }));
     world.rateTable.delete('EUR');
 
-    expect(await world.generate.execute()).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
 
     world.rateTable.set('EUR', '0.90');
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
     expect(result.created).toBe(1);
     expect(generatedBy(schedule.id)[0]).toMatchObject({ usdRate: '0.90', amountUsd: '133.33' });
   });
@@ -164,7 +172,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
   it('one run creates at most 24 periods per schedule', async () => {
     await world.createRecurring.execute(world.owner, input({ startDate: '2020-01-01' }));
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result.created).toBe(24);
   });
@@ -175,7 +183,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
       input({ startDate: '2026-07-01', endDate: '2026-08-31' }),
     );
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result.periodStarts).toEqual(['2026-07-05', '2026-08-05']);
   });
@@ -380,7 +388,7 @@ describe('time', () => {
       recurringRecord({ startDate: '2026-10-10', dayOfPeriod: 15, leadDays: 5 }),
     );
 
-    expect(await world.generate.execute()).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
     expect(NOW).toContain('2026-10-09');
   });
 });

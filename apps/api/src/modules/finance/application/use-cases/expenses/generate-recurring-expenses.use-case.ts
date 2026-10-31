@@ -7,6 +7,7 @@ import type { SearchIndexPort } from '../../../../../shared/application/ports/se
 import type { SequencePort } from '../../../../../shared/application/ports/sequence.port';
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import type { DateOnly } from '../../../../../shared/domain/business-date';
+import { ForbiddenError } from '../../../../../shared/domain/domain-error';
 import { roundMoney, toUsd } from '../../../../../shared/domain/money';
 import type { ExchangeRatePort } from '../../ports/exchange-rate.port';
 import type { ExpenseRepository, ExpenseRecord } from '../../ports/expense.repository.port';
@@ -25,7 +26,7 @@ export interface RecurringExpenseGenerationResult {
   readonly periodStarts: DateOnly[];
 }
 
-/** The actor of the scheduled step (`SYSTEM_JOB`). */
+/** The actor of the scheduled step (`SYSTEM_JOB`); `execute` refuses any other actor. */
 export const GENERATION_ACTOR: Actor = { actorType: 'SYSTEM', userId: null };
 
 /**
@@ -50,7 +51,8 @@ export class GenerateRecurringExpenses {
     private readonly ids: IdGeneratorPort,
   ) {}
 
-  async execute(actor: Actor = GENERATION_ACTOR): Promise<RecurringExpenseGenerationResult> {
+  async execute(actor: Actor): Promise<RecurringExpenseGenerationResult> {
+    if (actor.actorType !== 'SYSTEM') throw new ForbiddenError();
     const periodStarts: DateOnly[] = [];
     const scheduleIds = await this.recurring.activeIds();
     for (const id of scheduleIds) {

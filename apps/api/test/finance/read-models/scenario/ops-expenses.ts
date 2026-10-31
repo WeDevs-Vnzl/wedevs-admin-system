@@ -1,3 +1,4 @@
+import type { Actor } from '../../../../src/shared/application/actor';
 import type { CurrentUser } from '../../../../src/shared/application/current-user';
 import { addDays, CURRENCIES, rateFor, type Ctx, type Operation } from './ops-base';
 
@@ -192,11 +193,10 @@ const setRecurringExpenseStatus: Operation = {
 
 const generateRecurringExpenses: Operation = {
   name: 'generateRecurringExpenses',
-  // A job step: it takes no user input and checks no actor, so it has no refused path to drive.
-  validOnly: true,
+  system: true,
   async plan(ctx) {
     const uc = ctx.world.uc.generateRecurringExpenses;
-    return { describe: 'daily step', run: () => uc.execute() };
+    return { describe: 'daily step', run: (actor) => uc.execute(actor as Actor) };
   },
 };
 

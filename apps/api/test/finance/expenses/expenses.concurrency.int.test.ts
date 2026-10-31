@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { PrismaService } from '../../../src/shared/infrastructure/prisma/prisma.service';
 import { createTestPrisma, truncateBusinessTables } from '../../support/db';
+import { GENERATION_ACTOR } from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
 import { Gate, gated, interleave } from '../concurrency/world';
 import {
   catalogIds,
@@ -158,8 +159,8 @@ describe('GenerateRecurringExpenses run twice', () => {
     const results = await interleave(
       admin,
       gate,
-      () => slow.generate.execute(),
-      () => fast.generate.execute(),
+      () => slow.generate.execute(GENERATION_ACTOR),
+      () => fast.generate.execute(GENERATION_ACTOR),
     );
 
     expect(results.map((result) => result.status)).toEqual(['fulfilled', 'fulfilled']);

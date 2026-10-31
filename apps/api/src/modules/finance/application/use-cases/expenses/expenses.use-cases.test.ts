@@ -10,6 +10,7 @@ import {
   rejection,
   type World,
 } from '../../../../../../test/finance/expenses/world';
+import { GENERATION_ACTOR } from './generate-recurring-expenses.use-case';
 import type { CreateExpenseInput } from './create-expense.use-case';
 
 let world: World;
@@ -350,7 +351,7 @@ describe('voidExpense', () => {
     });
     await world.voidExpense.execute(world.owner, { id: 'exp_seed' });
 
-    const result = await world.generate.execute();
+    const result = await world.generate.execute(GENERATION_ACTOR);
 
     expect(result).toEqual({ created: 0, periodStarts: [] });
   });
