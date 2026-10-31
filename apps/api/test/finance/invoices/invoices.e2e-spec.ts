@@ -522,8 +522,13 @@ describe('invoices (e2e): HU-11, HU-12', () => {
       expect(await step.execute(SYSTEM_ACTOR)).toEqual({
         updated: 1,
         invoiceIds: [created.body.id],
+        skippedIds: [],
       });
-      expect(await step.execute(SYSTEM_ACTOR)).toEqual({ updated: 0, invoiceIds: [] });
+      expect(await step.execute(SYSTEM_ACTOR)).toEqual({
+        updated: 0,
+        invoiceIds: [],
+        skippedIds: [],
+      });
       const row = await admin.invoice.findUniqueOrThrow({ where: { id: created.body.id } });
       expect(row.status).toBe('VENCIDA');
       const client = await admin.clientMetrics.findUniqueOrThrow({
