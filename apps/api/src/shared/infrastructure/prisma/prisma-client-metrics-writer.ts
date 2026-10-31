@@ -31,9 +31,12 @@ export class PrismaClientMetricsWriter implements ClientMetricsWriterPort {
     if (ids.length === 0) return;
     // INSERT ... SELECT from "Client" so an id that does not exist is skipped instead of failing the
     // transaction on the foreign key; GREATEST ignores NULL, so the first touch sets the value.
+    // ORDER BY ... COLLATE "C" fixes the order the rows are written in: FinanceProjector writes the same
+    // ClientMetrics rows ascending, so a scan-order insert could deadlock against it (BE-3, lock order).
     await tx.$executeRaw`
       INSERT INTO "ClientMetrics" ("clientId", "lastActivityAt", "updatedAt")
       SELECT c."id", ${at}, now() FROM "Client" c WHERE c."id" = ANY(${ids}::text[])
+      ORDER BY c."id" COLLATE "C"
       ON CONFLICT ("clientId") DO UPDATE SET
         "lastActivityAt" = GREATEST("ClientMetrics"."lastActivityAt", EXCLUDED."lastActivityAt"),
         "updatedAt" = now()`;
