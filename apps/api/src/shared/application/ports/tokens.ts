@@ -9,3 +9,4 @@ export const AUTHENTICATOR = Symbol('AUTHENTICATOR');
 export const SEARCH_INDEX = Symbol('SEARCH_INDEX');
 export const CLIENT_METRICS_WRITER = Symbol('CLIENT_METRICS_WRITER');
 export const REQUEST_CONTEXT = Symbol('REQUEST_CONTEXT');
+export const ROW_LOCKS = Symbol('ROW_LOCKS');

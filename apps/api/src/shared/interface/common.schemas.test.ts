@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   VALIDATION_MESSAGES,
   dateOnlySchema,
+  decimalStringSchema,
   idSchema,
   isValidDateOnly,
   moneyAmountSchema,
@@ -126,6 +127,26 @@ describe('rateSchema (decimal strings, at most 8 decimals)', () => {
     ]);
     expect(messages(rateSchema.safeParse('0'))).toEqual([VALIDATION_MESSAGES.rateMustBePositive]);
     expect(rateSchema.safeParse(36.5).success).toBe(false);
+  });
+});
+
+describe('decimalStringSchema (output)', () => {
+  it.each(['0', '0.00', '1250.00', '-3.5', '99999999999999.99', '1.12345678'])(
+    'accepts %s',
+    (value) => {
+      expect(decimalStringSchema.safeParse(value).success).toBe(true);
+    },
+  );
+
+  it.each(['', '1e3', '01', '.5', '5.', '1,5', ' 1', 'NaN', '+1'])('rejects %j', (value) => {
+    expect(decimalStringSchema.safeParse(value).success).toBe(false);
+  });
+
+  it('rejects a number and emits a string with a pattern in JSON Schema', () => {
+    expect(decimalStringSchema.safeParse(1.5).success).toBe(false);
+    const json = z.toJSONSchema(decimalStringSchema) as { type?: string; pattern?: string };
+    expect(json.type).toBe('string');
+    expect(json.pattern).toBeTruthy();
   });
 });
 
