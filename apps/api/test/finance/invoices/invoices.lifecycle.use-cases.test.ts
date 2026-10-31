@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_ACTOR } from '../../../src/modules/finance/application/recompute-all';
+import { ConflictError } from '../../../src/shared/domain/domain-error';
 import {
   CANCELLED,
   KAIROS,
@@ -164,7 +165,11 @@ describe('MarkOverdueInvoices (HU-12 CA4, daily-maintenance step)', () => {
 
     const result = await w.markOverdue.execute(SYSTEM_ACTOR);
 
-    expect(result).toEqual({ updated: 2, invoiceIds: ['inv_a', 'inv_b'] });
+    expect(result).toEqual({
+      updated: 2,
+      invoiceIds: ['inv_a', 'inv_b'],
+      skippedIds: [],
+    });
     expect((await w.invoices.findById('inv_a'))?.status).toBe('VENCIDA');
     expect((await w.invoices.findById('inv_b'))?.status).toBe('VENCIDA');
     expect((await w.invoices.findById('inv_c'))?.status).toBe('EMITIDA');
@@ -189,9 +194,48 @@ describe('MarkOverdueInvoices (HU-12 CA4, daily-maintenance step)', () => {
     w.invoices.seed(invoiceRecord({ id: 'inv_a', invoiceNumber: 'A', dueDate: '2026-10-08' }));
     await w.markOverdue.execute(SYSTEM_ACTOR);
     const calls = w.projector.calls.length;
-    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({ updated: 0, invoiceIds: [] });
+    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 0,
+      invoiceIds: [],
+      skippedIds: [],
+    });
     expect(w.projector.calls).toHaveLength(calls);
     expect(w.activity.entries).toHaveLength(1);
+  });
+
+  it('a CONFLICT on one invoice skips it, the rest of the run goes on and the next run picks it up', async () => {
+    const w = createWorld();
+    w.invoices.seed(invoiceRecord({ id: 'inv_a', invoiceNumber: 'A', dueDate: '2026-10-08' }));
+    w.invoices.seed(invoiceRecord({ id: 'inv_b', invoiceNumber: 'B', dueDate: '2026-10-08' }));
+    const update = w.invoices.update.bind(w.invoices);
+    w.invoices.update = async (record) => {
+      if (record.id === 'inv_a') throw new ConflictError();
+      return update(record);
+    };
+
+    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 1,
+      invoiceIds: ['inv_b'],
+      skippedIds: ['inv_a'],
+    });
+    expect((await w.invoices.findById('inv_a'))?.status).toBe('EMITIDA');
+    expect((await w.invoices.findById('inv_b'))?.status).toBe('VENCIDA');
+
+    w.invoices.update = update;
+    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 1,
+      invoiceIds: ['inv_a'],
+      skippedIds: [],
+    });
+  });
+
+  it('any other error still aborts the run', async () => {
+    const w = createWorld();
+    w.invoices.seed(invoiceRecord({ id: 'inv_a', invoiceNumber: 'A', dueDate: '2026-10-08' }));
+    w.invoices.update = async () => {
+      throw new Error('disk full');
+    };
+    await expect(w.markOverdue.execute(SYSTEM_ACTOR)).rejects.toThrow('disk full');
   });
 
   it('only a SYSTEM actor may run it', async () => {

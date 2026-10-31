@@ -227,7 +227,11 @@ describe('a row that disappears between the plan and the lock is NOT_FOUND', () 
     const overdue = createWorld();
     overdue.invoices.seed(invoiceRecord({ id: 'inv_a', dueDate: '2026-10-01' }));
     vanishAfter(overdue, 1);
-    expect(await overdue.markOverdue.execute(SYSTEM_ACTOR)).toEqual({ updated: 0, invoiceIds: [] });
+    expect(await overdue.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 0,
+      invoiceIds: [],
+      skippedIds: [],
+    });
   });
 });
 
@@ -455,11 +459,16 @@ describe('the overdue step skips what is not a candidate at its lock', () => {
     expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
       updated: 1,
       invoiceIds: ['inv_arch'],
+      skippedIds: [],
     });
 
     expect((await w.invoices.findById('inv_arch'))?.status).toBe('VENCIDA');
     expect((await w.invoices.findById('inv_arch'))?.archivedAt).toBe(NOW);
     expect(w.activity.entries).toHaveLength(1);
+    // The entry of an archived invoice carries no client scope: no client metric moves (M1).
+    expect(w.activity.entries[0]).toMatchObject({ action: 'SYSTEM_JOB', entityId: 'inv_arch' });
+    expect(w.activity.entries[0]?.clientId ?? null).toBeNull();
+    expect(w.activity.entries[0]?.touchClientIds ?? []).toEqual([]);
     expect(w.search.get('INVOICE', 'inv_arch')).toMatchObject({
       status: 'VENCIDA',
       archived: true,
@@ -487,7 +496,11 @@ describe('the overdue step skips what is not a candidate at its lock', () => {
     );
     w.invoices.seed(invoiceRecord({ id: 'inv_future', invoiceNumber: 'D', dueDate: '2026-12-01' }));
     w.invoices.overdueIds = async () => ['inv_arch', 'inv_draft', 'inv_late', 'inv_future'];
-    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({ updated: 0, invoiceIds: [] });
+    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 0,
+      invoiceIds: [],
+      skippedIds: [],
+    });
     expect(w.activity.entries).toHaveLength(0);
   });
 });
