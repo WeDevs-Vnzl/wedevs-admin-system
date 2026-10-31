@@ -484,6 +484,16 @@ describe('payments (e2e): HU-13, HU-14, HU-12 CA2-CA3', () => {
 
       const created = await create({ receiptFileId: 'file_pdf', reference: 'R-1' });
       expect(created.body.receiptFileId).toBe('file_pdf');
+      expect(created.body.receipt).toMatchObject({ id: 'file_pdf', status: 'READY' });
+      expect(Object.keys(created.body.receipt).sort()).toEqual([
+        'createdAt',
+        'id',
+        'mimeType',
+        'originalName',
+        'sizeBytes',
+        'status',
+        'uploadedById',
+      ]);
       expect(
         await app.get<FileAccessRegistry>(FILE_ACCESS_REGISTRY).claimsFor('file_pdf'),
       ).toContainEqual({
@@ -520,6 +530,7 @@ describe('payments (e2e): HU-13, HU-14, HU-12 CA2-CA3', () => {
         .send({ ...body({ reference: 'R-1' }), receiptFileId: null })
         .expect(200);
       expect(detached.body.receiptFileId).toBeNull();
+      expect(detached.body.receipt).toBeNull();
     });
   });
 

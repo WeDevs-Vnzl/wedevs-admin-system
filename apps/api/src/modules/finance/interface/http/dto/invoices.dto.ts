@@ -162,7 +162,7 @@ const totalsResponse = z.object({
   balanceUsd: decimalStringSchema,
 });
 
-const fileResponse = z.object({
+export const fileResponse = z.object({
   id: idSchema,
   originalName: z.string(),
   mimeType: z.string(),

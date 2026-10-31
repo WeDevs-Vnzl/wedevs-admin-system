@@ -177,6 +177,17 @@ export class InMemoryPaymentRepository implements PaymentRepository, Transaction
       account: labels.account(row.accountId),
       allocated: subMoney(row.allocatable, row.unallocated),
       allocations: live.map((allocation) => this.allocationView(allocation)),
+      receipt: row.receiptFileId
+        ? {
+            id: row.receiptFileId,
+            originalName: 'receipt.pdf',
+            mimeType: 'application/pdf',
+            sizeBytes: 1024,
+            status: 'READY',
+            uploadedById: 'usr_owner',
+            createdAt: row.createdAt,
+          }
+        : null,
     };
   }
 

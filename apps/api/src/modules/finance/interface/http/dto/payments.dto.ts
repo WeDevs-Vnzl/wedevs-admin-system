@@ -19,6 +19,7 @@ import type {
 } from '../../../application/ports/payment.repository.port';
 import { PAYMENT_SORT_FIELDS } from '../../../application/use-cases/payments/payment-input';
 import type { PaymentOutput } from '../../../application/use-cases/payments/payment-support';
+import { fileResponse } from './invoices.dto';
 import {
   DEFAULT_PAYMENT_SORT,
   type ClientCreditOutput,
@@ -172,8 +173,9 @@ export const paymentResponseSchema = rowResponse.extend({
   /** `amount − igtf`: what can be applied to invoices. */
   allocatable: decimalStringSchema,
   usdRate: decimalStringSchema,
-  /** The receipt file; its metadata is read from the files API (C23). */
   receiptFileId: idSchema.nullable(),
+  /** Metadata of the receipt file; the download goes through the files API (C23). */
+  receipt: fileResponse.nullable(),
   allocations: z.array(allocationResponse),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
@@ -280,6 +282,7 @@ export function toPaymentResponse(output: PaymentOutput): z.infer<typeof payment
     allocatable: output.allocatable,
     usdRate: output.usdRate,
     receiptFileId: output.receiptFileId,
+    receipt: output.receipt,
     allocations: output.allocations.map(toAllocationResponse),
     createdAt: output.createdAt,
     updatedAt: output.updatedAt,

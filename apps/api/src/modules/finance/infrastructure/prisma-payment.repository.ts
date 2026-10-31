@@ -34,6 +34,17 @@ const VIEW_INCLUDE = {
   client: { select: { id: true, code: true, tradeName: true } },
   method: { select: { id: true, code: true, name: true, nameEn: true } },
   account: { select: { id: true, name: true } },
+  receiptFile: {
+    select: {
+      id: true,
+      originalName: true,
+      mimeType: true,
+      sizeBytes: true,
+      status: true,
+      uploadedById: true,
+      createdAt: true,
+    },
+  },
   allocations: {
     where: { deletedAt: null },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
@@ -136,6 +147,9 @@ function toView(row: ViewRow): PaymentView {
     account: accountRef(row.account),
     allocated: subMoney(record.allocatable, record.unallocated),
     allocations: row.allocations.map(toAllocationView),
+    receipt: row.receiptFile
+      ? { ...row.receiptFile, createdAt: row.receiptFile.createdAt.toISOString() }
+      : null,
   };
 }
 
@@ -186,8 +200,8 @@ const contains = (value: string) => ({ contains: value, mode: 'insensitive' as c
 
 /**
  * `Payment` and `PaymentAllocation` rows through the current transaction. The list and detail labels join
- * `Client` (commercial), `Account` and `PaymentMethod` (settings) and the tag assignments as read-only selects
- * (DT-118). Payments are never archived (Q-BE3-4), so
+ * `Client` (commercial), `Account`, `PaymentMethod` (settings), the receipt's `File` metadata (platform, seven
+ * columns, never `storageKey` or `bucket`) and the tag assignments as read-only selects (DT-118). Payments are never archived (Q-BE3-4), so
  * no read filters `deletedAt`. Allocations are soft-deleted (contract choice 3): the live ones have `deletedAt`
  * null, and `allocation_unique_active` allows one live row per payment and invoice.
  */

@@ -1,3 +1,4 @@
+import type { InvoiceFileView } from './invoice.repository.port';
 import type { DateOnly } from '../../../../shared/domain/business-date';
 import type { EntityRef } from '../../../../shared/domain/entity-ref';
 import type { PaymentStatus } from '../../../../shared/domain/enums';
@@ -78,6 +79,8 @@ export interface PaymentView extends PaymentRecord {
   /** `Σ` live allocations in the payment currency. */
   readonly allocated: MoneyString;
   readonly allocations: readonly PaymentAllocationView[];
+  /** Metadata of the receipt file, never its storage location (DT-118). */
+  readonly receipt: InvoiceFileView | null;
 }
 
 export interface PaymentListRowView {
