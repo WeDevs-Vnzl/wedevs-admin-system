@@ -36,7 +36,9 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
   it('refuses a non-SYSTEM actor and generates nothing', async () => {
     await world.createRecurring.execute(world.owner, input());
 
-    await expect(world.generate.execute({ actorType: 'USER', userId: world.owner.userId })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(
+      world.generate.execute({ actorType: 'USER', userId: world.owner.userId }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
     expect(world.expenses.all.filter((item) => item.recurringExpenseId !== null)).toHaveLength(0);
   });
 
@@ -123,7 +125,10 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     });
 
     expect(resumed).toMatchObject({ resumedOn: '2026-10-09', nextDueDate: '2026-11-05' });
-    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
+      created: 0,
+      periodStarts: [],
+    });
 
     // The next period after the resume is generated as usual: 2026-11-05, on 2026-10-31.
     world.clock.set('2026-10-31T15:00:00.000Z');
@@ -161,7 +166,10 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     const schedule = await world.createRecurring.execute(world.owner, input({ currency: 'EUR' }));
     world.rateTable.delete('EUR');
 
-    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
+      created: 0,
+      periodStarts: [],
+    });
 
     world.rateTable.set('EUR', '0.90');
     const result = await world.generate.execute(GENERATION_ACTOR);
@@ -388,7 +396,10 @@ describe('time', () => {
       recurringRecord({ startDate: '2026-10-10', dayOfPeriod: 15, leadDays: 5 }),
     );
 
-    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({ created: 0, periodStarts: [] });
+    expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
+      created: 0,
+      periodStarts: [],
+    });
     expect(NOW).toContain('2026-10-09');
   });
 });

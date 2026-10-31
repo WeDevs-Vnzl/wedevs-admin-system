@@ -7,14 +7,8 @@ import {
   toDecimal,
   type MoneyString,
 } from '../../../../../shared/domain/money';
-import {
-  EXPENSE_MESSAGES,
-  addError,
-  dateError,
-  moneyError,
-  textError,
-  usdRateError,
-} from '../expenses/expense-support';
+import { EXPENSE_MESSAGES } from '../expenses/expense-support';
+import { addError, dateError, moneyError, textError, usdRateError } from '../../field-validation';
 
 /** Message keys of the payment forms (`payments.validation.*`, FE `PAYMENT_MESSAGES`) and the errors of this slice. */
 export const PAYMENT_MESSAGES = {

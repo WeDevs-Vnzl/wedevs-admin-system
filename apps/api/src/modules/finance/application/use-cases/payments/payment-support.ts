@@ -41,7 +41,7 @@ import type {
 } from '../../ports/payment.repository.port';
 import type { InvoiceSupport } from '../invoices/invoice-support';
 import type { RecomputeInvoice } from '../invoices/recompute-invoice.use-case';
-import { addError } from '../expenses/expense-support';
+import { addError } from '../../field-validation';
 import {
   PAYMENT_MESSAGES,
   RECEIPT_MAX_BYTES,

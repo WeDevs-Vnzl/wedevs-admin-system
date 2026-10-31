@@ -7,13 +7,8 @@ import type { UnitOfWorkPort } from '../../../../../shared/application/ports/uni
 import { ConflictError, NotFoundError } from '../../../../../shared/domain/domain-error';
 import { EXPENSE_ERRORS } from '../../../domain/errors';
 import type { ExpenseRecord } from '../../ports/expense.repository.port';
-import {
-  type ExpenseOutput,
-  type ExpenseSupport,
-  expenseLockSet,
-  textError,
-  throwIfAny,
-} from './expense-support';
+import { type ExpenseOutput, type ExpenseSupport, expenseLockSet } from './expense-support';
+import { textError, throwIfAny } from '../../field-validation';
 
 export interface VoidExpenseInput {
   readonly id: string;

@@ -19,14 +19,10 @@ import type {
 import {
   EXPENSE_MESSAGES,
   type RecurringExpenseOutput,
-  addError,
-  dateError,
-  invalid,
-  moneyError,
   nextDueDateOf,
-  textError,
   todayOf,
 } from './expense-support';
+import { addError, dateError, invalid, moneyError, textError } from '../../field-validation';
 
 export interface RecurringExpenseInput {
   readonly name: string;

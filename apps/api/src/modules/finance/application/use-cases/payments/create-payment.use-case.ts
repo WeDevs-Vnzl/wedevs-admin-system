@@ -9,7 +9,7 @@ import type { SequencePort } from '../../../../../shared/application/ports/seque
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { toUsd } from '../../../../../shared/domain/money';
 import type { PaymentRecord } from '../../ports/payment.repository.port';
-import { addError, throwIfAny } from '../expenses/expense-support';
+import { addError, throwIfAny } from '../../field-validation';
 import {
   PAYMENT_MESSAGES,
   allocationListErrors,

@@ -13,7 +13,7 @@ import {
 } from '../../../../../shared/domain/domain-error';
 import { compareMoney, toUsd } from '../../../../../shared/domain/money';
 import type { PaymentRecord } from '../../ports/payment.repository.port';
-import { throwIfAny } from '../expenses/expense-support';
+import { throwIfAny } from '../../field-validation';
 import {
   PAYMENT_MESSAGES,
   normalizePaymentFields,

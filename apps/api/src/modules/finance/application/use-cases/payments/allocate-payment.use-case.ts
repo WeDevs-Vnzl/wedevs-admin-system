@@ -14,7 +14,7 @@ import {
 } from '../../../../../shared/domain/domain-error';
 import { PAYMENT_ERRORS } from '../../../domain/errors';
 import type { PaymentAllocationView, PaymentRecord } from '../../ports/payment.repository.port';
-import { throwIfAny } from '../expenses/expense-support';
+import { throwIfAny } from '../../field-validation';
 import { PAYMENT_MESSAGES, allocationFieldErrors, type AllocationInput } from './payment-input';
 import { derivedColumns, type PaymentOutput, type PaymentSupport } from './payment-support';
 

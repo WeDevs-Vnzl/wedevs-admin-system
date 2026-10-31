@@ -8,7 +8,7 @@ import type { UnitOfWorkPort } from '../../../../../shared/application/ports/uni
 import { ConflictError, NotFoundError } from '../../../../../shared/domain/domain-error';
 import { PAYMENT_STATUS_VALUES, type PaymentStatus } from '../../../../../shared/domain/enums';
 import type { PaymentRecord } from '../../ports/payment.repository.port';
-import { addError, textError, throwIfAny } from '../expenses/expense-support';
+import { addError, textError, throwIfAny } from '../../field-validation';
 import { PAYMENT_MESSAGES } from './payment-input';
 import { derivedColumns, type PaymentOutput, type PaymentSupport } from './payment-support';
 

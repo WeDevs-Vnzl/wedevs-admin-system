@@ -18,7 +18,7 @@ import type {
   PaymentListRowView,
   PaymentRepository,
 } from '../../ports/payment.repository.port';
-import { addError, dateError, textError, throwIfAny } from '../expenses/expense-support';
+import { addError, dateError, textError, throwIfAny } from '../../field-validation';
 import { PAYMENT_MESSAGES, PAYMENT_SORT_FIELDS } from './payment-input';
 import { isOpenInvoice, type PaymentOutput } from './payment-support';
 

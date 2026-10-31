@@ -17,8 +17,8 @@ import {
   type ExpenseSupport,
   expenseLockSet,
   storedAccountAmount,
-  throwIfAny,
 } from './expense-support';
+import { throwIfAny } from '../../field-validation';
 
 /** Everything `createExpense` takes except the status and payment date: paying goes through `markExpensePaid`. */
 export type UpdateExpenseInput = Omit<CreateExpenseInput, 'status' | 'paidAt'> & {

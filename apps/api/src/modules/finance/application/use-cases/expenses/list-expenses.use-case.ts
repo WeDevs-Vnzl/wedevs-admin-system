@@ -11,13 +11,11 @@ import type { Paginated } from '../../../../../shared/domain/pagination';
 import type { ExpenseFilter, ExpenseRepository } from '../../ports/expense.repository.port';
 import {
   type ExpenseOutput,
-  dateError,
-  throwIfAny,
   toExpenseOutput,
   todayOf,
   EXPENSE_SORT_FIELDS,
-  addError,
 } from './expense-support';
+import { dateError, throwIfAny, addError } from '../../field-validation';
 
 export const DEFAULT_EXPENSE_SORT: SortSpec = { field: 'date', direction: 'desc' };
 

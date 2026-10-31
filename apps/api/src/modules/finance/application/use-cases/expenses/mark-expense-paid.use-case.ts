@@ -13,13 +13,10 @@ import {
   type ExpenseOutput,
   type ExpenseSupport,
   checkAccountAmount,
-  dateError,
   expenseLockSet,
-  moneyError,
   storedAccountAmount,
-  throwIfAny,
-  usdRateError,
 } from './expense-support';
+import { dateError, moneyError, throwIfAny, usdRateError } from '../../field-validation';
 
 export interface MarkExpensePaidInput {
   readonly id: string;

@@ -26,12 +26,11 @@ import {
   EXPENSE_MESSAGES,
   RECURRING_EXPENSE_SORT_FIELDS,
   type RecurringExpenseOutput,
-  addError,
   expenseLockSet,
   nextDueDateOf,
-  throwIfAny,
   todayOf,
 } from './expense-support';
+import { addError, throwIfAny } from '../../field-validation';
 import {
   type RecurringExpenseInput,
   type RecurringExpenseSupport,
