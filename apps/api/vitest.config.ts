@@ -44,10 +44,27 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['src/shared/domain/money.ts', 'src/shared/domain/business-date.ts'],
+      // Money and business-date today; the finance globs start enforcing when package 1.3 and the use
+      // cases add files. Vitest 5 builds the per-glob threshold from the files that match it, and a glob
+      // with no matching file is skipped silently (checked in the 1.2 report), so the gate cannot fail
+      // before the files exist and cannot be skipped once they do.
+      include: [
+        'src/shared/domain/money.ts',
+        'src/shared/domain/business-date.ts',
+        'src/modules/finance/domain/**/*.ts',
+        'src/modules/finance/application/use-cases/{invoices,payments,accounts,billing}/**/*.ts',
+      ],
+      exclude: ['**/*.test.ts', '**/*.int.test.ts', '**/*.e2e-spec.ts'],
       thresholds: {
         'src/shared/domain/money.ts': { lines: 90, functions: 90, branches: 90, statements: 90 },
         'src/shared/domain/business-date.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 90,
+          statements: 90,
+        },
+        'src/modules/finance/domain/**': { lines: 90, functions: 90, branches: 90, statements: 90 },
+        'src/modules/finance/application/use-cases/{invoices,payments,accounts,billing}/**': {
           lines: 90,
           functions: 90,
           branches: 90,
