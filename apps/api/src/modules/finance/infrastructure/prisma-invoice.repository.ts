@@ -41,7 +41,17 @@ const RECORD_INCLUDE = {
 
 const VIEW_INCLUDE = {
   client: { select: { id: true, code: true, tradeName: true } },
-  file: true,
+  file: {
+    select: {
+      id: true,
+      originalName: true,
+      mimeType: true,
+      sizeBytes: true,
+      status: true,
+      uploadedById: true,
+      createdAt: true,
+    },
+  },
   lines: {
     orderBy: { order: 'asc' },
     include: {
