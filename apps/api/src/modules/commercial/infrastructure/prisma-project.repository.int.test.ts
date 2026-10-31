@@ -412,6 +412,28 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
       ).toEqual(['PRY-0001', 'PRY-0002']);
     });
 
+    it('withoutBillingPlan excludes projects with a plan and pages in SQL (Q-BE3-6)', async () => {
+      await seed();
+      await admin.billingPlan.create({
+        data: {
+          projectId: 'int_pry_1',
+          model: 'PRECIO_FIJO',
+          currency: 'USD',
+          contractAmount: '100.00',
+        },
+      });
+      expect(await codes({ filters: { withoutBillingPlan: true } })).toEqual([
+        'PRY-0002',
+        'PRY-0003',
+      ]);
+      expect(await codes({ filters: {} })).toEqual(['PRY-0001', 'PRY-0002', 'PRY-0003']);
+      const page = await repository.list(
+        request({ filters: { withoutBillingPlan: true }, pageSize: 1, page: 2 }),
+      );
+      expect(page.total).toBe(2);
+      expect(page.records.map((r) => r.code)).toEqual(['PRY-0003']);
+    });
+
     it('searches code, name and client names, accent- and case-insensitive, literal wildcards', async () => {
       await seed();
       expect(await codes({ filters: { q: 'arbol' } })).toEqual(['PRY-0001']);

@@ -159,6 +159,8 @@ const projectListOptions = {
     tagId: idSchema,
     deliveryFrom: dateOnlySchema,
     deliveryTo: dateOnlySchema,
+    /** Additive facet (`api-contract.md` §7): only projects with no billing plan; `true` is the one value. */
+    withoutBillingPlan: z.enum(['true']),
   },
 } as const;
 

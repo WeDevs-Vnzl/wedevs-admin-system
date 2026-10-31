@@ -16,6 +16,8 @@ export interface ProjectListFilters {
   /** Delivery window over `targetEndDate`, inclusive. */
   readonly deliveryFrom?: DateOnly;
   readonly deliveryTo?: DateOnly;
+  /** Only projects with no `BillingPlan` row (HU-07; a read-only `NOT EXISTS`, DT-118 / Q-BE3-6). */
+  readonly withoutBillingPlan?: boolean;
   readonly q?: string;
 }
 

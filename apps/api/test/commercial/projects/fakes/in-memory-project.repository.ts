@@ -89,6 +89,13 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
     return row ? clone(row) : null;
   }
 
+  /** Projects that have a billing plan (the real repository asks the `BillingPlan` table). */
+  private readonly planned = new Set<string>();
+
+  seedPlan(projectId: string): void {
+    this.planned.add(projectId);
+  }
+
   /** Ids passed to `findByIdForUpdate`, in call order (the fake has no real locks). */
   readonly lockedProjects: string[] = [];
 
@@ -166,6 +173,7 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
       ) {
         return false;
       }
+      if (filters.withoutBillingPlan && this.planned.has(record.id)) return false;
       if (
         filters.deliveryFrom &&
         !(record.targetEndDate && record.targetEndDate >= filters.deliveryFrom)

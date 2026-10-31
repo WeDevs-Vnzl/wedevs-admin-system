@@ -130,6 +130,12 @@ function listWhere(request: ProjectListRequest): Prisma.Sql {
   if (filters.deliveryTo) {
     parts.push(Prisma.sql`p."targetEndDate" <= ${filters.deliveryTo}::date`);
   }
+  if (filters.withoutBillingPlan) {
+    // Read-only join over finance's `BillingPlan` (DT-118 / Q-BE3-6), so the page and the total stay in SQL.
+    parts.push(
+      Prisma.sql`NOT EXISTS (SELECT 1 FROM "BillingPlan" bp WHERE bp."projectId" = p."id")`,
+    );
+  }
   const text = filters.q?.trim();
   if (text) parts.push(searchCondition(text));
   return parts.length > 0 ? Prisma.join(parts, ' AND ') : Prisma.sql`TRUE`;

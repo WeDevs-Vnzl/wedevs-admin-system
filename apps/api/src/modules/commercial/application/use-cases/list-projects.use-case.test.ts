@@ -92,6 +92,19 @@ describe('ListProjects (mock listProjects)', () => {
     expect(await codes({ deliveryTo: '2026-07-01' })).toEqual(['PRY-0001']);
   });
 
+  it('withoutBillingPlan=true keeps only the projects with no billing plan (HU-07, Q-BE3-6)', async () => {
+    const world = seeded();
+    world.projects.seedPlan('p1');
+    const codes = async (filters: Record<string, string | string[]>) =>
+      (await world.listProjects.execute(actor('OWNER'), query({ filters }))).items.map(
+        (r) => r.code,
+      );
+
+    expect(await codes({ withoutBillingPlan: 'true' })).toEqual(['PRY-0002']);
+    expect(await codes({ withoutBillingPlan: 'true', status: 'EN_CURSO' })).toEqual([]);
+    expect(await codes({})).toEqual(['PRY-0002', 'PRY-0001']);
+  });
+
   it('searches by code, name and client name, sorts and paginates', async () => {
     const world = seeded();
     const search = async (q: string) =>

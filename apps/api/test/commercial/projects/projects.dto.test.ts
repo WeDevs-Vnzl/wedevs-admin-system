@@ -107,6 +107,14 @@ describe('project list query', () => {
     });
   });
 
+  it('accepts withoutBillingPlan=true as an additive facet and nothing else', () => {
+    expect(projectListQuerySchema.parse({ withoutBillingPlan: 'true' }).filters).toEqual({
+      withoutBillingPlan: 'true',
+    });
+    expect(projectListQuerySchema.safeParse({ withoutBillingPlan: 'maybe' }).success).toBe(false);
+    expect(projectListQuerySchema.parse({}).filters).toEqual({});
+  });
+
   it('whitelists the sort keys: the money ones are accepted here and gated by the use case', () => {
     for (const field of ['code', 'name', 'status', 'createdAt', 'toInvoiceUsd']) {
       expect(projectListQuerySchema.safeParse({ sort: `${field}:asc` }).success).toBe(true);

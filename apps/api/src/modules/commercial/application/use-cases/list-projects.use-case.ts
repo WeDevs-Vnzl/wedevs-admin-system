@@ -33,6 +33,7 @@ export function projectFiltersOf(query: ListQuery): ProjectListFilters {
   const tagIds = values(query.filters.tagId);
   const deliveryFrom = values(query.filters.deliveryFrom)?.[0] as DateOnly | undefined;
   const deliveryTo = values(query.filters.deliveryTo)?.[0] as DateOnly | undefined;
+  const withoutBillingPlan = values(query.filters.withoutBillingPlan)?.includes('true') === true;
   return {
     ...(status ? { status } : {}),
     ...(clientIds ? { clientIds } : {}),
@@ -40,6 +41,7 @@ export function projectFiltersOf(query: ListQuery): ProjectListFilters {
     ...(tagIds ? { tagIds } : {}),
     ...(deliveryFrom ? { deliveryFrom } : {}),
     ...(deliveryTo ? { deliveryTo } : {}),
+    ...(withoutBillingPlan ? { withoutBillingPlan } : {}),
     ...(query.q !== undefined ? { q: query.q } : {}),
   };
 }
