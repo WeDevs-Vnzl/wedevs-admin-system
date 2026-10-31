@@ -565,6 +565,7 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
   async overdueIds(today: DateOnly): Promise<string[]> {
     const rows = await this.host.db.invoice.findMany({
       where: {
+        deletedAt: undefined,
         isDraft: false,
         status: { in: ['EMITIDA', 'PARCIAL'] },
         dueDate: { lt: dateOnlyToDbDate(today) },

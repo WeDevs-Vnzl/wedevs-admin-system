@@ -227,7 +227,7 @@ export interface InvoiceRepository {
   billableInstallments(projectIds: readonly string[]): Promise<BillableInstallmentView[]>;
   /** Non-archived `EMITIDA`, `PARCIAL` and `VENCIDA` invoices of the client with a balance. */
   openInvoices(clientId: string): Promise<OpenInvoiceView[]>;
-  /** Non-archived, non-draft `EMITIDA` and `PARCIAL` invoices whose due date is before `today`. */
+  /** Non-draft `EMITIDA` and `PARCIAL` invoices, archived or not, whose due date is before `today`. */
   overdueIds(today: DateOnly): Promise<string[]>;
   labels(ids: readonly string[]): Promise<Map<string, InvoiceLabel>>;
   /** True when an invoice, archived or not, carries the file (the download claim of C23). */

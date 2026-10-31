@@ -410,11 +410,28 @@ describe('the overdue step search entry', () => {
 });
 
 describe('the overdue step skips what is not a candidate at its lock', () => {
-  it('leaves archived, draft, already overdue and not-yet-due invoices untouched', async () => {
+  it('marks an archived open invoice past its due date, with its activity and search status', async () => {
     const w = createWorld();
     w.invoices.seed(
       invoiceRecord({ id: 'inv_arch', invoiceNumber: 'A', archivedAt: NOW, dueDate: '2026-01-01' }),
     );
+
+    expect(await w.markOverdue.execute(SYSTEM_ACTOR)).toEqual({
+      updated: 1,
+      invoiceIds: ['inv_arch'],
+    });
+
+    expect((await w.invoices.findById('inv_arch'))?.status).toBe('VENCIDA');
+    expect((await w.invoices.findById('inv_arch'))?.archivedAt).toBe(NOW);
+    expect(w.activity.entries).toHaveLength(1);
+    expect(w.search.get('INVOICE', 'inv_arch')).toMatchObject({
+      status: 'VENCIDA',
+      archived: true,
+    });
+  });
+
+  it('leaves draft, already overdue and not-yet-due invoices untouched', async () => {
+    const w = createWorld();
     w.invoices.seed(
       invoiceRecord({
         id: 'inv_draft',

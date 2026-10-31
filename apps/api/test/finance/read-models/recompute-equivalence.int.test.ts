@@ -105,34 +105,29 @@ describe('read models equal recompute-all after every money mutation', () => {
     expect(await db.paymentAllocation.count()).toBeGreaterThan(0);
     expect(await db.invoice.count({ where: { status: 'VENCIDA' } })).toBeGreaterThan(0);
   });
-  /**
-   * KNOWN DRIFT, reported to the main session and not fixed here: `MarkOverdueInvoices` skips an archived
-   * invoice (its `status` stays `EMITIDA`), while `RecomputeAll` recomputes the status of every invoice,
-   * archived or not (`VENCIDA` once the due date passed). The money columns, facts and metrics agree; only
-   * `Invoice.status` of an archived open invoice differs. `it.fails` keeps the assertion strict: it turns red
-   * (and must be removed, together with the guard in `ops-invoices.ts`) when production settles the rule.
-   */
-  it.fails(
-    'archived open invoice: the overdue step and recompute-all agree on its status',
-    async () => {
-      const { uc, owner, clock } = world;
-      const today = world.today();
-      const created = await uc.createInvoice.execute(owner, {
-        clientId: 'cli_a',
-        invoiceNumber: 'DRIFT-1',
-        issueDate: today,
-        dueDate: addDays(today, 10),
-        currency: 'USD',
-        usdRate: '1',
-        lines: [{ description: 'Servicio', projectId: null, unitPrice: '100.00', ivaRate: null }],
-      });
-      await uc.archiveInvoice.execute(owner, { id: created.id });
-      clock.advance(20 * 86_400_000);
-      await uc.markOverdue.execute(SYSTEM_ACTOR);
-      const incremental = await takeSnapshot(world.db);
-      await world.recomputeAll.execute(SYSTEM_ACTOR);
-      const rebuilt = await takeSnapshot(world.db);
-      expect(diffSnapshots(stateOf(incremental), stateOf(rebuilt))).toEqual([]);
-    },
-  );
+  /** PRD §9.4 has no archived branch: the overdue step and `RecomputeAll` both mark an archived open invoice. */
+  it('archived open invoice: the overdue step and recompute-all agree on its status', async () => {
+    const { uc, owner, clock } = world;
+    const today = world.today();
+    const created = await uc.createInvoice.execute(owner, {
+      clientId: 'cli_a',
+      invoiceNumber: 'DRIFT-1',
+      issueDate: today,
+      dueDate: addDays(today, 10),
+      currency: 'USD',
+      usdRate: '1',
+      lines: [{ description: 'Servicio', projectId: null, unitPrice: '100.00', ivaRate: null }],
+    });
+    await uc.archiveInvoice.execute(owner, { id: created.id });
+    clock.advance(20 * 86_400_000);
+    await uc.markOverdue.execute(SYSTEM_ACTOR);
+    const stored = await world.db.invoice.findFirst({
+      where: { id: created.id, deletedAt: undefined },
+    });
+    expect(stored?.status).toBe('VENCIDA');
+    const incremental = await takeSnapshot(world.db);
+    await world.recomputeAll.execute(SYSTEM_ACTOR);
+    const rebuilt = await takeSnapshot(world.db);
+    expect(diffSnapshots(stateOf(incremental), stateOf(rebuilt))).toEqual([]);
+  });
 });

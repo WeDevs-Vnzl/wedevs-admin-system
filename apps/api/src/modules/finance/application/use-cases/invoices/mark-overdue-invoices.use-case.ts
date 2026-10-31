@@ -12,7 +12,7 @@ export interface MarkOverdueResult {
 
 /**
  * Step 1 of `daily-maintenance` (PRD §12, HU-12 CA4): every issued invoice whose due date passed becomes
- * `VENCIDA`. No route: BE-5 schedules it under a `SYSTEM` actor and anything else is `FORBIDDEN`. Each invoice
+ * `VENCIDA`, archived ones too (§9.4 has no archived branch, so `RecomputeAll` agrees). No route: BE-5 schedules it under a `SYSTEM` actor and anything else is `FORBIDDEN`. Each invoice
  * has its own `Serializable` unit of work that locks it with its client and projects first, recomputes its
  * status from its lines and allocations (a payment that landed meanwhile wins) and projects its client and
  * projects. Running it twice on the same day changes nothing the second time.
@@ -41,12 +41,7 @@ export class MarkOverdueInvoices {
       async () => {
         const locked = await this.support.lockPlan(plan);
         const before = await this.invoices.findById(id);
-        if (
-          !before ||
-          before.archivedAt !== null ||
-          before.isDraft ||
-          !['EMITIDA', 'PARCIAL'].includes(before.status)
-        ) {
+        if (!before || before.isDraft || !['EMITIDA', 'PARCIAL'].includes(before.status)) {
           return false;
         }
         const after = await this.support.rederive(before);

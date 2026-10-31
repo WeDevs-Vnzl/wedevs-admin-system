@@ -230,11 +230,7 @@ export class InMemoryInvoiceRepository implements InvoiceRepository, Transaction
   async overdueIds(today: string): Promise<string[]> {
     return [...this.rows.values()]
       .filter(
-        (row) =>
-          row.archivedAt === null &&
-          !row.isDraft &&
-          ['EMITIDA', 'PARCIAL'].includes(row.status) &&
-          row.dueDate < today,
+        (row) => !row.isDraft && ['EMITIDA', 'PARCIAL'].includes(row.status) && row.dueDate < today,
       )
       .map((row) => row.id);
   }

@@ -208,13 +208,6 @@ const markOverdue: Operation = {
   async plan(ctx) {
     const uc = ctx.world.uc.markOverdue;
     const days = ctx.rng.int(3, 30);
-    // KNOWN DRIFT (see the `it.fails` in the spec): the step skips archived invoices while `RecomputeAll`
-    // recomputes their status, so the clock never crosses the due date of an archived open invoice here.
-    const archived = await ctx.world.db.invoice.findMany({
-      where: { deletedAt: { not: null }, voidedAt: null, status: { in: ['EMITIDA', 'PARCIAL'] } },
-    });
-    const horizon = addDays(ctx.today, days);
-    if (archived.some((invoice) => dayOf(invoice.dueDate) < horizon)) return null;
     return {
       describe: `advance ${days} days from ${ctx.today}`,
       run: (actor) => {

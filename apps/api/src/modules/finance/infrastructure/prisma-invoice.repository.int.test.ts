@@ -484,7 +484,10 @@ describe('list', () => {
       'inv_part',
     ]);
     expect(await uow.run(() => invoices.openInvoices('cli_b'))).toEqual([]);
-    expect(await uow.run(() => invoices.overdueIds('2026-10-09'))).toEqual(['inv_open']);
+    expect(await uow.run(() => invoices.overdueIds('2026-10-09'))).toEqual([
+      'inv_arch',
+      'inv_open',
+    ]);
   });
 
   it('labels existing invoices with their client and archived flag', async () => {
