@@ -6,6 +6,7 @@ import type { ProjectStatus, TechCategory } from '../../../shared/domain/enums';
 import {
   imageFileIds,
   richTextToPlainText,
+  sanitizeRichTextDoc,
   type RichTextDoc,
 } from '../../../shared/domain/rich-text';
 import type { ProjectStatusHint } from './project-status';
@@ -94,7 +95,8 @@ function invalid(fieldErrors: FieldErrors): ValidationFailedError {
 }
 
 /**
- * Trims and checks the scalar fields: name 1..120, summary 1..280, no image nodes in the description
+ * Trims and checks the scalar fields: name 1..120, summary 1..280, a sanitized description (allowlist, size)
+ * with no image nodes in it
  * (a project has no attachments, contract choice 6) and no end date before the start. Every failure is
  * reported at once.
  */
@@ -112,9 +114,20 @@ export function normalizeProjectFields(input: ProjectFieldsInput): ProjectFields
   if (summary.length === 0) fail('summary', PROJECT_KEYS.required);
   else if (summary.length > PROJECT_LIMITS.summary) fail('summary', PROJECT_KEYS.tooLong);
 
-  const description = input.description ?? null;
-  if (description !== null && imageFileIds(description).length > 0) {
-    fail('description', PROJECT_KEYS.invalidFormat);
+  // Sanitized here, not in the DTO, so no caller can skip it (as `prepareNoteContent` does for notes).
+  let description: RichTextDoc | null = null;
+  if (input.description !== null && input.description !== undefined) {
+    const result = sanitizeRichTextDoc(input.description);
+    if (!result.ok) {
+      fail(
+        'description',
+        result.reason === 'tooLong' ? PROJECT_KEYS.tooLong : PROJECT_KEYS.invalidFormat,
+      );
+    } else if (imageFileIds(result.doc).length > 0) {
+      fail('description', PROJECT_KEYS.invalidFormat);
+    } else {
+      description = result.doc;
+    }
   }
   const text = description === null ? '' : richTextToPlainText(description).trim();
 

@@ -208,6 +208,24 @@ describe('CreateProject (mock createProject, HU-05)', () => {
     ).toEqual({ description: ['validation.invalidFormat'] });
   });
 
+  it('sanitizes the description even when the DTO is bypassed (B2)', async () => {
+    const world = projectWorld();
+    expect(
+      await fieldErrors(
+        world.createProject.execute(
+          actor('OWNER'),
+          input({
+            description: {
+              type: 'doc',
+              content: [{ type: 'paragraph', attrs: { onclick: 'x' } }],
+            } as never,
+          }),
+        ),
+      ),
+    ).toEqual({ description: ['validation.invalidFormat'] });
+    expect(world.projects.rows).toHaveLength(0);
+  });
+
   it('applies the form rules: EN_CURSO needs a start date, summary at most 280 (HU-08 CA1)', async () => {
     const world = projectWorld();
     expect(

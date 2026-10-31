@@ -71,6 +71,38 @@ describe('normalizeProjectFields', () => {
     });
   });
 
+  it('sanitizes the description itself: no caller can skip it (B2)', () => {
+    const unsafe = (attrs: unknown) =>
+      ({
+        type: 'doc',
+        content: [{ type: 'text', text: 'x', marks: [{ type: 'link', attrs }] }],
+      }) as unknown as RichTextDoc;
+    expect(
+      fieldErrorsOf(() =>
+        normalizeProjectFields({ ...base, description: unsafe({ href: 'javascript:alert(1)' }) }),
+      ),
+    ).toEqual({ description: ['validation.invalidFormat'] });
+    expect(
+      fieldErrorsOf(() =>
+        normalizeProjectFields({ ...base, description: doc([{ type: 'script' }]) }),
+      ),
+    ).toEqual({ description: ['validation.invalidFormat'] });
+    expect(
+      fieldErrorsOf(() =>
+        normalizeProjectFields({ ...base, description: doc([paragraph('x'.repeat(500_000))]) }),
+      ),
+    ).toEqual({ description: ['validation.tooLong'] });
+  });
+
+  it('stores the clean copy of the description, not the raw input', () => {
+    const fields = normalizeProjectFields({
+      ...base,
+      description: doc([paragraph('hola')]),
+    });
+    expect(fields.description).toEqual(doc([paragraph('hola')]));
+    expect(fields.descriptionText).toBe('hola');
+  });
+
   it('refuses a target or actual end before the start', () => {
     expect(
       fieldErrorsOf(() =>
