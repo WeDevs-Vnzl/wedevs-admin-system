@@ -134,8 +134,23 @@ describe('read models equal recompute-all after every money mutation', () => {
   it('archived invoice crossing its due date: ClientMetrics is untouched and the entry has no client scope', async () => {
     const { uc, owner, clock, db } = world;
     const today = world.today();
+    // A client of its own: the random steps above leave other open invoices on `cli_a` that also cross
+    // their due date when the clock moves, which would legitimately move its metrics.
+    await db.client.create({
+      data: {
+        id: 'cli_m1',
+        code: 'CLI-M001',
+        kind: 'EMPRESA',
+        tradeName: 'cli_m1',
+        legalName: 'cli_m1 C.A.',
+        taxId: 'J-M1000001',
+        country: 'VE',
+        address: 'Av. Principal',
+        phone: '+584121234567',
+      },
+    });
     const created = await uc.createInvoice.execute(owner, {
-      clientId: 'cli_a',
+      clientId: 'cli_m1',
       invoiceNumber: 'DRIFT-2',
       issueDate: today,
       dueDate: addDays(today, 10),
@@ -144,7 +159,7 @@ describe('read models equal recompute-all after every money mutation', () => {
       lines: [{ description: 'Servicio', projectId: null, unitPrice: '100.00', ivaRate: null }],
     });
     await uc.archiveInvoice.execute(owner, { id: created.id });
-    const before = await db.clientMetrics.findUniqueOrThrow({ where: { clientId: 'cli_a' } });
+    const before = await db.clientMetrics.findUniqueOrThrow({ where: { clientId: 'cli_m1' } });
     clock.advance(20 * 86_400_000);
 
     await uc.markOverdue.execute(SYSTEM_ACTOR);
@@ -153,7 +168,7 @@ describe('read models equal recompute-all after every money mutation', () => {
     expect(stored?.status).toBe('VENCIDA');
     // Every column but `updatedAt`, which the projector's upsert bumps whatever it writes.
     const { updatedAt: _after, ...after } = await db.clientMetrics.findUniqueOrThrow({
-      where: { clientId: 'cli_a' },
+      where: { clientId: 'cli_m1' },
     });
     const { updatedAt: _before, ...kept } = before;
     expect(after).toEqual(kept);
