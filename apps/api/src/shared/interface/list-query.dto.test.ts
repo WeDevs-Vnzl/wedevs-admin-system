@@ -91,6 +91,27 @@ describe('createListQuerySchema', () => {
   });
 });
 
+describe('createListQueryDto contract (m3)', () => {
+  const Dto = createListQueryDto({
+    sortFields: ['name', 'client.name'],
+    defaultSort: { field: 'name', direction: 'asc' },
+  });
+  const json = z.toJSONSchema(Dto.schema, { io: 'input', unrepresentable: 'any' }) as {
+    properties: Record<string, Record<string, unknown>>;
+  };
+
+  it('documents pageSize as the integer enum 25 | 50 | 100', () => {
+    expect(json.properties.pageSize).toMatchObject({ type: 'integer', enum: [25, 50, 100] });
+  });
+
+  it('documents sort as the whitelisted field:direction tokens', () => {
+    expect(json.properties.sort).toMatchObject({
+      type: 'string',
+      enum: ['name:asc', 'name:desc', 'client.name:asc', 'client.name:desc'],
+    });
+  });
+});
+
 describe('createListQueryDto', () => {
   it('exposes page, pageSize, sort, q, archived and filters as OpenAPI query params', () => {
     const Dto = createListQueryDto({
