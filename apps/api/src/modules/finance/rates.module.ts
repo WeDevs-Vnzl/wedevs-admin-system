@@ -11,6 +11,12 @@ import {
   UNIT_OF_WORK,
 } from '../../shared/application/ports/tokens';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
+import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
+import { CurrencyCatalogQuery } from '../settings/application/currency-catalog.query';
+import {
+  CURRENCY_CATALOG,
+  type CurrencyCatalogPort,
+} from './application/ports/currency-catalog.port';
 import { EXCHANGE_RATE, type ExchangeRatePort } from './application/ports/exchange-rate.port';
 import {
   EXCHANGE_RATE_REPOSITORY,
@@ -23,6 +29,7 @@ import { LoadDailyRates } from './application/use-cases/rates/load-daily-rates.u
 import { UpsertExchangeRate } from './application/use-cases/rates/upsert-exchange-rate.use-case';
 import { ManualRateSource } from './infrastructure/manual-rate-source';
 import { PrismaExchangeRateRepository } from './infrastructure/prisma-exchange-rate.repository';
+import { SettingsCurrencyCatalogAdapter } from './infrastructure/settings-currency-catalog.adapter';
 import { ExchangeRatesController } from './interface/http/exchange-rates.controller';
 
 /**
@@ -31,8 +38,14 @@ import { ExchangeRatesController } from './interface/http/exchange-rates.control
  * Not imported by `AppModule` here; package 6.1 wires it.
  */
 @Module({
+  imports: [FinanceCatalogsModule],
   controllers: [ExchangeRatesController],
   providers: [
+    {
+      provide: CURRENCY_CATALOG,
+      useFactory: (catalog: CurrencyCatalogQuery) => new SettingsCurrencyCatalogAdapter(catalog),
+      inject: [CurrencyCatalogQuery],
+    },
     { provide: EXCHANGE_RATE_REPOSITORY, useClass: PrismaExchangeRateRepository },
     {
       provide: EXCHANGE_RATE,
@@ -59,7 +72,8 @@ import { ExchangeRatesController } from './interface/http/exchange-rates.control
         activityLog: ActivityLogPort,
         clock: ClockPort,
         ids: IdGeneratorPort,
-      ) => new useCase(authorization, uow, rates, activityLog, clock, ids),
+        currencies: CurrencyCatalogPort,
+      ) => new useCase(authorization, uow, rates, activityLog, clock, ids, currencies),
       inject: [
         AUTHORIZATION,
         UNIT_OF_WORK,
@@ -67,6 +81,7 @@ import { ExchangeRatesController } from './interface/http/exchange-rates.control
         ACTIVITY_LOG,
         CLOCK,
         ID_GENERATOR,
+        CURRENCY_CATALOG,
       ],
     })),
   ],

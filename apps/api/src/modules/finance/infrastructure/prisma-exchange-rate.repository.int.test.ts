@@ -154,10 +154,4 @@ describe('PrismaExchangeRateRepository (int)', () => {
       ).total,
     ).toBe(2);
   });
-
-  it('reports which currency codes exist in the catalog', async () => {
-    const known = await repository.knownCurrencies(['VES', 'EUR', 'ZZZ']);
-    expect([...known].sort()).toEqual(['EUR', 'VES']);
-    expect((await repository.knownCurrencies([])).size).toBe(0);
-  });
 });

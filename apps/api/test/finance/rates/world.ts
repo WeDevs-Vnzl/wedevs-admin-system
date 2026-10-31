@@ -67,6 +67,11 @@ export function createWorld() {
   const ids = new SequentialIdGenerator('rte');
   const authorization = new MatrixAuthorization();
   const source = new ManualRateSource(repository);
+  const catalog = new Set(['USD', 'VES', 'EUR']);
+  const currencies = {
+    knownCodes: async (codes: readonly string[]) =>
+      new Set(codes.filter((code) => catalog.has(code))),
+  };
   return {
     uow,
     repository,
@@ -79,8 +84,16 @@ export function createWorld() {
     viewer: userOf('VIEWER'),
     getRateFor: new GetRateFor(source),
     listRates: new ListExchangeRates(authorization, repository),
-    upsert: new UpsertExchangeRate(authorization, uow, repository, activity, clock, ids),
-    loadDaily: new LoadDailyRates(authorization, uow, repository, activity, clock, ids),
-    importCsv: new ImportRatesCsv(authorization, uow, repository, activity, clock, ids),
+    upsert: new UpsertExchangeRate(
+      authorization,
+      uow,
+      repository,
+      activity,
+      clock,
+      ids,
+      currencies,
+    ),
+    loadDaily: new LoadDailyRates(authorization, uow, repository, activity, clock, ids, currencies),
+    importCsv: new ImportRatesCsv(authorization, uow, repository, activity, clock, ids, currencies),
   };
 }

@@ -40,8 +40,9 @@ async function sequentially<T extends readonly (() => Promise<unknown>)[]>(
 const INCLUDING_ARCHIVED = { deletedAt: undefined } as const;
 
 /**
- * Reads the sources of the finance read models in the current transaction (own tables of `finance`
- * only). Takes no lock: the use case holds them (global lock order).
+ * Reads the sources of the finance read models in the current transaction: the tables of `finance`,
+ * plus read-only selects of `Client` and `Project` (DT-118), which must include archived rows. Takes no
+ * lock: the use case holds them (global lock order).
  */
 @Injectable()
 export class PrismaFinanceSources implements FinanceSourcesPort {

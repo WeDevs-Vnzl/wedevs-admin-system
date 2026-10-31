@@ -10,6 +10,7 @@ import type { IdGeneratorPort } from '../../../../../shared/application/ports/id
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { ValidationFailedError, type FieldErrors } from '../../../../../shared/domain/domain-error';
 import type { RateSource } from '../../../../../shared/domain/enums';
+import type { CurrencyCatalogPort } from '../../ports/currency-catalog.port';
 import type { ExchangeRateRepository } from '../../ports/exchange-rate.repository.port';
 import {
   addErrors,
@@ -40,6 +41,7 @@ export class LoadDailyRates {
     private readonly activityLog: ActivityLogPort,
     private readonly clock: ClockPort,
     private readonly ids: IdGeneratorPort,
+    private readonly currencies: CurrencyCatalogPort,
   ) {}
 
   async execute(
@@ -65,7 +67,7 @@ export class LoadDailyRates {
     if (Object.keys(fieldErrors).length > 0) throw new ValidationFailedError({ fieldErrors });
 
     return this.uow.run(async () => {
-      const known = await this.rates.knownCurrencies(input.rates.map((row) => row.currency));
+      const known = await this.currencies.knownCodes(input.rates.map((row) => row.currency));
       input.rates.forEach((row, index) => {
         if (!known.has(row.currency)) {
           addErrors(fieldErrors, `rates.${index}.currency`, [RATE_MESSAGES.unknownCurrency]);

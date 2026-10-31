@@ -11,6 +11,7 @@ import type { UnitOfWorkPort } from '../../../../../shared/application/ports/uni
 import { ValidationFailedError, type FieldErrors } from '../../../../../shared/domain/domain-error';
 import type { RateSource } from '../../../../../shared/domain/enums';
 import { rateDeviationExceeds, selectRate } from '../../../domain/rates';
+import type { CurrencyCatalogPort } from '../../ports/currency-catalog.port';
 import type {
   ExchangeRate,
   ExchangeRateRepository,
@@ -53,6 +54,7 @@ export class UpsertExchangeRate {
     private readonly activityLog: ActivityLogPort,
     private readonly clock: ClockPort,
     private readonly ids: IdGeneratorPort,
+    private readonly currencies: CurrencyCatalogPort,
   ) {}
 
   async execute(
@@ -68,7 +70,7 @@ export class UpsertExchangeRate {
     if (Object.keys(fieldErrors).length > 0) throw new ValidationFailedError({ fieldErrors });
 
     return this.uow.run(async () => {
-      const known = await this.rates.knownCurrencies([input.currency]);
+      const known = await this.currencies.knownCodes([input.currency]);
       if (!known.has(input.currency)) {
         throw new ValidationFailedError({
           fieldErrors: { currency: [RATE_MESSAGES.unknownCurrency] },

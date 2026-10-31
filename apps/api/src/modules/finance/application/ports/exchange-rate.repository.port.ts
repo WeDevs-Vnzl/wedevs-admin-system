@@ -59,9 +59,6 @@ export interface ExchangeRateRepository {
    */
   findEffective(currency: string, date: string): Promise<RateRow[]>;
 
-  /** The subset of `codes` that exist in the currency catalog (the foreign key's parent rows). */
-  knownCurrencies(codes: readonly string[]): Promise<ReadonlySet<string>>;
-
   /**
    * Stores one rate atomically on its unique key `(date, currency, source)`: two writers of the same key
    * end with one row and no error, whichever commits last supplying the rate (`overwrite`). An existing

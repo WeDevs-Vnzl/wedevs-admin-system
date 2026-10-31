@@ -22,8 +22,9 @@ const uow = new PrismaUnitOfWork(host);
 const activity = new PrismaActivityLog(host, new PrismaClientMetricsWriter(host));
 const clock = new SystemClock();
 const ids = new CuidGenerator();
-const upsert = new UpsertExchangeRate(authorization, uow, rates, activity, clock, ids);
-const loadDaily = new LoadDailyRates(authorization, uow, rates, activity, clock, ids);
+const currencies = { knownCodes: async (codes: readonly string[]) => new Set(codes) };
+const upsert = new UpsertExchangeRate(authorization, uow, rates, activity, clock, ids, currencies);
+const loadDaily = new LoadDailyRates(authorization, uow, rates, activity, clock, ids, currencies);
 
 let caller = userOf('OWNER');
 

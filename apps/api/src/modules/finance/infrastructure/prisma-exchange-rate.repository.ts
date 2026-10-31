@@ -71,14 +71,6 @@ export class PrismaExchangeRateRepository implements ExchangeRateRepository {
     });
   }
 
-  async knownCurrencies(codes: readonly string[]): Promise<ReadonlySet<string>> {
-    const rows = await this.host.db.currency.findMany({
-      where: { code: { in: [...codes] } },
-      select: { code: true },
-    });
-    return new Set(rows.map((row) => row.code));
-  }
-
   async save(draft: ExchangeRateDraft, onConflict: RateConflictMode): Promise<SaveRateResult> {
     // One statement on the unique key: two writers of the same key never see a gap between a read and the
     // insert, so the loser waits on the winner's row and updates it (or skips) instead of failing.

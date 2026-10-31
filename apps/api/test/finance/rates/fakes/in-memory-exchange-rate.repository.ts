@@ -22,8 +22,6 @@ export class InMemoryExchangeRateRepository
 {
   private rows = new Map<string, ExchangeRate>();
   private snapshot: Map<string, ExchangeRate> | null = null;
-  /** Currency catalog: only these codes are accepted by `knownCurrencies`. */
-  readonly currencies = new Set<string>(['USD', 'VES', 'EUR']);
 
   constructor(uow?: InMemoryUnitOfWork) {
     uow?.enlist(this);
@@ -70,10 +68,6 @@ export class InMemoryExchangeRateRepository
         source,
         createdAt,
       }));
-  }
-
-  async knownCurrencies(codes: readonly string[]): Promise<ReadonlySet<string>> {
-    return new Set(codes.filter((code) => this.currencies.has(code)));
   }
 
   async save(draft: ExchangeRateDraft, onConflict: RateConflictMode): Promise<SaveRateResult> {

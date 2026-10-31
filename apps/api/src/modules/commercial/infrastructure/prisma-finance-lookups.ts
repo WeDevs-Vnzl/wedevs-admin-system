@@ -11,7 +11,7 @@ import type {
  * Reads the rows behind `FinanceLookups`. Archived rows are requested explicitly (`deletedAt: undefined`)
  * because the soft-delete extension would otherwise hide them. The `User` read is the one table outside
  * commercial: identity exports no user lookup, so it is a narrow read-only select of three columns
- * (DT-118 style), never a write.
+ * (DT-118), never a write.
  */
 @Injectable()
 export class PrismaFinanceLookups implements FinanceLookupsSource {

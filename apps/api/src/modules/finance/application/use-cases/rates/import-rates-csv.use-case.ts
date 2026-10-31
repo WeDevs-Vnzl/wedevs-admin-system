@@ -10,6 +10,7 @@ import type { IdGeneratorPort } from '../../../../../shared/application/ports/id
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { ValidationFailedError } from '../../../../../shared/domain/domain-error';
 import type { RateSource } from '../../../../../shared/domain/enums';
+import type { CurrencyCatalogPort } from '../../ports/currency-catalog.port';
 import type { ExchangeRateRepository } from '../../ports/exchange-rate.repository.port';
 import {
   dateErrors,
@@ -55,6 +56,7 @@ export class ImportRatesCsv {
     private readonly activityLog: ActivityLogPort,
     private readonly clock: ClockPort,
     private readonly ids: IdGeneratorPort,
+    private readonly currencies: CurrencyCatalogPort,
   ) {}
 
   async execute(actor: CurrentUser, input: ImportRatesCsvInput): Promise<ImportRatesCsvResult> {
@@ -67,7 +69,7 @@ export class ImportRatesCsv {
     }
 
     return this.uow.run(async () => {
-      const known = await this.rates.knownCurrencies([
+      const known = await this.currencies.knownCodes([
         ...new Set(input.rows.map((row) => row.currency)),
       ]);
       const result: ImportRatesCsvResult = { created: 0, updated: 0, skipped: 0, errors: [] };
