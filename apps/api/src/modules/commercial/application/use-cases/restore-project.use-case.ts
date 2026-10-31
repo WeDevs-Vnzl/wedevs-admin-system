@@ -36,7 +36,7 @@ export class RestoreProject {
     assertCan(this.authorization, actor, 'restore', 'project');
 
     return this.uow.run(async () => {
-      const archived = await this.projects.findById(id);
+      const archived = await this.projects.findByIdForUpdate(id);
       if (!archived || archived.archivedAt === null) throw new NotFoundError();
 
       await this.projects.setArchived([id], null, null);

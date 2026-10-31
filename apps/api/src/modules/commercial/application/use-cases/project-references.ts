@@ -61,12 +61,16 @@ export class ProjectReferences {
   }
 }
 
-/** A project that can still be edited: unknown and archived rows answer `NOT_FOUND` to mutations. */
+/**
+ * A project that can still be edited: unknown and archived rows answer `NOT_FOUND` to mutations. The row
+ * is locked until the unit of work ends (lock order: project → clients, see `ProjectReferences.lockClients`),
+ * so the state the use case decides on is the state it writes over.
+ */
 export async function loadLiveProject(
   projects: ProjectRepository,
   id: string,
 ): Promise<ProjectRecord> {
-  const record = await projects.findById(id);
+  const record = await projects.findByIdForUpdate(id);
   if (!record || record.archivedAt !== null) throw new NotFoundError();
   return record;
 }

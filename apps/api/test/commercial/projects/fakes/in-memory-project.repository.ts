@@ -89,6 +89,15 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
     return row ? clone(row) : null;
   }
 
+  /** Ids passed to `findByIdForUpdate`, in call order (the fake has no real locks). */
+  readonly lockedProjects: string[] = [];
+
+  async findByIdForUpdate(id: string): Promise<ProjectRecord | null> {
+    this.uow.assertActive('ProjectRepository.findByIdForUpdate');
+    this.lockedProjects.push(id);
+    return this.findById(id);
+  }
+
   async insert(record: ProjectRecord): Promise<void> {
     this.uow.assertActive('ProjectRepository.insert');
     this.writeCount += 1;
@@ -102,9 +111,19 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
       summary: record.summary,
       description: record.description,
       descriptionText: record.descriptionText,
-      status: record.status,
       startDate: record.startDate,
       targetEndDate: record.targetEndDate,
+      endDate: record.endDate,
+    }));
+  }
+
+  async updateStatus(
+    record: Pick<ProjectRecord, 'id' | 'status' | 'startDate' | 'endDate'>,
+  ): Promise<void> {
+    this.write(record.id, (row) => ({
+      ...row,
+      status: record.status,
+      startDate: record.startDate,
       endDate: record.endDate,
     }));
   }
