@@ -38,6 +38,7 @@ export class RestoreProject {
     return this.uow.run(async () => {
       const archived = await this.projects.findByIdForUpdate(id);
       if (!archived || archived.archivedAt === null) throw new NotFoundError();
+      await this.projects.lockClients(archived.clients.map((link) => link.clientId));
 
       await this.projects.setArchived([id], null, null);
       const restored = await reloadProject(this.projects, id);

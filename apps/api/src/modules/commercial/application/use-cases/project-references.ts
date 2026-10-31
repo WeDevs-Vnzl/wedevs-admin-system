@@ -19,11 +19,21 @@ export class ProjectReferences {
     private readonly technologies: ProjectTechnologyCatalogPort,
   ) {}
 
-  /** Every client must exist and not be archived; the ones already linked keep their link. */
+  /** Locks the clients (ascending id) until the unit of work ends; see `ProjectRepository.lockClients`. */
+  async lockClients(clientIds: readonly string[]): Promise<void> {
+    await this.projects.lockClients(clientIds);
+  }
+
+  /**
+   * Every client must exist and not be archived; the ones already linked keep their link. All of them,
+   * the old links included, are locked first and in one ascending batch, so an archive of a client cannot
+   * slip in between this check and the write, and the recount that follows takes no new lock.
+   */
   async assertClients(
     clientIds: readonly string[],
     alreadyLinked: readonly string[] = [],
   ): Promise<void> {
+    await this.projects.lockClients([...clientIds, ...alreadyLinked]);
     const toCheck = clientIds.filter((id) => !alreadyLinked.includes(id));
     if (toCheck.length === 0) return;
     const live = new Set(await this.projects.liveClientIds(toCheck));

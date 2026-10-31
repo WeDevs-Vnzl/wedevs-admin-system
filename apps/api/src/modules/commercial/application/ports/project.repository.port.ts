@@ -71,6 +71,14 @@ export interface ProjectRepository {
   /** `ProjectMetrics` rows by project id; absent rows are absent from the map. */
   metricsFor(ids: readonly string[]): Promise<Map<string, ProjectMetricsRow>>;
 
+  /**
+   * Locks the `Client` rows (`FOR UPDATE`, ascending id) until the unit of work ends. Taken before a
+   * project is attached to a client and before `projectCount` is recounted: an archive of the client and
+   * two recounts of one client wait for each other instead of interleaving. Archived and unknown ids
+   * are fine (nothing to lock). Lock order of the commercial context: project rows (ascending id) →
+   * client rows (ascending id) → anything else; never a project after a client. Needs a unit of work.
+   */
+  lockClients(ids: readonly string[]): Promise<void>;
   /** The ids among `ids` that are live clients (exist and are not archived). */
   liveClientIds(ids: readonly string[]): Promise<string[]>;
   /** Display refs of clients, archived ones included; unknown ids are absent. */

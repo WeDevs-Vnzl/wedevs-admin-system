@@ -316,6 +316,18 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
     await expect(admin.technology.delete({ where: { id: tech.id } })).resolves.toBeDefined();
   });
 
+  it('lockClients needs a unit of work and holds the client rows until it ends', async () => {
+    await expect(repository.lockClients([kairos.id])).rejects.toThrow(/unit of work/);
+    const tryLock = () =>
+      admin.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ${kairos.id} FOR UPDATE NOWAIT`;
+    await uow.run(async () => {
+      await repository.lockClients([tornillo.id, kairos.id, kairos.id, 'unknown']);
+      await expect(tryLock()).rejects.toThrow();
+    });
+    await expect(tryLock()).resolves.toHaveLength(1);
+    await uow.run(() => repository.lockClients([]));
+  });
+
   it('answers live client ids without the archived ones, and refs with them', async () => {
     await admin.client.update({ where: { id: tornillo.id }, data: { deletedAt: new Date() } });
     expect(await repository.liveClientIds([kairos.id, tornillo.id, 'ghost'])).toEqual([kairos.id]);

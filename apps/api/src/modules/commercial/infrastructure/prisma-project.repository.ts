@@ -332,6 +332,16 @@ export class PrismaProjectRepository implements ProjectRepository {
     );
   }
 
+  async lockClients(ids: readonly string[]): Promise<void> {
+    const tx = this.host.requireTransaction('ProjectRepository.lockClients');
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return;
+    // ORDER BY runs before the row locks (LockRows sits above Sort), so the locks are taken in id order;
+    // COLLATE "C" is the byte order every caller of this method agrees on.
+    await tx.$queryRaw`SELECT "id" FROM "Client" WHERE "id" = ANY(${unique}::text[])
+      ORDER BY "id" COLLATE "C" FOR UPDATE`;
+  }
+
   async liveClientIds(ids: readonly string[]): Promise<string[]> {
     // The soft-delete extension keeps archived clients out of `findMany`.
     const rows = await this.host.db.client.findMany({

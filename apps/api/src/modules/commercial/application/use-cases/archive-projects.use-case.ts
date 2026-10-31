@@ -46,6 +46,8 @@ export class ArchiveProjects {
       const locked = new Map<string, ProjectRecord>();
       for (const id of [...ids].sort()) locked.set(id, await loadLiveProject(this.projects, id));
       const records = ids.flatMap((id) => locked.get(id) ?? []);
+      // Then the clients of all of them in one ascending batch (lock order: projects → clients).
+      await this.projects.lockClients(records.flatMap((r) => r.clients.map((l) => l.clientId)));
       if (!input.confirm) {
         for (const record of records) {
           if (await this.billing.hasActiveBilling(record.id)) {

@@ -225,6 +225,14 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
     return found;
   }
 
+  /** Id sets passed to `lockClients`, in call order, each as the repository would lock it. */
+  readonly lockedClients: string[][] = [];
+
+  async lockClients(ids: readonly string[]): Promise<void> {
+    this.uow.assertActive('ProjectRepository.lockClients');
+    this.lockedClients.push([...new Set(ids)].sort());
+  }
+
   async liveClientIds(ids: readonly string[]): Promise<string[]> {
     return ids.filter((id) => {
       const client = this.clients.get(id);
