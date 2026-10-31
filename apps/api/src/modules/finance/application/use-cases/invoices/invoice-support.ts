@@ -290,6 +290,10 @@ export class InvoiceSupport {
     return this.references.liveClient(clientId);
   }
 
+  liveProjectRef(projectId: string) {
+    return this.references.liveProject(projectId);
+  }
+
   async requireClient(clientId: string) {
     const client = await this.liveClientRef(clientId);
     if (!client) throw new NotFoundError();

@@ -16,6 +16,7 @@ import type { InvoiceSupport } from './invoice-support';
 export const RESTORE_ERRORS = {
   invoiceNumberTaken: 'trash.errors.invoiceNumberTaken',
   clientArchived: 'trash.errors.clientArchived',
+  projectArchived: 'trash.errors.projectArchived',
 } as const;
 
 export interface RestoredInvoice {
@@ -25,7 +26,7 @@ export interface RestoredInvoice {
 
 /**
  * `POST /invoices/{id}/restore` and the trash handler of `INVOICE` (HU-28 CA2). An archived invoice comes back
- * only if nothing it needs changed meanwhile: its client is live, nobody else holds its number
+ * only if nothing it needs changed meanwhile: its client and line projects are live, nobody else holds its number
  * (`trash.errors.invoiceNumberTaken`, pointing at the holder) and no installment it bills would end up
  * over-billed or cancelled. The mock freed archived invoices from the over-billing check, so restoring could
  * over-bill; here `invoices.errors.installmentExceeded` is a `CONFLICT`. A voided invoice binds no installment
@@ -64,6 +65,7 @@ export class RestoreInvoice {
           });
         }
         await this.requireLiveClient(before);
+        await this.requireLiveProjects(before);
         if (before.voidedAt === null) await this.requireRoomOnInstallments(before);
 
         const now = this.support.nowIso();
@@ -93,6 +95,19 @@ export class RestoreInvoice {
       message: RESTORE_ERRORS.clientArchived,
       ...(view ? { entity: view.client } : {}),
     });
+  }
+
+  private async requireLiveProjects(invoice: InvoiceRecord): Promise<void> {
+    const projectIds = new Set(invoice.lines.flatMap((line) => line.projectId ?? []));
+    for (const projectId of projectIds) {
+      if (await this.support.liveProjectRef(projectId)) continue;
+      const view = await this.support.invoices.view(invoice.id);
+      const project = view?.lines.find((line) => line.project?.id === projectId)?.project;
+      throw new ConflictError({
+        message: RESTORE_ERRORS.projectArchived,
+        ...(project ? { entity: project } : {}),
+      });
+    }
   }
 
   /** Every installment the invoice bills is live and still has room for it beside the other live invoices. */

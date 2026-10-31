@@ -32,6 +32,7 @@
   "errors": {
     "taxIdTaken": "Another active client already uses this tax ID. Archive or edit it before restoring this one.",
     "clientArchived": "Its client is archived. Restore the client first.",
+    "projectArchived": "One of its projects is archived. Restore the project first.",
     "invoiceNumberTaken": "Another active invoice already uses this number. Edit it before restoring this one."
   }
 }

@@ -378,6 +378,18 @@ describe('restore details', () => {
     expect(error.entity).toBeUndefined();
   });
 
+  it('refuses while the project of a line is archived, pointing at it', async () => {
+    const w = createWorld();
+    w.invoices.seed(archived({ lines: [{ ...SEED_LINE, projectId: 'prj_gone' }] }));
+    const error = await rejection(w.restore.execute(w.owner, 'inv_arch'));
+    expect(error).toMatchObject({
+      code: 'CONFLICT',
+      message: 'trash.errors.projectArchived',
+      entity: { type: 'PROJECT', id: 'prj_gone' },
+    });
+    expect((await w.invoices.findById('inv_arch'))?.archivedAt).not.toBeNull();
+  });
+
   it('a restored invoice past its due date is overdue again', async () => {
     const w = createWorld();
     w.invoices.seed(archived({ dueDate: '2026-09-01' }));
