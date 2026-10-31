@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import {
   addMoney,
   compareMoney,
@@ -37,9 +38,9 @@ export const FINANCE_FACT_SOURCE_VALUES = [
 export type FinanceFactSource = (typeof FINANCE_FACT_SOURCE_VALUES)[number];
 
 /**
- * Splits `total` (2 dp) proportionally to `weights`. Each share is round(total × weight / Σ weights, 2);
- * the rounding residue goes to the largest weight (the first on ties), so the parts always sum to
- * `total` (Q-BE3-7). When every weight is zero the first line takes the whole amount.
+ * Splits `total` (2 dp) proportionally to `weights`. Each share truncates total × weight / Σ weights to
+ * 2 dp toward zero, so the residue keeps the sign of `total` and no line turns negative; the residue
+ * goes to the largest weight (the first on ties), so the parts always sum to `total` (Q-BE3-7). When every weight is zero the first line takes the whole amount.
  */
 export function splitProportionally(
   total: MoneyString,
@@ -53,7 +54,8 @@ export function splitProportionally(
   const weightSum = toDecimal(sumWeights(weights));
   const shares = weights.map((weight, index) => {
     if (weightSum.isZero()) return index === 0 ? amount : '0.00';
-    return sumMoney([toDecimal(amount).times(toDecimal(weight)).dividedBy(weightSum).toFixed()]);
+    const share = toDecimal(amount).times(toDecimal(weight)).dividedBy(weightSum);
+    return sumMoney([share.toDecimalPlaces(2, Decimal.ROUND_DOWN).toFixed()]);
   });
   const residue = subMoney(amount, sumMoney(shares));
   if (!toDecimal(residue).isZero()) {

@@ -50,9 +50,31 @@ describe('splitProportionally', () => {
   });
 
   it('breaks ties on the largest weight with the first line', () => {
-    // each half-cent rounds up to 0.01; the -0.01 residue lands on the first (largest, tie) line
-    expect(splitProportionally('0.01', ['1', '1'])).toEqual(['0.00', '0.01']);
+    // each half-cent truncates to 0.00; the 0.01 residue lands on the first (largest, tie) line
+    expect(splitProportionally('0.01', ['1', '1'])).toEqual(['0.01', '0.00']);
     expect(splitProportionally('100.00', ['1', '1', '1'])).toEqual(['33.34', '33.33', '33.33']);
+  });
+
+  it('never gives a line the opposite sign of the total', () => {
+    expect(splitProportionally('0.02', ['1', '1', '1', '1'])).toEqual([
+      '0.02',
+      '0.00',
+      '0.00',
+      '0.00',
+    ]);
+    expect(splitProportionally('0.03', ['1', '1', '1', '1', '1'])).toEqual([
+      '0.03',
+      '0.00',
+      '0.00',
+      '0.00',
+      '0.00',
+    ]);
+    expect(splitProportionally('-0.02', ['1', '1', '1', '1'])).toEqual([
+      '-0.02',
+      '0.00',
+      '0.00',
+      '0.00',
+    ]);
   });
 
   it('puts everything on the first line when every weight is zero', () => {
