@@ -309,6 +309,73 @@ describe('schema deltas', () => {
   });
 });
 
+describe('Δ BE-3 columns (Q-BE3-2)', () => {
+  it('BillingPlan.contractedUsd and usdRate accept NULL and exact decimals', async () => {
+    const empty = await makeProject(prisma);
+    const withNulls = await prisma.billingPlan.create({
+      data: { projectId: empty.id, model: 'PRECIO_FIJO', currency: 'USD' },
+    });
+    expect(withNulls.contractedUsd).toBeNull();
+    expect(withNulls.usdRate).toBeNull();
+    const other = await makeProject(prisma);
+    const exact = await prisma.billingPlan.create({
+      data: {
+        projectId: other.id,
+        model: 'PRECIO_FIJO',
+        currency: 'USD',
+        contractedUsd: '1234567890123456.78',
+        usdRate: '123456789012.12345678',
+      },
+    });
+    expect(exact.contractedUsd?.toFixed(2)).toBe('1234567890123456.78');
+    expect(exact.usdRate?.toFixed(8)).toBe('123456789012.12345678');
+  });
+
+  it('resumedOn accepts NULL and a date on RecurringCharge and RecurringExpense; existing CHECKs still hold', async () => {
+    const project = await makeProject(prisma);
+    const charge = (billingDay: number, resumedOn?: Date) =>
+      prisma.recurringCharge.create({
+        data: {
+          projectId: project.id,
+          label: 'Hosting',
+          amount: '10',
+          currency: 'USD',
+          frequency: 'MENSUAL',
+          startDate: new Date('2026-01-01'),
+          billingDay,
+          usdRate: '1',
+          monthlyAmountUsd: '10',
+          resumedOn,
+        },
+      });
+    expect((await charge(1)).resumedOn).toBeNull();
+    const resumed = await charge(2, new Date('2026-03-05'));
+    expect(resumed.resumedOn?.toISOString().slice(0, 10)).toBe('2026-03-05');
+    await expectViolation(charge(29, new Date('2026-03-05')), 'rc_billing_day');
+
+    const category = await prisma.expenseCategory.findFirstOrThrow();
+    const expense = (dayOfPeriod: number, resumedOn?: Date) =>
+      prisma.recurringExpense.create({
+        data: {
+          name: uid('RE'),
+          categoryId: category.id,
+          currency: 'USD',
+          amount: '10',
+          frequency: 'MENSUAL',
+          dayOfPeriod,
+          startDate: new Date('2026-01-01'),
+          usdRate: '1',
+          monthlyAmountUsd: '10',
+          resumedOn,
+        },
+      });
+    expect((await expense(1)).resumedOn).toBeNull();
+    const resumedExpense = await expense(2, new Date('2026-03-05'));
+    expect(resumedExpense.resumedOn?.toISOString().slice(0, 10)).toBe('2026-03-05');
+    await expectViolation(expense(29, new Date('2026-03-05')), 're_day');
+  });
+});
+
 describe('read models (data-rules §3b)', () => {
   it('ClientMetrics and ProjectMetrics cascade on delete', async () => {
     const client = await makeClient(prisma);
