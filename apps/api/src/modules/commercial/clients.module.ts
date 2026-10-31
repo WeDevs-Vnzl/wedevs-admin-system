@@ -22,6 +22,7 @@ import {
   type RestoreHandler,
 } from '../platform/application/ports/restore-handler.port';
 import type { RestoreHandlerRegistry } from '../platform/application/restore-handler.registry';
+import { FinanceDependentsModule } from '../finance/finance-dependents.module';
 import { TrashModule } from '../platform/trash.module';
 import {
   TAGGABLE_TARGET_REGISTRY,
@@ -61,7 +62,6 @@ import { ClientRestoreHandler } from './infrastructure/client-restore.handler';
 import { ClientTaggableResolver } from './infrastructure/client-taggable.resolver';
 import { ContactRestoreHandler } from './infrastructure/contact-restore.handler';
 import { ContactTaggableResolver } from './infrastructure/contact-taggable.resolver';
-import { NoFinanceYetClientFinanceDependents } from './infrastructure/no-finance-yet.client-finance-dependents.adapter';
 import { PrismaClientRepository } from './infrastructure/prisma-client.repository';
 import { PrismaContactRepository } from './infrastructure/prisma-contact.repository';
 import { ClientsController } from './interface/http/clients.controller';
@@ -70,17 +70,16 @@ import { ContactsController } from './interface/http/contacts.controller';
 /**
  * Commercial → clients and contacts (PRD §8.2, HU-03, HU-04). Registers, from `onModuleInit`, the restore
  * handlers `CLIENT` / `CONTACT` in the trash registry and the taggable resolvers `CLIENT` / `CONTACT` in the
- * tag registry (the `FILE_ACCESS_REGISTRY` pattern). `ClientFinanceDependentsPort` is bound to the neutral
- * "no dependents" adapter until BE-3 rebinds it (Q-BE2-1). Not imported by `CommercialModule` here; package
+ * tag registry (the `FILE_ACCESS_REGISTRY` pattern). `ClientFinanceDependentsPort` comes from finance's
+ * `FinanceDependentsModule` (open invoices lock the archive, C19). Not imported by `CommercialModule` here; package
  * 4.1 wires it.
  */
 @Module({
-  imports: [TagsModule, TrashModule],
+  imports: [TagsModule, TrashModule, FinanceDependentsModule],
   controllers: [ClientsController, ContactsController],
   providers: [
     { provide: CLIENT_REPOSITORY, useClass: PrismaClientRepository },
     { provide: CONTACT_REPOSITORY, useClass: PrismaContactRepository },
-    { provide: CLIENT_FINANCE_DEPENDENTS, useClass: NoFinanceYetClientFinanceDependents },
     {
       provide: ClientTaggableResolver,
       useFactory: (clients: ClientRepository) => new ClientTaggableResolver(clients),

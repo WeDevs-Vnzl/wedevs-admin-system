@@ -19,6 +19,7 @@ import {
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
 import { RESTORE_HANDLER_REGISTRY } from '../platform/application/ports/restore-handler.port';
 import type { RestoreHandlerRegistry } from '../platform/application/restore-handler.registry';
+import { FinanceDependentsModule } from '../finance/finance-dependents.module';
 import { TrashModule } from '../platform/trash.module';
 import { TAGGABLE_TARGET_REGISTRY } from '../settings/application/ports/taggable-target.port';
 import { TagAssignments } from '../settings/application/tag-assignments';
@@ -51,7 +52,6 @@ import { SetProjectStatus } from './application/use-cases/set-project-status.use
 import { SetProjectTechnologies } from './application/use-cases/set-project-technologies.use-case';
 import { UpdateProject } from './application/use-cases/update-project.use-case';
 import { UpsertProjectLinks } from './application/use-cases/upsert-project-links.use-case';
-import { NoFinanceYetProjectBilling } from './infrastructure/no-finance-yet.project-billing.adapter';
 import { PrismaProjectRepository } from './infrastructure/prisma-project.repository';
 import { ProjectRestoreHandler } from './infrastructure/project-restore.handler';
 import { ProjectTaggableResolver } from './infrastructure/project-taggable.resolver';
@@ -59,17 +59,16 @@ import { SettingsTechnologyCatalogAdapter } from './infrastructure/settings-tech
 import { ProjectsController } from './interface/http/projects.controller';
 
 /**
- * Commercial → Proyectos (PRD §8.3, HU-05…HU-08). Binds the repository, the neutral billing port (BE-3
- * rebinds it) and settings' technology catalog; registers the `PROJECT` restore handler in the trash and
+ * Commercial → Proyectos (PRD §8.3, HU-05…HU-08). Binds the repository, takes the billing port from finance's
+ * `FinanceDependentsModule` and binds settings' technology catalog; registers the `PROJECT` restore handler in the trash and
  * the `PROJECT` taggable resolver in the tag registry. Exports `TechnologyUsageQueries`, which package
  * 4.1 binds to settings' `TechnologyUsagePort`.
  */
 @Module({
-  imports: [TechnologiesModule, TagsModule, TrashModule],
+  imports: [TechnologiesModule, TagsModule, TrashModule, FinanceDependentsModule],
   controllers: [ProjectsController],
   providers: [
     { provide: PROJECT_REPOSITORY, useClass: PrismaProjectRepository },
-    { provide: PROJECT_BILLING, useClass: NoFinanceYetProjectBilling },
     {
       provide: PROJECT_TECHNOLOGY_CATALOG,
       useFactory: (catalog: TechnologyCatalog) => new SettingsTechnologyCatalogAdapter(catalog),
