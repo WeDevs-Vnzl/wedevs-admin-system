@@ -159,6 +159,40 @@ describe('sanitizeRichTextDoc allowlist (port of fe/src/lib/validators/notes.ts)
     expect(ok(textDoc('x'.repeat(1000)))).toBe(true);
   });
 
+  describe('inherited Object.prototype keys', () => {
+    const keys = ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf'];
+    const invalid = { ok: false, reason: 'invalidFormat' };
+    // JSON.parse creates `__proto__` as an own property, like a request body does.
+    const withAttrs = (type: string, key: string, value: string): unknown =>
+      JSON.parse(
+        `{"type":"doc","content":[{"type":"${type}","attrs":{"${key}":${value}}}]}`,
+      ) as unknown;
+
+    it.each(keys)('rejects the attribute %s on a node as invalidFormat, never throws', (key) => {
+      expect(sanitizeRichTextDoc(withAttrs('paragraph', key, '"<x>"'))).toEqual(invalid);
+      expect(sanitizeRichTextDoc(withAttrs('paragraph', key, '{"a":1}'))).toEqual(invalid);
+      expect(sanitizeRichTextDoc(withAttrs('heading', key, '1'))).toEqual(invalid);
+      expect(sanitizeRichTextDoc(withAttrs('image', key, '"x"'))).toEqual(invalid);
+    });
+
+    it.each(keys)('rejects the attribute %s on a mark as invalidFormat', (key) => {
+      const doc = JSON.parse(
+        `{"type":"doc","content":[{"type":"text","text":"a","marks":[{"type":"link","attrs":{"href":"https://a.example","${key}":"x"}}]}]}`,
+      ) as unknown;
+      expect(sanitizeRichTextDoc(doc)).toEqual(invalid);
+    });
+
+    it.each(keys)('rejects %s as a node type and as a mark type', (key) => {
+      expect(sanitizeRichTextDoc({ type: 'doc', content: [{ type: key }] })).toEqual(invalid);
+      expect(
+        sanitizeRichTextDoc({
+          type: 'doc',
+          content: [{ type: 'text', text: 'a', marks: [{ type: key }] }],
+        }),
+      ).toEqual(invalid);
+    });
+  });
+
   it('does not mutate the input', () => {
     const input = image({ fileId: 'f1', src: 'https://x.example/a.png' });
     sanitizeRichTextDoc(input);

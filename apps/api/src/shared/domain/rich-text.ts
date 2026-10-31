@@ -198,11 +198,12 @@ function cleanAttrs(
   if (!isRecord(attrs)) return fail();
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(attrs)) {
-    const rule = rules[key];
+    // own keys only: `rules[key]` would resolve `constructor`, `__proto__`... through Object.prototype
+    const rule = Object.hasOwn(rules, key) ? rules[key] : undefined;
     if (!rule || !rule(value)) fail();
     out[key] = value;
   }
-  for (const key of required) if (!(key in out)) fail();
+  for (const key of required) if (!Object.hasOwn(out, key)) fail();
   return out;
 }
 
@@ -240,7 +241,10 @@ function cleanNode(raw: unknown, depth: number): RichTextNode {
   const node: RichTextNode = { type: nodeType };
   if (nodeType === 'image') node.attrs = cleanImageAttrs(attrs);
   else {
-    const cleaned = cleanAttrs(attrs, NODE_ATTRS[nodeType] ?? {});
+    const cleaned = cleanAttrs(
+      attrs,
+      Object.hasOwn(NODE_ATTRS, nodeType) ? (NODE_ATTRS[nodeType] ?? {}) : {},
+    );
     if (cleaned) node.attrs = cleaned;
   }
   if (content !== undefined) {
