@@ -2,7 +2,7 @@
 
 Sistema interno de WeDevs para clientes, proyectos, facturas, pagos, cuentas, gastos, documentos y notas, con portal público de documentos, vista de grafo, reportes y KPI. Es un monolito Next.js (App Router).
 
-**Estado:** Hito 1 — UI completa sobre datos mock (sin base de datos ni autenticación real). El Hito 2 incorpora Prisma sobre Neon, Clerk y el deploy en Netlify.
+**Estado:** Hito 1 — UI completa sobre datos mock (sin base de datos ni autenticación real). El Hito 2 incorpora Prisma sobre Neon, Clerk y el deploy en el VPS.
 
 ## Requisitos
 
@@ -42,9 +42,4 @@ Ver `.env.example`. En producción el portal público no arranca sin `SHARE_UNLO
 
 ## Deploy
 
-Cada push a `main` despliega a producción en Netlify con `.github/workflows/deploy.yml` (también se puede lanzar a mano con *Run workflow*). El workflow corre lint y typecheck, y luego `netlify deploy --build --prod` con la CLI; el build usa las variables de entorno configuradas en el sitio de Netlify.
-
-Configuración única:
-
-1. En el sitio de Netlify, desactivar los builds propios desde Git (*Site configuration → Build & deploy → Stop builds*) para no desplegar dos veces.
-2. En el repositorio de GitHub, crear los secrets `NETLIFY_AUTH_TOKEN` (token personal de Netlify) y `NETLIFY_SITE_ID` (*Project ID* del sitio).
+El frontend se despliega en el VPS como imagen Docker (`apps/web/Dockerfile`), junto con el backend. El despliegue lo realiza el usuario.
