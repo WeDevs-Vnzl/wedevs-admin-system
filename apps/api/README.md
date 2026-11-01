@@ -31,6 +31,14 @@ The app refuses to start (exit non-zero, names only, never values) unless these 
 verification), `CLERK_WEBHOOK_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
 `CLOUDINARY_API_SECRET`.
 
+### BE-4 environment
+
+Required, at least 32 characters each (the app refuses to start naming only the variable): `SHARE_IP_SALT`
+(salt of the stored share-access IP hash) and `SHARE_UNLOCK_SECRET` (signs the portal unlock cookie).
+Optional: `THROTTLE_TTL` (seconds, default 60), `THROTTLE_LIMIT` (requests per window, default 60) and
+`TRUST_PROXY_HOPS` (reverse proxies in front of the API, default 0; set 1 behind Caddy so `req.ip` is the
+real client, DT-143). Request logs mask the share token (`/portal/<token>`).
+
 The project owner provisions the real values in the Clerk and Cloudinary dashboards and keeps them in a
 local, uncommitted env file or the deploy environment. Agents never read, request or print them. Tests, CI
 and `openapi:generate`/`openapi:check` use documented placeholders only and never call Clerk or Cloudinary.

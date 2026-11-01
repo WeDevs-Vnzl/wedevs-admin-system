@@ -35,6 +35,8 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
   if (config.SENTRY_DSN) Sentry.init({ dsn: config.SENTRY_DSN, environment: config.NODE_ENV });
 
   app.disable('x-powered-by');
+  // Hops of trusted reverse proxies in front of the API (0 = none): `req.ip` follows `X-Forwarded-For` only then (DT-143).
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.setGlobalPrefix(API_PREFIX);
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
