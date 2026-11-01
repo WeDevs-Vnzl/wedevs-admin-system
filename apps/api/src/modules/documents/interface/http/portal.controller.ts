@@ -73,6 +73,7 @@ export class PortalController {
   @Get(':token')
   @ApiOperation({
     operationId: 'resolvePortalToken',
+    security: [],
     summary: 'The portal page of a share link (no side effect, no log row)',
   })
   @ApiOkResponse({ type: PortalShareDto })
@@ -91,6 +92,7 @@ export class PortalController {
   @Post(':token/views')
   @ApiOperation({
     operationId: 'recordPortalView',
+    security: [],
     summary: 'Logs a VIEW of the link, or of one of its documents',
   })
   @ApiBody({ type: RecordViewDto })
@@ -112,6 +114,7 @@ export class PortalController {
   @HttpCode(200)
   @ApiOperation({
     operationId: 'unlockPortalDocument',
+    security: [],
     summary: 'Checks the access key of a document; a right key sets the signed unlock cookie',
   })
   @ApiBody({ type: UnlockDocumentDto })
@@ -145,6 +148,7 @@ export class PortalController {
   @Get(':token/documents/:documentId')
   @ApiOperation({
     operationId: 'getPortalDocument',
+    security: [],
     summary: 'What the viewer renders for one document; a locked one is FORBIDDEN',
   })
   @ApiOkResponse({ type: PortalDocumentViewDto })
@@ -163,6 +167,7 @@ export class PortalController {
   @Get(':token/files/:documentId')
   @ApiOperation({
     operationId: 'getPortalFile',
+    security: [],
     summary:
       'Delivers a document: 302 to a signed 5-minute URL or to the stored link, or the markdown as text/markdown. DOWNLOAD is logged only for attachment',
   })
