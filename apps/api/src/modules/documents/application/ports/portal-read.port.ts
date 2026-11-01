@@ -30,7 +30,7 @@ export interface PortalDocumentRow {
  */
 export interface PortalReadPort {
   /**
-   * Live (not archived) documents of the link in display order, each with the version a visitor gets (a
+   * Live (not archived, not `ANULADO`: DT-151) documents of the link in display order, each with the version a visitor gets (a
    * pinned version must belong to its document). A document with nothing to serve is left out, as is one
    * that is archived since the link was made.
    */

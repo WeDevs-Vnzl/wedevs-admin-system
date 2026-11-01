@@ -520,12 +520,11 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
 
     it('pins the current version when versionId is omitted, follows the latest on null, and a new version moves only the latter (DT-150)', async () => {
       const { share } = await created({
-        documents: [
-          { documentId: 'doc_a' },
-          { documentId: 'doc_b', versionId: null },
-        ],
+        documents: [{ documentId: 'doc_a' }, { documentId: 'doc_b', versionId: null }],
       });
-      const explicit = await created({ documents: [{ documentId: 'doc_a', versionId: 'doc_a_v1' }] });
+      const explicit = await created({
+        documents: [{ documentId: 'doc_a', versionId: 'doc_a_v1' }],
+      });
       const stored = async (id: string) =>
         (
           await prisma.shareLinkDocument.findMany({
@@ -555,7 +554,10 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
           createdById: (users['owner'] as CurrentUser).userId,
         },
       });
-      await prisma.document.update({ where: { id: 'doc_a' }, data: { currentVersionId: 'doc_a_v3' } });
+      await prisma.document.update({
+        where: { id: 'doc_a' },
+        data: { currentVersionId: 'doc_a_v3' },
+      });
       const detail = (await get(`${BASE}/${share.id}`, 'owner').expect(200)).body as Body;
       expect(detail.documents[0]).toMatchObject({
         versionId: 'doc_a_v2',

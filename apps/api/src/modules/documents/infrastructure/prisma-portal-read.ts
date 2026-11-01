@@ -26,7 +26,9 @@ export class PrismaPortalRead implements PortalReadPort {
   async documentsOf(shareLinkId: string): Promise<PortalDocumentRow[]> {
     const db = this.host.db;
     const rows = await db.shareLinkDocument.findMany({
-      where: { shareLinkId, document: { deletedAt: null } },
+      // DT-151: an ANULADO document is never served; this is the only point that decides it, so the page, the
+      // document, the file, the unlock and the view all answer as for a document outside the link.
+      where: { shareLinkId, document: { deletedAt: null, status: { not: 'ANULADO' } } },
       orderBy: [{ order: 'asc' }, { documentId: 'asc' }],
       select: {
         documentId: true,
