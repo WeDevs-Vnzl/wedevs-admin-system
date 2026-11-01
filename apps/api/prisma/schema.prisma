@@ -277,6 +277,7 @@ model AlertState {
   userId         String
   alertKey       String // p. ej. "INVOICE_OVERDUE:<invoiceId>"
   dismissedUntil DateTime?
+  dismissedAt    DateTime? // dismissed for good (Δ16, DT-163)
   readAt         DateTime?
   createdAt      DateTime  @default(now())
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
