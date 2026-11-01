@@ -101,10 +101,11 @@ export class CreateDocument {
           createdById: actor.userId,
         });
         await this.tags.replace(actor, documentTagTarget(documentId), input.tagIds);
-        for (const target of input.links) {
+        // One millisecond apart, so the order of the links (the first client is the activity scope) is exact.
+        for (const [index, target] of input.links.entries()) {
           await this.support.documents.addLink(documentId, target, {
             id: this.support.nextId(),
-            createdAt: now,
+            createdAt: new Date(now.getTime() + index),
             createdById: actor.userId,
           });
         }

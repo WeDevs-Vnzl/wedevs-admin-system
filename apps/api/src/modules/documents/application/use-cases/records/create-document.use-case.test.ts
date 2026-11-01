@@ -110,6 +110,21 @@ describe('CreateDocument', () => {
     });
   });
 
+  it('stamps the links one millisecond apart so their order, and the first client, is exact', async () => {
+    const world = seededWorld();
+    const doc = await world.createDocument.execute(
+      owner,
+      newDocument({ links: [ANA, SOLARIS, KAIROS] }),
+    );
+    const stamps = world.documents.committedLinks(doc.id).map((link) => link.createdAt.getTime());
+    expect(stamps).toEqual([0, 1, 2].map((offset) => world.clock.now().getTime() + offset));
+    expect(doc.links.map((l) => l.entity.id)).toEqual(['con_ana', 'cli_solaris', 'cli_kairos']);
+    expect(world.activity.entries[0]).toMatchObject({
+      clientId: 'cli_solaris',
+      touchClientIds: ['cli_solaris', 'cli_kairos'],
+    });
+  });
+
   it('records no client scope for a document linked to a contact only', async () => {
     const world = seededWorld();
     await world.createDocument.execute(owner, newDocument({ links: [ANA], typeId: 'dtyp_nota' }));
