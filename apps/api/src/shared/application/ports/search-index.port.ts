@@ -32,6 +32,7 @@ export interface SearchIndexPort {
   /**
    * Set-based relabel of `subtitle` and `body` (same cleaning and body cap as `upsert`), only where the
    * value differs, so an unchanged entry keeps its `updatedAt`. A missing entry is a no-op.
+   * Returns the rows changed.
    */
-  setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<void>;
+  setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number>;
 }

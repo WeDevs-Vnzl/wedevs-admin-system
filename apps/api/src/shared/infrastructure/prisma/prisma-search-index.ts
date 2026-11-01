@@ -52,8 +52,9 @@ export class PrismaSearchIndex implements SearchIndexPort {
     await tx.searchEntry.updateMany({ where: { entityType, entityId }, data: { archived } });
   }
 
-  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<void> {
+  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number> {
     const tx = this.host.requireTransaction('SearchIndexPort.setTexts');
+    let changed = 0;
     for (let from = 0; from < rows.length; from += SET_TEXTS_CHUNK) {
       const chunk = rows.slice(from, from + SET_TEXTS_CHUNK);
       const text = (value: string | null | undefined, cap: boolean): string | null =>
@@ -67,7 +68,7 @@ export class PrismaSearchIndex implements SearchIndexPort {
       const subtitles = chunk.map((row) => text(row.subtitle, false));
       const setBody = chunk.map((row) => row.body !== undefined);
       const bodies = chunk.map((row) => text(row.body, true));
-      await tx.$executeRaw(Prisma.sql`
+      changed += await tx.$executeRaw(Prisma.sql`
         UPDATE "SearchEntry" AS s
         SET "subtitle" = CASE WHEN v."setSubtitle" THEN v."subtitle" ELSE s."subtitle" END,
             "body" = CASE WHEN v."setBody" THEN v."body" ELSE s."body" END,
@@ -79,5 +80,6 @@ export class PrismaSearchIndex implements SearchIndexPort {
           AND ((v."setSubtitle" AND s."subtitle" IS DISTINCT FROM v."subtitle")
             OR (v."setBody" AND s."body" IS DISTINCT FROM v."body"))`);
     }
+    return changed;
   }
 }

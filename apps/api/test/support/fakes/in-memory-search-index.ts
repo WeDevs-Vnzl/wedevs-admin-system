@@ -38,18 +38,20 @@ export class InMemorySearchIndex implements SearchIndexPort, TransactionParticip
     if (current) this.pending.set(k, { ...current, archived });
   }
 
-  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<void> {
+  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number> {
     this.uow.assertActive('SearchIndexPort.setTexts');
+    let changed = 0;
     for (const row of rows) {
       const k = key(entityType, row.entityId);
       const current = this.pending.get(k);
       if (!current) continue;
-      this.pending.set(k, {
-        ...current,
-        subtitle: row.subtitle === undefined ? current.subtitle : row.subtitle,
-        body: row.body === undefined ? current.body : row.body,
-      });
+      const subtitle = row.subtitle === undefined ? current.subtitle : row.subtitle;
+      const body = row.body === undefined ? current.body : row.body;
+      if (subtitle === current.subtitle && body === current.body) continue;
+      this.pending.set(k, { ...current, subtitle, body });
+      changed += 1;
     }
+    return changed;
   }
 
   begin(): void {

@@ -1,4 +1,6 @@
-import type { Actor } from '../actor';
+import type { ListQuery } from '../../domain/list-query';
+import type { PageSize } from '../../domain/pagination';
+import type { CurrentUser } from '../current-user';
 
 /** How a column is rendered by the CSV writer; money is written verbatim (DT-171). */
 export type ExportColumnType = 'text' | 'integer' | 'money' | 'date' | 'datetime' | 'boolean';
@@ -12,8 +14,8 @@ export interface ExportColumn<Row> {
 
 /** One page request over the entity's own list query. */
 export interface ExportPage {
-  readonly offset: number;
-  readonly limit: number;
+  readonly page: number;
+  readonly pageSize: PageSize;
 }
 
 /**
@@ -25,8 +27,8 @@ export interface ExportSource<Row = unknown> {
   /** Whitelist of exportable column ids. */
   readonly columns: Readonly<Record<string, ExportColumn<Row>>>;
   read(
-    actor: Actor,
-    query: unknown,
+    actor: CurrentUser,
+    query: Omit<ListQuery, 'page' | 'pageSize'>,
     page: ExportPage,
   ): Promise<{ rows: readonly Row[]; total: number }>;
 }

@@ -47,12 +47,13 @@ export function searchIndexSetTextsContract(
         await h.index.upsert(entry('a'));
         await h.index.upsert(entry('b'));
       });
-      await h.uow.run(() =>
+      const changed = await h.uow.run(() =>
         h.index.setTexts('PROJECT', [
           { entityId: 'a', subtitle: 'New client', body: 'new body' },
           { entityId: 'missing', subtitle: 'ghost' },
         ]),
       );
+      expect(changed).toBe(1);
       expect(await h.read('PROJECT', 'a')).toEqual({
         ...entry('a'),
         subtitle: 'New client',
@@ -87,7 +88,10 @@ export function searchIndexSetTextsContract(
       await h.uow.run(() => h.index.upsert(entry('a')));
       await h.uow.run(() => h.index.setTexts('PROJECT', [{ entityId: 'a', subtitle: 'New' }]));
       const first = await h.updatedAt('PROJECT', 'a');
-      await h.uow.run(() => h.index.setTexts('PROJECT', [{ entityId: 'a', subtitle: 'New' }]));
+      const changed = await h.uow.run(() =>
+        h.index.setTexts('PROJECT', [{ entityId: 'a', subtitle: 'New' }]),
+      );
+      expect(changed).toBe(0);
       expect(await h.updatedAt('PROJECT', 'a')).toEqual(first);
       expect((await h.read('PROJECT', 'a'))?.subtitle).toBe('New');
     });
