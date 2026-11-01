@@ -1,5 +1,6 @@
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
 import type { ExchangeRatePort } from '../../../src/modules/finance/application/ports/exchange-rate.port';
+import { GetKpis } from '../../../src/modules/intelligence/application/use-cases/reports/get-kpis.use-case';
 import { GetReport } from '../../../src/modules/intelligence/application/use-cases/reports/get-report.use-case';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { UserRole } from '../../../src/shared/domain/enums';
@@ -49,5 +50,6 @@ export function buildReportsWorld(now: string = NOW) {
     rates,
     clock,
     getReport: new GetReport(authorization, facts, inputs, clock),
+    getKpis: new GetKpis(authorization, facts, inputs, rates, clock),
   };
 }
