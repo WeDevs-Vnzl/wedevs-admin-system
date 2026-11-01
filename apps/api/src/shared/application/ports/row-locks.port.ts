@@ -13,6 +13,8 @@ export const ROW_LOCK_ORDER = [
   'Payment',
   'Expense',
   'Account',
+  'Document',
+  'ShareLink',
 ] as const;
 
 export type RowLockClass = (typeof ROW_LOCK_ORDER)[number];
