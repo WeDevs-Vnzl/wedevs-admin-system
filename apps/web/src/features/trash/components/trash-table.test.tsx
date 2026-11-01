@@ -137,7 +137,7 @@ describe("TrashTable (PRD §7.7)", () => {
 
   it("maps every trash CONFLICT key to a message", () => {
     expect(Object.keys(enTrash.errors).sort()).toEqual(
-      ["clientArchived", "invoiceNumberTaken", "taxIdTaken"].sort(),
+      ["clientArchived", "invoiceNumberTaken", "projectArchived", "taxIdTaken"].sort(),
     );
   });
 });
