@@ -36,6 +36,13 @@ export class InMemoryFileCleanupRepository implements FileCleanupRepository {
     return Promise.resolve(this.referenced.has(id));
   }
 
+  softDelete(id: string, at: Date): Promise<boolean> {
+    const row = this.rows.get(id);
+    if (!row || row.deletedAt !== null) return Promise.resolve(false);
+    this.rows.set(id, { ...row, deletedAt: at });
+    return Promise.resolve(true);
+  }
+
   hardDelete(id: string): Promise<boolean> {
     return Promise.resolve(this.rows.delete(id));
   }

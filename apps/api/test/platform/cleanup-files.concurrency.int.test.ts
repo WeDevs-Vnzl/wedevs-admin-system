@@ -123,6 +123,22 @@ describe('CleanupFiles vs ReserveFileForAttachment (concurrency, int)', () => {
     ).toBe(0);
   });
 
+  it('a confirm arriving while the asset is destroyed changes nothing: no READY row without an asset', async () => {
+    const file = await oldPending('fil_race_3');
+    let confirmed: boolean | undefined;
+    const destroy = storage.destroy.bind(storage);
+    storage.destroy = async (key) => {
+      confirmed = await repo.markReady(file.id, { sizeBytes: 10, mimeType: 'application/pdf' });
+      await destroy(key);
+    };
+
+    expect(await cleanup.execute(SYSTEM)).toEqual({ deleted: 1, skipped: 0, failed: 0 });
+
+    expect(confirmed).toBe(false);
+    expect(storage.destroyed).toEqual([file.storageKey]);
+    expect(await admin.file.count({ where: { id: file.id } })).toBe(0);
+  });
+
   it('a cleanup holding the row lock makes a concurrent reserve wait, then answer NOT_FOUND', async () => {
     const file = await oldPending('fil_race_2');
     await repo.markReady(file.id, { sizeBytes: 10, mimeType: 'application/pdf' });

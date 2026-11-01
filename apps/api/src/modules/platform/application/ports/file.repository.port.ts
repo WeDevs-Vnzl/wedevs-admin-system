@@ -45,6 +45,8 @@ export interface FileCleanupRepository {
   lockForCleanup(id: string): Promise<StoredFile | null>;
   /** Whether a business row points at the file (deleted rows included). */
   isReferenced(id: string): Promise<boolean>;
+  /** Marks the row deleted, so a confirm or an attach no longer finds it. `false` when already deleted. */
+  softDelete(id: string, at: Date): Promise<boolean>;
   /** Removes the row. `false` when it no longer exists. Only valid inside a unit of work. */
   hardDelete(id: string): Promise<boolean>;
 }

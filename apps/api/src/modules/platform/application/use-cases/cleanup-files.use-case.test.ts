@@ -111,6 +111,7 @@ describe('CleanupFiles', () => {
     expect(result).toEqual({ deleted: 0, skipped: 1, failed: 0 });
     expect(files.rows.get('late')?.status).toBe('READY');
     expect(files.locked).toEqual(['late']);
+    expect(storage.destroyed).toEqual([]);
     expect(activity.entries).toHaveLength(0);
   });
 
@@ -124,6 +125,21 @@ describe('CleanupFiles', () => {
     };
     expect(await cleanup.execute(SYSTEM)).toEqual({ deleted: 0, skipped: 1, failed: 0 });
     expect(files.rows.has('late')).toBe(true);
+    expect(files.rows.get('late')?.deletedAt).toBeNull();
+    expect(storage.destroyed).toEqual([]);
+  });
+
+  it('soft-deletes the row before destroying the asset, so a confirm can no longer flip it', async () => {
+    files.add(file('a'));
+    const destroy = storage.destroy.bind(storage);
+    let deletedAtDuringDestroy: Date | null | undefined;
+    storage.destroy = (key) => {
+      deletedAtDuringDestroy = files.rows.get('a')?.deletedAt;
+      return destroy(key);
+    };
+    expect(await cleanup.execute(SYSTEM)).toEqual({ deleted: 1, skipped: 0, failed: 0 });
+    expect(deletedAtDuringDestroy).toEqual(new Date(NOW));
+    expect(files.rows.has('a')).toBe(false);
   });
 
   it('a failed destroy skips that file for the next run and does not abort the run', async () => {
@@ -137,12 +153,25 @@ describe('CleanupFiles', () => {
 
     expect(result).toEqual({ deleted: 1, skipped: 0, failed: 1 });
     expect(failures).toEqual([{ fileId: 'b', storageKey: 'general/2026/10/b' }]);
-    expect(files.rows.has('b')).toBe(true);
+    expect(files.rows.get('b')?.deletedAt).toEqual(new Date(NOW));
     expect(files.rows.has('a')).toBe(false);
 
+    // The row is now a soft-deleted file, so it comes back once its deletion is 24 h old (DT-145).
     storage.destroy = destroy;
-    expect(await cleanup.execute(SYSTEM)).toEqual({ deleted: 1, skipped: 0, failed: 0 });
+    expect(await cleanup.execute(SYSTEM)).toEqual({ deleted: 0, skipped: 0, failed: 0 });
+    const nextDay = new CleanupFiles(
+      files,
+      storage,
+      activity,
+      uow,
+      new FixedClock('2026-10-26T10:00:01.000Z'),
+      (_error, context) => failures.push(context),
+    );
+    expect(await nextDay.execute(SYSTEM)).toEqual({ deleted: 1, skipped: 0, failed: 0 });
     expect(files.rows.size).toBe(0);
+    expect(activity.entries.find((e) => e.entityId === 'b')).toMatchObject({
+      metadata: { reason: 'DELETED' },
+    });
   });
 
   it('a rerun is a no-op', async () => {
