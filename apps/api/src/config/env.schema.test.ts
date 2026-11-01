@@ -136,4 +136,20 @@ describe('parseEnv', () => {
       },
     );
   });
+
+  describe('REDIS_URL (DT-169)', () => {
+    it('is optional, so the API boots without it', () => {
+      expect(parseEnv(valid).REDIS_URL).toBeUndefined();
+    });
+
+    it('is kept when present', () => {
+      expect(parseEnv({ ...valid, REDIS_URL: 'redis://redis:6379' }).REDIS_URL).toBe(
+        'redis://redis:6379',
+      );
+    });
+
+    it('rejects an empty value, naming the variable only', () => {
+      expect(() => parseEnv({ ...valid, REDIS_URL: '' })).toThrow('REDIS_URL');
+    });
+  });
 });
