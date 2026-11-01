@@ -25,11 +25,7 @@ import type { FinanceProjector } from './finance-projector';
 import type { FinanceSourcesPort, InvoiceCacheSource } from './ports/finance-sources.port';
 import type { InvoiceCacheWrite, ReadModelWriterPort } from './ports/read-model-writer.port';
 
-/**
- * The actor of the batch's system path: scripts and jobs call their use cases with it and no route.
- * `can()` takes a `CurrentUser`, so a `SYSTEM` use case authorizes by the actor type instead.
- */
-export const SYSTEM_ACTOR: Actor = { actorType: 'SYSTEM', userId: null };
+export { SYSTEM_ACTOR } from '../../../shared/application/actor';
 
 /** The transaction budget of the rebuild; see `RecomputeAll`. */
 export const RECOMPUTE_ALL_TIMEOUT_MS = 1_800_000;
