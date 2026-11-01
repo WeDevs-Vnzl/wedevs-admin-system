@@ -56,6 +56,15 @@ export function rowLocksContract(
       });
     });
 
+    it('locks the document classes: Document and ShareLink', async () => {
+      await h.uow.run(async () => {
+        await h.locks.lock({ ShareLink: ['s2', 's1'], Document: ['d1'], Account: ['a1'] });
+        await h.locks.lock({ Document: ['d1'], ShareLink: ['s1'] });
+        await expect(h.locks.lock({ ShareLink: ['s3'] })).rejects.toThrow(/second lock/i);
+        await expect(h.locks.lock({ Document: ['d2'] })).rejects.toThrow(/second lock/i);
+      });
+    });
+
     it('starts afresh in the next unit of work, and after a rolled-back one', async () => {
       await h.uow.run(() => h.locks.lock({ Client: ['c1'] }));
       await h.uow.run(() => h.locks.lock({ Client: ['c2'] }));

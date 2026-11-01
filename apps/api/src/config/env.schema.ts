@@ -13,6 +13,11 @@ export const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1),
   CLOUDINARY_API_KEY: z.string().min(1),
   CLOUDINARY_API_SECRET: z.string().min(1),
+  SHARE_IP_SALT: z.string().min(32),
+  SHARE_UNLOCK_SECRET: z.string().min(32),
+  THROTTLE_TTL: z.coerce.number().int().min(1).default(60),
+  THROTTLE_LIMIT: z.coerce.number().int().min(1).default(60),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

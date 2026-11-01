@@ -59,6 +59,8 @@ async function render(): Promise<string> {
   process.env.CLOUDINARY_CLOUD_NAME ??= 'openapi-placeholder';
   process.env.CLOUDINARY_API_KEY ??= 'openapi-placeholder';
   process.env.CLOUDINARY_API_SECRET ??= 'openapi-placeholder';
+  process.env.SHARE_IP_SALT ??= 'openapi-placeholder-share-ip-salt-000000';
+  process.env.SHARE_UNLOCK_SECRET ??= 'openapi-placeholder-share-unlock-secret-00';
   const { NestFactory } = await import('@nestjs/core');
   const { AppModule } = await import('../src/app.module.js');
   const { buildOpenApiDocument, configureApp } = await import('../src/app.setup.js');

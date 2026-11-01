@@ -19,6 +19,8 @@ const TABLE: Record<RowLockClass, string> = {
   Payment: '"Payment"',
   Expense: '"Expense"',
   Account: '"Account"',
+  Document: '"Document"',
+  ShareLink: '"ShareLink"',
 };
 
 /**
