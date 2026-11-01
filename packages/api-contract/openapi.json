@@ -12375,8 +12375,7 @@
                     {
                       "type": "null"
                     }
-                  ],
-                  "default": null
+                  ]
                 }
               },
               "required": [

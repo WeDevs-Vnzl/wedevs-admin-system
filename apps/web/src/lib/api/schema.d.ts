@@ -4712,8 +4712,7 @@ export interface components {
                 documentId: string;
                 /** @default false */
                 requiresAccessKey: boolean;
-                /** @default null */
-                versionId: string | null;
+                versionId?: string | null;
             }[];
             expiresAt?: string | null;
             /**

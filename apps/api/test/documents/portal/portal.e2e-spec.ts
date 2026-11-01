@@ -405,7 +405,7 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
       const pinned = await link({
         documents: [{ documentId: 'doc_prd', versionId: 'doc_prd_v1' }],
       });
-      const latest = await link({ documents: [{ documentId: 'doc_prd' }] });
+      const latest = await link({ documents: [{ documentId: 'doc_prd', versionId: null }] });
       expect(
         (await get(`${PORTAL}/${latest.token}/documents/doc_prd`).expect(200)).body.content
           .markdown,

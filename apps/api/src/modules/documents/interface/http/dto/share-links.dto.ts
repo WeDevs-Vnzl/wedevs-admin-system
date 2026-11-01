@@ -35,8 +35,11 @@ const documentStatus = z.enum(DOCUMENT_STATUS_VALUES);
 
 const shareDocumentInput = z.object({
   documentId: idSchema,
-  /** `null` = always the current version. */
-  versionId: idSchema.nullable().default(null),
+  /**
+   * Omitted = pin the document's current version when the link is created (DT-150); `null` = always follow
+   * the latest version.
+   */
+  versionId: idSchema.nullable().optional(),
   /** When `true` and the document has no key yet, a key is generated and returned once. */
   requiresAccessKey: z.boolean().default(false),
 });

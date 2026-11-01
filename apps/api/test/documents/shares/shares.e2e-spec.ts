@@ -201,7 +201,7 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
         allowDownload: false,
         expiresAt: '2026-12-31',
         documents: [
-          { documentId: 'doc_a', requiresAccessKey: true },
+          { documentId: 'doc_a', versionId: null, requiresAccessKey: true },
           { documentId: 'doc_b', versionId: 'doc_b_v1' },
         ],
       }).expect(201);
@@ -516,6 +516,56 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
           accessKey: 'changed',
         }),
       });
+    });
+
+    it('pins the current version when versionId is omitted, follows the latest on null, and a new version moves only the latter (DT-150)', async () => {
+      const { share } = await created({
+        documents: [
+          { documentId: 'doc_a' },
+          { documentId: 'doc_b', versionId: null },
+        ],
+      });
+      const explicit = await created({ documents: [{ documentId: 'doc_a', versionId: 'doc_a_v1' }] });
+      const stored = async (id: string) =>
+        (
+          await prisma.shareLinkDocument.findMany({
+            where: { shareLinkId: id },
+            orderBy: { order: 'asc' },
+          })
+        ).map((row) => [row.documentId, row.versionId]);
+
+      expect(share.documents.map((doc: Body) => [doc.versionId, doc.versionNumber])).toEqual([
+        ['doc_a_v2', 2],
+        [null, 1],
+      ]);
+      expect(await stored(share.id)).toEqual([
+        ['doc_a', 'doc_a_v2'],
+        ['doc_b', null],
+      ]);
+      expect(await stored(explicit.share.id)).toEqual([['doc_a', 'doc_a_v1']]);
+
+      // doc_a gets a v3: the omitted-then-pinned link keeps serving v2.
+      await prisma.documentVersion.create({
+        data: {
+          id: 'doc_a_v3',
+          documentId: 'doc_a',
+          versionNumber: 3,
+          format: 'MARKDOWN',
+          content: '# v3',
+          createdById: (users['owner'] as CurrentUser).userId,
+        },
+      });
+      await prisma.document.update({ where: { id: 'doc_a' }, data: { currentVersionId: 'doc_a_v3' } });
+      const detail = (await get(`${BASE}/${share.id}`, 'owner').expect(200)).body as Body;
+      expect(detail.documents[0]).toMatchObject({
+        versionId: 'doc_a_v2',
+        versionNumber: 2,
+        isLatest: false,
+      });
+      expect(await stored(share.id)).toEqual([
+        ['doc_a', 'doc_a_v2'],
+        ['doc_b', null],
+      ]);
     });
 
     it('revokes a link as a final state: edits, keys and a second revoke are INTEGRITY_LOCK', async () => {

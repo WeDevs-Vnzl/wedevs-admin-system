@@ -193,10 +193,22 @@ describe('BE-4 flows (full app)', () => {
     const latest = (
       await as('post', 'ADMIN', '/share-links', {
         title: 'Entrega al día',
-        documents: [{ documentId: doc.id }],
+        documents: [{ documentId: doc.id, versionId: null }],
       }).expect(201)
     ).body as Body;
     expect(latest.generatedKeys).toEqual([]);
+    // DT-150: an omitted versionId pins the current version (v1 here), so v2 will not reach this link.
+    const omitted = (
+      await as('post', 'ADMIN', '/share-links', {
+        title: 'Entrega implícita',
+        documents: [{ documentId: doc.id }],
+      }).expect(201)
+    ).body as Body;
+    expect(
+      await prisma.shareLinkDocument.findFirstOrThrow({
+        where: { shareLinkId: omitted.share.id },
+      }),
+    ).toMatchObject({ versionId: v1.id });
     const row = await prisma.shareLink.findUniqueOrThrow({ where: { id: pinned.share.id } });
     expect(row).toMatchObject({ viewCount: 0, downloadCount: 0, revokedAt: null });
     expect(await actions('SHARE_LINK', pinned.share.id)).toEqual(['SHARE_CREATE']);
@@ -278,6 +290,8 @@ describe('BE-4 flows (full app)', () => {
     const followsLatest = await portal(`${latest.share.token}/documents/${doc.id}`).expect(200);
     expect(followsLatest.body.document.versionNumber).toBe(2);
     expect(followsLatest.body.content.markdown).toBe('# Propuesta\n\nversión dos');
+    const stillPinned = await portal(`${omitted.share.token}/documents/${doc.id}`).expect(200);
+    expect(stillPinned.body.document.versionNumber).toBe(1);
 
     // 11. Revoke: final. The portal answers a bare 404 from then on, counters and log unchanged.
     await as('post', 'ADMIN', `/share-links/${pinned.share.id}/revoke`).expect(200);

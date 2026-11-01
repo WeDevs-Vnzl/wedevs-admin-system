@@ -38,7 +38,10 @@ export const MAX_SHARE_MESSAGE_LENGTH = 2000;
 
 // ───────────────────────────── Inputs ─────────────────────────────
 
-/** A document inside a link: the latest version (`versionId: null`) or a pinned one, with an optional key. */
+/**
+ * A document inside a link: the latest version (`versionId: null`) or a pinned one, with an optional key.
+ * On create an omitted `versionId` pins the document's current version (DT-150).
+ */
 export interface ShareDocumentInput {
   readonly documentId: string;
   readonly versionId?: string | null;
@@ -84,6 +87,8 @@ export interface ShareLinkFields {
     readonly documentId: string;
     readonly versionId: string | null;
     readonly requiresAccessKey: boolean;
+    /** `true` when the create form omitted `versionId`: `pinCurrentVersions` resolves it (DT-150). */
+    readonly pinCurrent: boolean;
   }[];
   readonly allowDownload: boolean;
   readonly locale: ShareLocale;
@@ -302,10 +307,32 @@ export class ShareSupport {
         documentId: item.documentId,
         versionId: item.versionId ?? null,
         requiresAccessKey: item.requiresAccessKey ?? false,
+        pinCurrent: mode === 'create' && item.versionId === undefined,
       })),
       allowDownload: input.allowDownload ?? true,
       locale: locale as ShareLocale,
       expiresAt,
+    };
+  }
+
+  /**
+   * DT-150: each document whose `versionId` was omitted is pinned to its current version. Run it inside the
+   * unit of work that inserts the link, so the version read is the one the link is written with. A document
+   * that is unknown or has no current version stays `null` and `checkReferences` refuses it as before.
+   */
+  async pinCurrentVersions(fields: ShareLinkFields): Promise<ShareLinkFields> {
+    const omitted = fields.documents.filter((item) => item.pinCurrent);
+    if (omitted.length === 0) return fields;
+    const documents = await this.shares.sharableDocuments(omitted.map((item) => item.documentId));
+    return {
+      ...fields,
+      documents: fields.documents.map((item) => ({
+        ...item,
+        versionId: item.pinCurrent
+          ? (documents.get(item.documentId)?.currentVersionId ?? null)
+          : item.versionId,
+        pinCurrent: false,
+      })),
     };
   }
 
