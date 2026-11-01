@@ -898,7 +898,7 @@ model DocumentVersion {
   versionNumber Int
   format        DocumentFormat
   content       String? // markdown
-  fileId        String?        @unique
+  fileId        String?
   url           String?
   changelog     String?
   createdAt     DateTime       @default(now())
@@ -910,6 +910,7 @@ model DocumentVersion {
   sharedIn  ShareLinkDocument[]
 
   @@unique([documentId, versionNumber])
+  @@index([fileId])
 }
 
 model DocumentLink {
@@ -1023,12 +1024,12 @@ model File {
   createdAt    DateTime   @default(now())
   deletedAt    DateTime?
 
-  uploadedBy      User             @relation(fields: [uploadedById], references: [id])
-  invoice         Invoice?         @relation("InvoiceFile")
-  paymentReceipt  Payment?         @relation("PaymentReceipt")
-  expenseReceipt  Expense?         @relation("ExpenseReceipt")
-  documentVersion DocumentVersion? @relation("VersionFile")
-  noteAttachments NoteAttachment[]
+  uploadedBy       User              @relation(fields: [uploadedById], references: [id])
+  invoice          Invoice?          @relation("InvoiceFile")
+  paymentReceipt   Payment?          @relation("PaymentReceipt")
+  expenseReceipt   Expense?          @relation("ExpenseReceipt")
+  documentVersions DocumentVersion[] @relation("VersionFile")
+  noteAttachments  NoteAttachment[]
 
   @@index([status, createdAt])
 }
@@ -1086,7 +1087,8 @@ model ShareLink {
   clientId       String?
   locale         String    @default("es")
   allowDownload  Boolean   @default(true)
-  expiresAt      DateTime?
+  expiresAt      DateTime? @db.Date
+  expiredAt      DateTime? // DT-137: marker set by the expired-links step
   revokedAt      DateTime?
   viewCount      Int       @default(0)
   downloadCount  Int       @default(0)
@@ -1112,6 +1114,7 @@ model ShareLinkDocument {
   version   DocumentVersion? @relation(fields: [versionId], references: [id])
 
   @@id([shareLinkId, documentId])
+  @@index([documentId])
 }
 
 model ShareAccessLog {
