@@ -186,6 +186,36 @@ describe('document type usage (e2e): HU-21 CA1, CA2 and the delete race', () => 
     ).resolves.toBe(1); // the type's own creation only; the failed delete logged nothing
   });
 
+  it('a DELETE that loses to another delete of the same type answers NOT_FOUND, never a 500', async () => {
+    const type = await createType().expect(201);
+    const typeId: string = type.body.id;
+
+    // The first delete is in flight (uncommitted); the second one reads the type, then waits on its lock.
+    let commit!: () => void;
+    const mayCommit = new Promise<void>((resolve) => (commit = resolve));
+    let deleted!: () => void;
+    const hasDeleted = new Promise<void>((resolve) => (deleted = resolve));
+    const first = prisma.$transaction(async (tx) => {
+      await tx.documentType.delete({ where: { id: typeId } });
+      deleted();
+      await mayCommit;
+    });
+    await hasDeleted;
+
+    const second = deleteType(typeId).then((res) => res);
+    await untilSomeoneWaitsOnALock(prisma);
+    commit();
+    await first;
+    const res = await second;
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('NOT_FOUND');
+    await expect(prisma.documentType.count({ where: { id: typeId } })).resolves.toBe(0);
+    await expect(
+      prisma.activityLog.count({ where: { entityId: typeId, action: 'SETTINGS_CHANGE' } }),
+    ).resolves.toBe(1); // the type's own creation only; the lost delete logged nothing
+  });
+
   it('a create that races a type delete answers NOT_FOUND after the Serializable retry re-reads the type, never a 500', async () => {
     const type = await createType().expect(201);
     const typeId: string = type.body.id;

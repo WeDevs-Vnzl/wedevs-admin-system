@@ -34,8 +34,9 @@ import {
  *  - N parallel wrong keys never exceed the lockout limit, and a right key during the lockout is refused;
  *  - N simultaneous views lose no count (the stored counters are atomic increments);
  *  - an unlock never writes a row after the link was revoked, and a resolve never waits for the revoke.
- * Each rule has a deterministic gated test, and a control that removes the lock and the isolation (the unlocked
- * behavior) to prove the test can fail.
+ * The lockout and revoke rules each have a deterministic gated test and a control that removes the lock and the
+ * isolation (the unlocked behavior) to prove the test can fail. The views rule has no lock to remove: it is a
+ * stress test of simultaneous requests against the atomic increment, with no gated control.
  */
 const admin = createTestPrisma();
 const service = new PrismaService({ DATABASE_URL: process.env.DATABASE_URL as string });

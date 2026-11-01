@@ -138,6 +138,17 @@ describe('document versions (e2e): HU-18 CA1-CA3, HU-19 CA4, DT-136, DT-138, A3'
   });
 
   describe('HU-18 CA1-CA3: markdown draft, publish, history and restore', () => {
+    it('stamps updatedById with the author of a new version, not the creator of the document', async () => {
+      const doc = await newDoc('member');
+      await post(`${BASE}/${doc.id}/versions`, 'owner', {
+        format: 'ENLACE',
+        url: 'https://x.test/a',
+      }).expect(201);
+      const row = await prisma.document.findUniqueOrThrow({ where: { id: doc.id } });
+      expect(row.createdById).toBe(users.member?.userId);
+      expect(row.updatedById).toBe(users.owner?.userId);
+    });
+
     it('saves the draft explicitly without creating a version, then publishes it as version 1', async () => {
       const doc = await newDoc('member');
 

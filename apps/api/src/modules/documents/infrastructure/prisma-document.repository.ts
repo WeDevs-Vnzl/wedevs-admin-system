@@ -468,7 +468,11 @@ export class PrismaDocumentRepository implements DocumentRepository {
     });
     await db.document.update({
       where: { id: version.documentId },
-      data: { currentVersionId: version.id, updatedAt: version.createdAt },
+      data: {
+        currentVersionId: version.id,
+        updatedAt: version.createdAt,
+        updatedById: version.createdById,
+      },
     });
     return { versionNumber };
   }
