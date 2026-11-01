@@ -549,8 +549,11 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
       ['expiresAt', 'expiresAt'],
       ['allowDownload', 'allowDownload'],
       ['versionId', 'documents.0.versionId'],
+      ['locale', 'locale'],
+      ['message', 'message'],
+      ['clientId', 'clientId'],
     ] as const)(
-      'refuses a PATCH that omits %s with 422 and changes nothing (no fail-open on keys, expiry, pin)',
+      'refuses a PATCH that omits %s with 422 and changes nothing (no fail-open on keys, expiry, pin, locale, message, client)',
       async (_name, path) => {
         const { share } = (
           await create('owner', {
@@ -597,6 +600,9 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
       await get(`${BASE}/missing`, 'owner').expect(404);
       await patch(`${BASE}/missing`, 'owner', {
         ...form(),
+        locale: 'es',
+        message: null,
+        clientId: null,
         allowDownload: true,
         expiresAt: null,
         documents: [{ documentId: 'doc_a', versionId: null, requiresAccessKey: false }],

@@ -144,6 +144,9 @@ describe('updateShareLink vs revokeShareLink', () => {
   const edit = (over: Record<string, unknown> = {}) => ({
     id: 'shr_a',
     title: 'Editado',
+    locale: 'es',
+    message: null,
+    clientId: null,
     allowDownload: true,
     expiresAt: null,
     documents: [{ documentId: 'doc_a', versionId: null, requiresAccessKey: false }],
@@ -209,6 +212,9 @@ describe('two edits of the document list of one link', () => {
   const edit = (title: string, documentIds: string[]) => ({
     id: 'shr_a',
     title,
+    locale: 'es',
+    message: null,
+    clientId: null,
     allowDownload: true,
     expiresAt: null,
     documents: documentIds.map((documentId) => ({

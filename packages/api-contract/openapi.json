@@ -12298,7 +12298,6 @@
             ]
           },
           "locale": {
-            "default": "es",
             "enum": [
               "es",
               "en"
@@ -12324,8 +12323,11 @@
         },
         "required": [
           "title",
+          "message",
+          "clientId",
           "documents",
           "allowDownload",
+          "locale",
           "expiresAt"
         ],
         "type": "object"

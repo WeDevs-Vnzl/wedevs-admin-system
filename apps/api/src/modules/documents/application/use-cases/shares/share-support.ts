@@ -65,6 +65,9 @@ export interface ShareLinkFieldsInput {
 export interface ShareLinkEditInput extends ShareLinkFieldsInput {
   readonly allowDownload: boolean;
   readonly expiresAt: DateOnly | null;
+  readonly locale: string;
+  readonly message: string | null;
+  readonly clientId: string | null;
   readonly documents: readonly {
     readonly documentId: string;
     readonly versionId: string | null;
@@ -243,7 +246,7 @@ export class ShareSupport {
    * The shape checks of the form, all in the use case so a caller that skips the DTO meets the same rules
    * (lesson B2): lengths, a distinct non-empty document list, the locale and the expiry date. With
    * `mode: 'edit'` the answers an omission would silently turn into a default (`allowDownload`, `expiresAt`,
-   * each document's `versionId` and `requiresAccessKey`) are required: a partial PATCH is `VALIDATION`, never
+   * each document's `versionId` and `requiresAccessKey`, DT-149: `locale`, `message` and `clientId`) are required: a partial PATCH is `VALIDATION`, never
    * a link that lost its key, its pin or its expiry.
    */
   normalize(input: ShareLinkFieldsInput, mode: 'create' | 'edit' = 'create'): ShareLinkFields {
@@ -285,6 +288,9 @@ export class ShareSupport {
     if (mode === 'edit') {
       if (input.allowDownload === undefined) fail('allowDownload', REQUIRED_KEY);
       if (input.expiresAt === undefined) fail('expiresAt', REQUIRED_KEY);
+      if (input.locale === undefined) fail('locale', REQUIRED_KEY);
+      if (input.message === undefined) fail('message', REQUIRED_KEY);
+      if (input.clientId === undefined) fail('clientId', REQUIRED_KEY);
     }
 
     if (Object.keys(errors).length > 0) throw new ValidationFailedError({ fieldErrors: errors });
