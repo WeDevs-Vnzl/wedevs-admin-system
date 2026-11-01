@@ -120,6 +120,7 @@ export interface FinanceFactsReadPort {
    * Receivable at the end of `close`: per invoice, BILLED − WITHHELD_* − COLLECTED over facts dated up to
    * `close`; only balances above zero count. Overdue means the invoice's `dueDate` is before `close`.
    */
+  /** Under a filter, each invoice's withholding counts by the share of its filtered billed amount. */
   receivableAt(close: DateOnly, filter?: FactFilter): Promise<ReceivableAt>;
 
   /**

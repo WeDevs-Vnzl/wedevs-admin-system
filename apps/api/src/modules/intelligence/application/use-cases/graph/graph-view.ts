@@ -1,3 +1,4 @@
+import { ENTITY_READ_RESOURCE } from '../../entity-read-resource';
 import type { PermissionResource } from '../../../../../shared/application/authorization';
 import type { CurrentUser } from '../../../../../shared/application/current-user';
 import type { AuthorizationPort } from '../../../../../shared/application/ports/authorization.port';
@@ -25,15 +26,7 @@ import type {
  * sees (DT-71). The single visibility map of the graph (C13).
  */
 export const GRAPH_RESOURCE: Record<GraphNodeType, PermissionResource | null> = {
-  CLIENT: 'client',
-  CONTACT: 'contact',
-  PROJECT: 'project',
-  INVOICE: 'invoice',
-  PAYMENT: 'payment',
-  EXPENSE: 'expense',
-  ACCOUNT: 'account',
-  DOCUMENT: 'document',
-  NOTE: 'note',
+  ...ENTITY_READ_RESOURCE,
   TECHNOLOGY: null,
   TAG: null,
 };

@@ -410,6 +410,48 @@ export function financeFactsReadContract(
         expect((await h.port.receivableAt('2026-03-01', { tagId: 't1' })).totalUsd).toBe('30.00');
       });
 
+      it('shares an invoice withholding among its projects by billed amount', async () => {
+        await h.tag('t1', { projectIds: ['p1'] });
+        await h.addFact(billed('i1', '60.00', '2026-02-10', { projectId: 'p1' }));
+        await h.addFact(billed('i1', '40.00', '2026-02-10', { projectId: 'p2' }));
+        await h.addFact({
+          kind: 'WITHHELD_ISLR',
+          date: '2026-01-10',
+          amountUsd: '10.00',
+          invoiceId: 'i1',
+          clientId: 'c1',
+        });
+        const close = '2026-03-01';
+        expect((await h.port.receivableAt(close, { projectId: 'p1' })).totalUsd).toBe('54.00');
+        expect((await h.port.receivableAt(close, { projectId: 'p2' })).totalUsd).toBe('36.00');
+        expect((await h.port.receivableAt(close, { tagId: 't1' })).totalUsd).toBe('54.00');
+        expect((await h.port.receivableAt(close)).totalUsd).toBe('90.00');
+        expect((await h.port.agingAt(close, { projectId: 'p1' })).totalUsd).toBe('54.00');
+      });
+
+      it('leaves out a project share settled by collections and withholding', async () => {
+        await h.addFact(billed('i1', '100.00', '2026-02-10', { projectId: 'p1' }));
+        await h.addFact({
+          kind: 'WITHHELD_IVA',
+          date: '2026-01-10',
+          amountUsd: '10.00',
+          invoiceId: 'i1',
+          clientId: 'c1',
+        });
+        await h.addFact({
+          kind: 'COLLECTED',
+          date: '2026-02-01',
+          amountUsd: '90.00',
+          invoiceId: 'i1',
+          clientId: 'c1',
+          projectId: 'p1',
+        });
+        expect(await h.port.receivableAt('2026-03-01', { projectId: 'p1' })).toEqual({
+          totalUsd: ZERO,
+          overdueUsd: ZERO,
+        });
+      });
+
       it('buckets balances by days past due on dueDate, per client, largest total first', async () => {
         const close = '2026-06-30';
         await h.addFact(billed('not-due', '1.00', '2026-07-15'));

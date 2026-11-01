@@ -1,3 +1,4 @@
+import { isZeroMoney, toDecimal } from '../../../src/shared/domain/money';
 import { daysBetween, type DateOnly } from '../../../src/shared/domain/business-date';
 import {
   addMoney,
@@ -168,31 +169,52 @@ export class InMemoryFinanceFactsRead implements FinanceFactsReadPort {
       }));
   }
 
-  /** Open balance of each invoice at `close`, with its client and due date. */
+  /**
+   * Open balance of each invoice at `close`, with its client and due date. Withholdings carry no project, so a
+   * filtered read takes the share of the invoice's withholding that matches its filtered billed amount.
+   */
   private balances(close: DateOnly, filter?: FactFilter) {
     const byInvoice = new Map<
       string,
-      { clientId: string | null; dueDate: DateOnly | null; balance: MoneyString }
+      {
+        clientId: string | null;
+        dueDate: DateOnly | null;
+        billed: MoneyString;
+        collected: MoneyString;
+      }
     >();
+    const whole = new Map<string, { billed: MoneyString; withheld: MoneyString }>();
     for (const fact of this.facts) {
-      if (!fact.invoiceId || fact.date > close || !this.matches(fact, filter)) continue;
+      if (!fact.invoiceId || fact.date > close) continue;
+      const totals = whole.get(fact.invoiceId) ?? { billed: ZERO, withheld: ZERO };
+      if (fact.kind === 'BILLED') totals.billed = addMoney(totals.billed, fact.amountUsd);
+      if (WITHHELD.includes(fact.kind)) totals.withheld = addMoney(totals.withheld, fact.amountUsd);
+      whole.set(fact.invoiceId, totals);
+      if (!this.matches(fact, filter)) continue;
       const current = byInvoice.get(fact.invoiceId) ?? {
         clientId: null,
         dueDate: null,
-        balance: ZERO,
+        billed: ZERO,
+        collected: ZERO,
       };
       if (fact.kind === 'BILLED') {
-        current.balance = addMoney(current.balance, fact.amountUsd);
+        current.billed = addMoney(current.billed, fact.amountUsd);
         current.dueDate = fact.dueDate ?? current.dueDate;
         current.clientId = fact.clientId ?? current.clientId;
-      } else if (fact.kind === 'COLLECTED' || WITHHELD.includes(fact.kind)) {
-        current.balance = subMoney(current.balance, fact.amountUsd);
+      } else if (fact.kind === 'COLLECTED') {
+        current.collected = addMoney(current.collected, fact.amountUsd);
       }
       byInvoice.set(fact.invoiceId, current);
     }
-    return [...byInvoice.values()].filter(
-      (row) => row.dueDate !== null && compareMoney(row.balance, ZERO) > 0,
-    );
+    return [...byInvoice.entries()]
+      .map(([invoiceId, row]) => {
+        const totals = whole.get(invoiceId) ?? { billed: ZERO, withheld: ZERO };
+        const share = isZeroMoney(totals.billed)
+          ? ZERO
+          : toDecimal(totals.withheld).mul(row.billed).div(totals.billed).toFixed(2);
+        return { ...row, balance: subMoney(subMoney(row.billed, row.collected), share) };
+      })
+      .filter((row) => row.dueDate !== null && compareMoney(row.balance, ZERO) > 0);
   }
 
   async receivableAt(close: DateOnly, filter?: FactFilter): Promise<ReceivableAt> {

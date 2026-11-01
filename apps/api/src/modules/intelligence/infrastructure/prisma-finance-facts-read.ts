@@ -51,30 +51,37 @@ const money = (expression: Prisma.Sql): Prisma.Sql =>
   Prisma.sql`COALESCE(${expression}, 0)::numeric(38,2)::text`;
 
 /**
- * Per-invoice open balance as of a close date: BILLED - WITHHELD_* - COLLECTED over facts dated up to it,
- * the due date from the BILLED facts (DT-125). Invoices without a BILLED fact, or with no balance left, drop
- * out. Columns: `invoiceId`, `clientId`, `dueDate`, `balance`.
+ * Per-invoice open balance as of a close date: BILLED - WITHHELD_* - COLLECTED over facts dated up to it, the
+ * due date from the BILLED facts (DT-125). Withholdings carry no project, so they are read for the whole
+ * invoice and a filtered read takes the share of its filtered billed amount, as the projector splits by net
+ * amount. Invoices without a BILLED fact, or with no balance left, drop out. Columns: `invoiceId`, `clientId`,
+ * `dueDate`, `balance`.
  */
 const openBalances = (close: DateOnly, filter: FactFilter | undefined): Prisma.Sql => Prisma.sql`
-  SELECT f."invoiceId" AS "invoiceId",
-         MAX(f."clientId") FILTER (WHERE f."kind" = 'BILLED') AS "clientId",
-         MAX(f."dueDate") FILTER (WHERE f."kind" = 'BILLED') AS "dueDate",
-         SUM(CASE
-               WHEN f."kind" = 'BILLED' THEN f."amountUsd"
-               WHEN f."kind" IN ('COLLECTED', 'WITHHELD_IVA', 'WITHHELD_ISLR', 'WITHHELD_OTHER')
-                 THEN -f."amountUsd"
-               ELSE 0
-             END) AS "balance"
-  FROM "FinanceFact" f
-  WHERE f."invoiceId" IS NOT NULL AND f."date" <= ${close}::date AND ${filterSql(filter)}
-  GROUP BY f."invoiceId"
-  HAVING MAX(f."dueDate") FILTER (WHERE f."kind" = 'BILLED') IS NOT NULL
-     AND SUM(CASE
-               WHEN f."kind" = 'BILLED' THEN f."amountUsd"
-               WHEN f."kind" IN ('COLLECTED', 'WITHHELD_IVA', 'WITHHELD_ISLR', 'WITHHELD_OTHER')
-                 THEN -f."amountUsd"
-               ELSE 0
-             END) > 0`;
+  SELECT o.* FROM (
+    SELECT b."invoiceId", b."clientId", b."dueDate",
+           b."billed" - b."collected"
+             - COALESCE(ROUND(w."withheld" * b."billed" / NULLIF(w."billed", 0), 2), 0) AS "balance"
+    FROM (
+      SELECT f."invoiceId" AS "invoiceId",
+             MAX(f."clientId") FILTER (WHERE f."kind" = 'BILLED') AS "clientId",
+             MAX(f."dueDate") FILTER (WHERE f."kind" = 'BILLED') AS "dueDate",
+             COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'BILLED'), 0) AS "billed",
+             COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'COLLECTED'), 0) AS "collected"
+      FROM "FinanceFact" f
+      WHERE f."invoiceId" IS NOT NULL AND f."date" <= ${close}::date AND ${filterSql(filter)}
+      GROUP BY f."invoiceId"
+    ) b
+    CROSS JOIN LATERAL (
+      SELECT COALESCE(SUM(t."amountUsd") FILTER (WHERE t."kind" = 'BILLED'), 0) AS "billed",
+             COALESCE(SUM(t."amountUsd") FILTER (
+               WHERE t."kind" IN ('WITHHELD_IVA', 'WITHHELD_ISLR', 'WITHHELD_OTHER')), 0) AS "withheld"
+      FROM "FinanceFact" t
+      WHERE t."invoiceId" = b."invoiceId" AND t."date" <= ${close}::date
+    ) w
+    WHERE b."dueDate" IS NOT NULL
+  ) o
+  WHERE o."balance" > 0`;
 
 /**
  * Reads `FinanceFact` with raw SQL aggregates (DT-125, DT-170): sums happen in the database and reach Node as

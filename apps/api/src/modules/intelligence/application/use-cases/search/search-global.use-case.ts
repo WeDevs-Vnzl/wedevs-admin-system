@@ -1,5 +1,5 @@
+import { ENTITY_READ_RESOURCE } from '../../entity-read-resource';
 import type { CurrentUser } from '../../../../../shared/application/current-user';
-import type { PermissionResource } from '../../../../../shared/application/authorization';
 import type { AuthorizationPort } from '../../../../../shared/application/ports/authorization.port';
 import { ValidationFailedError } from '../../../../../shared/domain/domain-error';
 import {
@@ -11,18 +11,6 @@ import {
 import type { SearchHit, SearchReadPort } from '../../ports/search-read.port';
 
 /** The permission resource each indexed type is read under; a type the caller cannot read never appears. */
-export const SEARCH_RESOURCE: Readonly<Record<SearchableEntityType, PermissionResource>> = {
-  CLIENT: 'client',
-  CONTACT: 'contact',
-  PROJECT: 'project',
-  INVOICE: 'invoice',
-  PAYMENT: 'payment',
-  EXPENSE: 'expense',
-  ACCOUNT: 'account',
-  DOCUMENT: 'document',
-  NOTE: 'note',
-};
-
 // The interface layer reads the type list and limits through the application, not the domain.
 export {
   SEARCHABLE_ENTITY_TYPE_VALUES,
@@ -92,7 +80,8 @@ export class SearchGlobal {
     const requested = parsed.entityType ? [parsed.entityType] : wanted;
     const types = SEARCHABLE_ENTITY_TYPE_VALUES.filter(
       (type) =>
-        requested.includes(type) && this.authorization.can(actor, 'read', SEARCH_RESOURCE[type]),
+        requested.includes(type) &&
+        this.authorization.can(actor, 'read', ENTITY_READ_RESOURCE[type]),
     );
     if (types.length === 0) return empty;
 

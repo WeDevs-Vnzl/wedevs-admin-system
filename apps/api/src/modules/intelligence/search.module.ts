@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SharedInterfaceModule } from '../../shared/interface/shared-interface.module';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
 import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
@@ -24,6 +25,7 @@ import { SearchController } from './interface/http/search.controller';
  * imported by `AppModule` before package 6.1.
  */
 @Module({
+  imports: [SharedInterfaceModule],
   controllers: [SearchController],
   providers: [
     { provide: SEARCH_READ, useClass: PrismaSearchRead },
