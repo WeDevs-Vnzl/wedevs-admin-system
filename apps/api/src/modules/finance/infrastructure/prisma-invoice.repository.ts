@@ -28,7 +28,13 @@ import type {
   OpenInvoiceView,
 } from '../application/ports/invoice.repository.port';
 import { INVOICE_ERRORS } from '../domain/errors';
-import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
+import {
+  anyOf,
+  dateBound,
+  hasSearchText,
+  orderBy,
+  searchPage,
+} from '../../../shared/infrastructure/prisma/search-entry-page';
 
 const NUMBER_INDEX = 'invoice_number_active';
 /** An invoice that still binds an installment: not voided and not archived (drafts count). */

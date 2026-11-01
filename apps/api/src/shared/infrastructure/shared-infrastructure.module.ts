@@ -10,6 +10,8 @@ import {
   SEQUENCE,
   UNIT_OF_WORK,
 } from '../application/ports/tokens';
+import { ExportSourceRegistry } from '../application/ports/export-source.port';
+import { SearchReindexRegistry } from '../application/ports/search-reindex.port';
 import { CuidGenerator } from './id-generator.adapter';
 import { PrismaActivityLog } from './prisma/prisma-activity-log';
 import { PrismaClientMetricsWriter } from './prisma/prisma-client-metrics-writer';
@@ -36,6 +38,8 @@ import { SystemClock } from './system-clock.adapter';
     { provide: CLIENT_METRICS_WRITER, useClass: PrismaClientMetricsWriter },
     { provide: ROW_LOCKS, useClass: PrismaRowLocks },
     { provide: REQUEST_CONTEXT, useClass: AsyncLocalRequestContext },
+    SearchReindexRegistry,
+    ExportSourceRegistry,
   ],
   exports: [
     PrismaService,
@@ -49,6 +53,8 @@ import { SystemClock } from './system-clock.adapter';
     CLIENT_METRICS_WRITER,
     ROW_LOCKS,
     REQUEST_CONTEXT,
+    SearchReindexRegistry,
+    ExportSourceRegistry,
   ],
 })
 export class SharedInfrastructureModule {}

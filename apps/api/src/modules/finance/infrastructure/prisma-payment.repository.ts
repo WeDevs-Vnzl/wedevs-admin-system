@@ -25,7 +25,13 @@ import type {
   PaymentRepository,
   PaymentView,
 } from '../application/ports/payment.repository.port';
-import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
+import {
+  anyOf,
+  dateBound,
+  hasSearchText,
+  orderBy,
+  searchPage,
+} from '../../../shared/infrastructure/prisma/search-entry-page';
 
 /** Key of a receipt file that is already another payment's (`receiptFileId` is unique). */
 const RECEIPT_UNAVAILABLE = 'payments.validation.receiptUnavailable';

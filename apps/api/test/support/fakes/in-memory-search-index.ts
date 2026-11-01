@@ -2,6 +2,7 @@ import type { EntityType } from '../../../src/shared/domain/enums';
 import type {
   SearchIndexEntry,
   SearchIndexPort,
+  SearchTextsUpdate,
 } from '../../../src/shared/application/ports/search-index.port';
 import type { InMemoryUnitOfWork, TransactionParticipant } from './in-memory-unit-of-work';
 
@@ -35,6 +36,20 @@ export class InMemorySearchIndex implements SearchIndexPort, TransactionParticip
     const k = key(entityType, entityId);
     const current = this.pending.get(k);
     if (current) this.pending.set(k, { ...current, archived });
+  }
+
+  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<void> {
+    this.uow.assertActive('SearchIndexPort.setTexts');
+    for (const row of rows) {
+      const k = key(entityType, row.entityId);
+      const current = this.pending.get(k);
+      if (!current) continue;
+      this.pending.set(k, {
+        ...current,
+        subtitle: row.subtitle === undefined ? current.subtitle : row.subtitle,
+        body: row.body === undefined ? current.body : row.body,
+      });
+    }
   }
 
   begin(): void {
