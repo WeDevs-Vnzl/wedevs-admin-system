@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { todayInCaracas } from '../../../src/shared/domain/business-date';
 import { NoteLinkTargetRegistry } from '../../../src/modules/commercial/application/note-link-target.registry';
 import type { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { FILE_ACCESS_REGISTRY } from '../../../src/modules/platform/application/ports/file-access.port';
@@ -26,10 +27,10 @@ vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
 const BASE = '/api/v1';
 const admin = createTestPrisma(assertLocalDatabaseUrl(process.env.DATABASE_URL));
 
-/** `YYYY-MM-01` of the month `back` months before the current one (UTC). */
+/** `YYYY-MM-01` of the month `back` months before the current business month (Caracas). */
 function firstOfMonth(back: number): string {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1))
+  const [year, month] = todayInCaracas(new Date()).split('-').map(Number);
+  return new Date(Date.UTC(year as number, (month as number) - 1 - back, 1))
     .toISOString()
     .slice(0, 10);
 }

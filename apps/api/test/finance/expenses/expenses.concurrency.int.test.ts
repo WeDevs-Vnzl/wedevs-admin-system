@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
+import { parseDateOnly, todayInCaracas } from '../../../src/shared/domain/business-date';
 import { PrismaService } from '../../../src/shared/infrastructure/prisma/prisma.service';
 import { createTestPrisma, truncateBusinessTables } from '../../support/db';
 import { GENERATION_ACTOR } from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
@@ -136,8 +137,8 @@ describe('markExpensePaid vs voidExpense', () => {
 
 describe('GenerateRecurringExpenses run twice', () => {
   it('creates one expense per period, never a duplicate', async () => {
-    const start = new Date();
-    start.setUTCDate(1);
+    // The first of the current business month (Caracas), which the UTC date can already have left.
+    const start = parseDateOnly(`${todayInCaracas(new Date()).slice(0, 7)}-01`);
     start.setUTCMonth(start.getUTCMonth() - 1);
     await admin.recurringExpense.create({
       data: {
