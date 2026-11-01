@@ -185,6 +185,37 @@ describe('document type usage (e2e): HU-21 CA1, CA2 and the delete race', () => 
       prisma.activityLog.count({ where: { entityId: typeId, action: 'SETTINGS_CHANGE' } }),
     ).resolves.toBe(1); // the type's own creation only; the failed delete logged nothing
   });
+
+  it('a create that races a type delete answers NOT_FOUND after the Serializable retry re-reads the type, never a 500', async () => {
+    const type = await createType().expect(201);
+    const typeId: string = type.body.id;
+
+    // The competing delete: in flight (uncommitted), so the create still reads the type and then waits on the
+    // FK share lock of its insert; the commit makes that wait fail with a serialization error and a retry.
+    let commit!: () => void;
+    const mayCommit = new Promise<void>((resolve) => (commit = resolve));
+    let deleted!: () => void;
+    const hasDeleted = new Promise<void>((resolve) => (deleted = resolve));
+    const deleting = prisma.$transaction(async (tx) => {
+      await tx.documentType.delete({ where: { id: typeId } });
+      deleted();
+      await mayCommit;
+    });
+    await hasDeleted;
+
+    const creating = createDocument(typeId).then((res) => res);
+    await untilSomeoneWaitsOnALock(prisma);
+    commit();
+    await deleting;
+    const res = await creating;
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('NOT_FOUND');
+    await expect(prisma.documentType.count({ where: { id: typeId } })).resolves.toBe(0);
+    await expect(prisma.document.count()).resolves.toBe(0);
+    await expect(prisma.activityLog.count({ where: { entityType: 'DOCUMENT' } })).resolves.toBe(0);
+    await expect(prisma.searchEntry.count({ where: { entityType: 'DOCUMENT' } })).resolves.toBe(0);
+  });
 });
 
 /** Polls `pg_stat_activity` until a backend waits on a lock. */

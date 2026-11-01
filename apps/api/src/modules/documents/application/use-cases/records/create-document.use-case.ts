@@ -62,16 +62,18 @@ export class CreateDocument {
     if (title === '') {
       throw new ValidationFailedError({ fieldErrors: { title: [REQUIRED_KEY] } });
     }
-    const type = await this.support.requireActiveType(input.typeId);
-    assertDocumentTypeRules(type, { signedAt: input.signedAt, expiresAt: input.expiresAt });
-    assertDocumentDates({ effectiveDate: input.effectiveDate, expiresAt: input.expiresAt });
-    if (input.links.length > MAX_DOCUMENT_LINKS) {
-      throw new ValidationFailedError({ fieldErrors: { links: ['validation.invalidOption'] } });
-    }
-    assertDistinctTargets(input.links);
 
     const id = await this.uow.run(
       async () => {
+        // Inside the unit of work, so a `Serializable` retry reads the type again: a type deleted while the
+        // first attempt ran answers `NOT_FOUND` instead of inserting against a vanished row.
+        const type = await this.support.requireActiveType(input.typeId);
+        assertDocumentTypeRules(type, { signedAt: input.signedAt, expiresAt: input.expiresAt });
+        assertDocumentDates({ effectiveDate: input.effectiveDate, expiresAt: input.expiresAt });
+        if (input.links.length > MAX_DOCUMENT_LINKS) {
+          throw new ValidationFailedError({ fieldErrors: { links: ['validation.invalidOption'] } });
+        }
+        assertDistinctTargets(input.links);
         const refs = await this.support.requireLinkTargets(
           actor,
           input.links,
