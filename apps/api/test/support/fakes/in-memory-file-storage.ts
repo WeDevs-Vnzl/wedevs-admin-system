@@ -1,4 +1,5 @@
 import type {
+  FileDisposition,
   FileStoragePort,
   UploadIntent,
 } from '../../../src/modules/platform/application/ports/file-storage.port';
@@ -50,11 +51,12 @@ export class InMemoryFileStorage implements FileStoragePort {
 
   signedDownloadUrl(
     storageKey: string,
-    input: { fileName: string; expiresAt: Date },
+    input: { fileName: string; expiresAt: Date; disposition?: FileDisposition },
   ): Promise<string> {
     const query = new URLSearchParams({
       name: input.fileName,
       exp: String(input.expiresAt.getTime()),
+      ...(input.disposition === 'inline' ? { disposition: 'inline' } : {}),
     });
     return Promise.resolve(`https://storage.test/download/${storageKey}?${query.toString()}`);
   }

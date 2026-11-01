@@ -92,6 +92,75 @@ describe('PrismaFileRepository (int)', () => {
     expect(await repo.isReferenced('unknown')).toBe(false);
   });
 
+  describe('cleanup reads (DT-145)', () => {
+    const cutoff = new Date('2026-10-24T10:00:00Z');
+    const at = (iso: string) => new Date(iso);
+    const make = async (id: string, over: Partial<StoredFile> = {}): Promise<StoredFile> => {
+      const file = { ...newFile(), id, storageKey: `general/2026/10/${id}`, ...over };
+      await repo.insert(file);
+      if (over.status === 'READY') {
+        await repo.markReady(id, { sizeBytes: 10, mimeType: 'application/pdf' });
+      }
+      if (over.deletedAt) await repo.softDelete(id, over.deletedAt);
+      return file;
+    };
+
+    it('finds old PENDING and old soft-deleted unreferenced files, oldest first, within the limit', async () => {
+      await make('c_pending_old', { createdAt: at('2026-10-20T10:00:00Z') });
+      await make('c_pending_older', { createdAt: at('2026-10-19T10:00:00Z') });
+      await make('c_pending_new', { createdAt: at('2026-10-25T09:00:00Z') });
+      await make('c_ready', { status: 'READY', createdAt: at('2026-10-01T10:00:00Z') });
+      await make('c_deleted_old', {
+        status: 'READY',
+        createdAt: at('2026-10-21T10:00:00Z'),
+        deletedAt: at('2026-10-22T10:00:00Z'),
+      });
+      await make('c_deleted_new', {
+        status: 'READY',
+        createdAt: at('2026-10-21T10:00:00Z'),
+        deletedAt: at('2026-10-25T09:00:00Z'),
+      });
+
+      const all = await repo.findCleanupCandidates(cutoff, 10);
+      expect(all.map((c) => c.id)).toEqual(['c_pending_older', 'c_pending_old', 'c_deleted_old']);
+      expect(all[0]).toEqual({
+        id: 'c_pending_older',
+        storageKey: 'general/2026/10/c_pending_older',
+      });
+      expect(await repo.findCleanupCandidates(cutoff, 2)).toHaveLength(2);
+    });
+
+    it('leaves out referenced files, deleted or not', async () => {
+      const kept = await make('c_kept', {
+        status: 'READY',
+        createdAt: at('2026-10-20T10:00:00Z'),
+        deletedAt: at('2026-10-21T10:00:00Z'),
+      });
+      const note = await makeNote(admin);
+      await admin.noteAttachment.create({ data: { noteId: note.id, fileId: kept.id } });
+      await make('c_free', { createdAt: at('2026-10-20T10:00:00Z') });
+      expect((await repo.findCleanupCandidates(cutoff, 10)).map((c) => c.id)).toEqual(['c_free']);
+    });
+
+    it('lockForCleanup sees deleted rows and needs a unit of work; hardDelete removes the row', async () => {
+      const host = new TransactionHost(service);
+      const uow = new PrismaUnitOfWork(host);
+      const file = await make('c_lock', {
+        status: 'READY',
+        deletedAt: at('2026-10-21T10:00:00Z'),
+      });
+      const scoped = new PrismaFileRepository(host);
+      await expect(scoped.lockForCleanup(file.id)).rejects.toThrow();
+      await expect(scoped.hardDelete(file.id)).rejects.toThrow();
+      const locked = await uow.run(() => scoped.lockForCleanup(file.id));
+      expect(locked).toMatchObject({ id: file.id, deletedAt: at('2026-10-21T10:00:00Z') });
+      expect(await uow.run(() => scoped.lockForCleanup('unknown'))).toBeNull();
+      expect(await uow.run(() => scoped.hardDelete(file.id))).toBe(true);
+      expect(await uow.run(() => scoped.hardDelete(file.id))).toBe(false);
+      expect(await admin.file.count({ where: { id: file.id } })).toBe(0);
+    });
+  });
+
   describe('row lock shared by ReserveFileForAttachment and DeleteFile', () => {
     const settle = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
     const pending = async (p: Promise<unknown>) =>

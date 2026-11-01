@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
 import type { ClockPort } from '../../../shared/application/ports/clock.port';
-import type { FileStoragePort, UploadIntent } from '../application/ports/file-storage.port';
+import type {
+  FileDisposition,
+  FileStoragePort,
+  UploadIntent,
+} from '../application/ports/file-storage.port';
 import type { UploadContext } from '../domain/upload-rules';
 
 export interface CloudinaryCredentials {
@@ -118,15 +122,18 @@ export class CloudinaryFileStorage implements FileStoragePort {
 
   signedDownloadUrl(
     storageKey: string,
-    input: { fileName: string; expiresAt: Date },
+    input: { fileName: string; expiresAt: Date; disposition?: FileDisposition },
   ): Promise<string> {
     // Cloudinary's API download endpoint signs `expires_at`, so the URL stops working by itself.
     // The SDK's typings omit the credential options it reads and type `attachment` as a boolean while
     // forwarding a string as the download file name.
+    // `inline` omits `attachment`, so the API does not force `Content-Disposition: attachment`; the
+    // real behaviour of the private download URL is checked live by the user (DT-85), never by an agent.
+    const disposition = input.disposition === 'inline' ? {} : { attachment: input.fileName };
     const options = {
       resource_type: RESOURCE_TYPE,
       type: DELIVERY_TYPE,
-      attachment: input.fileName,
+      ...disposition,
       expires_at: Math.floor(input.expiresAt.getTime() / 1000),
       cloud_name: this.credentials.cloudName,
       api_key: this.credentials.apiKey,
