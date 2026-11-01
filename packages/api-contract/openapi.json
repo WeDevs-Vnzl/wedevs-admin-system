@@ -28656,6 +28656,16 @@
             },
             "description": "NOT_FOUND"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "CONFLICT"
+          },
           "422": {
             "content": {
               "application/json": {

@@ -124,6 +124,7 @@ export class PortalController {
     'VALIDATION',
     'ACCESS_KEY_INVALID',
     'ACCESS_KEY_LOCKED',
+    'CONFLICT',
     'RATE_LIMITED',
     'INTERNAL',
   )

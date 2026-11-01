@@ -406,6 +406,23 @@ describe('BE-4 contract: documents, share links and the portal', () => {
     expect(portal.map(({ operation }) => operation.security)).toEqual(Array(5).fill([]));
   });
 
+  it('declares CONFLICT where a Serializable retry can exhaust (unlock), and no 409 on the ReadCommitted portal routes', () => {
+    const codes = (path: string, method: string): string[] =>
+      Object.keys(
+        (full.paths[path]?.[method] as { responses?: Record<string, unknown> } | undefined)
+          ?.responses ?? {},
+      );
+    expect(codes('/api/v1/portal/{token}/documents/{documentId}/unlock', 'post')).toContain('409');
+    for (const [path, method] of [
+      ['/api/v1/portal/{token}', 'get'],
+      ['/api/v1/portal/{token}/views', 'post'],
+      ['/api/v1/portal/{token}/documents/{documentId}', 'get'],
+      ['/api/v1/portal/{token}/files/{documentId}', 'get'],
+    ] as const) {
+      expect(codes(path, method)).not.toContain('409');
+    }
+  });
+
   it('exposes no access key, hash or secret in a response except accessKey and generatedKeys of the share-link mutations', () => {
     expect(secretFindings(full)).toEqual([]);
   });
