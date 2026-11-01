@@ -17,7 +17,8 @@ import {
  * `createShareLink` (`POST /share-links`, HU-22 CA1): a link with a CSPRNG token and its documents, each on
  * the latest version or pinned, some with a generated access key. Owner and Admin only (`share`). The keys are
  * generated and hashed before the unit of work opens (A1, scrypt never runs inside one); the clear keys come
- * back once in `generatedKeys` and are stored only as hashes. `Serializable`; records `SHARE_CREATE`.
+ * back once in `generatedKeys` and are stored only as hashes. A document without `versionId` is pinned to its
+ * current version inside the unit of work (DT-150); an explicit `null` follows the latest. `Serializable`; records `SHARE_CREATE`.
  */
 export class CreateShareLink {
   constructor(
@@ -29,9 +30,9 @@ export class CreateShareLink {
 
   async execute(actor: CurrentUser, input: ShareLinkFieldsInput): Promise<ShareLinkMutationResult> {
     assertCan(this.authorization, actor, 'create', 'share');
-    const fields = this.support.normalize(input);
+    const normalized = this.support.normalize(input);
 
-    const keyed = fields.documents.filter((item) => item.requiresAccessKey);
+    const keyed = normalized.documents.filter((item) => item.requiresAccessKey);
     const prepared = await this.support.prepareKeys(keyed.length);
     const keyOf = new Map(
       keyed.flatMap((item, index) => {
@@ -42,6 +43,7 @@ export class CreateShareLink {
 
     const id = await this.uow.run(
       async () => {
+        const fields = await this.support.pinCurrentVersions(normalized);
         await this.support.checkReferences(fields, null);
         const now = this.support.now();
         const link = {

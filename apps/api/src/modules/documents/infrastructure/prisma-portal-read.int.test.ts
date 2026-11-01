@@ -70,6 +70,20 @@ const link = (documentId: string, order: number, over: Record<string, unknown> =
   admin.shareLinkDocument.create({ data: { shareLinkId: 'shr_a', documentId, order, ...over } });
 
 describe('PrismaPortalRead.documentsOf', () => {
+  it('leaves out an ANULADO document and keeps a VENCIDO one (DT-151)', async () => {
+    await document('doc_a', { status: 'ANULADO' });
+    await document('doc_b', { status: 'VENCIDO' });
+    await document('doc_c');
+    await link('doc_a', 0);
+    await link('doc_b', 1);
+    await link('doc_c', 2);
+
+    expect((await read.documentsOf('shr_a')).map((row) => row.documentId)).toEqual([
+      'doc_b',
+      'doc_c',
+    ]);
+  });
+
   it('lists the documents in display order with the current version, or the pinned one', async () => {
     await document('doc_a', {}, 3);
     await document('doc_b', {}, 2);

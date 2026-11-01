@@ -35,8 +35,11 @@ const documentStatus = z.enum(DOCUMENT_STATUS_VALUES);
 
 const shareDocumentInput = z.object({
   documentId: idSchema,
-  /** `null` = always the current version. */
-  versionId: idSchema.nullable().default(null),
+  /**
+   * Omitted = pin the document's current version when the link is created (DT-150); `null` = always follow
+   * the latest version.
+   */
+  versionId: idSchema.nullable().optional(),
   /** When `true` and the document has no key yet, a key is generated and returned once. */
   requiresAccessKey: z.boolean().default(false),
 });
@@ -61,8 +64,8 @@ export class ShareLinkFormDto extends createZodDto(shareLinkFormSchema) {}
  * `PATCH /share-links/{id}`: the whole form, with no default. A field whose omission would reset the link
  * (`allowDownload`, `expiresAt`, a document's `versionId` and `requiresAccessKey`) must be answered, `null`
  * included where it means something: a partial edit is `VALIDATION`, never a silent loss of a key, a pin or
- * the expiry. `locale` still defaults and `message` and `clientId` still clear when absent (the form always
- * submits them).
+ * the expiry. DT-149: `locale`, `message` and `clientId` are answered too (`null` clears the last two), so a
+ * partial edit can neither reset the language nor drop the message or the client.
  */
 export const shareLinkEditSchema = shareLinkFormSchema.extend({
   documents: z
@@ -76,6 +79,9 @@ export const shareLinkEditSchema = shareLinkFormSchema.extend({
     .min(1)
     .max(50),
   allowDownload: z.boolean(),
+  locale: shareLocale,
+  message: text(2000).nullable(),
+  clientId: idSchema.nullable(),
   expiresAt: dateOnlySchema.nullable(),
 });
 export class ShareLinkEditDto extends createZodDto(shareLinkEditSchema) {}

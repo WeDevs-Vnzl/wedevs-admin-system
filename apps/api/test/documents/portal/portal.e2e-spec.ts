@@ -223,6 +223,45 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
       await get(`${PORTAL}/${token}/documents/doc_prd`).expect(404);
     });
 
+    it('serves no ANULADO document: the same bare 404 as a document outside the link, no log, no counter (DT-151)', async () => {
+      const { token, id, key } = await link();
+      await prisma.document.update({ where: { id: 'doc_prd' }, data: { status: 'VENCIDO' } });
+      await prisma.document.update({ where: { id: 'doc_cred' }, data: { status: 'ANULADO' } });
+      const outside = await get(`${PORTAL}/${token}/documents/doc_two`).expect(404);
+      const before = await prisma.shareLink.findUniqueOrThrow({ where: { id } });
+
+      // The page lists the VENCIDO document and leaves the ANULADO one out.
+      const page = await get(`${PORTAL}/${token}`).expect(200);
+      expect(page.body.documents.map((doc: Body) => doc.documentId)).toEqual([
+        'doc_contrato',
+        'doc_prd',
+      ]);
+      await get(`${PORTAL}/${token}/documents/doc_prd`).expect(200);
+      const viewed = await logs(id);
+
+      const responses = [
+        await get(`${PORTAL}/${token}/documents/doc_cred`),
+        await get(`${PORTAL}/${token}/files/doc_cred?disposition=attachment`),
+        await unlock(token, 'doc_cred', key),
+        await http().post(`${PORTAL}/${token}/views`).send({ documentId: 'doc_cred' }),
+      ];
+      for (const res of responses) {
+        expect(res.status).toBe(404);
+        expect(res.body).toEqual({
+          error: { ...outside.body.error, correlationId: res.body.error.correlationId },
+        });
+      }
+      expect(await logs(id)).toEqual(viewed);
+      expect(await prisma.shareLink.findUniqueOrThrow({ where: { id } })).toEqual(before);
+    });
+
+    it('still resolves a link whose documents are all ANULADO, with an empty list (DT-151)', async () => {
+      const { token } = await link();
+      await prisma.document.updateMany({ data: { status: 'ANULADO' } });
+      const page = await get(`${PORTAL}/${token}`).expect(200);
+      expect(page.body).toMatchObject({ title: 'Entrega de documentación', documents: [] });
+    });
+
     it('returns the raw markdown to the viewer and describes a file without its key', async () => {
       const { token } = await link();
       const md = await get(`${PORTAL}/${token}/documents/doc_prd`).expect(200);
@@ -405,7 +444,7 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
       const pinned = await link({
         documents: [{ documentId: 'doc_prd', versionId: 'doc_prd_v1' }],
       });
-      const latest = await link({ documents: [{ documentId: 'doc_prd' }] });
+      const latest = await link({ documents: [{ documentId: 'doc_prd', versionId: null }] });
       expect(
         (await get(`${PORTAL}/${latest.token}/documents/doc_prd`).expect(200)).body.content
           .markdown,

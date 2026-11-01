@@ -95,6 +95,25 @@ describe('createShareLink (HU-22 CA1)', () => {
     expect(share.documents.map((doc) => doc.order)).toEqual([0, 1]);
   });
 
+  it('pins the current version when versionId is omitted, and follows the latest on an explicit null (DT-150)', async () => {
+    const world = seededWorld();
+    const { share } = await world.createShareLink.execute(
+      owner,
+      form({
+        documents: [{ documentId: 'doc_a' }, { documentId: 'doc_b', versionId: null }],
+      }),
+    );
+    expect(share.documents.map((doc) => [doc.versionId, doc.versionNumber])).toEqual([
+      ['doc_a_v3', 3],
+      [null, 1],
+    ]);
+
+    // A new version of doc_a does not move the pinned link.
+    world.seedDocument('doc_a', { versions: 4 });
+    const detail = await world.getShareLink.execute(owner, { id: share.id });
+    expect(must(detail.documents[0])).toMatchObject({ versionId: 'doc_a_v3', versionNumber: 3 });
+  });
+
   it('generates a key once per document that asks for it and stores only the hash', async () => {
     const world = seededWorld();
     const { share, generatedKeys } = await world.createShareLink.execute(

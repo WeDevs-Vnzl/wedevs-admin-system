@@ -38,7 +38,10 @@ export const MAX_SHARE_MESSAGE_LENGTH = 2000;
 
 // ───────────────────────────── Inputs ─────────────────────────────
 
-/** A document inside a link: the latest version (`versionId: null`) or a pinned one, with an optional key. */
+/**
+ * A document inside a link: the latest version (`versionId: null`) or a pinned one, with an optional key.
+ * On create an omitted `versionId` pins the document's current version (DT-150).
+ */
 export interface ShareDocumentInput {
   readonly documentId: string;
   readonly versionId?: string | null;
@@ -65,6 +68,9 @@ export interface ShareLinkFieldsInput {
 export interface ShareLinkEditInput extends ShareLinkFieldsInput {
   readonly allowDownload: boolean;
   readonly expiresAt: DateOnly | null;
+  readonly locale: string;
+  readonly message: string | null;
+  readonly clientId: string | null;
   readonly documents: readonly {
     readonly documentId: string;
     readonly versionId: string | null;
@@ -81,6 +87,8 @@ export interface ShareLinkFields {
     readonly documentId: string;
     readonly versionId: string | null;
     readonly requiresAccessKey: boolean;
+    /** `true` when the create form omitted `versionId`: `pinCurrentVersions` resolves it (DT-150). */
+    readonly pinCurrent: boolean;
   }[];
   readonly allowDownload: boolean;
   readonly locale: ShareLocale;
@@ -243,7 +251,7 @@ export class ShareSupport {
    * The shape checks of the form, all in the use case so a caller that skips the DTO meets the same rules
    * (lesson B2): lengths, a distinct non-empty document list, the locale and the expiry date. With
    * `mode: 'edit'` the answers an omission would silently turn into a default (`allowDownload`, `expiresAt`,
-   * each document's `versionId` and `requiresAccessKey`) are required: a partial PATCH is `VALIDATION`, never
+   * each document's `versionId` and `requiresAccessKey`, DT-149: `locale`, `message` and `clientId`) are required: a partial PATCH is `VALIDATION`, never
    * a link that lost its key, its pin or its expiry.
    */
   normalize(input: ShareLinkFieldsInput, mode: 'create' | 'edit' = 'create'): ShareLinkFields {
@@ -285,6 +293,9 @@ export class ShareSupport {
     if (mode === 'edit') {
       if (input.allowDownload === undefined) fail('allowDownload', REQUIRED_KEY);
       if (input.expiresAt === undefined) fail('expiresAt', REQUIRED_KEY);
+      if (input.locale === undefined) fail('locale', REQUIRED_KEY);
+      if (input.message === undefined) fail('message', REQUIRED_KEY);
+      if (input.clientId === undefined) fail('clientId', REQUIRED_KEY);
     }
 
     if (Object.keys(errors).length > 0) throw new ValidationFailedError({ fieldErrors: errors });
@@ -296,10 +307,32 @@ export class ShareSupport {
         documentId: item.documentId,
         versionId: item.versionId ?? null,
         requiresAccessKey: item.requiresAccessKey ?? false,
+        pinCurrent: mode === 'create' && item.versionId === undefined,
       })),
       allowDownload: input.allowDownload ?? true,
       locale: locale as ShareLocale,
       expiresAt,
+    };
+  }
+
+  /**
+   * DT-150: each document whose `versionId` was omitted is pinned to its current version. Run it inside the
+   * unit of work that inserts the link, so the version read is the one the link is written with. A document
+   * that is unknown or has no current version stays `null` and `checkReferences` refuses it as before.
+   */
+  async pinCurrentVersions(fields: ShareLinkFields): Promise<ShareLinkFields> {
+    const omitted = fields.documents.filter((item) => item.pinCurrent);
+    if (omitted.length === 0) return fields;
+    const documents = await this.shares.sharableDocuments(omitted.map((item) => item.documentId));
+    return {
+      ...fields,
+      documents: fields.documents.map((item) => ({
+        ...item,
+        versionId: item.pinCurrent
+          ? (documents.get(item.documentId)?.currentVersionId ?? null)
+          : item.versionId,
+        pinCurrent: false,
+      })),
     };
   }
 
