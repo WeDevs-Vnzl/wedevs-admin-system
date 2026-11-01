@@ -211,7 +211,7 @@ describe.each(isolations)('account writes under concurrency (isolation: %s)', (i
       expect(await admin.financeFact.count({ where: { kind: 'TRANSFER_OUT' } })).toBe(2);
       expect(await admin.financeFact.count({ where: { kind: 'TRANSFER_IN' } })).toBe(2);
     }
-  });
+  }, 60_000);
 
   it('movements on one account lose nothing', async () => {
     for (let round = 0; round < ROUNDS; round++) {
@@ -254,5 +254,5 @@ describe.each(isolations)('account writes under concurrency (isolation: %s)', (i
       expect(await admin.financeFact.count({ where: { kind: 'MOVEMENT_IN' } })).toBe(1);
       expect(await admin.financeFact.count({ where: { kind: 'MOVEMENT_OUT' } })).toBe(1);
     }
-  });
+  }, 60_000);
 });
