@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { activityLogContract } from '../contracts/activity-log.contract';
 import { activitySeamsContract } from '../contracts/activity-seams.contract';
 import { clientMetricsWriterContract } from '../contracts/client-metrics-writer.contract';
+import { rowLocksContract } from '../contracts/row-locks.contract';
 import { searchIndexContract } from '../contracts/search-index.contract';
 import { sequenceContract } from '../contracts/sequence.contract';
 import { unitOfWorkContract, type KernelHarness } from '../contracts/unit-of-work.contract';
@@ -9,6 +10,7 @@ import { FixedClock } from './fixed-clock';
 import { FixedRequestContext } from './fixed-request-context';
 import { InMemoryActivityLog } from './in-memory-activity-log';
 import { InMemoryClientMetricsWriter } from './in-memory-client-metrics-writer';
+import { InMemoryRowLocks } from './in-memory-row-locks';
 import { InMemorySearchIndex } from './in-memory-search-index';
 import { InMemorySequence } from './in-memory-sequence';
 import { InMemoryUnitOfWork } from './in-memory-unit-of-work';
@@ -28,6 +30,10 @@ function build(): KernelHarness & { raw: InMemorySequence } {
 }
 
 unitOfWorkContract('in-memory fakes', build);
+rowLocksContract('in-memory fakes', () => {
+  const uow = new InMemoryUnitOfWork();
+  return { uow, locks: new InMemoryRowLocks(uow) };
+});
 activityLogContract('in-memory fakes', build);
 sequenceContract('in-memory fakes', build, async (h, name, value) => {
   (h as ReturnType<typeof build>).raw.seed(name, value);

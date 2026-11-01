@@ -2,6 +2,12 @@ export type IsolationLevel = 'ReadCommitted' | 'RepeatableRead' | 'Serializable'
 
 export interface UnitOfWorkOptions {
   readonly isolation?: IsolationLevel;
+  /**
+   * How long the transaction may run before it is rolled back, in milliseconds. The adapter has a default
+   * that suits a request; only a batch that rebuilds the whole dataset (`RecomputeAll`) asks for more.
+   * A nested `run` joins the outer transaction and ignores it.
+   */
+  readonly timeoutMs?: number;
 }
 
 /**

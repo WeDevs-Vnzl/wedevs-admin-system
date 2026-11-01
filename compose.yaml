@@ -92,7 +92,7 @@ services:
     restart: unless-stopped
     networks: [app]
 
-  # Production hosting of the web stays on Netlify until the VPS (deploy.yml); this is the local image.
+  # The web image: local through this profile; the user deploys it on the VPS.
   web:
     profiles: [web]
     image: wedevs-web:latest

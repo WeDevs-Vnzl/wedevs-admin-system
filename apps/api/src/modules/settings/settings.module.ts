@@ -14,15 +14,26 @@ import { UpdateCompanySettings } from './application/use-cases/update-company-se
 import { CompanyLogoFileAccessResolver } from './infrastructure/company-logo-file-access.resolver';
 import { PlatformCompanyLogoAdapter } from './infrastructure/platform-company-logo.adapter';
 import { PrismaSettingRepository } from './infrastructure/prisma-setting.repository';
+import { DocumentTypesModule } from './document-types.module';
+import { FinanceCatalogsModule } from './finance-catalogs.module';
+import { TagsModule } from './tags.module';
+import { TechnologiesModule } from './technologies.module';
 import { CompanySettingsController } from './interface/http/company-settings.controller';
 
 /**
- * Company settings (PRD §8.15). Reads need only authentication (Q-BE1-3); updates need the `settings`
+ * Settings aggregator (PRD §8.15): imports the finance catalogs, document types, tags and technologies
+ * sub-modules and owns company settings. Reads need only authentication (Q-BE1-3); updates need the `settings`
  * grant. `CompanyLogoPort` is answered by platform's `GetFileSummary`, and the logo is registered in
  * platform's file access registry so any signed-in user can download it.
  */
 @Module({
-  imports: [PlatformModule],
+  imports: [
+    PlatformModule,
+    FinanceCatalogsModule,
+    DocumentTypesModule,
+    TagsModule,
+    TechnologiesModule,
+  ],
   controllers: [CompanySettingsController],
   providers: [
     { provide: SETTING_REPOSITORY, useClass: PrismaSettingRepository },

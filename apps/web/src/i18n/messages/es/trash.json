@@ -32,6 +32,7 @@
   "errors": {
     "taxIdTaken": "Otro cliente activo ya usa este RIF. Archívalo o edítalo antes de restaurar este.",
     "clientArchived": "Su cliente está archivado. Restaura primero el cliente.",
+    "projectArchived": "Uno de sus proyectos está archivado. Restaura primero el proyecto.",
     "invoiceNumberTaken": "Otra factura activa ya usa este número. Edítala antes de restaurar esta."
   }
 }

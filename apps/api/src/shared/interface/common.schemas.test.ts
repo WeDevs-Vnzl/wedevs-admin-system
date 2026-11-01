@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DECIMAL_STRING_PATTERN,
   VALIDATION_MESSAGES,
   dateOnlySchema,
+  decimalRequestSchema,
+  decimalStringSchema,
   idSchema,
   isValidDateOnly,
   moneyAmountSchema,
@@ -126,6 +129,49 @@ describe('rateSchema (decimal strings, at most 8 decimals)', () => {
     ]);
     expect(messages(rateSchema.safeParse('0'))).toEqual([VALIDATION_MESSAGES.rateMustBePositive]);
     expect(rateSchema.safeParse(36.5).success).toBe(false);
+  });
+});
+
+describe('decimalStringSchema (output)', () => {
+  it.each(['0', '0.00', '1250.00', '-3.5', '99999999999999.99', '1.12345678'])(
+    'accepts %s',
+    (value) => {
+      expect(decimalStringSchema.safeParse(value).success).toBe(true);
+    },
+  );
+
+  it.each(['', '1e3', '01', '.5', '5.', '1,5', ' 1', 'NaN', '+1'])('rejects %j', (value) => {
+    expect(decimalStringSchema.safeParse(value).success).toBe(false);
+  });
+
+  it('rejects a number and emits a string with a pattern in JSON Schema', () => {
+    expect(decimalStringSchema.safeParse(1.5).success).toBe(false);
+    const json = z.toJSONSchema(decimalStringSchema) as { type?: string; pattern?: string };
+    expect(json.type).toBe('string');
+    expect(json.pattern).toBeTruthy();
+  });
+});
+
+describe('request money and rate contract metadata', () => {
+  const pattern = (schema: z.ZodType) =>
+    (z.toJSONSchema(schema, { io: 'input' }) as { pattern?: string }).pattern;
+
+  it('documents the decimal pattern on every request money and rate schema', () => {
+    expect(pattern(moneyAmountSchema())).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(moneyAmountSchema({ sign: 'any' }).default('0'))).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(rateSchema)).toBe(DECIMAL_STRING_PATTERN);
+    expect(pattern(decimalRequestSchema)).toBe(DECIMAL_STRING_PATTERN);
+  });
+
+  it('is metadata only: the pattern checks nothing and the i18n keys are unchanged', () => {
+    expect(decimalRequestSchema.safeParse('not a number').success).toBe(true);
+    expect(messages(moneyAmountSchema().safeParse('abc'))).toEqual([
+      VALIDATION_MESSAGES.invalidMoney,
+    ]);
+    expect(messages(moneyAmountSchema().safeParse('1.234'))).toEqual([
+      VALIDATION_MESSAGES.moneyTooManyDecimals,
+    ]);
+    expect(messages(rateSchema.safeParse('0'))).toEqual([VALIDATION_MESSAGES.rateMustBePositive]);
   });
 });
 

@@ -22,6 +22,9 @@ import {
   type PaymentMethodRepository,
 } from './application/ports/payment-method.repository.port';
 import { SETTING_REPOSITORY, type SettingRepository } from './application/ports/setting.repository';
+import { CurrencyCatalogQuery } from './application/currency-catalog.query';
+import { ExpenseCategoryCatalogQuery } from './application/expense-category-catalog.query';
+import { PaymentMethodCatalogQuery } from './application/payment-method-catalog.query';
 import { FiscalSettingsQuery } from './application/fiscal-settings.query';
 import { CreateCurrency } from './application/use-cases/create-currency.use-case';
 import { CreateExpenseCategory } from './application/use-cases/create-expense-category.use-case';
@@ -48,7 +51,7 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
  * tree and the fiscal parameters. Every write runs `can(…, 'settings')` first and logs one `SETTINGS_CHANGE` in its
  * unit of work. The fiscal parameters are stored under the `fiscal` key of the shared `Setting` table through this
  * module's own binding of the existing `SettingRepository` adapter (the company settings module keeps its own).
- * `FiscalSettingsQuery` is exported for BE-3. Exchange rates are BE-3.
+ * `FiscalSettingsQuery`, `CurrencyCatalogQuery`, `ExpenseCategoryCatalogQuery` and `PaymentMethodCatalogQuery` are exported for BE-3. Exchange rates are BE-3.
  */
 @Module({
   controllers: [
@@ -62,6 +65,22 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
     { provide: PAYMENT_METHOD_REPOSITORY, useClass: PrismaPaymentMethodRepository },
     { provide: EXPENSE_CATEGORY_REPOSITORY, useClass: PrismaExpenseCategoryRepository },
     { provide: SETTING_REPOSITORY, useClass: PrismaSettingRepository },
+    {
+      provide: CurrencyCatalogQuery,
+      useFactory: (currencies: CurrencyRepository) => new CurrencyCatalogQuery(currencies),
+      inject: [CURRENCY_REPOSITORY],
+    },
+    {
+      provide: PaymentMethodCatalogQuery,
+      useFactory: (methods: PaymentMethodRepository) => new PaymentMethodCatalogQuery(methods),
+      inject: [PAYMENT_METHOD_REPOSITORY],
+    },
+    {
+      provide: ExpenseCategoryCatalogQuery,
+      useFactory: (categories: ExpenseCategoryRepository) =>
+        new ExpenseCategoryCatalogQuery(categories),
+      inject: [EXPENSE_CATEGORY_REPOSITORY],
+    },
     {
       provide: FiscalSettingsQuery,
       useFactory: (settings: SettingRepository) => new FiscalSettingsQuery(settings),
@@ -167,6 +186,11 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
       inject: [AUTHORIZATION, UNIT_OF_WORK, SETTING_REPOSITORY, CURRENCY_REPOSITORY, ACTIVITY_LOG],
     },
   ],
-  exports: [FiscalSettingsQuery],
+  exports: [
+    FiscalSettingsQuery,
+    CurrencyCatalogQuery,
+    ExpenseCategoryCatalogQuery,
+    PaymentMethodCatalogQuery,
+  ],
 })
 export class FinanceCatalogsModule {}

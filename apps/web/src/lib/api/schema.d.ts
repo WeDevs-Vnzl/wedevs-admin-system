@@ -4,6 +4,976 @@
  */
 
 export interface paths {
+    "/api/v1/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accounts with their balances (inactive ones only on request) */
+        get: operations["listAccounts"];
+        put?: never;
+        /** Open a company account */
+        post: operations["createAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Users who can be the partner of a contribution or withdrawal */
+        get: operations["listAccountPartners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One account with its balance */
+        get: operations["getAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit an account (the currency is locked once it has movements) */
+        patch: operations["updateAccount"];
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Balance of an account at the end of a date (today when omitted) */
+        get: operations["getAccountBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ledger of an account with the running balance of every entry */
+        get: operations["getAccountLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a contribution, a withdrawal or a signed adjustment */
+        post: operations["createAccountMovement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a reconciliation and suggest the AJUSTE that closes the difference */
+        post: operations["reconcileAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity log, newest first, IP masked (Owner, Admin) */
+        get: operations["listActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/allocations/{id}/deallocate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove an allocation (the amount goes back to the credit of the payment) */
+        post: operations["deallocatePayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List clients (money fields null without canSeeFinancials) */
+        get: operations["listClients"];
+        put?: never;
+        /** Create a client (CLI-#### code) */
+        post: operations["createClient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive several clients and their contacts, all or nothing */
+        post: operations["archiveClients"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Client typeahead (EntityRef, up to 20) */
+        get: operations["searchClients"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One client with its live contacts */
+        get: operations["getClient"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the editable fields of a client */
+        patch: operations["updateClient"];
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a client and its contacts (confirm needed with active projects or open invoices) */
+        post: operations["archiveClient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/billable-installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pending installments of the client projects (the billing wizard) */
+        get: operations["listBillableInstallments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contacts of a client, primary first */
+        get: operations["listContacts"];
+        put?: never;
+        /** Create a contact of a live client */
+        post: operations["createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/credit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saldo a favor of a client: the unapplied remainder of its confirmed payments */
+        get: operations["getClientCredit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/open-invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open invoices of the client (the payment form) */
+        get: operations["listOpenInvoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived client and its cascade contacts */
+        post: operations["restoreClient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change the status of a client */
+        post: operations["setClientStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contact typeahead (EntityRef, up to 20) */
+        get: operations["searchContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the editable fields of a contact */
+        patch: operations["updateContact"];
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a contact */
+        post: operations["archiveContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make a contact the primary one of its client */
+        post: operations["setPrimaryContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Currencies (active by default; every row with includeInactive) */
+        get: operations["listCurrencies"];
+        put?: never;
+        /** Add a currency (settings grant) */
+        post: operations["createCurrency"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/currencies/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a currency, incl. its active flag (settings grant) */
+        patch: operations["updateCurrency"];
+        trace?: never;
+    };
+    "/api/v1/document-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Document categories in order, each with its types (any signed-in user) */
+        get: operations["listDocumentCategories"];
+        put?: never;
+        /** Create a document category at the end (settings grant) */
+        post: operations["createDocumentCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-categories/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder every category: the full id set, all or nothing (settings grant) */
+        post: operations["reorderDocumentCategories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an empty category for good (settings grant) */
+        delete: operations["deleteDocumentCategory"];
+        options?: never;
+        head?: never;
+        /** Edit a category name, English name and colour (settings grant) */
+        patch: operations["updateDocumentCategory"];
+        trace?: never;
+    };
+    "/api/v1/document-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Document types, filtered, searched, sorted and paged (any signed-in user) */
+        get: operations["listDocumentTypes"];
+        put?: never;
+        /** Create a document type inside a category (settings grant) */
+        post: operations["createDocumentType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One document type with its category and document count (any signed-in user) */
+        get: operations["getDocumentType"];
+        put?: never;
+        post?: never;
+        /** Delete an unused document type for good (settings grant) */
+        delete: operations["deleteDocumentType"];
+        options?: never;
+        head?: never;
+        /** Replace every field of a document type (settings grant) */
+        patch: operations["updateDocumentType"];
+        trace?: never;
+    };
+    "/api/v1/document-types/{id}/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate or deactivate a document type (settings grant) */
+        post: operations["setDocumentTypeActive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Documents table (archived ones for trash roles only) */
+        get: operations["listDocuments"];
+        put?: never;
+        /** Create a BORRADOR document, optionally with its first version (all or nothing) */
+        post: operations["createDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive several documents, all or nothing */
+        post: operations["archiveDocuments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/category-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live documents per category id under the list facets (the category chips) */
+        get: operations["countDocumentsByCategory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One document (archived ones for trash roles only) */
+        get: operations["getDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit the metadata of a live document */
+        patch: operations["updateDocument"];
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a document (Owner and Admin) */
+        post: operations["archiveDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Explicit "Save draft" of a markdown document (no autosave, creates no version) */
+        put: operations["saveDocumentDraft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link the document to a record (idempotent); returns every link */
+        post: operations["linkDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/links/{entityType}/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one link (a hard delete); returns the remaining links */
+        delete: operations["unlinkDocument"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived document (trash roles) */
+        post: operations["restoreDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change the status (VENCIDO is never set by a person) */
+        post: operations["setDocumentStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Version history, newest first, without content */
+        get: operations["listDocumentVersions"];
+        put?: never;
+        /** Next version from a READY file or an http(s) link */
+        post: operations["uploadDocumentVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/versions/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Freeze the sent text (or the stored draft) as the next immutable markdown version */
+        post: operations["publishDocumentVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One version with its raw markdown (the FE diff reads two of them) */
+        get: operations["getDocumentVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/versions/{versionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A new current version copying the chosen one; the history is never rewritten */
+        post: operations["restoreDocumentVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exchange-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stored rates, newest date first (settings grant) */
+        get: operations["listExchangeRates"];
+        put?: never;
+        /** Save the rate of a date, currency and source (settings grant) */
+        post: operations["upsertExchangeRate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exchange-rates/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Quick daily load: several currencies for one date and source, all or nothing */
+        post: operations["loadDailyRates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exchange-rates/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import rates from parsed CSV rows, with per-row errors */
+        post: operations["importExchangeRates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exchange-rates/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rate to prefill for a currency on a date, with every source as an option */
+        get: operations["getRateFor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expense-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Expense category tree, two levels (active by default) */
+        get: operations["listExpenseCategories"];
+        put?: never;
+        /** Add a root or a child of a root (settings grant) */
+        post: operations["createExpenseCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expense-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit an expense category (settings grant) */
+        patch: operations["updateExpenseCategory"];
+        trace?: never;
+    };
+    "/api/v1/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List expenses (filters, search, sort) */
+        get: operations["listExpenses"];
+        put?: never;
+        /** Create an expense, pending or paid (GAS-####) */
+        post: operations["createExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Expense detail */
+        get: operations["getExpense"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a pending expense */
+        patch: operations["updateExpense"];
+        trace?: never;
+    };
+    "/api/v1/expenses/{id}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a pending expense as paid (debits the account) */
+        post: operations["markExpensePaid"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void an expense (ANULADO is final) */
+        post: operations["voidExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files": {
         parameters: {
             query?: never;
@@ -89,6 +1059,178 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/installments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit an installment (a billed one only accepts a new label) */
+        patch: operations["updateInstallment"];
+        trace?: never;
+    };
+    "/api/v1/installments/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel an unbilled installment */
+        post: operations["cancelInstallment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List invoices (filters, search, sort) */
+        get: operations["listInvoices"];
+        put?: never;
+        /** Register an invoice with lines and per-rate tax lines (FAC-####) */
+        post: operations["createInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invoice detail with lines, totals and payments */
+        get: operations["getInvoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit an invoice (the whole invoice again) */
+        patch: operations["updateInvoice"];
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive an invoice (frees its number) */
+        post: operations["archiveInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Attach, replace or detach (null) the PDF of the invoice */
+        put: operations["attachInvoiceFile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Issue a draft invoice */
+        post: operations["issueInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/payment-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The client and open option a new payment starts from (404 once it takes no payment) */
+        get: operations["getInvoiceForPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived invoice */
+        post: operations["restoreInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void an invoice with a reason */
+        post: operations["voidInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -141,6 +1283,729 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notes table, or the feed of one record (entityType + entityId) */
+        get: operations["listNotes"];
+        put?: never;
+        /** Create a note (the caller is the author) */
+        post: operations["createNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One note (archived ones for trash roles only) */
+        get: operations["getNote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit title, content and tags */
+        patch: operations["updateNote"];
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a note (Owner/Admin any; a Member only their own) */
+        post: operations["archiveNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Attach an uploaded (READY) file */
+        post: operations["attachNoteFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hang the note from one more record */
+        post: operations["linkNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pin or unpin a note */
+        post: operations["pinNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived note (trash roles) */
+        post: operations["restoreNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{id}/unlink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a link (a note keeps at least one) */
+        post: operations["unlinkNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment methods (active by default; every row with includeInactive) */
+        get: operations["listPaymentMethods"];
+        put?: never;
+        /** Add a payment method (settings grant) */
+        post: operations["createPaymentMethod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a payment method (settings grant) */
+        patch: operations["updatePaymentMethod"];
+        trace?: never;
+    };
+    "/api/v1/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List payments (filters, search, sort) */
+        get: operations["listPayments"];
+        put?: never;
+        /** Register a payment with IGTF, fee and optional allocations (PAG-####) */
+        post: operations["createPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Possible duplicates by reference, method and account (a warning, never a refusal) */
+        get: operations["detectDuplicatePayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment detail with its allocations */
+        get: operations["getPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a payment (client and currency are locked while it has allocations) */
+        patch: operations["updatePayment"];
+        trace?: never;
+    };
+    "/api/v1/payments/{id}/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply (part of) a confirmed payment to an open invoice */
+        post: operations["allocatePayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm or void a payment (voiding removes its allocations) */
+        post: operations["setPaymentStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The portal page of a share link (no side effect, no log row) */
+        get: operations["resolvePortalToken"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/{token}/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the viewer renders for one document; a locked one is FORBIDDEN */
+        get: operations["getPortalDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/{token}/documents/{documentId}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Checks the access key of a document; a right key sets the signed unlock cookie */
+        post: operations["unlockPortalDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/{token}/files/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Delivers a document: 302 to a signed 5-minute URL or to the stored link, or the markdown as text/markdown. DOWNLOAD is logged only for attachment */
+        get: operations["getPortalFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/{token}/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logs a VIEW of the link, or of one of its documents */
+        post: operations["recordPortalView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List projects (filters, search, sort) */
+        get: operations["listProjects"];
+        put?: never;
+        /** Create a project (PRY-####) */
+        post: operations["createProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive several projects, all or nothing */
+        post: operations["archiveProjects"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One project (archived: trash roles only) */
+        get: operations["getProject"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the editable fields of a project */
+        patch: operations["updateProject"];
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a project (active billing asks for confirm) */
+        post: operations["archiveProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan, installments and recurring charges */
+        get: operations["getBillingPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/billing-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Create or update the plan (USD snapshot taken when the contract or currency changes) */
+        put: operations["upsertBillingPlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/billing-plan/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate the installments from a quick template or a custom list */
+        post: operations["applyInstallmentTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace the clients of a project */
+        put: operations["setProjectClients"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a manual installment */
+        post: operations["createInstallment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Create the links without id and update the ones with id */
+        put: operations["upsertProjectLinks"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/links/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder the links of one group */
+        post: operations["reorderProjectLinks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one link of a project */
+        delete: operations["removeProjectLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/recurring-charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a recurring charge */
+        post: operations["createRecurringCharge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived project */
+        post: operations["restoreProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change the status of a project (transition rules, dates, cancel options) */
+        post: operations["setProjectStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/technologies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace the stack of a project (active technologies only) */
+        put: operations["setProjectTechnologies"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring-charges/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a recurring charge (only periods not generated yet are affected) */
+        patch: operations["updateRecurringCharge"];
+        trace?: never;
+    };
+    "/api/v1/recurring-charges/{id}/generate-missing-periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the periods skipped while a charge was paused */
+        post: operations["generateMissingPeriods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring-charges/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause, resume or finish a recurring charge (finished is final) */
+        post: operations["setRecurringChargeStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring-expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recurring expenses (filters, search, sort) */
+        get: operations["listRecurringExpenses"];
+        put?: never;
+        /** Create a recurring expense */
+        post: operations["createRecurringExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recurring-expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recurring expense detail */
+        get: operations["getRecurringExpense"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a recurring expense (affects only the periods not generated yet) */
+        patch: operations["updateRecurringExpense"];
+        trace?: never;
+    };
+    "/api/v1/recurring-expenses/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause, resume or finish a recurring expense (finished is final) */
+        post: operations["setRecurringExpenseStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/company": {
         parameters: {
             query?: never;
@@ -157,6 +2022,286 @@ export interface paths {
         head?: never;
         /** Replace the company profile (settings grant) */
         patch: operations["updateCompanySettings"];
+        trace?: never;
+    };
+    "/api/v1/settings/fiscal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fiscal parameters: VAT rates, default rate, IGTF, due days (any signed-in user) */
+        get: operations["getFiscalSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the fiscal parameters (settings grant) */
+        patch: operations["updateFiscalSettings"];
+        trace?: never;
+    };
+    "/api/v1/share-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Share links table */
+        get: operations["listShareLinks"];
+        put?: never;
+        /** Create a link; the generated access keys are returned once */
+        post: operations["createShareLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/share-links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One link with its documents and counters */
+        get: operations["getShareLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit the whole form of a live link; new keys are returned once */
+        patch: operations["updateShareLink"];
+        trace?: never;
+    };
+    "/api/v1/share-links/{id}/access-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Access table of one link */
+        get: operations["listShareAccessLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/share-links/{id}/documents/{documentId}/access-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate, regenerate or remove the access key of one document; the key is returned once */
+        post: operations["setShareDocumentAccessKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/share-links/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke a link: final, the portal answers 404 from then on */
+        post: operations["revokeShareLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tags with usage (any signed-in user) */
+        get: operations["listTags"];
+        put?: never;
+        /** Create a tag (settings create, or edit client/project, or create note/document) */
+        post: operations["createTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add tags to a record (update on the record resource) */
+        post: operations["assignTags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/unassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a tag from a record (update on the record resource) */
+        post: operations["unassignTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One tag with usage (any signed-in user) */
+        get: operations["getTag"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename or recolour a tag (settings grant) */
+        patch: operations["updateTag"];
+        trace?: never;
+    };
+    "/api/v1/technologies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Technology catalog (any signed-in user) */
+        get: operations["listTechnologies"];
+        put?: never;
+        /** Create a technology (settings grant) */
+        post: operations["createTechnology"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/technologies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One technology with its usage count */
+        get: operations["getTechnology"];
+        put?: never;
+        post?: never;
+        /** Delete an unused technology (settings grant; in use is locked) */
+        delete: operations["deleteTechnology"];
+        options?: never;
+        head?: never;
+        /** Replace a technology (settings grant) */
+        patch: operations["updateTechnology"];
+        trace?: never;
+    };
+    "/api/v1/technologies/{id}/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate or deactivate a technology (settings grant) */
+        post: operations["setTechnologyActive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer between two accounts, each side in its own currency */
+        post: operations["createTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List archived records of the types a context made restorable */
+        get: operations["listTrash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trash/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived record through the owning context’s restore use case */
+        post: operations["restoreFromTrash"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/users": {
@@ -253,20 +2398,1077 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountBalanceResponseDto: {
+            accountId: string;
+            at: string;
+            balance: string;
+            balanceUsd: string | null;
+            currency: string;
+        };
+        AccountLedgerResponseDto: {
+            items: {
+                amount: string;
+                balance: string;
+                date: string;
+                description: string | null;
+                id: string;
+                /** @enum {string} */
+                kind: "OPENING_BALANCE" | "PAYMENT" | "EXPENSE" | "TRANSFER_OUT" | "TRANSFER_IN" | "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE";
+                source: components["schemas"]["EntityRef"] | null;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        AccountListResponseDto: {
+            items: {
+                active: boolean;
+                balance: string;
+                balanceUsd: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                holderName: string | null;
+                id: string;
+                identifierMasked: string | null;
+                institution: string | null;
+                name: string;
+                notes: string | null;
+                openingBalance: string;
+                openingDate: string;
+                /** @enum {string} */
+                type: "BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO";
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        AccountPartnerResponseDto: {
+            id: string;
+            name: string;
+        };
+        AccountResponseDto: {
+            active: boolean;
+            balance: string;
+            balanceUsd: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            holderName: string | null;
+            id: string;
+            identifierMasked: string | null;
+            institution: string | null;
+            name: string;
+            notes: string | null;
+            openingBalance: string;
+            openingDate: string;
+            /** @enum {string} */
+            type: "BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ActivityListResponseDto: {
+            items: {
+                /** @enum {string} */
+                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS";
+                actor: {
+                    id: string | null;
+                    imageUrl: string | null;
+                    name: string | null;
+                    /** @enum {string} */
+                    type: "USER" | "SYSTEM" | "PUBLIC";
+                };
+                changes: {
+                    [key: string]: [
+                        string | boolean | null,
+                        string | boolean | null
+                    ] | "changed";
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                entityId: string;
+                entityLabel: string;
+                /** @enum {string} */
+                entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                id: string;
+                ip: string | null;
+                metadata: {
+                    [key: string]: string | number | boolean | null;
+                } | null;
+                userAgent: string | null;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        AllocatePaymentDto: {
+            amountInvoiceCurrency: string;
+            amountPaymentCurrency: string;
+            invoiceId: string;
+        };
+        ApplyInstallmentTemplateDto: {
+            installments?: {
+                amount: string;
+                currency: string;
+                dueDate?: string | null;
+                /** @enum {string} */
+                kind: "ANTICIPO" | "HITO" | "CUOTA" | "FINAL" | "RECURRENTE" | "AJUSTE";
+                label: string;
+                percentage?: string | null;
+                trigger?: string | null;
+            }[];
+            /** @default true */
+            replacePending: boolean;
+            /** @enum {string} */
+            template: "FULL_UPFRONT" | "SPLIT_50_50" | "SPLIT_40_30_30" | "SPLIT_30_40_30" | "THREE_EQUAL" | "CUSTOM";
+        };
+        ArchiveClientDto: {
+            /** @default false */
+            confirm: boolean;
+        };
+        ArchiveClientsDto: {
+            /** @default false */
+            confirm: boolean;
+            ids: string[];
+        };
+        ArchiveDocumentsDto: {
+            ids: string[];
+        };
+        ArchiveProjectDto: {
+            /** @default false */
+            confirm: boolean;
+        };
+        ArchiveProjectsDto: {
+            /** @default false */
+            confirm: boolean;
+            ids: string[];
+        };
+        ArchivedDocumentDto: {
+            /** Format: date-time */
+            archivedAt: string;
+            id: string;
+        };
+        ArchivedDocumentsDto: {
+            archived: {
+                /** Format: date-time */
+                archivedAt: string;
+                id: string;
+            }[];
+        };
+        ArchivedNoteDto: {
+            /** Format: date-time */
+            archivedAt: string;
+            id: string;
+        };
+        ArchivedProjectDto: {
+            /** Format: date-time */
+            archivedAt: string;
+            id: string;
+        };
+        ArchivedProjectsDto: {
+            archived: {
+                /** Format: date-time */
+                archivedAt: string;
+                id: string;
+            }[];
+        };
+        AssignTagsDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE";
+            tagIds: string[];
+        };
+        AttachInvoiceFileDto: {
+            fileId: string | null;
+        };
+        AttachNoteFileDto: {
+            fileId: string;
+        };
+        BillableInstallmentResponseDto: {
+            amount: string;
+            currency: string;
+            dueDate: string | null;
+            installment: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            /** @enum {string} */
+            kind: "ANTICIPO" | "HITO" | "CUOTA" | "FINAL" | "RECURRENTE" | "AJUSTE";
+            label: string;
+            project: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            remainingAmount: string;
+        };
+        BillingPageResponseDto: {
+            installments: {
+                amount: string;
+                billingPlanId: string | null;
+                cancelledAt: string | null;
+                currency: string;
+                dueDate: string | null;
+                id: string;
+                invoicedAmount: string;
+                /** @enum {string} */
+                kind: "ANTICIPO" | "HITO" | "CUOTA" | "FINAL" | "RECURRENTE" | "AJUSTE";
+                label: string;
+                locked: boolean;
+                order: number;
+                percentage: string | null;
+                periodEnd: string | null;
+                periodStart: string | null;
+                projectId: string;
+                recurringChargeId: string | null;
+                /** @enum {string} */
+                status: "PENDIENTE" | "FACTURADA" | "COBRADA_PARCIAL" | "COBRADA" | "CANCELADA";
+                trigger: string | null;
+            }[];
+            plan: {
+                contractAmount: string | null;
+                contractedUsd: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                id: string;
+                installments: {
+                    amount: string;
+                    billingPlanId: string | null;
+                    cancelledAt: string | null;
+                    currency: string;
+                    dueDate: string | null;
+                    id: string;
+                    invoicedAmount: string;
+                    /** @enum {string} */
+                    kind: "ANTICIPO" | "HITO" | "CUOTA" | "FINAL" | "RECURRENTE" | "AJUSTE";
+                    label: string;
+                    locked: boolean;
+                    order: number;
+                    percentage: string | null;
+                    periodEnd: string | null;
+                    periodStart: string | null;
+                    projectId: string;
+                    recurringChargeId: string | null;
+                    /** @enum {string} */
+                    status: "PENDIENTE" | "FACTURADA" | "COBRADA_PARCIAL" | "COBRADA" | "CANCELADA";
+                    trigger: string | null;
+                }[];
+                installmentsTotal: string;
+                /** @enum {string} */
+                model: "PRECIO_FIJO" | "RECURRENTE" | "MIXTO";
+                notes: string | null;
+                projectId: string;
+                scheduleConsistent: boolean;
+                scheduleDifference: string | null;
+                /** Format: date-time */
+                updatedAt: string;
+                usdRate: string | null;
+            } | null;
+            projectId: string;
+            recurringCharges: {
+                amount: string;
+                billingDay: number;
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                endDate: string | null;
+                /** @enum {string} */
+                frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+                id: string;
+                label: string;
+                lastGeneratedPeriodStart: string | null;
+                leadDays: number;
+                monthlyAmount: string;
+                projectId: string;
+                resumedOn: string | null;
+                startDate: string;
+                /** @enum {string} */
+                status: "ACTIVO" | "PAUSADO" | "FINALIZADO";
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+        };
+        ChangeUserRoleDto: {
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+        };
         ClerkWebhookResponseDto: {
             /** @enum {string} */
             outcome: "created" | "updated" | "deleted" | "unchanged" | "recorded" | "duplicate" | "ignored";
             /** @constant */
             received: true;
         };
+        ClientArchiveResultDto: {
+            /** Format: date-time */
+            archivedAt: string;
+            archivedContacts: number;
+            id: string;
+        };
+        ClientCreditResponseDto: {
+            payments: {
+                code: string;
+                currency: string;
+                date: string;
+                paymentId: string;
+                unallocated: string;
+                unallocatedUsd: string;
+            }[];
+            totalUsd: string;
+        };
+        ClientDetailDto: {
+            activatedAt: string | null;
+            address: string;
+            archivedAt: string | null;
+            code: string;
+            contacts: {
+                archivedAt: string | null;
+                clientId: string;
+                /** Format: date-time */
+                createdAt: string;
+                email: string | null;
+                fullName: string;
+                id: string;
+                isPrimary: boolean;
+                phone: string | null;
+                position: string | null;
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            country: string;
+            /** Format: date-time */
+            createdAt: string;
+            email: string | null;
+            id: string;
+            /** @enum {string} */
+            kind: "PERSONA" | "EMPRESA";
+            legalName: string;
+            phone: string;
+            /** @enum {string} */
+            status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+            tags: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+            taxId: string;
+            tradeName: string;
+            /** Format: date-time */
+            updatedAt: string;
+            website: string | null;
+        };
+        ClientListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                code: string;
+                country: string;
+                id: string;
+                /** @enum {string} */
+                kind: "PERSONA" | "EMPRESA";
+                lastActivityAt: string | null;
+                projectCount: number;
+                receivableUsd: string | null;
+                /** @enum {string} */
+                status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                totalInvoicedUsd: string | null;
+                tradeName: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ClientsArchiveResultDto: {
+            archived: {
+                /** Format: date-time */
+                archivedAt: string;
+                archivedContacts: number;
+                id: string;
+            }[];
+        };
         CompanySettingsResponseDto: {
-            address: string[];
-            legalName: string[];
-            logoFileId: string[];
+            address: string | null;
+            legalName: string | null;
+            logoFileId: string | null;
             name: string;
-            taxId: string[];
+            taxId: string | null;
+        };
+        ConfirmUploadDto: {
+            fileId: string;
+        };
+        ContactArchivedDto: {
+            /** Format: date-time */
+            archivedAt: string;
+            id: string;
+        };
+        ContactListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                clientId: string;
+                /** Format: date-time */
+                createdAt: string;
+                email: string | null;
+                fullName: string;
+                id: string;
+                isPrimary: boolean;
+                phone: string | null;
+                position: string | null;
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ContactViewDto: {
+            archivedAt: string | null;
+            clientId: string;
+            /** Format: date-time */
+            createdAt: string;
+            email: string | null;
+            fullName: string;
+            id: string;
+            isPrimary: boolean;
+            phone: string | null;
+            position: string | null;
+            tags: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateAccountDto: {
+            /** @default true */
+            active: boolean;
+            currency: string;
+            holderName?: string | null;
+            identifierMasked?: string | null;
+            institution?: string | null;
+            name: string;
+            notes?: string | null;
+            /** @default 0 */
+            openingBalance: string;
+            openingDate: string;
+            /** @enum {string} */
+            type: "BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO";
+        };
+        CreateClientDto: {
+            address: string;
+            country: string;
+            email?: string | null;
+            /** @enum {string} */
+            kind: "PERSONA" | "EMPRESA";
+            legalName?: string | null;
+            phone: string;
+            /**
+             * @default PROSPECTO
+             * @enum {string}
+             */
+            status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+            /** @default [] */
+            tagIds: string[];
+            taxId: string;
+            tradeName: string;
+            website?: string | null;
+        };
+        CreateContactDto: {
+            email?: string | null;
+            fullName: string;
+            /** @default false */
+            isPrimary: boolean;
+            phone?: string | null;
+            position?: string | null;
+            /** @default [] */
+            tagIds: string[];
+        };
+        CreateCurrencyDto: {
+            active?: boolean;
+            code: string;
+            decimals?: number;
+            name: string;
+            symbol: string;
+        };
+        CreateDocumentDto: {
+            /** @default 30 */
+            alertDaysBefore: number;
+            effectiveDate?: string | null;
+            expiresAt?: string | null;
+            initialVersion?: {
+                changelog?: string | null;
+                fileId: string;
+                /** @constant */
+                format: "ARCHIVO";
+            } | {
+                changelog?: string | null;
+                /** @constant */
+                format: "ENLACE";
+                url: string;
+            };
+            /** @default [] */
+            links: {
+                entityId: string;
+                /** @enum {string} */
+                entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE";
+            }[];
+            signedAt?: string | null;
+            summary?: string | null;
+            /** @default [] */
+            tagIds: string[];
+            title: string;
+            typeId: string;
+        };
+        CreateExpenseCategoryDto: {
+            active?: boolean;
+            color?: string | null;
+            name: string;
+            nameEn?: string | null;
+            parentId?: string | null;
+        };
+        CreateExpenseDto: {
+            accountAmount?: string | null;
+            accountId?: string | null;
+            amount: string;
+            categoryId: string;
+            currency: string;
+            date: string;
+            description: string;
+            dueDate?: string | null;
+            paidAt?: string | null;
+            projectId?: string | null;
+            receiptFileId?: string | null;
+            /**
+             * @default PAGADO
+             * @enum {string}
+             */
+            status: "PENDIENTE" | "PAGADO";
+            usdRate: string;
+            vendor?: string | null;
+        };
+        CreateInstallmentDto: {
+            amount: string;
+            currency: string;
+            dueDate?: string | null;
+            /** @enum {string} */
+            kind: "ANTICIPO" | "HITO" | "CUOTA" | "FINAL" | "RECURRENTE" | "AJUSTE";
+            label: string;
+            order?: number;
+            percentage?: string | null;
+            trigger?: string | null;
+        };
+        CreateInvoiceDto: {
+            bcvRate?: string | null;
+            clientId: string;
+            controlNumber?: string | null;
+            currency: string;
+            dueDate: string;
+            fileId?: string | null;
+            invoiceNumber: string;
+            isDraft?: boolean;
+            islrWithheld?: string;
+            issueDate: string;
+            ivaWithheld?: string;
+            lines: {
+                description: string;
+                discount?: string;
+                id?: string;
+                installmentId?: string | null;
+                ivaRate: string | null;
+                projectId?: string | null;
+                quantity?: string;
+                unitPrice: string;
+            }[];
+            otherWithheld?: string;
+            otherWithheldNote?: string | null;
+            taxAdjustments?: {
+                adjustment: string;
+                ivaRate: string;
+            }[];
+            usdRate: string;
+        };
+        CreateMovementDto: {
+            amount: string;
+            date: string;
+            description: string;
+            partnerId?: string | null;
+            /** @enum {string} */
+            type: "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE";
+            usdRate: string;
+        };
+        CreateNoteDto: {
+            /** @default [] */
+            attachmentFileIds: string[];
+            content: unknown;
+            links: {
+                entityId: string;
+                /** @enum {string} */
+                entityType: "CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE";
+            }[];
+            /** @default false */
+            pinned: boolean;
+            /** @default [] */
+            tagIds: string[];
+            title?: string | null;
+        };
+        CreatePaymentDto: {
+            accountId: string;
+            /** @default [] */
+            allocations: {
+                amountInvoiceCurrency: string;
+                amountPaymentCurrency: string;
+                invoiceId: string;
+            }[];
+            amount: string;
+            clientId: string;
+            currency: string;
+            date: string;
+            /** @default 0 */
+            feeAmount: string;
+            /** @default 0 */
+            igtfAmount: string;
+            methodId: string;
+            receiptFileId?: string | null;
+            reference?: string | null;
+            /**
+             * @default CONFIRMADO
+             * @enum {string}
+             */
+            status: "PENDIENTE_VERIFICACION" | "CONFIRMADO";
+            usdRate: string;
+        };
+        CreatePaymentMethodDto: {
+            active?: boolean;
+            code: string;
+            name: string;
+            nameEn?: string | null;
+            requiresReference?: boolean;
+            suggestsIgtf?: boolean;
+        };
+        CreateProjectDto: {
+            clients: {
+                clientId: string;
+                role?: string | null;
+            }[];
+            description?: unknown | null;
+            endDate?: string | null;
+            /** @default [] */
+            links: {
+                /** @enum {string} */
+                group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+                id?: string;
+                label: string;
+                /** @default 0 */
+                order: number;
+                url: string;
+            }[];
+            name: string;
+            startDate?: string | null;
+            /**
+             * @default PROPUESTA
+             * @enum {string}
+             */
+            status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+            summary: string;
+            /** @default [] */
+            tagIds: string[];
+            targetEndDate?: string | null;
+            /** @default [] */
+            technologyIds: string[];
+        };
+        CreateRecurringChargeDto: {
+            amount: string;
+            billingDay: number;
+            currency: string;
+            endDate?: string | null;
+            /** @enum {string} */
+            frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+            label: string;
+            /** @default 7 */
+            leadDays: number;
+            startDate: string;
+        };
+        CreateRecurringExpenseDto: {
+            accountId?: string | null;
+            amount: string;
+            categoryId: string;
+            currency: string;
+            dayOfPeriod: number;
+            endDate?: string | null;
+            /** @enum {string} */
+            frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+            /** @default 5 */
+            leadDays: number;
+            name: string;
+            projectId?: string | null;
+            startDate: string;
+            vendor?: string | null;
+        };
+        CreateTagDto: {
+            color: string;
+            name: string;
+        };
+        CreateTechnologyDto: {
+            /** @default true */
+            active: boolean;
+            /** @enum {string} */
+            category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+            color?: string | null;
+            iconSlug?: string | null;
+            name: string;
+            nameEn?: string | null;
+            slug?: string | null;
+        };
+        CreateTransferDto: {
+            amountFrom: string;
+            amountTo: string;
+            date: string;
+            /** @default 0 */
+            feeAmount: string;
+            fromAccountId: string;
+            notes?: string | null;
+            rate?: string | null;
+            reference?: string | null;
+            toAccountId: string;
+            usdRate: string;
+        };
+        CurrencyResponseDto: {
+            active: boolean;
+            code: string;
+            decimals: number;
+            name: string;
+            symbol: string;
+        };
+        DeletedRefDto: {
+            id: string;
+        };
+        DocumentCategoryBodyDto: {
+            color?: string | null;
+            name: string;
+            nameEn?: string | null;
+        };
+        DocumentCategoryResponseDto: {
+            color: string | null;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            order: number;
+            types: {
+                active: boolean;
+                /** @enum {string} */
+                defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                documentCount: number;
+                hasExpiration: boolean;
+                id: string;
+                name: string;
+                nameEn: string | null;
+                requiresSignature: boolean;
+            }[];
+        };
+        DocumentDetailDto: {
+            alertDaysBefore: number;
+            archivedAt: string | null;
+            category: {
+                color: string | null;
+                id: string;
+                name: string;
+                nameEn: string | null;
+            };
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: {
+                id: string;
+                imageUrl: string | null;
+                name: string;
+            } | null;
+            currentVersion: {
+                changelog: string | null;
+                content: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                createdBy: {
+                    id: string;
+                    imageUrl: string | null;
+                    name: string;
+                };
+                documentId: string;
+                file: {
+                    /** Format: date-time */
+                    createdAt: string;
+                    id: string;
+                    mimeType: string;
+                    originalName: string;
+                    sizeBytes: number;
+                    /** @enum {string} */
+                    status: "PENDING" | "READY";
+                    uploadedById: string;
+                } | null;
+                /** @enum {string} */
+                format: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                id: string;
+                isCurrent: boolean;
+                url: string | null;
+                versionNumber: number;
+            } | null;
+            draftContent: string | null;
+            draftUpdatedAt: string | null;
+            effectiveDate: string | null;
+            expiresAt: string | null;
+            id: string;
+            isShared: boolean;
+            links: {
+                /** Format: date-time */
+                createdAt: string;
+                entity: components["schemas"]["EntityRef"];
+                id: string;
+            }[];
+            signedAt: string | null;
+            /** @enum {string} */
+            status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+            summary: string | null;
+            tags: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+            title: string;
+            type: {
+                /** @enum {string} */
+                defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                hasExpiration: boolean;
+                id: string;
+                name: string;
+                nameEn: string | null;
+                requiresSignature: boolean;
+            };
+            /** Format: date-time */
+            updatedAt: string;
+            versionCount: number;
+        };
+        DocumentLinkDto: {
+            /** Format: date-time */
+            createdAt: string;
+            entity: components["schemas"]["EntityRef"];
+            id: string;
+        };
+        DocumentLinkTargetDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE";
+        };
+        DocumentListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                code: string;
+                currentFormat: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                currentVersionNumber: number | null;
+                expiresAt: string | null;
+                id: string;
+                isShared: boolean;
+                links: components["schemas"]["EntityRef"][];
+                /** @enum {string} */
+                status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                title: string;
+                type: {
+                    /** @enum {string} */
+                    defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                    hasExpiration: boolean;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    requiresSignature: boolean;
+                };
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        DocumentTypeBodyDto: {
+            /** @default true */
+            active: boolean;
+            categoryId: string;
+            /**
+             * @default ARCHIVO
+             * @enum {string}
+             */
+            defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+            /** @default false */
+            hasExpiration: boolean;
+            name: string;
+            nameEn?: string | null;
+            /** @default false */
+            requiresSignature: boolean;
+        };
+        DocumentTypeDetailDto: {
+            active: boolean;
+            category: {
+                color: string | null;
+                id: string;
+                name: string;
+                nameEn: string | null;
+            };
+            /** @enum {string} */
+            defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+            documentCount: number;
+            hasExpiration: boolean;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            requiresSignature: boolean;
+        };
+        DocumentTypeListResponseDto: {
+            items: {
+                active: boolean;
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                documentCount: number;
+                hasExpiration: boolean;
+                id: string;
+                name: string;
+                nameEn: string | null;
+                requiresSignature: boolean;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        DocumentVersionDetailDto: {
+            changelog: string | null;
+            content: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: {
+                id: string;
+                imageUrl: string | null;
+                name: string;
+            };
+            documentId: string;
+            file: {
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                mimeType: string;
+                originalName: string;
+                sizeBytes: number;
+                /** @enum {string} */
+                status: "PENDING" | "READY";
+                uploadedById: string;
+            } | null;
+            /** @enum {string} */
+            format: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+            id: string;
+            isCurrent: boolean;
+            url: string | null;
+            versionNumber: number;
+        };
+        DocumentVersionRowDto: {
+            changelog: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: {
+                id: string;
+                imageUrl: string | null;
+                name: string;
+            };
+            documentId: string;
+            file: {
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                mimeType: string;
+                originalName: string;
+                sizeBytes: number;
+                /** @enum {string} */
+                status: "PENDING" | "READY";
+                uploadedById: string;
+            } | null;
+            /** @enum {string} */
+            format: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+            id: string;
+            isCurrent: boolean;
+            url: string | null;
+            versionNumber: number;
+        };
+        DuplicatePaymentResponseDto: {
+            duplicate: boolean;
+            matches: {
+                amount: string;
+                currency: string;
+                date: string;
+                payment: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                /** @enum {string} */
+                status: "PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO";
+            }[];
         };
         EntityRef: {
+            code: string | null;
+            id: string;
+            label: string;
+            /** @enum {string} */
+            type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+        };
+        EntityRefDto: {
+            code: string | null;
+            id: string;
+            label: string;
+            /** @enum {string} */
+            type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+        };
+        EntityRefResponseDto: {
             code: string | null;
             id: string;
             label: string;
@@ -285,6 +3487,165 @@ export interface components {
                 message: string;
             };
         };
+        ExchangeRateListResponseDto: {
+            items: {
+                /** Format: date-time */
+                createdAt: string;
+                createdById: string | null;
+                currency: string;
+                date: string;
+                id: string;
+                /** @enum {string} */
+                source: "MANUAL" | "BCV" | "OTRA";
+                usdRate: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ExpenseCategoryNodeDto: {
+            active: boolean;
+            children: {
+                active: boolean;
+                color: string | null;
+                id: string;
+                name: string;
+                nameEn: string | null;
+                parentId: string | null;
+            }[];
+            color: string | null;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            parentId: string | null;
+        };
+        ExpenseCategoryResponseDto: {
+            active: boolean;
+            color: string | null;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            parentId: string | null;
+        };
+        ExpenseListResponseDto: {
+            items: {
+                account: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                accountAmount: string | null;
+                amount: string;
+                amountUsd: string;
+                category: {
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    parent: {
+                        id: string;
+                        name: string;
+                        nameEn: string | null;
+                    } | null;
+                };
+                code: string;
+                /** Format: date-time */
+                createdAt: string;
+                createdById: string | null;
+                currency: string;
+                date: string;
+                description: string;
+                dueDate: string | null;
+                id: string;
+                overdue: boolean;
+                paidAt: string | null;
+                periodStart: string | null;
+                project: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                receiptFileId: string | null;
+                recurring: boolean;
+                recurringExpense: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                /** @enum {string} */
+                status: "PENDIENTE" | "PAGADO" | "ANULADO";
+                /** Format: date-time */
+                updatedAt: string;
+                usdRate: string;
+                vendor: string | null;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ExpenseResponseDto: {
+            account: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            } | null;
+            accountAmount: string | null;
+            amount: string;
+            amountUsd: string;
+            category: {
+                id: string;
+                name: string;
+                nameEn: string | null;
+                parent: {
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                } | null;
+            };
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdById: string | null;
+            currency: string;
+            date: string;
+            description: string;
+            dueDate: string | null;
+            id: string;
+            overdue: boolean;
+            paidAt: string | null;
+            periodStart: string | null;
+            project: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            } | null;
+            receiptFileId: string | null;
+            recurring: boolean;
+            recurringExpense: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            } | null;
+            /** @enum {string} */
+            status: "PENDIENTE" | "PAGADO" | "ANULADO";
+            /** Format: date-time */
+            updatedAt: string;
+            usdRate: string;
+            vendor: string | null;
+        };
         FileResponseDto: {
             /** Format: date-time */
             createdAt: string;
@@ -296,6 +3657,20 @@ export interface components {
             status: "PENDING" | "READY";
             uploadedById: string;
         };
+        FiscalSettingsResponseDto: {
+            igtfCurrencies: string[];
+            igtfRate: string;
+            invoiceDefaultDueDays: number;
+            ivaDefaultRate: string;
+            ivaRates: string[];
+        };
+        GenerateMissingPeriodsDto: {
+            upTo?: string;
+        };
+        GenerateMissingPeriodsResponseDto: {
+            created: number;
+            periodStarts: string[];
+        };
         HealthResponseDto: {
             /** @constant */
             database: "up";
@@ -303,6 +3678,29 @@ export interface components {
             status: "ok";
             /** Format: date-time */
             time: string;
+        };
+        ImportRatesDto: {
+            /** @default false */
+            overwrite: boolean;
+            rows: {
+                currency: string;
+                date: string;
+                /**
+                 * @default MANUAL
+                 * @enum {string}
+                 */
+                source: "MANUAL" | "BCV" | "OTRA";
+                usdRate: string;
+            }[];
+        };
+        ImportRatesResponseDto: {
+            created: number;
+            errors: {
+                messages: string[];
+                row: number;
+            }[];
+            skipped: number;
+            updated: number;
         };
         InvitationDto: {
             /** Format: date-time */
@@ -322,8 +3720,1232 @@ export interface components {
                 role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
             }[];
         };
+        InviteUserDto: {
+            /** Format: email */
+            email: string;
+            /**
+             * @default ADMIN
+             * @enum {string}
+             */
+            role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+        };
+        InvoiceListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                balance: string;
+                balanceUsd: string;
+                client: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                code: string;
+                currency: string;
+                daysOverdue: number;
+                dueDate: string;
+                hasPartialPayment: boolean;
+                id: string;
+                invoiceNumber: string;
+                issueDate: string;
+                projects: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                }[];
+                /** @enum {string} */
+                status: "BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA";
+                total: string;
+                totalUsd: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        InvoicePaymentContextResponseDto: {
+            client: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            invoice: {
+                balance: string;
+                code: string;
+                currency: string;
+                dueDate: string;
+                id: string;
+                invoiceNumber: string;
+                issueDate: string;
+                receivable: string;
+                /** @enum {string} */
+                status: "BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA";
+                usdRate: string;
+            };
+        };
+        InvoiceResponseDto: {
+            allocations: {
+                amountInvoiceCurrency: string;
+                amountPaymentCurrency: string;
+                amountUsd: string;
+                id: string;
+                payment: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                paymentCurrency: string;
+                paymentDate: string;
+            }[];
+            archivedAt: string | null;
+            bcvRate: string | null;
+            client: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            code: string;
+            controlNumber: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            createdById: string | null;
+            currency: string;
+            daysOverdue: number;
+            dueDate: string;
+            file: {
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                mimeType: string;
+                originalName: string;
+                sizeBytes: number;
+                status: string;
+                uploadedById: string;
+            } | null;
+            fileId: string | null;
+            hasPartialPayment: boolean;
+            id: string;
+            invoiceNumber: string;
+            isDraft: boolean;
+            issueDate: string;
+            lines: {
+                amount: string;
+                description: string;
+                discount: string;
+                id: string;
+                installment: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                ivaRate: string | null;
+                netAmount: string;
+                order: number;
+                project: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                quantity: string;
+                unitPrice: string;
+            }[];
+            /** @enum {string} */
+            status: "BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA";
+            taxLines: {
+                adjustment: string;
+                ivaAmount: string;
+                ivaRate: string;
+                taxBase: string;
+            }[];
+            totals: {
+                balance: string;
+                balanceUsd: string;
+                discount: string;
+                exemptAmount: string;
+                islrWithheld: string;
+                ivaAmount: string;
+                ivaWithheld: string;
+                otherWithheld: string;
+                otherWithheldNote: string | null;
+                paidAmount: string;
+                receivable: string;
+                receivableUsd: string;
+                subtotal: string;
+                taxBase: string;
+                total: string;
+                totalUsd: string;
+            };
+            /** Format: date-time */
+            updatedAt: string;
+            usdRate: string;
+            voidReason: string | null;
+            voidedAt: string | null;
+        };
+        LoadDailyRatesDto: {
+            date: string;
+            rates: {
+                currency: string;
+                usdRate: string;
+            }[];
+            /**
+             * @default MANUAL
+             * @enum {string}
+             */
+            source: "MANUAL" | "BCV" | "OTRA";
+        };
+        LoadDailyRatesResponseDto: {
+            created: number;
+            updated: number;
+        };
+        MarkExpensePaidDto: {
+            accountAmount?: string | null;
+            accountId: string;
+            amount: string;
+            currency: string;
+            paidAt: string;
+            receiptFileId?: string | null;
+            usdRate: string;
+        };
+        MovementResponseDto: {
+            account: components["schemas"]["EntityRef"];
+            amount: string;
+            amountUsd: string;
+            /** Format: date-time */
+            createdAt: string;
+            date: string;
+            description: string;
+            id: string;
+            partner: components["schemas"]["EntityRef"] | null;
+            /** @enum {string} */
+            type: "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE";
+        };
+        NoteDetailDto: {
+            archivedAt: string | null;
+            attachments: {
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                mimeType: string;
+                originalName: string;
+                sizeBytes: number;
+                status: string;
+                uploadedById: string;
+            }[];
+            author: {
+                id: string;
+                imageUrl: string | null;
+                name: string;
+            };
+            content: {
+                [key: string]: unknown;
+            };
+            contentText: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            links: components["schemas"]["EntityRef"][];
+            pinned: boolean;
+            tags: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+            title: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        NoteLinkTargetDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE";
+        };
+        NoteListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                attachmentCount: number;
+                author: {
+                    id: string;
+                    imageUrl: string | null;
+                    name: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                excerpt: string;
+                id: string;
+                links: components["schemas"]["EntityRef"][];
+                pinned: boolean;
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                title: string | null;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        OpenInvoiceResponseDto: {
+            balance: string;
+            code: string;
+            currency: string;
+            dueDate: string;
+            id: string;
+            invoiceNumber: string;
+            issueDate: string;
+            receivable: string;
+            /** @enum {string} */
+            status: "BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA";
+            usdRate: string;
+        };
+        PaymentAllocationResponseDto: {
+            amountInvoiceCurrency: string;
+            amountPaymentCurrency: string;
+            amountUsd: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            invoice: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            invoiceCurrency: string;
+            paymentId: string;
+        };
+        PaymentListResponseDto: {
+            items: {
+                account: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                allocated: string;
+                amount: string;
+                amountUsd: string;
+                client: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                code: string;
+                currency: string;
+                date: string;
+                id: string;
+                method: {
+                    code: string;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                reference: string | null;
+                /** @enum {string} */
+                status: "PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO";
+                unallocated: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        PaymentMethodResponseDto: {
+            active: boolean;
+            code: string;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            requiresReference: boolean;
+            suggestsIgtf: boolean;
+        };
+        PaymentResponseDto: {
+            account: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            allocatable: string;
+            allocated: string;
+            allocations: {
+                amountInvoiceCurrency: string;
+                amountPaymentCurrency: string;
+                amountUsd: string;
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                invoice: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                };
+                invoiceCurrency: string;
+                paymentId: string;
+            }[];
+            amount: string;
+            amountUsd: string;
+            client: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdById: string | null;
+            currency: string;
+            date: string;
+            feeAmount: string;
+            id: string;
+            igtfAmount: string;
+            method: {
+                code: string;
+                id: string;
+                name: string;
+                nameEn: string | null;
+            };
+            netCredited: string;
+            receipt: {
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                mimeType: string;
+                originalName: string;
+                sizeBytes: number;
+                status: string;
+                uploadedById: string;
+            } | null;
+            receiptFileId: string | null;
+            reference: string | null;
+            /** @enum {string} */
+            status: "PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO";
+            unallocated: string;
+            /** Format: date-time */
+            updatedAt: string;
+            usdRate: string;
+        };
+        PinNoteDto: {
+            pinned: boolean;
+        };
+        PortalDocumentViewDto: {
+            content: {
+                /** @constant */
+                format: "MARKDOWN";
+                markdown: string;
+            } | {
+                /** @constant */
+                format: "ENLACE";
+                url: string;
+            } | {
+                fileName: string;
+                /** @constant */
+                format: "ARCHIVO";
+                mimeType: string;
+                /** @enum {string} */
+                preview: "pdf" | "image" | "none";
+                sizeBytes: number;
+            };
+            document: {
+                documentId: string;
+                /** @enum {string} */
+                format: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                /** @constant */
+                locked: false;
+                title: string;
+                typeName: string;
+                typeNameEn: string | null;
+                versionDate: string;
+                versionNumber: number;
+            };
+        };
+        PortalShareDto: {
+            allowDownload: boolean;
+            clientName: string | null;
+            documents: {
+                documentId: string;
+                /** @enum {string} */
+                format: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                locked: boolean;
+                title: string;
+                typeName: string;
+                typeNameEn: string | null;
+                versionDate: string;
+                versionNumber: number;
+            }[];
+            expiresAt: string | null;
+            /** @enum {string} */
+            locale: "es" | "en";
+            message: string | null;
+            title: string;
+        };
+        ProjectDetailDto: {
+            archivedAt: string | null;
+            clients: {
+                client: components["schemas"]["EntityRef"];
+                role: string | null;
+            }[];
+            code: string;
+            collectedUsd: string | null;
+            contractedValueUsd: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            description: {
+                content?: unknown[];
+                /** @constant */
+                type: "doc";
+            } | null;
+            endDate: string | null;
+            hasBillingPlan: boolean;
+            id: string;
+            invoicedUsd: string | null;
+            links: {
+                /** @enum {string} */
+                group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+                id: string;
+                label: string;
+                order: number;
+                url: string;
+            }[];
+            name: string;
+            stack: {
+                /** @enum {string} */
+                category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+                color: string | null;
+                iconSlug: string | null;
+                id: string;
+                name: string;
+                nameEn: string | null;
+            }[];
+            startDate: string | null;
+            /** @enum {string} */
+            status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+            summary: string;
+            tags: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+            targetEndDate: string | null;
+            toInvoiceUsd: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProjectLinksResponseDto: {
+            links: {
+                /** @enum {string} */
+                group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+                id: string;
+                label: string;
+                order: number;
+                url: string;
+            }[];
+        };
+        ProjectListResponseDto: {
+            items: {
+                archivedAt: string | null;
+                clients: {
+                    client: components["schemas"]["EntityRef"];
+                    role: string | null;
+                }[];
+                code: string;
+                collectedUsd: string | null;
+                contractedValueUsd: string | null;
+                id: string;
+                invoicedUsd: string | null;
+                name: string;
+                stack: {
+                    /** @enum {string} */
+                    category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                }[];
+                startDate: string | null;
+                /** @enum {string} */
+                status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                targetEndDate: string | null;
+                toInvoiceUsd: string | null;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ProjectStatusChangeDto: {
+            hints: ("NO_BILLING_PLAN" | "SUGGEST_RECURRING_CHARGE")[];
+            project: {
+                archivedAt: string | null;
+                clients: {
+                    client: components["schemas"]["EntityRef"];
+                    role: string | null;
+                }[];
+                code: string;
+                collectedUsd: string | null;
+                contractedValueUsd: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                description: {
+                    content?: unknown[];
+                    /** @constant */
+                    type: "doc";
+                } | null;
+                endDate: string | null;
+                hasBillingPlan: boolean;
+                id: string;
+                invoicedUsd: string | null;
+                links: {
+                    /** @enum {string} */
+                    group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+                    id: string;
+                    label: string;
+                    order: number;
+                    url: string;
+                }[];
+                name: string;
+                stack: {
+                    /** @enum {string} */
+                    category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                }[];
+                startDate: string | null;
+                /** @enum {string} */
+                status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+                summary: string;
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                targetEndDate: string | null;
+                toInvoiceUsd: string | null;
+                /** Format: date-time */
+                updatedAt: string;
+            };
+        };
+        PublishVersionDto: {
+            changelog?: string | null;
+            content?: string;
+        };
+        RateLookupResponseDto: {
+            rate: {
+                effectiveDate: string;
+                isFallback: boolean;
+                options: {
+                    createdAt: string;
+                    /** @enum {string} */
+                    source: "MANUAL" | "BCV" | "OTRA";
+                    usdRate: string;
+                }[];
+                source: ("MANUAL" | "BCV" | "OTRA") | null;
+                usdRate: string;
+            } | null;
+        };
+        ReconcileAccountDto: {
+            date: string;
+            notes?: string | null;
+            statementBalance: string;
+        };
+        ReconciliationResponseDto: {
+            accountId: string;
+            /** Format: date-time */
+            createdAt: string;
+            date: string;
+            difference: string;
+            id: string;
+            notes: string | null;
+            statementBalance: string;
+            suggestedAdjustment: string | null;
+            systemBalance: string;
+        };
+        RecordViewDto: {
+            documentId?: string;
+        };
+        RecordViewResultDto: {
+            /** @constant */
+            recorded: true;
+        };
+        RecurringExpenseListResponseDto: {
+            items: {
+                account: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                amount: string;
+                category: {
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    parent: {
+                        id: string;
+                        name: string;
+                        nameEn: string | null;
+                    } | null;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                dayOfPeriod: number;
+                endDate: string | null;
+                /** @enum {string} */
+                frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+                id: string;
+                lastGeneratedPeriodStart: string | null;
+                leadDays: number;
+                monthlyAmountUsd: string;
+                name: string;
+                nextDueDate: string | null;
+                project: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                resumedOn: string | null;
+                startDate: string;
+                /** @enum {string} */
+                status: "ACTIVO" | "PAUSADO" | "FINALIZADO";
+                usdRate: string;
+                vendor: string | null;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        RecurringExpenseResponseDto: {
+            account: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            } | null;
+            amount: string;
+            category: {
+                id: string;
+                name: string;
+                nameEn: string | null;
+                parent: {
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                } | null;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            dayOfPeriod: number;
+            endDate: string | null;
+            /** @enum {string} */
+            frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+            id: string;
+            lastGeneratedPeriodStart: string | null;
+            leadDays: number;
+            monthlyAmountUsd: string;
+            name: string;
+            nextDueDate: string | null;
+            project: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            } | null;
+            resumedOn: string | null;
+            startDate: string;
+            /** @enum {string} */
+            status: "ACTIVO" | "PAUSADO" | "FINALIZADO";
+            usdRate: string;
+            vendor: string | null;
+        };
+        ReorderDocumentCategoriesDto: {
+            orderedIds: string[];
+        };
+        ReorderProjectLinksDto: {
+            /** @enum {string} */
+            group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+            orderedLinkIds: string[];
+        };
+        RequestUploadDto: {
+            /** @enum {string} */
+            context: "general" | "payment_receipt";
+            mime: string;
+            name: string;
+            size: number;
+        };
+        RestoreFromTrashDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE";
+        };
+        RestoreVersionDto: {
+            changelog?: string | null;
+        };
+        RestoredInvoiceResponseDto: {
+            entity: {
+                code: string | null;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+            };
+            /** Format: date-time */
+            restoredAt: string;
+        };
+        RestoredProjectDto: {
+            entity: components["schemas"]["EntityRef"];
+            /** Format: date-time */
+            restoredAt: string;
+        };
+        RestoredRecordResponseDto: {
+            entity: {
+                code?: string;
+                id: string;
+                label: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE";
+            };
+            /** Format: date-time */
+            restoredAt: string;
+        };
         RevokeInvitationResponseDto: {
             invitationId: string;
+        };
+        SaveDraftDto: {
+            content: string;
+        };
+        SaveDraftResponseDto: {
+            documentId: string;
+            /** Format: date-time */
+            draftUpdatedAt: string;
+        };
+        SetClientStatusDto: {
+            /** @enum {string} */
+            status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+        };
+        SetDocumentStatusDto: {
+            signedAt?: string | null;
+            /** @enum {string} */
+            status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "ANULADO";
+        };
+        SetDocumentTypeActiveDto: {
+            active: boolean;
+        };
+        SetPaymentStatusDto: {
+            reason?: string | null;
+            /** @enum {string} */
+            status: "PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO";
+        };
+        SetPreferenceDto: {
+            value: unknown;
+        };
+        SetProjectClientsDto: {
+            clients: {
+                clientId: string;
+                role?: string | null;
+            }[];
+        };
+        SetProjectStatusDto: {
+            /** @default false */
+            cancelPendingInstallments: boolean;
+            /** @default false */
+            confirm: boolean;
+            endDate?: string;
+            /** @default false */
+            finishRecurringCharges: boolean;
+            startDate?: string;
+            /** @enum {string} */
+            status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+        };
+        SetProjectTechnologiesDto: {
+            technologyIds: string[];
+        };
+        SetRecurringChargeStatusDto: {
+            /** @enum {string} */
+            status: "ACTIVO" | "PAUSADO" | "FINALIZADO";
+        };
+        SetRecurringExpenseStatusDto: {
+            /** @enum {string} */
+            status: "ACTIVO" | "PAUSADO" | "FINALIZADO";
+        };
+        SetShareAccessKeyDto: {
+            /** @enum {string} */
+            action: "generate" | "regenerate" | "remove";
+        };
+        SetShareAccessKeyResultDto: {
+            accessKey: string | null;
+            accessKeyUpdatedAt: string | null;
+            /** @enum {string} */
+            action: "generate" | "regenerate" | "remove";
+            documentId: string;
+            requiresAccessKey: boolean;
+            shareLinkId: string;
+        };
+        SetTechnologyActiveDto: {
+            active: boolean;
+        };
+        ShareAccessLogResponseDto: {
+            items: {
+                /** Format: date-time */
+                createdAt: string;
+                documentId: string | null;
+                documentTitle: string | null;
+                /** @enum {string} */
+                event: "VIEW" | "DOWNLOAD" | "UNLOCK" | "UNLOCK_FAILED";
+                id: string;
+                shareLinkId: string;
+                userAgent: string | null;
+                visitor: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ShareLinkDetailDto: {
+            allowDownload: boolean;
+            client: components["schemas"]["EntityRef"] | null;
+            counters: {
+                downloadCount: number;
+                failedUnlockCount: number;
+                unlockCount: number;
+                viewCount: number;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: {
+                id: string;
+                imageUrl: string | null;
+                name: string;
+            };
+            documents: {
+                accessKeyUpdatedAt: string | null;
+                counters: {
+                    downloadCount: number;
+                    failedUnlockCount: number;
+                    unlockCount: number;
+                    viewCount: number;
+                };
+                document: components["schemas"]["EntityRef"];
+                /** @enum {string} */
+                documentStatus: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                format: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                isLatest: boolean;
+                order: number;
+                requiresAccessKey: boolean;
+                versionId: string | null;
+                versionNumber: number | null;
+            }[];
+            expiresAt: string | null;
+            id: string;
+            lastAccessedAt: string | null;
+            /** @enum {string} */
+            locale: "es" | "en";
+            message: string | null;
+            revokedAt: string | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "REVOKED" | "EXPIRED";
+            title: string;
+            token: string;
+            url: string;
+        };
+        ShareLinkEditDto: {
+            allowDownload: boolean;
+            clientId: string | null;
+            documents: {
+                documentId: string;
+                requiresAccessKey: boolean;
+                versionId: string | null;
+            }[];
+            expiresAt: string | null;
+            /** @enum {string} */
+            locale: "es" | "en";
+            message: string | null;
+            title: string;
+        };
+        ShareLinkFormDto: {
+            /** @default true */
+            allowDownload: boolean;
+            clientId?: string | null;
+            documents: {
+                documentId: string;
+                /** @default false */
+                requiresAccessKey: boolean;
+                versionId?: string | null;
+            }[];
+            expiresAt?: string | null;
+            /**
+             * @default es
+             * @enum {string}
+             */
+            locale: "es" | "en";
+            message?: string | null;
+            title: string;
+        };
+        ShareLinkListResponseDto: {
+            items: {
+                client: components["schemas"]["EntityRef"] | null;
+                counters: {
+                    downloadCount: number;
+                    failedUnlockCount: number;
+                    unlockCount: number;
+                    viewCount: number;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                createdBy: {
+                    id: string;
+                    imageUrl: string | null;
+                    name: string;
+                };
+                documentCount: number;
+                expiresAt: string | null;
+                id: string;
+                lastAccessedAt: string | null;
+                protectedDocumentCount: number;
+                /** @enum {string} */
+                status: "ACTIVE" | "REVOKED" | "EXPIRED";
+                title: string;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        ShareLinkMutationResultDto: {
+            generatedKeys: {
+                accessKey: string;
+                documentId: string;
+            }[];
+            share: {
+                allowDownload: boolean;
+                client: components["schemas"]["EntityRef"] | null;
+                counters: {
+                    downloadCount: number;
+                    failedUnlockCount: number;
+                    unlockCount: number;
+                    viewCount: number;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                createdBy: {
+                    id: string;
+                    imageUrl: string | null;
+                    name: string;
+                };
+                documents: {
+                    accessKeyUpdatedAt: string | null;
+                    counters: {
+                        downloadCount: number;
+                        failedUnlockCount: number;
+                        unlockCount: number;
+                        viewCount: number;
+                    };
+                    document: components["schemas"]["EntityRef"];
+                    /** @enum {string} */
+                    documentStatus: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                    format: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                    isLatest: boolean;
+                    order: number;
+                    requiresAccessKey: boolean;
+                    versionId: string | null;
+                    versionNumber: number | null;
+                }[];
+                expiresAt: string | null;
+                id: string;
+                lastAccessedAt: string | null;
+                /** @enum {string} */
+                locale: "es" | "en";
+                message: string | null;
+                revokedAt: string | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "REVOKED" | "EXPIRED";
+                title: string;
+                token: string;
+                url: string;
+            };
+        };
+        TagChipsResponseDto: {
+            items: {
+                color: string;
+                id: string;
+                name: string;
+            }[];
+        };
+        TagDto: {
+            color: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            name: string;
+            usageCount: number;
+        };
+        TagListResponseDto: {
+            items: {
+                color: string;
+                /** Format: date-time */
+                createdAt: string;
+                id: string;
+                name: string;
+                usageCount: number;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        TechnologyDeletedDto: {
+            id: string;
+        };
+        TechnologyListResponseDto: {
+            items: {
+                active: boolean;
+                /** @enum {string} */
+                category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+                color: string | null;
+                iconSlug: string | null;
+                id: string;
+                name: string;
+                nameEn: string | null;
+                slug: string;
+                usageCount: number;
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        TechnologyViewDto: {
+            active: boolean;
+            /** @enum {string} */
+            category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+            color: string | null;
+            iconSlug: string | null;
+            id: string;
+            name: string;
+            nameEn: string | null;
+            slug: string;
+            usageCount: number;
+        };
+        TransferResponseDto: {
+            amountFrom: string;
+            amountTo: string;
+            amountUsd: string;
+            /** Format: date-time */
+            createdAt: string;
+            date: string;
+            feeAmount: string;
+            fromAccount: components["schemas"]["EntityRef"];
+            id: string;
+            notes: string | null;
+            rate: string | null;
+            reference: string | null;
+            toAccount: components["schemas"]["EntityRef"];
+        };
+        TrashListResponseDto: {
+            items: {
+                context: string | null;
+                /** Format: date-time */
+                deletedAt: string;
+                deletedBy: {
+                    id: string;
+                    imageUrl: string | null;
+                    name: string;
+                } | null;
+                entity: {
+                    code?: string;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE";
+                };
+            }[];
+            page: number;
+            pageCount: number;
+            pageSize: number;
+            total: number;
+        };
+        UnassignTagDto: {
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE";
+            tagId: string;
+        };
+        UnlockDocumentDto: {
+            key: string;
+        };
+        UnlockDocumentResultDto: {
+            documentId: string;
+            /** @constant */
+            unlocked: true;
+        };
+        UpdateAccountDto: {
+            active?: boolean;
+            currency?: string;
+            holderName?: string | null;
+            identifierMasked?: string | null;
+            institution?: string | null;
+            name?: string;
+            notes?: string | null;
+            openingBalance?: string;
+            openingDate?: string;
+            /** @enum {string} */
+            type?: "BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO";
+        };
+        UpdateClientDto: {
+            address: string;
+            country: string;
+            email?: string | null;
+            /** @enum {string} */
+            kind: "PERSONA" | "EMPRESA";
+            legalName?: string | null;
+            phone: string;
+            /** @default [] */
+            tagIds: string[];
+            taxId: string;
+            tradeName: string;
+            website?: string | null;
         };
         UpdateCompanySettingsDto: {
             address?: string | null;
@@ -331,6 +4953,188 @@ export interface components {
             logoFileId?: string | null;
             name: string;
             taxId?: string | null;
+        };
+        UpdateContactDto: {
+            email?: string | null;
+            fullName: string;
+            /** @default false */
+            isPrimary: boolean;
+            phone?: string | null;
+            position?: string | null;
+            /** @default [] */
+            tagIds: string[];
+        };
+        UpdateCurrencyDto: {
+            active?: boolean;
+            decimals?: number;
+            name: string;
+            symbol: string;
+        };
+        UpdateDocumentDto: {
+            /** @default 30 */
+            alertDaysBefore: number;
+            effectiveDate?: string | null;
+            expiresAt?: string | null;
+            signedAt?: string | null;
+            summary?: string | null;
+            /** @default [] */
+            tagIds: string[];
+            title: string;
+            typeId: string;
+        };
+        UpdateExpenseCategoryDto: {
+            active?: boolean;
+            color?: string | null;
+            name: string;
+            nameEn?: string | null;
+            parentId?: string | null;
+        };
+        UpdateExpenseDto: {
+            accountAmount?: string | null;
+            accountId?: string | null;
+            amount: string;
+            categoryId: string;
+            currency: string;
+            date: string;
+            description: string;
+            dueDate?: string | null;
+            projectId?: string | null;
+            receiptFileId?: string | null;
+            usdRate: string;
+            vendor?: string | null;
+        };
+        UpdateFiscalSettingsDto: {
+            igtfCurrencies?: string[];
+            igtfRate?: string;
+            invoiceDefaultDueDays?: number;
+            ivaDefaultRate?: string;
+            ivaRates?: string[];
+        };
+        UpdateInstallmentDto: {
+            amount?: string;
+            currency?: string;
+            dueDate?: string | null;
+            label?: string;
+            order?: number;
+            percentage?: string | null;
+            trigger?: string | null;
+        };
+        UpdateInvoiceDto: {
+            bcvRate?: string | null;
+            clientId: string;
+            controlNumber?: string | null;
+            currency: string;
+            dueDate: string;
+            fileId?: string | null;
+            invoiceNumber: string;
+            isDraft?: boolean;
+            islrWithheld?: string;
+            issueDate: string;
+            ivaWithheld?: string;
+            lines: {
+                description: string;
+                discount?: string;
+                id?: string;
+                installmentId?: string | null;
+                ivaRate: string | null;
+                projectId?: string | null;
+                quantity?: string;
+                unitPrice: string;
+            }[];
+            otherWithheld?: string;
+            otherWithheldNote?: string | null;
+            taxAdjustments?: {
+                adjustment: string;
+                ivaRate: string;
+            }[];
+            usdRate: string;
+        };
+        UpdateNoteDto: {
+            content: unknown;
+            /** @default [] */
+            tagIds: string[];
+            title?: string | null;
+        };
+        UpdatePaymentDto: {
+            accountId: string;
+            amount: string;
+            clientId: string;
+            currency: string;
+            date: string;
+            /** @default 0 */
+            feeAmount: string;
+            /** @default 0 */
+            igtfAmount: string;
+            methodId: string;
+            receiptFileId?: string | null;
+            reference?: string | null;
+            usdRate: string;
+        };
+        UpdatePaymentMethodDto: {
+            active?: boolean;
+            name: string;
+            nameEn?: string | null;
+            requiresReference?: boolean;
+            suggestsIgtf?: boolean;
+        };
+        UpdateProjectDto: {
+            clients: {
+                clientId: string;
+                role?: string | null;
+            }[];
+            description?: unknown | null;
+            endDate?: string | null;
+            name: string;
+            startDate?: string | null;
+            summary: string;
+            /** @default [] */
+            tagIds: string[];
+            targetEndDate?: string | null;
+            /** @default [] */
+            technologyIds: string[];
+        };
+        UpdateRecurringChargeDto: {
+            amount: string;
+            billingDay: number;
+            currency: string;
+            endDate?: string | null;
+            /** @enum {string} */
+            frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+            label: string;
+            /** @default 7 */
+            leadDays: number;
+            startDate: string;
+        };
+        UpdateRecurringExpenseDto: {
+            accountId?: string | null;
+            amount: string;
+            categoryId: string;
+            currency: string;
+            dayOfPeriod: number;
+            endDate?: string | null;
+            /** @enum {string} */
+            frequency: "MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
+            /** @default 5 */
+            leadDays: number;
+            name: string;
+            projectId?: string | null;
+            startDate: string;
+            vendor?: string | null;
+        };
+        UpdateTagDto: {
+            color?: string;
+            name?: string;
+        };
+        UpdateTechnologyDto: {
+            /** @default true */
+            active: boolean;
+            /** @enum {string} */
+            category: "LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO";
+            color?: string | null;
+            iconSlug?: string | null;
+            name: string;
+            nameEn?: string | null;
+            slug?: string | null;
         };
         UploadIntentResponseDto: {
             /** Format: date-time */
@@ -341,12 +5145,62 @@ export interface components {
             fileId: string;
             url: string;
         };
+        UploadVersionDto: {
+            changelog?: string | null;
+            fileId?: string;
+            /** @enum {string} */
+            format: "ARCHIVO" | "ENLACE";
+            url?: string;
+        };
+        UpsertBillingPlanDto: {
+            contractAmount?: string | null;
+            currency: string;
+            /** @enum {string} */
+            model: "PRECIO_FIJO" | "RECURRENTE" | "MIXTO";
+            notes?: string | null;
+        };
+        UpsertExchangeRateDto: {
+            currency: string;
+            date: string;
+            /**
+             * @default MANUAL
+             * @enum {string}
+             */
+            source: "MANUAL" | "BCV" | "OTRA";
+            usdRate: string;
+        };
+        UpsertExchangeRateResponseDto: {
+            created: boolean;
+            deviationExceeded: boolean;
+            rate: {
+                /** Format: date-time */
+                createdAt: string;
+                createdById: string | null;
+                currency: string;
+                date: string;
+                id: string;
+                /** @enum {string} */
+                source: "MANUAL" | "BCV" | "OTRA";
+                usdRate: string;
+            };
+        };
+        UpsertProjectLinksDto: {
+            links: {
+                /** @enum {string} */
+                group: "REPOSITORIO" | "ENTORNO" | "DISENO" | "GESTION" | "DOCUMENTACION" | "INFRAESTRUCTURA" | "COMUNICACION" | "OTRO";
+                id?: string;
+                label: string;
+                /** @default 0 */
+                order: number;
+                url: string;
+            }[];
+        };
         UserDetailDto: {
             /** Format: date-time */
             createdAt: string;
             email: string;
             id: string;
-            imageUrl: string[];
+            imageUrl: string | null;
             locale: string;
             name: string;
             /** @enum {string} */
@@ -389,6 +5243,12 @@ export interface components {
             theme: "light" | "dark" | "system";
             timezone: string;
         };
+        VoidExpenseDto: {
+            reason?: string | null;
+        };
+        VoidInvoiceDto: {
+            reason: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -398,7 +5258,140 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    confirmFileUpload: {
+    listAccounts: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "type:asc" | "type:desc" | "institution:asc" | "institution:desc" | "currency:asc" | "currency:desc" | "balance:asc" | "balance:desc" | "status:asc" | "status:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                type?: ("BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO") | ("BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO")[];
+                currency?: string | string[];
+                status?: ("active" | "inactive") | ("active" | "inactive")[];
+                includeInactive?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccountDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listAccountPartners: {
         parameters: {
             query?: never;
             header?: never;
@@ -406,6 +5399,4973 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountPartnerResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAccountDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getAccountBalance: {
+        parameters: {
+            query?: {
+                at?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountBalanceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getAccountLedger: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "date:asc" | "date:desc" | "kind:asc" | "kind:desc" | "amount:asc" | "amount:desc" | "balance:asc" | "balance:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                kind?: ("OPENING_BALANCE" | "PAYMENT" | "EXPENSE" | "TRANSFER_OUT" | "TRANSFER_IN" | "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE") | ("OPENING_BALANCE" | "PAYMENT" | "EXPENSE" | "TRANSFER_OUT" | "TRANSFER_IN" | "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE")[];
+                dateFrom?: string | string[];
+                dateTo?: string | string[];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLedgerResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createAccountMovement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMovementDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovementResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reconcileAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconcileAccountDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listActivity: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "createdAt:asc" | "createdAt:desc" | "action:asc" | "action:desc" | "entityType:asc" | "entityType:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                actorId?: string | string[];
+                actorType?: ("USER" | "SYSTEM" | "PUBLIC") | ("USER" | "SYSTEM" | "PUBLIC")[];
+                action?: ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS") | ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS")[];
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER")[];
+                entityId?: string | string[];
+                from?: string | string[];
+                to?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deallocatePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listClients: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "tradeName:asc" | "tradeName:desc" | "kind:asc" | "kind:desc" | "country:asc" | "country:desc" | "status:asc" | "status:desc" | "projectCount:asc" | "projectCount:desc" | "totalInvoicedUsd:asc" | "totalInvoicedUsd:desc" | "receivableUsd:asc" | "receivableUsd:desc" | "lastActivityAt:asc" | "lastActivityAt:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PROSPECTO" | "ACTIVO" | "INACTIVO") | ("PROSPECTO" | "ACTIVO" | "INACTIVO")[];
+                kind?: ("PERSONA" | "EMPRESA") | ("PERSONA" | "EMPRESA")[];
+                country?: ("AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW") | ("AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW")[];
+                tagId?: string | string[];
+                createdFrom?: string | string[];
+                createdTo?: string | string[];
+                hasOverdue?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateClientDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveClients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveClientsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientsArchiveResultDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    searchClients: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityRefDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClientDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveClientDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientArchiveResultDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listBillableInstallments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillableInstallmentResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listContacts: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "fullName:asc" | "fullName:desc" | "position:asc" | "position:desc" | "email:asc" | "email:desc" | "isPrimary:asc" | "isPrimary:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getClientCredit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientCreditResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listOpenInvoices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenInvoiceResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreClient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setClientStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetClientStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    searchContacts: {
+        parameters: {
+            query?: {
+                q?: string;
+                clientId?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityRefDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContactDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactArchivedDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setPrimaryContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listCurrencies: {
+        parameters: {
+            query?: {
+                includeInactive?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The currencies, USD first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrencyResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createCurrency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCurrencyDto"];
+            };
+        };
+        responses: {
+            /** @description The created currency */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrencyResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateCurrency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCurrencyDto"];
+            };
+        };
+        responses: {
+            /** @description The saved currency */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrencyResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listDocumentCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentCategoryResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createDocumentCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentCategoryBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentCategoryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reorderDocumentCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderDocumentCategoriesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentCategoryResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteDocumentCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedRefDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateDocumentCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentCategoryBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentCategoryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listDocumentTypes: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "category:asc" | "category:desc" | "documentCount:asc" | "documentCount:desc" | "active:asc" | "active:desc";
+                q?: string;
+                categoryId?: string | string[];
+                active?: string;
+                requiresSignature?: string;
+                hasExpiration?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createDocumentType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentTypeBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDocumentType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteDocumentType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedRefDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateDocumentType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentTypeBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setDocumentTypeActive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDocumentTypeActiveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listDocuments: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "title:asc" | "title:desc" | "category:asc" | "category:desc" | "type:asc" | "type:desc" | "status:asc" | "status:desc" | "format:asc" | "format:desc" | "versionNumber:asc" | "versionNumber:desc" | "expiresAt:asc" | "expiresAt:desc" | "updatedAt:asc" | "updatedAt:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO") | ("BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO")[];
+                categoryId?: string | string[];
+                typeId?: string | string[];
+                format?: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | ("MARKDOWN" | "ARCHIVO" | "ENLACE")[];
+                clientId?: string | string[];
+                contactId?: string | string[];
+                projectId?: string | string[];
+                invoiceId?: string | string[];
+                paymentId?: string | string[];
+                expenseId?: string | string[];
+                tagId?: string | string[];
+                expiresFrom?: string | string[];
+                expiresTo?: string | string[];
+                expiringWithinDays?: string | string[];
+                shared?: ("true" | "false") | ("true" | "false")[];
+                staleDraft?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDocumentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveDocuments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveDocumentsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedDocumentsDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    countDocumentsByCategory: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "title:asc" | "title:desc" | "category:asc" | "category:desc" | "type:asc" | "type:desc" | "status:asc" | "status:desc" | "format:asc" | "format:desc" | "versionNumber:asc" | "versionNumber:desc" | "expiresAt:asc" | "expiresAt:desc" | "updatedAt:asc" | "updatedAt:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO") | ("BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO")[];
+                categoryId?: string | string[];
+                typeId?: string | string[];
+                format?: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | ("MARKDOWN" | "ARCHIVO" | "ENLACE")[];
+                clientId?: string | string[];
+                contactId?: string | string[];
+                projectId?: string | string[];
+                invoiceId?: string | string[];
+                paymentId?: string | string[];
+                expenseId?: string | string[];
+                tagId?: string | string[];
+                expiresFrom?: string | string[];
+                expiresTo?: string | string[];
+                expiringWithinDays?: string | string[];
+                shared?: ("true" | "false") | ("true" | "false")[];
+                staleDraft?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Count per category id; categories without documents are absent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDocumentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedDocumentDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    saveDocumentDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveDraftResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    linkDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentLinkTargetDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentLinkDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlinkDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE";
+                entityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentLinkDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityRefResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setDocumentStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDocumentStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listDocumentVersions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionRowDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    uploadDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadVersionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    publishDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishVersionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreVersionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listExchangeRates: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "date:asc" | "date:desc" | "currency:asc" | "currency:desc" | "usdRate:asc" | "usdRate:desc" | "source:asc" | "source:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                currency?: string | string[];
+                source?: ("MANUAL" | "BCV" | "OTRA") | ("MANUAL" | "BCV" | "OTRA")[];
+                dateFrom?: string | string[];
+                dateTo?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeRateListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upsertExchangeRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertExchangeRateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpsertExchangeRateResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    loadDailyRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoadDailyRatesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadDailyRatesResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    importExchangeRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRatesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportRatesResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getRateFor: {
+        parameters: {
+            query: {
+                date: string;
+                currency: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLookupResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listExpenseCategories: {
+        parameters: {
+            query?: {
+                includeInactive?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The roots, each with its children */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategoryNodeDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createExpenseCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseCategoryDto"];
+            };
+        };
+        responses: {
+            /** @description The created category */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategoryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateExpenseCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseCategoryDto"];
+            };
+        };
+        responses: {
+            /** @description The saved category */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategoryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listExpenses: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "date:asc" | "date:desc" | "dueDate:asc" | "dueDate:desc" | "description:asc" | "description:desc" | "vendor:asc" | "vendor:desc" | "amount:asc" | "amount:desc" | "amountUsd:asc" | "amountUsd:desc" | "status:asc" | "status:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PENDIENTE" | "PAGADO" | "ANULADO") | ("PENDIENTE" | "PAGADO" | "ANULADO")[];
+                categoryId?: string | string[];
+                accountId?: string | string[];
+                projectId?: string | string[];
+                currency?: string | string[];
+                tagId?: string | string[];
+                dateFrom?: string | string[];
+                dateTo?: string | string[];
+                recurringOnly?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    markExpensePaid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkExpensePaidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    voidExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidExpenseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirmFileUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmUploadDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -469,7 +10429,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestUploadDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -521,7 +10485,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -575,7 +10541,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -632,6 +10600,845 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInstallmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK | CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancelInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK | CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listInvoices: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "invoiceNumber:asc" | "invoiceNumber:desc" | "issueDate:asc" | "issueDate:desc" | "dueDate:asc" | "dueDate:desc" | "total:asc" | "total:desc" | "totalUsd:asc" | "totalUsd:desc" | "balance:asc" | "balance:desc" | "balanceUsd:asc" | "balanceUsd:desc" | "status:asc" | "status:desc" | "daysOverdue:asc" | "daysOverdue:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA") | ("BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA")[];
+                clientId?: string | string[];
+                projectId?: string | string[];
+                currency?: string | string[];
+                tagId?: string | string[];
+                dateFrom?: string | string[];
+                dateTo?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvoiceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInvoiceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    attachInvoiceFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachInvoiceFileDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    issueInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getInvoiceForPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoicePaymentContextResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoredInvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    voidInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidInvoiceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description INTERNAL */
@@ -723,10 +11530,16 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                key: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPreferenceDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -769,7 +11582,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                key: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -784,6 +11599,3607 @@ export interface operations {
             };
             /** @description UNAUTHENTICATED */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listNotes: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "createdAt:asc" | "createdAt:desc" | "updatedAt:asc" | "updatedAt:desc" | "title:asc" | "title:desc" | "pinned:asc" | "pinned:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                authorId?: string | string[];
+                tagId?: string | string[];
+                linkedEntityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE") | ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE")[];
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE") | ("CLIENT" | "CONTACT" | "PROJECT" | "DOCUMENT" | "INVOICE" | "PAYMENT" | "EXPENSE")[];
+                entityId?: string | string[];
+                pinned?: ("true" | "false") | ("true" | "false")[];
+                createdFrom?: string | string[];
+                createdTo?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedNoteDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    attachNoteFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachNoteFileDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    linkNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteLinkTargetDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pinNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PinNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityRefDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlinkNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteLinkTargetDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listPaymentMethods: {
+        parameters: {
+            query?: {
+                includeInactive?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The payment methods, by name */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodResponseDto"][];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createPaymentMethod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentMethodDto"];
+            };
+        };
+        responses: {
+            /** @description The created payment method */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updatePaymentMethod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePaymentMethodDto"];
+            };
+        };
+        responses: {
+            /** @description The saved payment method */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listPayments: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "date:asc" | "date:desc" | "amount:asc" | "amount:desc" | "amountUsd:asc" | "amountUsd:desc" | "allocated:asc" | "allocated:desc" | "unallocated:asc" | "unallocated:desc" | "reference:asc" | "reference:desc" | "status:asc" | "status:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO") | ("PENDIENTE_VERIFICACION" | "CONFIRMADO" | "ANULADO")[];
+                clientId?: string | string[];
+                accountId?: string | string[];
+                methodId?: string | string[];
+                currency?: string | string[];
+                tagId?: string | string[];
+                dateFrom?: string | string[];
+                dateTo?: string | string[];
+                hasUnallocated?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    detectDuplicatePayment: {
+        parameters: {
+            query: {
+                methodId: string;
+                accountId: string;
+                reference: string;
+                excludePaymentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicatePaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updatePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePaymentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    allocatePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllocatePaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentAllocationResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setPaymentStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPaymentStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resolvePortalToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalShareDto"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPortalDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalDocumentViewDto"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlockPortalDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnlockDocumentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnlockDocumentResultDto"];
+                };
+            };
+            /** @description ACCESS_KEY_INVALID */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description ACCESS_KEY_LOCKED | RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPortalFile: {
+        parameters: {
+            query?: {
+                disposition?: "inline" | "attachment";
+            };
+            header?: never;
+            path: {
+                token: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Markdown body (text/markdown; charset=utf-8) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Redirect to the signed file URL or the stored link */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    recordPortalView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordViewDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordViewResultDto"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "code:asc" | "code:desc" | "name:asc" | "name:desc" | "status:asc" | "status:desc" | "startDate:asc" | "startDate:desc" | "targetEndDate:asc" | "targetEndDate:desc" | "createdAt:asc" | "createdAt:desc" | "contractedValueUsd:asc" | "contractedValueUsd:desc" | "invoicedUsd:asc" | "invoicedUsd:desc" | "collectedUsd:asc" | "collectedUsd:desc" | "toInvoiceUsd:asc" | "toInvoiceUsd:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO") | ("PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO")[];
+                clientId?: string | string[];
+                technologyId?: string | string[];
+                tagId?: string | string[];
+                deliveryFrom?: string | string[];
+                deliveryTo?: string | string[];
+                withoutBillingPlan?: "true" | "true"[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProjectDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveProjectsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedProjectsDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProjectDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    archiveProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveProjectDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivedProjectDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBillingPage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upsertBillingPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertBillingPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK | CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    applyInstallmentTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyInstallmentTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setProjectClients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProjectClientsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInstallmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upsertProjectLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertProjectLinksDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectLinksResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reorderProjectLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderProjectLinksDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectLinksResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    removeProjectLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectLinksResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createRecurringCharge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurringChargeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoredProjectDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setProjectStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProjectStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectStatusChangeDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setProjectTechnologies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProjectTechnologiesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateRecurringCharge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurringChargeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    generateMissingPeriods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateMissingPeriodsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateMissingPeriodsResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setRecurringChargeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRecurringChargeStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPageResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listRecurringExpenses: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "vendor:asc" | "vendor:desc" | "amount:asc" | "amount:desc" | "frequency:asc" | "frequency:desc" | "startDate:asc" | "startDate:desc" | "status:asc" | "status:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("ACTIVO" | "PAUSADO" | "FINALIZADO") | ("ACTIVO" | "PAUSADO" | "FINALIZADO")[];
+                categoryId?: string | string[];
+                frequency?: ("MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL") | ("MENSUAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpenseListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createRecurringExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurringExpenseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getRecurringExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateRecurringExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurringExpenseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setRecurringExpenseStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRecurringExpenseStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpenseResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -909,9 +15325,1622 @@ export interface operations {
             };
         };
     };
-    listUsers: {
+    getFiscalSettings: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The fiscal parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalSettingsResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateFiscalSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFiscalSettingsDto"];
+            };
+        };
+        responses: {
+            /** @description The saved fiscal parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalSettingsResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listShareLinks: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "title:asc" | "title:desc" | "status:asc" | "status:desc" | "expiresAt:asc" | "expiresAt:desc" | "viewCount:asc" | "viewCount:desc" | "downloadCount:asc" | "downloadCount:desc" | "lastAccessedAt:asc" | "lastAccessedAt:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                status?: ("ACTIVE" | "REVOKED" | "EXPIRED") | ("ACTIVE" | "REVOKED" | "EXPIRED")[];
+                clientId?: string | string[];
+                documentId?: string | string[];
+                hasAccessKeys?: ("true" | "false") | ("true" | "false")[];
+                createdFrom?: string | string[];
+                createdTo?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createShareLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkFormDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkMutationResultDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getShareLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateShareLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkEditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkMutationResultDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listShareAccessLog: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "createdAt:asc" | "createdAt:desc" | "event:asc" | "event:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                event?: ("VIEW" | "DOWNLOAD" | "UNLOCK" | "UNLOCK_FAILED") | ("VIEW" | "DOWNLOAD" | "UNLOCK" | "UNLOCK_FAILED")[];
+                documentId?: string | string[];
+                from?: string | string[];
+                to?: string | string[];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareAccessLogResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setShareDocumentAccessKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetShareAccessKeyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetShareAccessKeyResultDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revokeShareLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkDetailDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT | INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listTags: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "usageCount:asc" | "usageCount:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT" | "NOTE")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTagDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagChipsResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unassignTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnassignTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagChipsResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listTechnologies: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "category:asc" | "category:desc" | "usageCount:asc" | "usageCount:desc" | "active:asc" | "active:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                category?: ("LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO") | ("LENGUAJE" | "FRONTEND" | "BACKEND" | "BASE_DE_DATOS" | "INFRAESTRUCTURA" | "MOBILE" | "IA" | "TESTING" | "HERRAMIENTA" | "OTRO")[];
+                active?: ("true" | "false") | ("true" | "false")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createTechnology: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTechnologyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getTechnology: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteTechnology: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyDeletedDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateTechnology: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTechnologyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setTechnologyActive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetTechnologyActiveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TechnologyViewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTransferDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listTrash: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "deletedAt:asc" | "deletedAt:desc" | "entityType:asc" | "entityType:desc" | "label:asc" | "label:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE")[];
+                deletedById?: string | string[];
+                deletedFrom?: string | string[];
+                deletedTo?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrashListResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreFromTrash: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreFromTrashDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoredRecordResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "name:asc" | "name:desc" | "email:asc" | "email:desc" | "role:asc" | "role:desc" | "createdAt:asc" | "createdAt:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                role?: ("OWNER" | "ADMIN" | "MEMBER" | "VIEWER") | ("OWNER" | "ADMIN" | "MEMBER" | "VIEWER")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1017,7 +17046,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteUserDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -1078,7 +17111,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -1133,7 +17168,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -1188,10 +17225,16 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeUserRoleDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

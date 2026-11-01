@@ -2,6 +2,8 @@ import type { UploadContext } from '../../domain/upload-rules';
 
 export const FILE_STORAGE = Symbol('FILE_STORAGE');
 
+export type FileDisposition = 'attachment' | 'inline';
+
 export interface UploadIntent {
   /** Where the browser POSTs the multipart form. */
   readonly url: string;
@@ -23,10 +25,17 @@ export interface FileStoragePort {
   getObjectInfo(storageKey: string): Promise<{ readonly bytes: number } | null>;
   /** The first `n` bytes of the object, for magic-byte sniffing. */
   readHead(storageKey: string, n: number): Promise<Uint8Array>;
-  /** Short-lived signed URL that downloads the object as an attachment named `fileName`. */
+  /**
+   * Short-lived signed URL for the object, named `fileName`. `disposition` defaults to `attachment`
+   * (a download); `inline` leaves the browser to render the file.
+   */
   signedDownloadUrl(
     storageKey: string,
-    input: { readonly fileName: string; readonly expiresAt: Date },
+    input: {
+      readonly fileName: string;
+      readonly expiresAt: Date;
+      readonly disposition?: FileDisposition;
+    },
   ): Promise<string>;
   /** Deletes the object. Idempotent: a missing object is not an error. */
   destroy(storageKey: string): Promise<void>;

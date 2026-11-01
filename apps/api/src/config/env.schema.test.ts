@@ -12,6 +12,8 @@ const valid = {
   CLOUDINARY_CLOUD_NAME: 'cloud-placeholder',
   CLOUDINARY_API_KEY: 'key-placeholder',
   CLOUDINARY_API_SECRET: 'secret-placeholder',
+  SHARE_IP_SALT: 'a'.repeat(32),
+  SHARE_UNLOCK_SECRET: 'b'.repeat(32),
 };
 
 const BE1_NAMES = [
@@ -88,5 +90,50 @@ describe('parseEnv', () => {
     it('fails when empty', () => {
       expect(() => parseEnv({ ...valid, [name]: '' })).toThrow(name);
     });
+  });
+
+  describe('BE-4 variables', () => {
+    it('applies the defaults: throttle 60 per 60 s, no trusted proxy', () => {
+      const config = parseEnv(valid);
+      expect(config.THROTTLE_TTL).toBe(60);
+      expect(config.THROTTLE_LIMIT).toBe(60);
+      expect(config.TRUST_PROXY_HOPS).toBe(0);
+    });
+
+    it('coerces the numeric variables', () => {
+      const config = parseEnv({
+        ...valid,
+        THROTTLE_TTL: '30',
+        THROTTLE_LIMIT: '10',
+        TRUST_PROXY_HOPS: '1',
+      });
+      expect(config).toMatchObject({ THROTTLE_TTL: 30, THROTTLE_LIMIT: 10, TRUST_PROXY_HOPS: 1 });
+    });
+
+    it.each(['TRUST_PROXY_HOPS', 'THROTTLE_TTL', 'THROTTLE_LIMIT'])(
+      'rejects a non-integer or out-of-range %s, naming it only',
+      (name) => {
+        for (const bad of ['1.5', 'x', '-1']) {
+          expect(() => parseEnv({ ...valid, [name]: bad })).toThrow(name);
+        }
+      },
+    );
+
+    it.each(['SHARE_IP_SALT', 'SHARE_UNLOCK_SECRET'] as const)(
+      '%s is required, at least 32 characters, and a failure never echoes the value',
+      (name) => {
+        const { [name]: _omitted, ...rest } = valid;
+        expect(() => parseEnv(rest)).toThrow(name);
+        const short = 'short-secret-value-xyz';
+        try {
+          parseEnv({ ...valid, [name]: short });
+          expect.unreachable();
+        } catch (error) {
+          expect((error as Error).message).toContain(name);
+          expect((error as Error).message).not.toContain(short);
+        }
+        expect(parseEnv({ ...valid, [name]: 'c'.repeat(32) })[name]).toBe('c'.repeat(32));
+      },
+    );
   });
 });

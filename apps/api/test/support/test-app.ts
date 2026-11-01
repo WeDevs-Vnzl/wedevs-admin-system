@@ -1,4 +1,4 @@
-import type { DynamicModule, Type } from '@nestjs/common';
+import { Module, type DynamicModule, type Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../../src/app.module';
@@ -22,7 +22,15 @@ export interface TestAppOptions {
   readonly authorization?: FakeAuthorization;
   /** Mounts the test-only `ProbeModule` routes (default true); the route inventory turns them off. */
   readonly probes?: boolean;
+  /**
+   * Modules of `AppModule`'s graph replaced by an empty module, for a spec that registers its own fakes
+   * where the real module would register the same thing (e.g. restore handlers in the trash).
+   */
+  readonly without?: readonly Type<unknown>[];
 }
+
+@Module({})
+class EmptyModule {}
 
 function providesToken(module: Type<unknown> | DynamicModule, token: symbol): boolean {
   const target = 'module' in module ? module.module : module;
@@ -74,6 +82,9 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<NestE
   let builder = Test.createTestingModule({
     imports: [AppModule, ...(options.probes === false ? [] : [ProbeModule]), ...modules],
   });
+  for (const module of options.without ?? []) {
+    builder = builder.overrideModule(module).useModule(EmptyModule);
+  }
   for (const { token, useValue } of [...fakes, ...(options.overrides ?? [])]) {
     builder = builder.overrideProvider(token).useValue(useValue);
   }

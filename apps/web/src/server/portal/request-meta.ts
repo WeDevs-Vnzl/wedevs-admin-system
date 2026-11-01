@@ -32,12 +32,10 @@ export function hashIp(ip: string, salt: string): string {
 }
 
 /**
- * The visitor IP: Netlify's client header first, then the first `X-Forwarded-For` hop, then `X-Real-IP`.
+ * The visitor IP: the first `X-Forwarded-For` hop, then `X-Real-IP`.
  * `"unknown"` when none is present (local development), so every such visitor shares one lockout bucket.
  */
 export function clientIpOf(headers: Headers): string {
-  const platform = headers.get("x-nf-client-connection-ip")?.trim();
-  if (platform) return platform;
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   if (forwarded) return forwarded;
   return headers.get("x-real-ip")?.trim() || "unknown";

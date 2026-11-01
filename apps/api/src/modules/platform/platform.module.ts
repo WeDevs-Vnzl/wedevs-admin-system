@@ -18,14 +18,24 @@ import { SharedInterfaceModule } from '../../shared/interface/shared-interface.m
 import { FileAccessRegistry } from './application/file-access.registry';
 import { CONTENT_SNIFFER, type ContentSnifferPort } from './application/ports/content-sniffer.port';
 import { FILE_ACCESS_REGISTRY } from './application/ports/file-access.port';
-import { FILE_REPOSITORY, type FileRepository } from './application/ports/file.repository.port';
+import {
+  FILE_CLEANUP_REPOSITORY,
+  FILE_REPOSITORY,
+  type FileCleanupRepository,
+  type FileRepository,
+} from './application/ports/file.repository.port';
 import { FILE_STORAGE, type FileStoragePort } from './application/ports/file-storage.port';
 import { HEALTH_PROBE, type HealthProbePort } from './application/ports/health-probe.port';
+import {
+  CleanupFiles,
+  type CleanupFailureReporter,
+} from './application/use-cases/cleanup-files.use-case';
 import { ConfirmUpload } from './application/use-cases/confirm-upload.use-case';
 import { DeleteFile } from './application/use-cases/delete-file.use-case';
 import { GetFileDownload } from './application/use-cases/get-file-download.use-case';
 import { GetFileSummary } from './application/use-cases/get-file-summary.use-case';
 import { GetHealth } from './application/use-cases/get-health.use-case';
+import { IssueFileDeliveryUrl } from './application/use-cases/issue-file-delivery-url.use-case';
 import { ReserveFileForAttachment } from './application/use-cases/reserve-file-for-attachment.use-case';
 import { RequestUpload } from './application/use-cases/request-upload.use-case';
 import type { CleanupFailureHandler } from './application/upload-permission';
@@ -33,6 +43,8 @@ import { CloudinaryFileStorage } from './infrastructure/cloudinary-file-storage.
 import { FileTypeSniffer } from './infrastructure/file-type-sniffer.adapter';
 import { PrismaFileRepository } from './infrastructure/prisma-file.repository';
 import { PrismaHealthProbe } from './infrastructure/prisma-health-probe.adapter';
+import { ActivityModule } from './activity.module';
+import { TrashModule } from './trash.module';
 import { FilesController } from './interface/http/files.controller';
 import { HealthController } from './interface/http/health.controller';
 
@@ -44,8 +56,16 @@ const logCleanupFailure =
       'File asset cleanup failed; the cleanup job will retry',
     );
 
+const logCleanupRunFailure =
+  (logger: AppLogger): CleanupFailureReporter =>
+  (error, context) =>
+    logger.error(
+      { fileId: context.fileId, storageKey: context.storageKey, err: error },
+      'File cleanup step failed for one file; it stays for the next run',
+    );
+
 @Module({
-  imports: [SharedInterfaceModule],
+  imports: [SharedInterfaceModule, ActivityModule, TrashModule],
   controllers: [HealthController, FilesController],
   providers: [
     { provide: HEALTH_PROBE, useClass: PrismaHealthProbe },
@@ -71,7 +91,33 @@ const logCleanupFailure =
     },
     { provide: CONTENT_SNIFFER, useClass: FileTypeSniffer },
     { provide: FILE_REPOSITORY, useClass: PrismaFileRepository },
+    { provide: FILE_CLEANUP_REPOSITORY, useExisting: FILE_REPOSITORY },
     { provide: FILE_ACCESS_REGISTRY, useClass: FileAccessRegistry },
+    {
+      provide: IssueFileDeliveryUrl,
+      useFactory: (files: FileRepository, storage: FileStoragePort, clock: ClockPort) =>
+        new IssueFileDeliveryUrl(files, storage, clock),
+      inject: [FILE_REPOSITORY, FILE_STORAGE, CLOCK],
+    },
+    {
+      provide: CleanupFiles,
+      useFactory: (
+        files: FileCleanupRepository,
+        storage: FileStoragePort,
+        activity: ActivityLogPort,
+        uow: UnitOfWorkPort,
+        clock: ClockPort,
+        logger: AppLogger,
+      ) => new CleanupFiles(files, storage, activity, uow, clock, logCleanupRunFailure(logger)),
+      inject: [
+        FILE_CLEANUP_REPOSITORY,
+        FILE_STORAGE,
+        ACTIVITY_LOG,
+        UNIT_OF_WORK,
+        CLOCK,
+        APP_LOGGER,
+      ],
+    },
     {
       provide: RequestUpload,
       useFactory: (
@@ -180,6 +226,12 @@ const logCleanupFailure =
       inject: [AUTHORIZATION, FILE_REPOSITORY, FILE_ACCESS_REGISTRY],
     },
   ],
-  exports: [GetFileSummary, ReserveFileForAttachment, FILE_ACCESS_REGISTRY],
+  exports: [
+    GetFileSummary,
+    ReserveFileForAttachment,
+    IssueFileDeliveryUrl,
+    CleanupFiles,
+    FILE_ACCESS_REGISTRY,
+  ],
 })
 export class PlatformModule {}

@@ -17,6 +17,8 @@ export const TEST_ENV: Readonly<Record<string, string>> = {
   CLOUDINARY_CLOUD_NAME: 'fake-cloud',
   CLOUDINARY_API_KEY: '000000000000000',
   CLOUDINARY_API_SECRET: 'fake-cloudinary-secret-not-real',
+  SHARE_IP_SALT: 'fake-share-ip-salt-not-a-real-secret-0000',
+  SHARE_UNLOCK_SECRET: 'fake-share-unlock-secret-not-real-0000',
 };
 
 /** Puts the fake values into `process.env` (overriding whatever was there, so no real key can leak in). */

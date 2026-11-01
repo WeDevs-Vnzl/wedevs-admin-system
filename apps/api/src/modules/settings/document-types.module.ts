@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { DocumentUsageModule } from '../documents/document-usage.module';
+import { PrismaDocumentTypeUsage } from '../documents/infrastructure/prisma-document-type-usage';
 import {
   ACTIVITY_LOG,
   AUTHORIZATION,
@@ -33,7 +35,6 @@ import { ReorderDocumentCategories } from './application/use-cases/reorder-docum
 import { SetDocumentTypeActive } from './application/use-cases/set-document-type-active.use-case';
 import { UpdateDocumentCategory } from './application/use-cases/update-document-category.use-case';
 import { UpdateDocumentType } from './application/use-cases/update-document-type.use-case';
-import { NoDocumentsYetDocumentTypeUsageAdapter } from './infrastructure/no-documents-yet.document-type-usage.adapter';
 import { PrismaDocumentCategoryRepository } from './infrastructure/prisma-document-category.repository';
 import { PrismaDocumentTypeRepository } from './infrastructure/prisma-document-type.repository';
 import { DocumentCategoriesController } from './interface/http/document-categories.controller';
@@ -41,15 +42,16 @@ import { DocumentTypesController } from './interface/http/document-types.control
 
 /**
  * Document categories and types (PRD §8.9.1, HU-21). `DocumentTypeCatalog` is exported for the documents
- * context (BE-4): it reads the catalog through this application API, never the tables. The usage port is
- * bound to a neutral adapter until BE-4 rebinds `DOCUMENT_TYPE_USAGE` (DT-110).
+ * context (BE-4): it reads the catalog through this application API, never the tables. `DOCUMENT_TYPE_USAGE`
+ * is bound to the documents adapter exported by `DocumentUsageModule` (DT-110).
  */
 @Module({
+  imports: [DocumentUsageModule],
   controllers: [DocumentCategoriesController, DocumentTypesController],
   providers: [
     { provide: DOCUMENT_CATEGORY_REPOSITORY, useClass: PrismaDocumentCategoryRepository },
     { provide: DOCUMENT_TYPE_REPOSITORY, useClass: PrismaDocumentTypeRepository },
-    { provide: DOCUMENT_TYPE_USAGE, useClass: NoDocumentsYetDocumentTypeUsageAdapter },
+    { provide: DOCUMENT_TYPE_USAGE, useExisting: PrismaDocumentTypeUsage },
     {
       provide: DocumentTypeCatalog,
       useFactory: (

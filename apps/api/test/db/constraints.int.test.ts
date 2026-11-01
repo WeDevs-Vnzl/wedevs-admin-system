@@ -13,6 +13,7 @@ import {
   makePayment,
   makeProject,
   makeTag,
+  makeUser,
   uid,
 } from './helpers';
 
@@ -306,6 +307,141 @@ describe('schema deltas', () => {
       SELECT e.enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'ShareEvent'`;
     const values = labels.map((l) => l.enumlabel);
     expect(values).toEqual(expect.arrayContaining(['VIEW', 'DOWNLOAD', 'UNLOCK', 'UNLOCK_FAILED']));
+  });
+});
+
+describe('Δ BE-3 columns (Q-BE3-2)', () => {
+  it('BillingPlan.contractedUsd and usdRate accept NULL and exact decimals', async () => {
+    const empty = await makeProject(prisma);
+    const withNulls = await prisma.billingPlan.create({
+      data: { projectId: empty.id, model: 'PRECIO_FIJO', currency: 'USD' },
+    });
+    expect(withNulls.contractedUsd).toBeNull();
+    expect(withNulls.usdRate).toBeNull();
+    const other = await makeProject(prisma);
+    const exact = await prisma.billingPlan.create({
+      data: {
+        projectId: other.id,
+        model: 'PRECIO_FIJO',
+        currency: 'USD',
+        contractedUsd: '1234567890123456.78',
+        usdRate: '123456789012.12345678',
+      },
+    });
+    expect(exact.contractedUsd?.toFixed(2)).toBe('1234567890123456.78');
+    expect(exact.usdRate?.toFixed(8)).toBe('123456789012.12345678');
+  });
+
+  it('resumedOn accepts NULL and a date on RecurringCharge and RecurringExpense; existing CHECKs still hold', async () => {
+    const project = await makeProject(prisma);
+    const charge = (billingDay: number, resumedOn?: Date) =>
+      prisma.recurringCharge.create({
+        data: {
+          projectId: project.id,
+          label: 'Hosting',
+          amount: '10',
+          currency: 'USD',
+          frequency: 'MENSUAL',
+          startDate: new Date('2026-01-01'),
+          billingDay,
+          usdRate: '1',
+          monthlyAmountUsd: '10',
+          resumedOn,
+        },
+      });
+    expect((await charge(1)).resumedOn).toBeNull();
+    const resumed = await charge(2, new Date('2026-03-05'));
+    expect(resumed.resumedOn?.toISOString().slice(0, 10)).toBe('2026-03-05');
+    await expectViolation(charge(29, new Date('2026-03-05')), 'rc_billing_day');
+
+    const category = await prisma.expenseCategory.findFirstOrThrow();
+    const expense = (dayOfPeriod: number, resumedOn?: Date) =>
+      prisma.recurringExpense.create({
+        data: {
+          name: uid('RE'),
+          categoryId: category.id,
+          currency: 'USD',
+          amount: '10',
+          frequency: 'MENSUAL',
+          dayOfPeriod,
+          startDate: new Date('2026-01-01'),
+          usdRate: '1',
+          monthlyAmountUsd: '10',
+          resumedOn,
+        },
+      });
+    expect((await expense(1)).resumedOn).toBeNull();
+    const resumedExpense = await expense(2, new Date('2026-03-05'));
+    expect(resumedExpense.resumedOn?.toISOString().slice(0, 10)).toBe('2026-03-05');
+    await expectViolation(expense(29, new Date('2026-03-05')), 're_day');
+  });
+});
+
+describe('Δ15 document and share deltas (DT-136, DT-137)', () => {
+  it('two versions may reference one File (restore reuses the file)', async () => {
+    const user = await makeUser(prisma);
+    const doc = await makeDocument(prisma);
+    const file = await prisma.file.create({
+      data: {
+        storageKey: uid('documents/k'),
+        bucket: 'b',
+        originalName: 'a.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1,
+        uploadedById: user.id,
+      },
+    });
+    const version = (versionNumber: number) =>
+      prisma.documentVersion.create({
+        data: {
+          documentId: doc.id,
+          versionNumber,
+          format: 'ARCHIVO',
+          fileId: file.id,
+          createdById: user.id,
+        },
+      });
+    await version(1);
+    await expect(version(2)).resolves.toBeTruthy();
+    const withVersions = await prisma.file.findUniqueOrThrow({
+      where: { id: file.id },
+      include: { documentVersions: true },
+    });
+    expect(withVersions.documentVersions).toHaveLength(2);
+  });
+
+  it('ShareLink.expiresAt stores a date only; expiredAt accepts NULL and a timestamp', async () => {
+    const user = await makeUser(prisma);
+    const link = await prisma.shareLink.create({
+      data: {
+        token: uid('tok'),
+        title: 'Link',
+        createdById: user.id,
+        expiresAt: new Date('2026-12-31T15:45:10.000Z'),
+      },
+    });
+    expect(link.expiredAt).toBeNull();
+    expect(link.expiresAt?.toISOString()).toBe('2026-12-31T00:00:00.000Z');
+    const marked = await prisma.shareLink.update({
+      where: { id: link.id },
+      data: { expiredAt: new Date('2027-01-01T04:05:06.000Z') },
+    });
+    expect(marked.expiredAt?.toISOString()).toBe('2027-01-01T04:05:06.000Z');
+  });
+
+  it('ShareLinkDocument(documentId) is indexed; doclink_one_target still holds', async () => {
+    const rows = await prisma.$queryRaw<{ indexdef: string }[]>`
+      SELECT indexdef FROM pg_indexes WHERE tablename = 'ShareLinkDocument'`;
+    expect(rows.some((r) => r.indexdef.includes('("documentId")'))).toBe(true);
+    const versionIdx = await prisma.$queryRaw<{ indexdef: string }[]>`
+      SELECT indexdef FROM pg_indexes WHERE tablename = 'DocumentVersion' AND indexdef LIKE '%("fileId")%'`;
+    expect(versionIdx).toHaveLength(1);
+    expect(versionIdx[0]?.indexdef).not.toContain('UNIQUE');
+    const doc = await makeDocument(prisma);
+    await expectViolation(
+      prisma.documentLink.create({ data: { documentId: doc.id } }),
+      'doclink_one_target',
+    );
   });
 });
 

@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/node';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import type { AppConfig } from './config/env.schema';
 import { CorrelationIdMiddleware } from './shared/interface/correlation-id.middleware';
+import { restoreNullableTypes } from './shared/interface/openapi-nullable';
 import { HttpErrorFilter } from './shared/interface/http-error.filter';
 import { RequestContextMiddleware } from './shared/interface/request-context.middleware';
 import { AppZodValidationPipe } from './shared/interface/zod-validation';
@@ -23,7 +24,7 @@ export function buildOpenApiDocument(app: NestExpressApplication): OpenAPIObject
     .addSecurityRequirements('bearer')
     .build();
   const document = SwaggerModule.createDocument(app, options);
-  return cleanupOpenApiDoc(document, { version: '3.1' });
+  return cleanupOpenApiDoc(restoreNullableTypes(document), { version: '3.1' });
 }
 
 /**
@@ -34,6 +35,8 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
   if (config.SENTRY_DSN) Sentry.init({ dsn: config.SENTRY_DSN, environment: config.NODE_ENV });
 
   app.disable('x-powered-by');
+  // Hops of trusted reverse proxies in front of the API (0 = none): `req.ip` follows `X-Forwarded-For` only then (DT-143).
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.setGlobalPrefix(API_PREFIX);
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 

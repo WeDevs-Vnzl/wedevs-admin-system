@@ -141,6 +141,38 @@ describe('CloudinaryFileStorage', () => {
     expect(url.toString()).not.toContain(credentials.apiSecret);
   });
 
+  it('omits the attachment parameter for inline delivery and keeps the rest of the URL shape', async () => {
+    const storage = new CloudinaryFileStorage(credentials, clock);
+    const expiresAt = new Date('2026-10-25T10:05:00.000Z');
+    const inline = new URL(
+      await storage.signedDownloadUrl('general/2026/10/abc', {
+        fileName: 'Contrato.pdf',
+        expiresAt,
+        disposition: 'inline',
+      }),
+    );
+    expect(`${inline.origin}${inline.pathname}`).toBe(
+      'https://api.cloudinary.com/v1_1/demo-cloud/raw/download',
+    );
+    expect(inline.searchParams.has('attachment')).toBe(false);
+    expect(inline.searchParams.get('public_id')).toBe('general/2026/10/abc');
+    expect(inline.searchParams.get('type')).toBe('authenticated');
+    expect(inline.searchParams.get('expires_at')).toBe(
+      String(Math.floor(expiresAt.getTime() / 1000)),
+    );
+    expect(inline.searchParams.get('signature')).toMatch(/^[0-9a-f]{40}$/);
+
+    const explicit = new URL(
+      await storage.signedDownloadUrl('general/2026/10/abc', {
+        fileName: 'Contrato.pdf',
+        expiresAt,
+        disposition: 'attachment',
+      }),
+    );
+    expect(explicit.searchParams.get('attachment')).toBe('Contrato.pdf');
+    expect(explicit.searchParams.get('signature')).not.toBe(inline.searchParams.get('signature'));
+  });
+
   it('destroys with a signed form POST and treats "not found" as success', async () => {
     const { http, calls } = stubFetch(json({ result: 'ok' }), json({ result: 'not found' }));
     const storage = new CloudinaryFileStorage(credentials, clock, http);

@@ -15,12 +15,12 @@ describe("portal request metadata (C20, C22)", () => {
     expect(hashIp("203.0.113.7", "salt-2")).not.toBe(hash);
   });
 
-  it("reads the client IP from the platform header first, then the first forwarded hop", () => {
+  it("reads the client IP from the first forwarded hop and ignores other hosts' headers", () => {
     expect(
       clientIpOf(
         new Headers({ "x-nf-client-connection-ip": "198.51.100.1", "x-forwarded-for": "10.0.0.1" }),
       ),
-    ).toBe("198.51.100.1");
+    ).toBe("10.0.0.1");
     expect(clientIpOf(new Headers({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" }))).toBe(
       "203.0.113.7",
     );
