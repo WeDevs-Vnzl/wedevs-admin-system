@@ -79,6 +79,39 @@ const FINANCE_ROUTES: Readonly<Record<string, string>> = {
   'POST /api/v1/recurring-expenses/{id}/status': 'expense:update',
 };
 
+/** Every BE-4 route with the grant its handler declares (TASK-BE.md BE-4 contract choice 1, PRD §4.3). */
+const BE4_ROUTES: Readonly<Record<string, string>> = {
+  'GET /api/v1/documents': 'document:read',
+  'POST /api/v1/documents': 'document:create',
+  'GET /api/v1/documents/category-counts': 'document:read',
+  'POST /api/v1/documents/archive': 'document:delete',
+  'GET /api/v1/documents/{id}': 'document:read',
+  'PATCH /api/v1/documents/{id}': 'document:update',
+  'POST /api/v1/documents/{id}/status': 'document:update',
+  'POST /api/v1/documents/{id}/archive': 'document:delete',
+  'POST /api/v1/documents/{id}/restore': 'document:restore',
+  'POST /api/v1/documents/{id}/links': 'document:update',
+  'DELETE /api/v1/documents/{id}/links/{entityType}/{entityId}': 'document:update',
+  'PUT /api/v1/documents/{id}/draft': 'document:update',
+  'GET /api/v1/documents/{id}/versions': 'document:read',
+  'GET /api/v1/documents/{id}/versions/{versionId}': 'document:read',
+  'POST /api/v1/documents/{id}/versions': 'document:update',
+  'POST /api/v1/documents/{id}/versions/publish': 'document:update',
+  'POST /api/v1/documents/{id}/versions/{versionId}/restore': 'document:update',
+  'GET /api/v1/share-links': 'share:read',
+  'POST /api/v1/share-links': 'share:create',
+  'GET /api/v1/share-links/{id}': 'share:read',
+  'PATCH /api/v1/share-links/{id}': 'share:update',
+  'POST /api/v1/share-links/{id}/revoke': 'share:update',
+  'POST /api/v1/share-links/{id}/documents/{documentId}/access-key': 'share:update',
+  'GET /api/v1/share-links/{id}/access-log': 'share:read',
+  'GET /api/v1/portal/{token}': 'public',
+  'POST /api/v1/portal/{token}/views': 'public',
+  'POST /api/v1/portal/{token}/documents/{documentId}/unlock': 'public',
+  'GET /api/v1/portal/{token}/documents/{documentId}': 'public',
+  'GET /api/v1/portal/{token}/files/{documentId}': 'public',
+};
+
 const toArray = (value: unknown): string[] => (Array.isArray(value) ? value : [value]) as string[];
 
 function joinPath(...parts: string[]): string {
@@ -124,6 +157,17 @@ function inventory(app: NestExpressApplication): InventoriedRoute[] {
   return routes.sort((a, b) => a.route.localeCompare(b.route));
 }
 
+function controllerOf(app: NestExpressApplication, handler: string): object {
+  const name = handler.split('.')[0];
+  for (const module of app.get(ModulesContainer, { strict: false }).values()) {
+    for (const wrapper of module.controllers.values()) {
+      const type = wrapper.metatype;
+      if (type && type.name === name) return type;
+    }
+  }
+  throw new Error(`${handler}: controller not found`);
+}
+
 /** The routes that break the "exactly one declaration" rule (none or two). */
 const violations = (routes: InventoriedRoute[]): InventoriedRoute[] =>
   routes.filter((r) => r.grant === 'missing' || r.grant === 'conflict');
@@ -144,11 +188,32 @@ describe('route inventory (full AppModule)', () => {
     expect(violations(routes)).toEqual([]);
   });
 
-  it('the @Public() set is exactly health and the Clerk webhook (api-contract.md §5)', () => {
+  it('the @Public() set is exactly health, the Clerk webhook and the five portal routes (api-contract.md §5)', () => {
     const publicRoutes = inventory(app)
       .filter((r) => r.grant === 'public')
       .map((r) => r.route);
-    expect(publicRoutes.sort()).toEqual(['GET /api/v1/health', 'POST /api/v1/webhooks/clerk']);
+    expect(publicRoutes.sort()).toEqual(
+      [
+        'GET /api/v1/health',
+        'POST /api/v1/webhooks/clerk',
+        'GET /api/v1/portal/{token}',
+        'POST /api/v1/portal/{token}/views',
+        'POST /api/v1/portal/{token}/documents/{documentId}/unlock',
+        'GET /api/v1/portal/{token}/documents/{documentId}',
+        'GET /api/v1/portal/{token}/files/{documentId}',
+      ].sort(),
+    );
+  });
+
+  it('inventories exactly the BE-4 document, share-link and portal routes, each with its declared grant (C13, C24)', () => {
+    const prefixes = /^(GET|POST|PUT|PATCH|DELETE) \/api\/v1\/(documents|share-links|portal)/;
+    const declared = Object.fromEntries(
+      inventory(app)
+        .filter((r) => prefixes.test(r.route))
+        .map((r) => [r.route, r.requirement ?? r.grant]),
+    );
+    expect(Object.keys(BE4_ROUTES)).toHaveLength(29);
+    expect(declared).toEqual(BE4_ROUTES);
   });
 
   it('inventories every BE-2 handler with exactly one grant, the note archive as @Authenticated()', () => {
@@ -181,6 +246,16 @@ describe('route inventory (full AppModule)', () => {
     );
     expect(Object.keys(FINANCE_ROUTES)).toHaveLength(57);
     expect(declared).toEqual(FINANCE_ROUTES);
+  });
+
+  it('applies the portal throttler to the portal controller only: 70 requests to health stay 200 under a limit of 60', async () => {
+    const guarded = inventory(app)
+      .filter((r) => Reflect.getMetadata('__guards__', controllerOf(app, r.handler)) !== undefined)
+      .map((r) => r.handler.split('.')[0]);
+    expect([...new Set(guarded)]).toEqual(['PortalController']);
+    for (let i = 0; i < 70; i += 1) {
+      await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+    }
   });
 
   it('exposes no DELETE on finance and no finance route outside the documented set', () => {
