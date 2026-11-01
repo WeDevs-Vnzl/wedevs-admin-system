@@ -323,6 +323,135 @@ describe('finance contract: money is a decimal string, never a JSON number (less
   });
 });
 
+/** Every BE-4 operation: documents, share links and the portal (`TASK-BE.md` BE-4 contract choice 1). */
+const BE4_PATH = /^\/api\/v1\/(documents|share-links|portal)(\/|$)/;
+
+/** Names that would carry a secret or a hash: an access key, a scrypt hash, an IP hash, a salt, a storage key. */
+const SECRET_NAME = /(key|hash|secret|scrypt|salt)/i;
+/** Flags and timestamps about a key, never the key itself. */
+const KEY_METADATA: ReadonlySet<string> = new Set(['requiresAccessKey', 'accessKeyUpdatedAt']);
+/** The one-time reveal of a generated key: only the mutation results of a share link carry it (HU-22). */
+const KEY_REVEAL: ReadonlySet<string> = new Set(['accessKey', 'generatedKeys']);
+
+/** Property names reachable from the response schemas of one operation. */
+function responseProperties(doc: FullDocument, operation: Record<string, unknown>): string[] {
+  const names = new Set<string>();
+  const visit = (node: JsonSchema | undefined, seen: readonly string[]): void => {
+    if (!node) return;
+    const ref = typeof node.$ref === 'string' ? node.$ref : undefined;
+    if (ref) {
+      if (seen.includes(ref)) return;
+      visit(doc.components.schemas[ref.split('/').pop() ?? ''], [...seen, ref]);
+      return;
+    }
+    for (const key of ['anyOf', 'oneOf', 'allOf'] as const) {
+      for (const branch of (node[key] as JsonSchema[] | undefined) ?? []) visit(branch, seen);
+    }
+    if (node.items) visit(node.items as JsonSchema, seen);
+    for (const [name, value] of Object.entries(
+      (node.properties ?? {}) as Record<string, JsonSchema>,
+    )) {
+      names.add(name);
+      visit(value, seen);
+    }
+  };
+  for (const response of Object.values(
+    (operation.responses ?? {}) as Record<
+      string,
+      { content?: Record<string, { schema: JsonSchema }> }
+    >,
+  )) {
+    for (const media of Object.values(response.content ?? {})) visit(media.schema, []);
+  }
+  return [...names];
+}
+
+/** Response properties that look like a secret, outside the allowed key metadata and the mutation reveal. */
+function secretFindings(doc: FullDocument): string[] {
+  const findings: string[] = [];
+  for (const [path, methods] of Object.entries(doc.paths)) {
+    if (!BE4_PATH.test(path)) continue;
+    for (const [method, operation] of Object.entries(methods)) {
+      const mutation = path.startsWith('/api/v1/share-links') && method !== 'get';
+      for (const name of responseProperties(doc, operation)) {
+        if (!SECRET_NAME.test(name) || KEY_METADATA.has(name)) continue;
+        if (KEY_REVEAL.has(name) && mutation) continue;
+        findings.push(`${method.toUpperCase()} ${path}: ${name}`);
+      }
+    }
+  }
+  return findings.sort();
+}
+
+describe('BE-4 contract: documents, share links and the portal', () => {
+  const full = DOCUMENT as unknown as FullDocument;
+  const be4Operations = Object.entries(full.paths)
+    .filter(([path]) => BE4_PATH.test(path))
+    .flatMap(([path, methods]) =>
+      Object.entries(methods).map(([method, operation]) => ({ path, method, operation })),
+    );
+
+  it('documents the 29 BE-4 operations', () => {
+    expect(be4Operations).toHaveLength(29);
+  });
+
+  it('declares a bearer requirement on every authenticated BE-4 operation by inheriting the global one (C13)', () => {
+    const authenticated = be4Operations.filter(({ path }) => !path.startsWith('/api/v1/portal'));
+    expect(authenticated.filter(({ operation }) => operation.security !== undefined)).toEqual([]);
+  });
+
+  // Blocked: the five @ApiOperation of PortalController lack `security: []` (as health and the Clerk webhook
+  // have), so the document still inherits the global bearer for them. Needs portal.controller.ts, outside 5.1.
+  it.todo('declares no bearer requirement (security: []) on the five portal operations (C24)');
+
+  it('exposes no access key, hash or secret in a response except accessKey and generatedKeys of the share-link mutations', () => {
+    expect(secretFindings(full)).toEqual([]);
+  });
+
+  it('flags a hash planted in a portal response and a key revealed by a GET', () => {
+    const doc = structuredClone(full);
+    const schemas = doc.components.schemas;
+    const target = schemas.ShareLinkDetailDto;
+    if (!target) throw new Error('ShareLinkDetailDto is not in the document');
+    target.properties = {
+      ...(target.properties as Record<string, JsonSchema>),
+      accessKeyHash: { type: 'string' },
+      accessKey: { type: 'string' },
+    };
+    const findings = secretFindings(doc);
+    expect(findings).toContain('GET /api/v1/share-links/{id}: accessKeyHash');
+    expect(findings).toContain('GET /api/v1/share-links/{id}: accessKey');
+  });
+
+  it('documents pageSize as 25 | 50 | 100 and sort as the whitelist on every new list', () => {
+    const lists = be4Operations.filter(({ operation }) =>
+      ((operation.parameters ?? []) as { name: string }[]).some((p) => p.name === 'pageSize'),
+    );
+    expect(lists.map(({ method, path }) => `${method} ${path}`).sort()).toEqual([
+      'get /api/v1/documents',
+      'get /api/v1/documents/category-counts',
+      'get /api/v1/share-links',
+      'get /api/v1/share-links/{id}/access-log',
+    ]);
+    const weak = lists.flatMap(({ method, path, operation }) => {
+      const params = operation.parameters as { name: string; schema: JsonSchema }[];
+      const pageSize = params.find((p) => p.name === 'pageSize')?.schema;
+      const sort = params.find((p) => p.name === 'sort')?.schema;
+      const where = `${method.toUpperCase()} ${path}`;
+      return [
+        ...(pageSize?.type === 'integer' &&
+        JSON.stringify(pageSize.enum) === JSON.stringify([25, 50, 100])
+          ? []
+          : [`${where}: pageSize is not the 25|50|100 integer enum`]),
+        ...(sort && Array.isArray(sort.enum) && sort.enum.length > 0
+          ? []
+          : [`${where}: sort is not the whitelisted enum`]),
+      ];
+    });
+    expect(weak).toEqual([]);
+  });
+});
+
 describe('OpenAPI document reflects the route metadata (committed packages/api-contract/openapi.json)', () => {
   let routes: ExpectedRoute[];
   let app: NestExpressApplication;
