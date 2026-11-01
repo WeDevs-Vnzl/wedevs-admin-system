@@ -85,29 +85,39 @@ describe('hashKey / verifyKey (scrypt, constant time)', () => {
 });
 
 describe('unlock cookie (C22)', () => {
-  it('round-trips the unlocked ids of its own token', () => {
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: ['doc_1', 'doc_2'], now: NOW });
-    expect(secrets.verifyUnlock(value, TOKEN, NOW)).toEqual(['doc_1', 'doc_2']);
+  const HOUR = 3_600_000;
+  const at = (hours: number): Date => new Date(NOW.getTime() + hours * HOUR);
+  const grant = (documentId: string, expiresInHours = 12) => ({
+    documentId,
+    expiresAt: at(expiresInHours),
+  });
+  const ids = (grants: { documentId: string }[]): string[] => grants.map((g) => g.documentId);
+
+  it('round-trips the grants of its own token, each with its own expiry', () => {
+    const value = secrets.signUnlock({
+      token: TOKEN,
+      grants: [grant('doc_1'), grant('doc_2', 5)],
+      now: NOW,
+    });
+    expect(secrets.verifyUnlock(value, TOKEN, NOW)).toEqual([grant('doc_1'), grant('doc_2', 5)]);
   });
 
   it('never carries the token in clear', () => {
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: ['doc_1'], now: NOW });
+    const value = secrets.signUnlock({ token: TOKEN, grants: [grant('doc_1')], now: NOW });
     expect(value).not.toContain(TOKEN);
   });
 
   it('is worth nothing for another link', () => {
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: ['doc_1'], now: NOW });
+    const value = secrets.signUnlock({ token: TOKEN, grants: [grant('doc_1')], now: NOW });
     expect(secrets.verifyUnlock(value, OTHER_TOKEN, NOW)).toEqual([]);
   });
 
   it('is worth nothing once tampered with or signed with another secret', () => {
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: ['doc_1'], now: NOW });
+    const value = secrets.signUnlock({ token: TOKEN, grants: [grant('doc_1')], now: NOW });
     const [payload, signature] = value.split('.') as [string, string];
+    const original = JSON.parse(Buffer.from(payload, 'base64url').toString());
     const forged = Buffer.from(
-      JSON.stringify({
-        ...JSON.parse(Buffer.from(payload, 'base64url').toString()),
-        ids: ['doc_1', 'doc_9'],
-      }),
+      JSON.stringify({ ...original, g: [...original.g, { id: 'doc_9', exp: at(12).getTime() }] }),
     ).toString('base64url');
     expect(secrets.verifyUnlock(`${forged}.${signature}`, TOKEN, NOW)).toEqual([]);
     const other = new NodeShareSecrets({ unlockSecret: `${SECRET}-other`, ipSalt: 'salt-1' });
@@ -125,15 +135,19 @@ describe('unlock cookie (C22)', () => {
     };
     const l = createHash('sha256').update(TOKEN).digest('base64url');
     const exp = NOW.getTime() + 1000;
-    expect(secrets.verifyUnlock(signed({ l, ids: ['doc_1'], exp }), TOKEN, NOW)).toEqual(['doc_1']);
-    expect(secrets.verifyUnlock(signed({ l, ids: 'doc_1', exp }), TOKEN, NOW)).toEqual([]);
-    expect(secrets.verifyUnlock(signed({ l, ids: [1], exp }), TOKEN, NOW)).toEqual([]);
-    expect(secrets.verifyUnlock(signed({ l, ids: ['a'], exp: 'x' }), TOKEN, NOW)).toEqual([]);
-    expect(secrets.verifyUnlock(signed({ l: 1, ids: [], exp }), TOKEN, NOW)).toEqual([]);
+    expect(ids(secrets.verifyUnlock(signed({ l, g: [{ id: 'doc_1', exp }] }), TOKEN, NOW))).toEqual(
+      ['doc_1'],
+    );
+    expect(secrets.verifyUnlock(signed({ l, g: 'doc_1' }), TOKEN, NOW)).toEqual([]);
+    expect(secrets.verifyUnlock(signed({ l, g: [{ id: 1, exp }] }), TOKEN, NOW)).toEqual([]);
+    expect(secrets.verifyUnlock(signed({ l, g: [{ id: 'a', exp: 'x' }] }), TOKEN, NOW)).toEqual([]);
+    expect(secrets.verifyUnlock(signed({ l, g: [{ id: 'a', exp: 1.5 }] }), TOKEN, NOW)).toEqual([]);
+    expect(secrets.verifyUnlock(signed({ l, g: [null] }), TOKEN, NOW)).toEqual([]);
+    expect(secrets.verifyUnlock(signed({ l: 1, g: [] }), TOKEN, NOW)).toEqual([]);
     expect(secrets.verifyUnlock(signed(null), TOKEN, NOW)).toEqual([]);
     expect(
       secrets.verifyUnlock(
-        signed({ l, ids: Array.from({ length: 51 }, (_, i) => `d${i}`), exp }),
+        signed({ l, g: Array.from({ length: 51 }, (_, i) => ({ id: `d${i}`, exp })) }),
         TOKEN,
         NOW,
       ),
@@ -143,17 +157,54 @@ describe('unlock cookie (C22)', () => {
     expect(secrets.verifyUnlock(`${notJson}.${sig}`, TOKEN, NOW)).toEqual([]);
   });
 
-  it(`expires ${UNLOCK_COOKIE_MAX_AGE_SECONDS / 3600} h after it was signed`, () => {
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: ['doc_1'], now: NOW });
-    const edge = new Date(NOW.getTime() + UNLOCK_COOKIE_MAX_AGE_SECONDS * 1000);
-    expect(secrets.verifyUnlock(value, TOKEN, edge)).toEqual(['doc_1']);
+  it('rejects the first payload shape (ids plus one exp) safely: no unlock, no exception', () => {
+    const payload = Buffer.from(
+      JSON.stringify({
+        l: createHash('sha256').update(TOKEN).digest('base64url'),
+        ids: ['doc_1', 'doc_2'],
+        exp: at(1).getTime(),
+      }),
+    ).toString('base64url');
+    const old = `${payload}.${createHmac('sha256', SECRET).update(payload).digest('base64url')}`;
+    expect(() => secrets.verifyUnlock(old, TOKEN, NOW)).not.toThrow();
+    expect(secrets.verifyUnlock(old, TOKEN, NOW)).toEqual([]);
+  });
+
+  it(`a grant expires ${UNLOCK_COOKIE_MAX_AGE_SECONDS / 3600} h after it was given, to the millisecond`, () => {
+    const value = secrets.signUnlock({ token: TOKEN, grants: [grant('doc_1')], now: NOW });
+    const edge = at(12);
+    expect(ids(secrets.verifyUnlock(value, TOKEN, edge))).toEqual(['doc_1']);
     expect(secrets.verifyUnlock(value, TOKEN, new Date(edge.getTime() + 1))).toEqual([]);
   });
 
-  it('dedupes and caps the ids at 50', () => {
-    const ids = Array.from({ length: 60 }, (_, i) => `d${i}`);
-    const value = secrets.signUnlock({ token: TOKEN, documentIds: [...ids, 'd0'], now: NOW });
-    expect(secrets.verifyUnlock(value, TOKEN, NOW)).toEqual(ids.slice(0, 50));
+  it('keeps each grant on its own clock: an expired one is dropped, the others stay', () => {
+    const value = secrets.signUnlock({
+      token: TOKEN,
+      grants: [grant('doc_a', 1), grant('doc_b', 12)],
+      now: NOW,
+    });
+    expect(ids(secrets.verifyUnlock(value, TOKEN, at(2)))).toEqual(['doc_b']);
+  });
+
+  it('drops a grant already expired when signing and never signs one past 12 h', () => {
+    const value = secrets.signUnlock({
+      token: TOKEN,
+      grants: [grant('doc_old', -1), grant('doc_far', 40)],
+      now: NOW,
+    });
+    expect(secrets.verifyUnlock(value, TOKEN, NOW)).toEqual([grant('doc_far', 12)]);
+  });
+
+  it('dedupes by document and caps the grants at 50', () => {
+    const many = Array.from({ length: 60 }, (_, i) => grant(`d${i}`));
+    const value = secrets.signUnlock({
+      token: TOKEN,
+      grants: [...many, grant('d0', 3)],
+      now: NOW,
+    });
+    const read = secrets.verifyUnlock(value, TOKEN, NOW);
+    expect(ids(read)).toEqual(many.slice(0, 50).map((g) => g.documentId));
+    expect(read[0]).toEqual(grant('d0', 12));
   });
 });
 

@@ -51,9 +51,11 @@ describe('UnlockSharedDocument', () => {
     expect(result).toMatchObject({ documentId: 'doc_cred', unlocked: true });
     expect(w.accessLog.rows.map((row) => row.event)).toEqual(['UNLOCK']);
     expect(w.accessLog.rows[0]).toMatchObject({ documentId: 'doc_cred', userAgent: 'Vitest' });
-    expect(w.secrets.verifyUnlock(result.unlockCookie ?? undefined, TOKEN, w.clock.now())).toEqual([
-      'doc_cred',
-    ]);
+    expect(
+      w.secrets
+        .verifyUnlock(result.unlockCookie ?? undefined, TOKEN, w.clock.now())
+        .map((grant) => grant.documentId),
+    ).toEqual(['doc_cred']);
     expect(w.accessLog.countersOf('shr_a').lastAccessedAt).toEqual(w.clock.now());
     expect(w.accessLog.countersOf('shr_a').viewCount).toBe(0);
   });
@@ -64,8 +66,50 @@ describe('UnlockSharedDocument', () => {
     const first = await unlock(w, KEY);
     const second = await unlock(w, KEY, undefined, first.unlockCookie ?? undefined, 'doc_two');
     expect(
-      w.secrets.verifyUnlock(second.unlockCookie ?? undefined, TOKEN, w.clock.now()).sort(),
+      w.secrets
+        .verifyUnlock(second.unlockCookie ?? undefined, TOKEN, w.clock.now())
+        .map((grant) => grant.documentId)
+        .sort(),
     ).toEqual(['doc_cred', 'doc_two']);
+  });
+
+  it('unlocking B never extends A: A at 0 h, B at 11 h; past 12 h A is locked and B is open (FixedClock)', async () => {
+    const w = createPortalWorld();
+    await w.seedLink([...DOCS, { id: 'doc_two', key: KEY }]);
+    const hour = 3_600_000;
+    const start = w.clock.now().getTime();
+    const first = await unlock(w, KEY);
+    w.clock.set(new Date(start + 11 * hour));
+    const second = await unlock(w, KEY, undefined, first.unlockCookie ?? undefined, 'doc_two');
+    const open = (cookie: string | null, at: number): string[] =>
+      w.secrets
+        .verifyUnlock(cookie ?? undefined, TOKEN, new Date(start + at))
+        .map((grant) => grant.documentId)
+        .sort();
+
+    expect(open(second.unlockCookie, 11 * hour)).toEqual(['doc_cred', 'doc_two']);
+    expect(open(second.unlockCookie, 12 * hour)).toEqual(['doc_cred', 'doc_two']);
+    expect(open(second.unlockCookie, 12 * hour + 1)).toEqual(['doc_two']);
+    expect(open(second.unlockCookie, 23 * hour)).toEqual(['doc_two']);
+    expect(open(second.unlockCookie, 23 * hour + 1)).toEqual([]);
+  });
+
+  it('re-unlocking A renews A alone', async () => {
+    const w = createPortalWorld();
+    await w.seedLink([...DOCS, { id: 'doc_two', key: KEY }]);
+    const hour = 3_600_000;
+    const start = w.clock.now().getTime();
+    const a = await unlock(w, KEY);
+    w.clock.set(new Date(start + 5 * hour));
+    const b = await unlock(w, KEY, undefined, a.unlockCookie ?? undefined, 'doc_two');
+    w.clock.set(new Date(start + 10 * hour));
+    const renewed = await unlock(w, KEY, undefined, b.unlockCookie ?? undefined);
+    const live = w.secrets.verifyUnlock(
+      renewed.unlockCookie ?? undefined,
+      TOKEN,
+      new Date(start + 17 * hour + 1),
+    );
+    expect(live.map((grant) => grant.documentId)).toEqual(['doc_cred']);
   });
 
   it('trims the typed key', async () => {

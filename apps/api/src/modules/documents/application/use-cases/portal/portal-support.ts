@@ -18,7 +18,7 @@ import type {
   ShareLocale,
 } from '../../ports/share-link.repository.port';
 import type { ShareAccessLogPort } from '../../ports/share-access-log.port';
-import type { ShareSecretsPort } from '../../ports/share-secrets.port';
+import type { ShareSecretsPort, UnlockGrant } from '../../ports/share-secrets.port';
 
 // What the interface layer needs of the domain constants (it may not import `domain/` itself).
 export {
@@ -152,6 +152,11 @@ export class PortalSupport {
 
   /** The ids the signed cookie of this visitor unlocks for this link; `[]` for anything not valid. */
   unlockedIds(visitor: PortalVisitor, token: string): string[] {
+    return this.unlockGrants(visitor, token).map((grant) => grant.documentId);
+  }
+
+  /** The live grants of the cookie, each with its own expiry; `[]` for anything not valid. */
+  unlockGrants(visitor: PortalVisitor, token: string): UnlockGrant[] {
     return this.secrets.verifyUnlock(visitor.unlockCookie, token, this.now());
   }
 

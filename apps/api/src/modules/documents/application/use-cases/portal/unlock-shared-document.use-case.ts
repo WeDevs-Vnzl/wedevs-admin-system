@@ -12,6 +12,7 @@ import {
   lockoutWindowStart,
   normalizeAccessKeyInput,
   shareStatusOn,
+  UNLOCK_COOKIE_MAX_AGE_SECONDS,
   type UnlockFailureCode,
 } from '../../../domain';
 import type { RateLimitPort } from '../../ports/rate-limit.port';
@@ -74,7 +75,7 @@ export class UnlockSharedDocument {
     }
     const link = await this.support.liveLink(input.token);
     const document = await this.support.sharedDocument(link, input.documentId);
-    const unlockedBefore = this.support.unlockedIds(input.visitor, link.token);
+    const grantsBefore = this.support.unlockGrants(input.visitor, link.token);
     if (!document.requiresKey) {
       return { documentId: document.documentId, unlocked: true, unlockCookie: null };
     }
@@ -121,18 +122,31 @@ export class UnlockSharedDocument {
           ? new AccessKeyLockedError()
           : new AccessKeyInvalidError();
       }
+      // `ReadCommitted`, not `Serializable`: the conversion reads nothing. It writes the `lastAccessedAt` of the
+      // link and flips the entry this request appended (by its own id) from `UNLOCK_FAILED` to `UNLOCK`, so
+      // there is no read a concurrent writer could invalidate and `Serializable` would only add retries, and
+      // `CONFLICT`s, to a visitor who typed the right key. The lockout decision above already ran under the
+      // `ShareLink` row lock at `Serializable`.
       await this.uow.run(
         () => this.accessLog.convertToUnlock(attempt.entryId, link.id, this.support.now()),
         { isolation: 'ReadCommitted' },
       );
     }
+    const now = this.support.now();
     return {
       documentId: document.documentId,
       unlocked: true,
       unlockCookie: this.support.secrets.signUnlock({
         token: link.token,
-        documentIds: [...unlockedBefore, document.documentId],
-        now: this.support.now(),
+        // Each document keeps the expiry it was given: unlocking this one never extends the others.
+        grants: [
+          ...grantsBefore.filter((grant) => grant.documentId !== document.documentId),
+          {
+            documentId: document.documentId,
+            expiresAt: new Date(now.getTime() + UNLOCK_COOKIE_MAX_AGE_SECONDS * 1000),
+          },
+        ],
+        now,
       }),
     };
   }
