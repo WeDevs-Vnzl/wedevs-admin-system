@@ -13,6 +13,7 @@ import {
   assertDocumentDates,
   assertDocumentTypeRules,
   documentTypeRuleIssues,
+  isVersionLocked,
 } from '../../../domain';
 import {
   documentTagTarget,
@@ -49,7 +50,7 @@ export interface UpdateDocumentMetaInput {
 /**
  * `updateDocumentMeta` (`PATCH /documents/{id}`): the metadata of a live document; status, links and content
  * have their own use cases. The rules are those of creation for the (possibly new) type plus the document's
- * current status: a `FIRMADO` one cannot move to a type without signature nor lose its signature date.
+ * current status: a `FIRMADO` (or signed `VENCIDO`) one cannot move to a type without signature nor lose its signature date.
  * `Serializable` under the `Document` row lock. Logs `UPDATE` with the changed fields, and only when
  * something changed.
  */
@@ -86,7 +87,9 @@ export class UpdateDocumentMeta {
         if (statusIssue) {
           throw new ValidationFailedError({ fieldErrors: { status: [statusIssue.message] } });
         }
-        if (doc.status === 'FIRMADO' && !input.signedAt) {
+        // A `FIRMADO` document and a `VENCIDO` one that was signed keep their signature date (DT-138): losing it
+        // would reopen the version lock.
+        if (isVersionLocked(doc) && !input.signedAt) {
           throw new ValidationFailedError({ fieldErrors: { signedAt: [REQUIRED_KEY] } });
         }
 

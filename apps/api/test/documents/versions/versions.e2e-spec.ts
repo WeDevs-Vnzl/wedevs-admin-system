@@ -291,6 +291,23 @@ describe('document versions (e2e): HU-18 CA1-CA3, HU-19 CA4, DT-136, DT-138, A3'
       },
     );
 
+    it('a PATCH cannot clear the signature date of a signed VENCIDO document: the lock holds (DT-138)', async () => {
+      const doc = await lockedPrd('VENCIDO', '2026-10-08');
+      const res = await http()
+        .patch(`${BASE}/${doc.id}`)
+        .set('Authorization', as('owner'))
+        .send({ title: 'Documento', typeId: PRD, alertDaysBefore: 30 })
+        .expect(422);
+      expect(res.body.error.fieldErrors).toEqual({ signedAt: ['validation.required'] });
+      expect(await prisma.document.findUniqueOrThrow({ where: { id: doc.id } })).toMatchObject({
+        status: 'VENCIDO',
+        signedAt: new Date('2026-10-08'),
+      });
+      const refused = await publish(doc.id, 'owner', '# v2').expect(409);
+      expect(refused.body.error.code).toBe('INTEGRITY_LOCK');
+      expect(await history(doc.id)).toHaveLength(1);
+    });
+
     it('a VENCIDO document without a signature date is not locked', async () => {
       const doc = await lockedPrd('VENCIDO', null);
       await publish(doc.id, 'owner', '# v2').expect(201);
