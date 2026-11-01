@@ -13313,6 +13313,15 @@ export interface operations {
                     "application/json": components["schemas"]["RecordViewResultDto"];
                 };
             };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description NOT_FOUND */
             404: {
                 headers: {

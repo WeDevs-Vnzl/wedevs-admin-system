@@ -45,6 +45,38 @@ describe('RecordShareView', () => {
     expect(w.accessLog.rows[0]).toMatchObject({ event: 'VIEW', documentId: 'doc_prd' });
   });
 
+  it('a VIEW of a locked document without the unlock cookie is FORBIDDEN: no row, no counter moved', async () => {
+    const w = createPortalWorld();
+    await w.seedLink([{ id: 'doc_prd' }, { id: 'doc_nda', key: 'K7QM-2XRP-ABCD' }]);
+    await expect(
+      w.recordView.execute({ token: TOKEN, documentId: 'doc_nda', visitor: visitor() }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(
+      w.recordView.execute({
+        token: TOKEN,
+        documentId: 'doc_nda',
+        visitor: visitor({ unlockCookie: w.cookieFor(['doc_prd']) }),
+      }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(w.accessLog.rows).toEqual([]);
+    expect(w.accessLog.countersOf('shr_a')).toMatchObject({ viewCount: 0, lastAccessedAt: null });
+  });
+
+  it('records a VIEW of a locked document once its cookie unlocks it; the link-level VIEW needs none', async () => {
+    const w = createPortalWorld();
+    await w.seedLink([{ id: 'doc_prd' }, { id: 'doc_nda', key: 'K7QM-2XRP-ABCD' }]);
+    await w.recordView.execute({ token: TOKEN, visitor: visitor() });
+    await w.recordView.execute({
+      token: TOKEN,
+      documentId: 'doc_nda',
+      visitor: visitor({ unlockCookie: w.cookieFor(['doc_nda']) }),
+    });
+    expect(w.accessLog.rows.map((row) => [row.event, row.documentId])).toEqual([
+      ['VIEW', null],
+      ['VIEW', 'doc_nda'],
+    ]);
+  });
+
   it('caps the user agent at 512 characters and stores none when absent', async () => {
     const w = createPortalWorld();
     await w.seedLink(DOCS);
