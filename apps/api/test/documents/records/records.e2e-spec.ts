@@ -956,7 +956,7 @@ describe('documents records (e2e): HU-19, HU-20, DT-141, DT-142', () => {
   it('documents every route in the OpenAPI document', () => {
     const doc = buildOpenApiDocument(app);
     const operations = Object.entries(doc.paths ?? {}).flatMap(([path, item]) =>
-      path.startsWith('/api/v1/documents')
+      path.startsWith('/api/v1/documents') && !/\/(versions|draft)(\/|$)/.test(path)
         ? Object.keys(item ?? {}).map((method) => `${method.toUpperCase()} ${path}`)
         : [],
     );

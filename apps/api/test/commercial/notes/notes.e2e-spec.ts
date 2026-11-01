@@ -427,8 +427,12 @@ describe('notes (e2e)', () => {
       entityType: 'CLIENT',
       entityId: 'cli_missing',
     }).expect(404);
-    const invalidType = await post(`${BASE}/${note.id}/links`, 'member', {
+    await post(`${BASE}/${note.id}/links`, 'member', {
       entityType: 'DOCUMENT',
+      entityId: 'doc_missing',
+    }).expect(404);
+    const invalidType = await post(`${BASE}/${note.id}/links`, 'member', {
+      entityType: 'NOT_A_TYPE',
       entityId: 'doc_1',
     }).expect(422);
     expect(invalidType.body.error.fieldErrors).toEqual({

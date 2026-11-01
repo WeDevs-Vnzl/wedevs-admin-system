@@ -209,14 +209,17 @@ describe('tags (e2e)', () => {
       expect(after.body.usageCount).toBe(0);
     });
 
-    it('answers 422 for an unregistered or unknown entity type, and for unknown tag ids', async () => {
+    it('answers 422 for an unknown entity type and for unknown tag ids, 404 for a missing document', async () => {
       const tag = (await createTag('OWNER', 'Alpha')).body;
-      for (const entityType of ['DOCUMENT', 'NOT_A_TYPE']) {
-        const res = await assign('ADMIN', { entityType, entityId: 'x', tagIds: [tag.id] }).expect(
-          422,
-        );
-        expect(res.body.error.fieldErrors.entityType).toEqual(['validation.invalidOption']);
-      }
+      const res = await assign('ADMIN', {
+        entityType: 'NOT_A_TYPE',
+        entityId: 'x',
+        tagIds: [tag.id],
+      }).expect(422);
+      expect(res.body.error.fieldErrors.entityType).toEqual(['validation.invalidOption']);
+      await assign('ADMIN', { entityType: 'DOCUMENT', entityId: 'x', tagIds: [tag.id] }).expect(
+        404,
+      );
       const unknown = await assign('ADMIN', {
         entityType: 'CLIENT',
         entityId: clientId,
