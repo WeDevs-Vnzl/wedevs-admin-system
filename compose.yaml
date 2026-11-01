@@ -76,6 +76,25 @@ services:
     restart: unless-stopped
     networks: [app]
 
+  # BullMQ worker (DT-116, DT-152, DT-169): the api image in worker mode; the only service that connects to Redis.
+  worker:
+    image: wedevs-api:latest
+    command: ['node', 'dist/worker.js']
+    env_file: apps/api/.env
+    environment:
+      <<: *api-database
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    # Dockerfile:39 probes the API's HTTP port; the worker has none.
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    networks: [app]
+
   caddy:
     image: docker.io/library/caddy:2.10.2
     environment:

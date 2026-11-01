@@ -40,6 +40,7 @@
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "@sentry/node": "11.8.0",
+    "bullmq": "6.5.3",
     "cloudinary": "2.11.0",
     "date-fns": "4.4.0",
     "date-fns-tz": "3.2.0",

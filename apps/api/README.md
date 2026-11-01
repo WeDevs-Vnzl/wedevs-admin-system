@@ -39,6 +39,13 @@ Optional: `THROTTLE_TTL` (seconds, default 60), `THROTTLE_LIMIT` (requests per w
 `TRUST_PROXY_HOPS` (reverse proxies in front of the API, default 0; set 1 behind Caddy so `req.ip` is the
 real client, DT-143). Request logs mask the share token (`/portal/<token>`).
 
+### BE-5 environment
+
+`REDIS_URL` (for example `redis://localhost:6379`) is optional for the API, which never connects to Redis
+(DT-169), and required by the worker (`node dist/worker.js`): it refuses to start without it, naming only the
+variable. Add it to your local, uncommitted env file if you run the worker outside compose; the compose
+`worker` service sets `redis://redis:6379` itself.
+
 The project owner provisions the real values in the Clerk and Cloudinary dashboards and keeps them in a
 local, uncommitted env file or the deploy environment. Agents never read, request or print them. Tests, CI
 and `openapi:generate`/`openapi:check` use documented placeholders only and never call Clerk or Cloudinary.
