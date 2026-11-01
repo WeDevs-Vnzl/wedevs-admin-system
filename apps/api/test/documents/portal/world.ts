@@ -20,7 +20,7 @@ import { ResolveShareToken } from '../../../src/modules/documents/application/us
 import { UnlockSharedDocument } from '../../../src/modules/documents/application/use-cases/portal/unlock-shared-document.use-case';
 import { NodeShareSecrets } from '../../../src/modules/documents/infrastructure/node-share-secrets';
 import { UNLOCK_COOKIE_MAX_AGE_SECONDS } from '../../../src/modules/documents/domain/share-link';
-import type { DocumentFormat } from '../../../src/shared/domain/enums';
+import type { DocumentFormat, FileStatus } from '../../../src/shared/domain/enums';
 import { FakeNoteTargets } from '../../commercial/notes/fakes/fake-note-targets';
 import { FixedClock } from '../../support/fakes/fixed-clock';
 import { InMemoryRowLocks } from '../../support/fakes/in-memory-row-locks';
@@ -45,7 +45,7 @@ export interface SeedDocument {
   readonly versionNumber?: number;
   readonly content?: string;
   readonly url?: string;
-  readonly file?: { id: string; name: string; mime: string; size: number; status?: string };
+  readonly file?: { id: string; name: string; mime: string; size: number; status?: FileStatus };
   /** The clear key; the hash is made by the world's real secrets. */
   readonly key?: string;
   readonly createdAt?: Date;

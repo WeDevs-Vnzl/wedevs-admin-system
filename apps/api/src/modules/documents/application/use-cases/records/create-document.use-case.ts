@@ -71,7 +71,7 @@ export class CreateDocument {
         assertDocumentTypeRules(type, { signedAt: input.signedAt, expiresAt: input.expiresAt });
         assertDocumentDates({ effectiveDate: input.effectiveDate, expiresAt: input.expiresAt });
         if (input.links.length > MAX_DOCUMENT_LINKS) {
-          throw new ValidationFailedError({ fieldErrors: { links: ['validation.invalidOption'] } });
+          throw new ValidationFailedError({ fieldErrors: { links: ['validation.tooLong'] } });
         }
         assertDistinctTargets(input.links);
         const refs = await this.support.requireLinkTargets(

@@ -3226,7 +3226,8 @@ export interface components {
                     mimeType: string;
                     originalName: string;
                     sizeBytes: number;
-                    status: string;
+                    /** @enum {string} */
+                    status: "PENDING" | "READY";
                     uploadedById: string;
                 } | null;
                 /** @enum {string} */
@@ -3397,7 +3398,8 @@ export interface components {
                 mimeType: string;
                 originalName: string;
                 sizeBytes: number;
-                status: string;
+                /** @enum {string} */
+                status: "PENDING" | "READY";
                 uploadedById: string;
             } | null;
             /** @enum {string} */
@@ -3424,7 +3426,8 @@ export interface components {
                 mimeType: string;
                 originalName: string;
                 sizeBytes: number;
-                status: string;
+                /** @enum {string} */
+                status: "PENDING" | "READY";
                 uploadedById: string;
             } | null;
             /** @enum {string} */

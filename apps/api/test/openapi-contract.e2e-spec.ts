@@ -423,6 +423,24 @@ describe('BE-4 contract: documents, share links and the portal', () => {
     }
   });
 
+  it('documents the status of every file meta as the PENDING | READY enum', () => {
+    const files: JsonSchema[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (typeof node !== 'object' || node === null) return;
+      const props = (node as JsonSchema).properties as Record<string, JsonSchema> | undefined;
+      if (props?.originalName && props.sizeBytes && props.status) files.push(props.status);
+      Object.values(node).forEach(walk);
+    };
+    for (const name of ['DocumentDetailDto', 'DocumentVersionDetailDto', 'DocumentVersionRowDto']) {
+      walk(full.components.schemas[name]);
+    }
+    expect(files).toHaveLength(3);
+    expect(files.filter((status) => JSON.stringify(status.enum) !== '["PENDING","READY"]')).toEqual(
+      [],
+    );
+  });
+
   it('exposes no access key, hash or secret in a response except accessKey and generatedKeys of the share-link mutations', () => {
     expect(secretFindings(full)).toEqual([]);
   });

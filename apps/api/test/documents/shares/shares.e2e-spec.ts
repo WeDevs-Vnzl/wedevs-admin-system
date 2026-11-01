@@ -565,9 +565,19 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
         });
         const logged = (await activity(share.id)).length;
 
-        const body = editOf(share, { title: 'Cambiado' }) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (path.startsWith('documents.')) delete body.documents[0][path.split('.')[2] ?? ''];
-        else delete body[path];
+        const full = editOf(share, { title: 'Cambiado' });
+        const omit = (record: Body, key: string): Body => {
+          const { [key]: _omitted, ...rest } = record;
+          return rest;
+        };
+        const body = path.startsWith('documents.')
+          ? {
+              ...full,
+              documents: (full.documents as Body[]).map((doc, index) =>
+                index === 0 ? omit(doc, path.split('.')[2] ?? '') : doc,
+              ),
+            }
+          : omit(full, path);
         const res = await patch(`${BASE}/${share.id}`, 'owner', body).expect(422);
 
         expect(res.body.error.code).toBe('VALIDATION');

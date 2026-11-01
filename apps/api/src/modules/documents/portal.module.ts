@@ -143,9 +143,11 @@ export class PortalModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // By path, not by controller: an unmatched `/api/v1/portal/...` subpath (404) carries the C22 headers too
     // (string paths take no controller version, so it is named here).
-    consumer.apply(PortalHeadersMiddleware).forRoutes(
-      { path: 'portal', method: RequestMethod.ALL, version: '1' },
-      { path: 'portal/{*path}', method: RequestMethod.ALL, version: '1' },
-    );
+    consumer
+      .apply(PortalHeadersMiddleware)
+      .forRoutes(
+        { path: 'portal', method: RequestMethod.ALL, version: '1' },
+        { path: 'portal/{*path}', method: RequestMethod.ALL, version: '1' },
+      );
   }
 }

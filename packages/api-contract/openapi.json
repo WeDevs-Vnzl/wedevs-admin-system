@@ -4397,6 +4397,10 @@
                             "type": "integer"
                           },
                           "status": {
+                            "enum": [
+                              "PENDING",
+                              "READY"
+                            ],
                             "type": "string"
                           },
                           "uploadedById": {
@@ -5235,6 +5239,10 @@
                     "type": "integer"
                   },
                   "status": {
+                    "enum": [
+                      "PENDING",
+                      "READY"
+                    ],
                     "type": "string"
                   },
                   "uploadedById": {
@@ -5360,6 +5368,10 @@
                     "type": "integer"
                   },
                   "status": {
+                    "enum": [
+                      "PENDING",
+                      "READY"
+                    ],
                     "type": "string"
                   },
                   "uploadedById": {

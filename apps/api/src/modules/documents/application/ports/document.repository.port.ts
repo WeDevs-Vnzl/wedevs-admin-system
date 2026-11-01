@@ -1,5 +1,5 @@
 import type { DateOnly } from '../../../../shared/domain/business-date';
-import type { DocumentFormat, DocumentStatus } from '../../../../shared/domain/enums';
+import type { DocumentFormat, DocumentStatus, FileStatus } from '../../../../shared/domain/enums';
 import type { ListQuery } from '../../../../shared/domain/list-query';
 import type { Paginated } from '../../../../shared/domain/pagination';
 
@@ -106,7 +106,7 @@ export interface DocumentFileMeta {
   readonly originalName: string;
   readonly mimeType: string;
   readonly sizeBytes: number;
-  readonly status: string;
+  readonly status: FileStatus;
   readonly uploadedById: string;
   readonly createdAt: Date;
 }
@@ -169,7 +169,10 @@ export interface DocumentRepository {
   insert(document: NewDocument): Promise<void>;
   findById(id: string): Promise<DocumentRecord | null>;
   list(criteria: DocumentListCriteria): Promise<Paginated<DocumentRecord>>;
-  /** Live documents per category id under every facet but `categoryIds`, the search and the page window. */
+  /**
+   * Documents per category id for the category chips: the same criteria as `list` (archive scope, facets and
+   * search) except `categoryIds`, and counted over the whole result, never one page window.
+   */
   countByCategory(criteria: DocumentListCriteria): Promise<Record<string, number>>;
   relationsOf(ids: readonly string[], today: DateOnly): Promise<Map<string, DocumentRelations>>;
   /** `code`, `title` and whether it is archived, for note targets and tag labels. Unknown ids are absent. */

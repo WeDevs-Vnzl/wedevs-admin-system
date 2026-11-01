@@ -1,6 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { DOCUMENT_FORMAT_VALUES, DOCUMENT_STATUS_VALUES } from '../../../../../shared/domain/enums';
+import {
+  DOCUMENT_FORMAT_VALUES,
+  DOCUMENT_STATUS_VALUES,
+  FILE_STATUS_VALUES,
+} from '../../../../../shared/domain/enums';
 import {
   dateOnlySchema,
   idSchema,
@@ -8,6 +12,7 @@ import {
 } from '../../../../../shared/interface/common.schemas';
 import { entityRefResponseSchema } from '../../../../../shared/interface/error-envelope';
 import { createListQueryDto } from '../../../../../shared/interface/list-query.dto';
+import { MAX_DOCUMENT_LINKS } from '../../../application/document-support';
 import {
   DOCUMENT_LINK_ENTITY_TYPE_VALUES,
   DOCUMENT_SORT_FIELDS,
@@ -65,7 +70,7 @@ const metadataShape = {
 
 export const createDocumentDtoSchema = z.object({
   ...metadataShape,
-  links: z.array(documentLinkTargetSchema).max(30).default([]),
+  links: z.array(documentLinkTargetSchema).max(MAX_DOCUMENT_LINKS).default([]),
   initialVersion: initialVersionSchema.optional(),
 });
 export class CreateDocumentDto extends createZodDto(createDocumentDtoSchema) {}
@@ -145,7 +150,7 @@ const fileSchema = z.object({
   originalName: z.string(),
   mimeType: z.string(),
   sizeBytes: z.number().int(),
-  status: z.string(),
+  status: z.enum(FILE_STATUS_VALUES),
   uploadedById: z.string(),
   createdAt: timestampSchema,
 });

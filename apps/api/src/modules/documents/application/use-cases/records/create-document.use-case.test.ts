@@ -305,7 +305,11 @@ describe('CreateDocument', () => {
       }));
       await expect(
         world.createDocument.execute(owner, newDocument({ links: many })),
-      ).rejects.toMatchObject({ code: 'VALIDATION' });
+      ).rejects.toMatchObject({
+        code: 'VALIDATION',
+        fieldErrors: { links: ['validation.tooLong'] },
+      });
+      expect(world.documents.rows).toHaveLength(0);
     });
   });
 

@@ -17,7 +17,11 @@ export class PortalThrottlerGuard extends ThrottlerGuard {
   }
 
   /** One bucket per visitor: the default key adds the class and handler, which would give each route its own. */
-  protected override generateKey(_context: ExecutionContext, tracker: string, name: string): string {
+  protected override generateKey(
+    _context: ExecutionContext,
+    tracker: string,
+    name: string,
+  ): string {
     return `portal-${name}-${tracker}`;
   }
 }

@@ -140,7 +140,9 @@ describe('updateShareLink (A5, A6)', () => {
     const { world, created } = await keyedLink();
     await world.updateShareLink.execute(
       owner,
-      editOf(created.share, { documents: [{ documentId: 'doc_b', versionId: null, requiresAccessKey: false }] }),
+      editOf(created.share, {
+        documents: [{ documentId: 'doc_b', versionId: null, requiresAccessKey: false }],
+      }),
     );
     expect(must(world.activity.entries.at(-1)).changes).toEqual({
       documents: 'changed',
@@ -212,11 +214,19 @@ describe('updateShareLink (A5, A6)', () => {
           ],
         }),
       );
-      const form = editOf(pinned.share) as Record<string, unknown> & {
-        documents: Record<string, unknown>[];
+      const full = editOf(pinned.share);
+      const omit = (record: Record<string, unknown>, key: string): Record<string, unknown> => {
+        const { [key]: _omitted, ...rest } = record;
+        return rest;
       };
-      if (path.startsWith('documents.')) delete form.documents[0]?.[path.split('.')[2] ?? ''];
-      else delete form[path];
+      const form = path.startsWith('documents.')
+        ? {
+            ...full,
+            documents: full.documents.map((doc, index) =>
+              index === 0 ? omit(doc, path.split('.')[2] ?? '') : doc,
+            ),
+          }
+        : omit(full, path);
 
       const writes = world.shares.writeCount;
       const entries = world.activity.entries.length;
@@ -256,7 +266,9 @@ describe('updateShareLink (A5, A6)', () => {
     await expect(
       world.updateShareLink.execute(
         owner,
-        editOf(created.share, { documents: [{ documentId: 'doc_missing', versionId: null, requiresAccessKey: false }] }),
+        editOf(created.share, {
+          documents: [{ documentId: 'doc_missing', versionId: null, requiresAccessKey: false }],
+        }),
       ),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
     expect(world.shares.writeCount).toBe(writes);
