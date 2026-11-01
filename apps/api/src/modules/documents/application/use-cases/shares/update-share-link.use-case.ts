@@ -12,13 +12,13 @@ import {
   writesOf,
   type PreparedKey,
   type ShareLinkFields,
-  type ShareLinkFieldsInput,
+  type ShareLinkEditInput,
   type ShareLinkMutationResult,
   type ShareSupport,
   type ShareViews,
 } from './share-support';
 
-export interface UpdateShareLinkInput extends ShareLinkFieldsInput {
+export interface UpdateShareLinkInput extends ShareLinkEditInput {
   readonly id: string;
 }
 
@@ -56,7 +56,7 @@ export class UpdateShareLink {
 
   async execute(actor: CurrentUser, input: UpdateShareLinkInput): Promise<ShareLinkMutationResult> {
     assertCan(this.authorization, actor, 'update', 'share');
-    const fields = this.support.normalize(input);
+    const fields = this.support.normalize(input, 'edit');
 
     // Plan outside the unit of work: which keys to make. The locked recheck below is authoritative.
     const link = await this.support.requireLink(input.id);

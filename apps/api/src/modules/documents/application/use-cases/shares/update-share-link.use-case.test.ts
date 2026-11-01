@@ -140,7 +140,7 @@ describe('updateShareLink (A5, A6)', () => {
     const { world, created } = await keyedLink();
     await world.updateShareLink.execute(
       owner,
-      editOf(created.share, { documents: [{ documentId: 'doc_b', versionId: null }] }),
+      editOf(created.share, { documents: [{ documentId: 'doc_b', versionId: null, requiresAccessKey: false }] }),
     );
     expect(must(world.activity.entries.at(-1)).changes).toEqual({
       documents: 'changed',
@@ -192,6 +192,49 @@ describe('updateShareLink (A5, A6)', () => {
     ).rejects.toMatchObject({ code: 'VALIDATION', fieldErrors: { expiresAt: expect.any(Array) } });
   });
 
+  it.each([
+    ['allowDownload', 'allowDownload'],
+    ['expiresAt', 'expiresAt'],
+    ['a document versionId', 'documents.0.versionId'],
+    ['a document requiresAccessKey', 'documents.0.requiresAccessKey'],
+  ] as const)(
+    'refuses an edit that omits %s: VALIDATION, and the link keeps its keys, pin and expiry',
+    async (_label, path) => {
+      const { world, created } = await keyedLink();
+      const pinned = await world.updateShareLink.execute(
+        owner,
+        editOf(created.share, {
+          expiresAt: '2026-12-31',
+          allowDownload: false,
+          documents: [
+            { documentId: 'doc_a', versionId: 'doc_a_v1', requiresAccessKey: true },
+            { documentId: 'doc_b', versionId: null, requiresAccessKey: false },
+          ],
+        }),
+      );
+      const form = editOf(pinned.share) as Record<string, unknown> & {
+        documents: Record<string, unknown>[];
+      };
+      if (path.startsWith('documents.')) delete form.documents[0]?.[path.split('.')[2] ?? ''];
+      else delete form[path];
+
+      const writes = world.shares.writeCount;
+      const entries = world.activity.entries.length;
+      await expect(world.updateShareLink.execute(owner, form as never)).rejects.toMatchObject({
+        code: 'VALIDATION',
+        fieldErrors: { [path]: ['validation.required'] },
+      });
+      expect(world.shares.writeCount).toBe(writes);
+      expect(world.activity.entries).toHaveLength(entries);
+      const after = await world.getShareLink.execute(owner, { id: created.share.id });
+      expect(after).toMatchObject({ allowDownload: false, expiresAt: '2026-12-31' });
+      expect(after.documents.map((d) => [d.versionId, d.requiresAccessKey])).toEqual([
+        ['doc_a_v1', true],
+        [null, false],
+      ]);
+    },
+  );
+
   it('is INTEGRITY_LOCK on a revoked link and writes nothing', async () => {
     const { world, created } = await keyedLink();
     await world.revokeShareLink.execute(owner, { id: created.share.id });
@@ -213,7 +256,7 @@ describe('updateShareLink (A5, A6)', () => {
     await expect(
       world.updateShareLink.execute(
         owner,
-        editOf(created.share, { documents: [{ documentId: 'doc_missing' }] }),
+        editOf(created.share, { documents: [{ documentId: 'doc_missing', versionId: null, requiresAccessKey: false }] }),
       ),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
     expect(world.shares.writeCount).toBe(writes);

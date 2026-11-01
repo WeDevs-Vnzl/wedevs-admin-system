@@ -12224,6 +12224,100 @@
         ],
         "type": "object"
       },
+      "ShareLinkEditDto": {
+        "properties": {
+          "allowDownload": {
+            "type": "boolean"
+          },
+          "clientId": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "documents": {
+            "items": {
+              "properties": {
+                "documentId": {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9_-]+$",
+                  "type": "string"
+                },
+                "requiresAccessKey": {
+                  "type": "boolean"
+                },
+                "versionId": {
+                  "anyOf": [
+                    {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z0-9_-]+$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "documentId",
+                "versionId",
+                "requiresAccessKey"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locale": {
+            "default": "es",
+            "enum": [
+              "es",
+              "en"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "documents",
+          "allowDownload",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
       "ShareLinkFormDto": {
         "properties": {
           "allowDownload": {
@@ -32349,7 +32443,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ShareLinkFormDto"
+                "$ref": "#/components/schemas/ShareLinkEditDto"
               }
             }
           },

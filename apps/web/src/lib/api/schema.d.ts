@@ -4687,6 +4687,23 @@ export interface components {
             token: string;
             url: string;
         };
+        ShareLinkEditDto: {
+            allowDownload: boolean;
+            clientId?: string | null;
+            documents: {
+                documentId: string;
+                requiresAccessKey: boolean;
+                versionId: string | null;
+            }[];
+            expiresAt: string | null;
+            /**
+             * @default es
+             * @enum {string}
+             */
+            locale: "es" | "en";
+            message?: string | null;
+            title: string;
+        };
         ShareLinkFormDto: {
             /** @default true */
             allowDownload: boolean;
@@ -15610,7 +15627,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ShareLinkFormDto"];
+                "application/json": components["schemas"]["ShareLinkEditDto"];
             };
         };
         responses: {

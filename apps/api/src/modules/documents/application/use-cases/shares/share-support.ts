@@ -58,6 +58,20 @@ export interface ShareLinkFieldsInput {
   readonly expiresAt?: DateOnly | null;
 }
 
+/**
+ * The edit form (A5): the same fields, but an answer that would silently reset the link when left out is
+ * mandatory. `expiresAt` and `versionId` take `null` as an answer ("never expires", "follow the latest").
+ */
+export interface ShareLinkEditInput extends ShareLinkFieldsInput {
+  readonly allowDownload: boolean;
+  readonly expiresAt: DateOnly | null;
+  readonly documents: readonly {
+    readonly documentId: string;
+    readonly versionId: string | null;
+    readonly requiresAccessKey: boolean;
+  }[];
+}
+
 /** The form after the shape checks: every default applied, text trimmed. */
 export interface ShareLinkFields {
   readonly title: string;
@@ -227,9 +241,12 @@ export class ShareSupport {
 
   /**
    * The shape checks of the form, all in the use case so a caller that skips the DTO meets the same rules
-   * (lesson B2): lengths, a distinct non-empty document list, the locale and the expiry date.
+   * (lesson B2): lengths, a distinct non-empty document list, the locale and the expiry date. With
+   * `mode: 'edit'` the answers an omission would silently turn into a default (`allowDownload`, `expiresAt`,
+   * each document's `versionId` and `requiresAccessKey`) are required: a partial PATCH is `VALIDATION`, never
+   * a link that lost its key, its pin or its expiry.
    */
-  normalize(input: ShareLinkFieldsInput): ShareLinkFields {
+  normalize(input: ShareLinkFieldsInput, mode: 'create' | 'edit' = 'create'): ShareLinkFields {
     const errors: FieldErrors = {};
     const fail = (path: string, key: string): void => {
       errors[path] = [key];
@@ -258,7 +275,17 @@ export class ShareSupport {
     }
     documents.forEach((item, index) => {
       if (!item.documentId) fail(`documents.${index}.documentId`, REQUIRED_KEY);
+      if (mode === 'edit') {
+        if (item.versionId === undefined) fail(`documents.${index}.versionId`, REQUIRED_KEY);
+        if (item.requiresAccessKey === undefined) {
+          fail(`documents.${index}.requiresAccessKey`, REQUIRED_KEY);
+        }
+      }
     });
+    if (mode === 'edit') {
+      if (input.allowDownload === undefined) fail('allowDownload', REQUIRED_KEY);
+      if (input.expiresAt === undefined) fail('expiresAt', REQUIRED_KEY);
+    }
 
     if (Object.keys(errors).length > 0) throw new ValidationFailedError({ fieldErrors: errors });
     return {

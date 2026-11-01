@@ -57,6 +57,29 @@ export const shareLinkFormSchema = z.object({
 });
 export class ShareLinkFormDto extends createZodDto(shareLinkFormSchema) {}
 
+/**
+ * `PATCH /share-links/{id}`: the whole form, with no default. A field whose omission would reset the link
+ * (`allowDownload`, `expiresAt`, a document's `versionId` and `requiresAccessKey`) must be answered, `null`
+ * included where it means something: a partial edit is `VALIDATION`, never a silent loss of a key, a pin or
+ * the expiry. `locale` still defaults and `message` and `clientId` still clear when absent (the form always
+ * submits them).
+ */
+export const shareLinkEditSchema = shareLinkFormSchema.extend({
+  documents: z
+    .array(
+      z.object({
+        documentId: idSchema,
+        versionId: idSchema.nullable(),
+        requiresAccessKey: z.boolean(),
+      }),
+    )
+    .min(1)
+    .max(50),
+  allowDownload: z.boolean(),
+  expiresAt: dateOnlySchema.nullable(),
+});
+export class ShareLinkEditDto extends createZodDto(shareLinkEditSchema) {}
+
 export class ShareLinkIdParamsDto extends createZodDto(z.object({ id: idSchema })) {}
 export class ShareLinkDocumentParamsDto extends createZodDto(
   z.object({ id: idSchema, documentId: idSchema }),
