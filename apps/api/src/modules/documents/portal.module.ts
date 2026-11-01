@@ -1,4 +1,4 @@
-import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
+import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_CONFIG } from '../../config/config.module';
 import type { AppConfig } from '../../config/env.schema';
@@ -141,6 +141,13 @@ import { ShareLinksModule } from './share-links.module';
 })
 export class PortalModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(PortalHeadersMiddleware).forRoutes(PortalController);
+    // By path, not by controller: an unmatched `/api/v1/portal/...` subpath (404) carries the C22 headers too
+    // (string paths take no controller version, so it is named here).
+    consumer
+      .apply(PortalHeadersMiddleware)
+      .forRoutes(
+        { path: 'portal', method: RequestMethod.ALL, version: '1' },
+        { path: 'portal/{*path}', method: RequestMethod.ALL, version: '1' },
+      );
   }
 }

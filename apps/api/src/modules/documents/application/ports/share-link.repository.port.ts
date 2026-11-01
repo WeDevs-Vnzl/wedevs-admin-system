@@ -66,7 +66,7 @@ export interface ShareLinkPatch {
 
 /**
  * What a write does with the key of a document: keep the stored hash, clear it, or store a new one. The hash
- * is written here and never read back through this API (it stays inside the adapter).
+ * is written here; the only read back is `accessKeyHashOf`, for the unlock check.
  */
 export type ShareKeyChange =
   | { readonly kind: 'keep' }
@@ -160,7 +160,8 @@ export interface ShareAccessLogEntry {
 /**
  * `ShareLink`, `ShareLinkDocument` and the read side of `ShareAccessLog`. Every write is valid only inside a
  * unit of work; the use case locks the link first (`RowLocksPort`, class `ShareLink`). By-id reads return
- * revoked links too and the use cases decide. Key hashes are written here and never returned.
+ * revoked links too and the use cases decide. Key hashes are written here and read back only by
+ * `accessKeyHashOf` (the unlock check); no other method returns one.
  *
  * The portal package (4.1) resolves a token with `findByToken` and appends access-log rows through its own
  * port; the stored counters it increments are read back by this API.

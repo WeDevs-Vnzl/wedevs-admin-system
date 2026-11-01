@@ -38,7 +38,13 @@ const DOCS = [
   {
     id: 'doc_pending',
     format: 'ARCHIVO' as const,
-    file: { id: 'fil_p', name: 'p.pdf', mime: 'application/pdf', size: 1, status: 'PENDING' },
+    file: {
+      id: 'fil_p',
+      name: 'p.pdf',
+      mime: 'application/pdf',
+      size: 1,
+      status: 'PENDING' as const,
+    },
   },
 ];
 

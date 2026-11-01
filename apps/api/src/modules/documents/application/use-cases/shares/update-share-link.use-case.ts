@@ -12,13 +12,13 @@ import {
   writesOf,
   type PreparedKey,
   type ShareLinkFields,
-  type ShareLinkFieldsInput,
+  type ShareLinkEditInput,
   type ShareLinkMutationResult,
   type ShareSupport,
   type ShareViews,
 } from './share-support';
 
-export interface UpdateShareLinkInput extends ShareLinkFieldsInput {
+export interface UpdateShareLinkInput extends ShareLinkEditInput {
   readonly id: string;
 }
 
@@ -56,7 +56,7 @@ export class UpdateShareLink {
 
   async execute(actor: CurrentUser, input: UpdateShareLinkInput): Promise<ShareLinkMutationResult> {
     assertCan(this.authorization, actor, 'update', 'share');
-    const fields = this.support.normalize(input);
+    const fields = this.support.normalize(input, 'edit');
 
     // Plan outside the unit of work: which keys to make. The locked recheck below is authoritative.
     const link = await this.support.requireLink(input.id);
@@ -103,6 +103,10 @@ export class UpdateShareLink {
           return { kind: 'clear' };
         });
 
+        // Write order: the document rows, then the link row, then the activity entry. Nothing depends on it for
+        // correctness: the `ShareLink` row lock taken above serializes every edit and revoke of this link, and
+        // the unit of work commits all of it or none. The concurrency test pauses right after this first write
+        // to show a second edit cannot interleave its own document list.
         await this.support.shares.replaceDocuments(current.id, writes);
         await this.support.shares.update(current.id, {
           title: fields.title,

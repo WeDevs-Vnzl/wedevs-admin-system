@@ -97,7 +97,7 @@ export class PortalController {
   })
   @ApiBody({ type: RecordViewDto })
   @ApiCreatedResponse({ type: RecordViewResultDto })
-  @ApiErrorResponses('NOT_FOUND', 'VALIDATION', 'RATE_LIMITED', 'INTERNAL')
+  @ApiErrorResponses('NOT_FOUND', 'FORBIDDEN', 'VALIDATION', 'RATE_LIMITED', 'INTERNAL')
   recordView(
     @Param() params: PortalTokenParamsDto,
     @Body() body: RecordViewDto,
@@ -124,6 +124,7 @@ export class PortalController {
     'VALIDATION',
     'ACCESS_KEY_INVALID',
     'ACCESS_KEY_LOCKED',
+    'CONFLICT',
     'RATE_LIMITED',
     'INTERNAL',
   )

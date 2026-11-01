@@ -347,6 +347,31 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
       ).toMatchObject({ viewCount: 1 });
     });
 
+    it('answers FORBIDDEN to a VIEW of a locked document without its cookie: no row, no counter', async () => {
+      const { token, id, key } = await link();
+      const refused = await http()
+        .post(`${PORTAL}/${token}/views`)
+        .send({ documentId: 'doc_cred' })
+        .expect(403);
+      expect(refused.body.error.code).toBe('FORBIDDEN');
+      expectC22(refused);
+      expect(await logs(id)).toEqual([]);
+      const detail = await manage(`/${id}`).expect(200);
+      expect(detail.body.counters).toMatchObject({ viewCount: 0 });
+      expect(detail.body.lastAccessedAt).toBeNull();
+
+      const cookie = pair(cookieOf(await unlock(token, 'doc_cred', key).expect(200)));
+      await http()
+        .post(`${PORTAL}/${token}/views`)
+        .set('Cookie', cookie)
+        .send({ documentId: 'doc_cred' })
+        .expect(201);
+      expect((await logs(id)).map((row) => [row.event, row.documentId])).toEqual([
+        ['UNLOCK', 'doc_cred'],
+        ['VIEW', 'doc_cred'],
+      ]);
+    });
+
     it('does not let a visitor record a DOWNLOAD: the body cannot choose the event', async () => {
       const { token, id } = await link();
       await http().post(`${PORTAL}/${token}/views`).send({ event: 'DOWNLOAD' }).expect(201);
@@ -563,6 +588,48 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
       await get(`${PORTAL}/${token}/documents/doc_cred`, cookie).expect(403);
     });
 
+    it('unlocking B never extends A: A at 0 h, B at 11 h, then A is locked after 12 h and B is open', async () => {
+      const made = await http()
+        .post('/api/v1/share-links')
+        .set('Authorization', `Bearer ${owner}`)
+        .send({
+          title: 'Dos claves',
+          documents: [
+            { documentId: 'doc_cred', requiresAccessKey: true },
+            { documentId: 'doc_prd', requiresAccessKey: true },
+          ],
+        })
+        .expect(201);
+      const token = made.body.share.token as string;
+      const keys = new Map(
+        (made.body.generatedKeys as Body[]).map((k) => [k.documentId as string, k.accessKey]),
+      );
+      const hour = 3_600_000;
+
+      const first = await unlock(token, 'doc_cred', keys.get('doc_cred') as string).expect(200);
+      clock.advance(11 * hour);
+      const second = await unlock(
+        token,
+        'doc_prd',
+        keys.get('doc_prd') as string,
+        pair(cookieOf(first)),
+      ).expect(200);
+      expect(cookieOf(second)).toContain('Max-Age=43200');
+      const cookie = pair(cookieOf(second));
+
+      await get(`${PORTAL}/${token}/documents/doc_cred`, cookie).expect(200);
+      clock.advance(hour); // 12 h after A, 1 h after B
+      await get(`${PORTAL}/${token}/documents/doc_cred`, cookie).expect(200);
+      clock.advance(1);
+      const lockedA = await get(`${PORTAL}/${token}/documents/doc_cred`, cookie).expect(403);
+      expect(lockedA.body.error.code).toBe('FORBIDDEN');
+      await get(`${PORTAL}/${token}/documents/doc_prd`, cookie).expect(200);
+      const page = await get(`${PORTAL}/${token}`, cookie).expect(200);
+      expect(
+        Object.fromEntries(page.body.documents.map((d: Body) => [d.documentId, d.locked])),
+      ).toMatchObject({ doc_cred: true, doc_prd: false });
+    });
+
     it('refuses a forged cookie, the cookie of another link and a cookie value altered by a character', async () => {
       const one = await link();
       const two = await link();
@@ -578,14 +645,15 @@ describe('public portal (e2e): HU-22 CA2-CA7, DT-45, C22, C24', () => {
     });
 
     it('never lets a body or query field mark a document as unlocked', async () => {
-      const { token } = await link();
+      const { token, id } = await link();
       await get(`${PORTAL}/${token}/documents/doc_cred?unlockedDocumentIds=doc_cred`).expect(403);
       await get(`${PORTAL}/${token}/documents/doc_cred`).set('X-Unlocked', 'doc_cred').expect(403);
       await http()
         .post(`${PORTAL}/${token}/views`)
         .send({ documentId: 'doc_cred', unlockedDocumentIds: ['doc_cred'] })
-        .expect(201);
+        .expect(403);
       await get(`${PORTAL}/${token}/documents/doc_cred`).expect(403);
+      expect(await logs(id)).toEqual([]);
     });
 
     it('does not count a key outside 8-128 characters: 422 VALIDATION and no row', async () => {

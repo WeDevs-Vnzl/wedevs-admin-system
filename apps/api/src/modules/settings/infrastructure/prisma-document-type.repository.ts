@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { DocumentTypeRepository } from '../application/ports/document-type.repository.port';
 import type { DocumentType } from '../domain/document-type';
+import { NotFoundError } from '../../../shared/domain/domain-error';
 import type { DocumentFormat } from '../../../shared/domain/enums';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 
@@ -26,6 +27,13 @@ function toType(row: TypeRow): DocumentType {
     defaultFormat: row.defaultFormat as DocumentFormat,
     active: row.active,
   };
+}
+
+/** Prisma `P2025`: the row to update or delete is gone (another transaction deleted it first). */
+function isRecordNotFound(error: unknown): boolean {
+  return (
+    typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2025'
+  );
 }
 
 /**
@@ -61,22 +69,34 @@ export class PrismaDocumentTypeRepository implements DocumentTypeRepository {
     });
   }
 
+  /** `NOT_FOUND` when a concurrent delete removed the row between the use case's read and this write. */
   async update(type: DocumentType): Promise<void> {
-    await this.host.db.documentType.update({
-      where: { id: type.id },
-      data: {
-        categoryId: type.categoryId,
-        name: type.name,
-        nameEn: type.nameEn,
-        requiresSignature: type.requiresSignature,
-        hasExpiration: type.hasExpiration,
-        defaultFormat: type.defaultFormat,
-        active: type.active,
-      },
-    });
+    try {
+      await this.host.db.documentType.update({
+        where: { id: type.id },
+        data: {
+          categoryId: type.categoryId,
+          name: type.name,
+          nameEn: type.nameEn,
+          requiresSignature: type.requiresSignature,
+          hasExpiration: type.hasExpiration,
+          defaultFormat: type.defaultFormat,
+          active: type.active,
+        },
+      });
+    } catch (error) {
+      if (isRecordNotFound(error)) throw new NotFoundError();
+      throw error;
+    }
   }
 
+  /** `NOT_FOUND` when a concurrent delete already removed the row (two deletes of one type). */
   async delete(id: string): Promise<void> {
-    await this.host.db.documentType.delete({ where: { id } });
+    try {
+      await this.host.db.documentType.delete({ where: { id } });
+    } catch (error) {
+      if (isRecordNotFound(error)) throw new NotFoundError();
+      throw error;
+    }
   }
 }

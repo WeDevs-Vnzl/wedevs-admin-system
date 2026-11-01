@@ -172,6 +172,29 @@ describe('UpdateDocumentMeta', () => {
     expect(world.documents.rows[0]?.typeId).toBe('dtyp_nda');
   });
 
+  it('a signed VENCIDO document cannot lose its signature date either (DT-138)', async () => {
+    const world = seededWorld();
+    const doc = await created(world);
+    for (const status of ['EN_REVISION', 'APROBADO', 'ENVIADO'] as const) {
+      await world.setStatus.execute(owner, { id: doc.id, status });
+    }
+    const signed = await world.setStatus.execute(owner, {
+      id: doc.id,
+      status: 'FIRMADO',
+      signedAt: '2026-10-08',
+    });
+    const row = world.documents.rows[0];
+    if (!row) throw new Error('no row');
+    world.documents.seed({ ...row, status: 'VENCIDO' });
+    await expect(
+      world.updateMeta.execute(owner, form(signed, { signedAt: null })),
+    ).rejects.toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: { signedAt: ['validation.required'] },
+    });
+    expect(world.documents.rows[0]?.signedAt).toBe('2026-10-08');
+  });
+
   it('refuses a Viewer, an unknown document and an archived one', async () => {
     const world = seededWorld();
     const doc = await created(world);

@@ -34,8 +34,9 @@ import {
  *  - N parallel wrong keys never exceed the lockout limit, and a right key during the lockout is refused;
  *  - N simultaneous views lose no count (the stored counters are atomic increments);
  *  - an unlock never writes a row after the link was revoked, and a resolve never waits for the revoke.
- * Each rule has a deterministic gated test, and a control that removes the lock and the isolation (the unlocked
- * behavior) to prove the test can fail.
+ * The lockout and revoke rules each have a deterministic gated test and a control that removes the lock and the
+ * isolation (the unlocked behavior) to prove the test can fail. The views rule has no lock to remove: it is a
+ * stress test of simultaneous requests against the atomic increment, with no gated control.
  */
 const admin = createTestPrisma();
 const service = new PrismaService({ DATABASE_URL: process.env.DATABASE_URL as string });
@@ -342,12 +343,23 @@ describe('recordShareView: N simultaneous views lose no count (contract choice 4
 
   it('views of the page and of one document racing all count', async () => {
     const world = buildPortalWorld();
+    // doc_a is key-protected, so its views carry the unlock cookie (a locked one is FORBIDDEN, uncounted).
+    const now = new Date();
+    const unlocked = world.secrets.signUnlock({
+      token: TOKEN,
+      grants: [{ documentId: 'doc_a', expiresAt: new Date(now.getTime() + 60_000) }],
+      now,
+    });
     await settled([
       ...Array.from({ length: 10 }, () =>
         world.recordView.execute({ token: TOKEN, visitor: visitor() }),
       ),
       ...Array.from({ length: 10 }, () =>
-        world.recordView.execute({ token: TOKEN, documentId: 'doc_a', visitor: visitor() }),
+        world.recordView.execute({
+          token: TOKEN,
+          documentId: 'doc_a',
+          visitor: { ...visitor(), unlockCookie: unlocked },
+        }),
       ),
     ]);
     const link = await admin.shareLink.findUniqueOrThrow({ where: { id: 'shr_a' } });

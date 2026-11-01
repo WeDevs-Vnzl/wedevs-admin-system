@@ -31,6 +31,7 @@ import {
   ShareAccessLogResponseDto,
   ShareLinkDetailDto,
   ShareLinkDocumentParamsDto,
+  ShareLinkEditDto,
   ShareLinkFormDto,
   ShareLinkIdParamsDto,
   ShareLinkListResponseDto,
@@ -189,7 +190,7 @@ export class ShareLinksController {
     operationId: 'updateShareLink',
     summary: 'Edit the whole form of a live link; new keys are returned once',
   })
-  @ApiBody({ type: ShareLinkFormDto })
+  @ApiBody({ type: ShareLinkEditDto })
   @ApiOkResponse({ type: ShareLinkMutationResultDto })
   @ApiErrorResponses(
     'UNAUTHENTICATED',
@@ -203,7 +204,7 @@ export class ShareLinksController {
   async update(
     @CurrentUser() user: CurrentUserModel,
     @Param() params: ShareLinkIdParamsDto,
-    @Body() body: ShareLinkFormDto,
+    @Body() body: ShareLinkEditDto,
   ): Promise<ShareLinkMutationResultDto> {
     return mutationResponse(await this.updateShareLink.execute(user, { ...body, id: params.id }));
   }

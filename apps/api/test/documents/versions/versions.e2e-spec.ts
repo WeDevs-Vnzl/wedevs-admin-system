@@ -138,6 +138,17 @@ describe('document versions (e2e): HU-18 CA1-CA3, HU-19 CA4, DT-136, DT-138, A3'
   });
 
   describe('HU-18 CA1-CA3: markdown draft, publish, history and restore', () => {
+    it('stamps updatedById with the author of a new version, not the creator of the document', async () => {
+      const doc = await newDoc('member');
+      await post(`${BASE}/${doc.id}/versions`, 'owner', {
+        format: 'ENLACE',
+        url: 'https://x.test/a',
+      }).expect(201);
+      const row = await prisma.document.findUniqueOrThrow({ where: { id: doc.id } });
+      expect(row.createdById).toBe(users.member?.userId);
+      expect(row.updatedById).toBe(users.owner?.userId);
+    });
+
     it('saves the draft explicitly without creating a version, then publishes it as version 1', async () => {
       const doc = await newDoc('member');
 
@@ -290,6 +301,23 @@ describe('document versions (e2e): HU-18 CA1-CA3, HU-19 CA4, DT-136, DT-138, A3'
         expect(await history(doc.id)).toHaveLength(1);
       },
     );
+
+    it('a PATCH cannot clear the signature date of a signed VENCIDO document: the lock holds (DT-138)', async () => {
+      const doc = await lockedPrd('VENCIDO', '2026-10-08');
+      const res = await http()
+        .patch(`${BASE}/${doc.id}`)
+        .set('Authorization', as('owner'))
+        .send({ title: 'Documento', typeId: PRD, alertDaysBefore: 30 })
+        .expect(422);
+      expect(res.body.error.fieldErrors).toEqual({ signedAt: ['validation.required'] });
+      expect(await prisma.document.findUniqueOrThrow({ where: { id: doc.id } })).toMatchObject({
+        status: 'VENCIDO',
+        signedAt: new Date('2026-10-08'),
+      });
+      const refused = await publish(doc.id, 'owner', '# v2').expect(409);
+      expect(refused.body.error.code).toBe('INTEGRITY_LOCK');
+      expect(await history(doc.id)).toHaveLength(1);
+    });
 
     it('a VENCIDO document without a signature date is not locked', async () => {
       const doc = await lockedPrd('VENCIDO', null);

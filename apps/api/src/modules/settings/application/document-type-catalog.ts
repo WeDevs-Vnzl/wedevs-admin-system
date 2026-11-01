@@ -183,6 +183,10 @@ export class DocumentTypeCatalog {
     }
   }
 
+  /**
+   * A type with its `documentCount`. Inside a unit of work the usage adapter locks the type row to count (see
+   * `PrismaDocumentTypeUsage`), which the type writes accept; a list reads it outside one, without a lock.
+   */
   async typeView(type: DocumentType): Promise<DocumentTypeView> {
     return {
       id: type.id,

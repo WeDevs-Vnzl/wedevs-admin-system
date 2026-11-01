@@ -544,9 +544,63 @@ describe('share links (e2e): HU-22 CA1, CA6, DT-45, DT-137', () => {
       ]);
     });
 
+    it.each([
+      ['requiresAccessKey', 'documents.0.requiresAccessKey'],
+      ['expiresAt', 'expiresAt'],
+      ['allowDownload', 'allowDownload'],
+      ['versionId', 'documents.0.versionId'],
+    ] as const)(
+      'refuses a PATCH that omits %s with 422 and changes nothing (no fail-open on keys, expiry, pin)',
+      async (_name, path) => {
+        const { share } = (
+          await create('owner', {
+            expiresAt: '2026-12-31',
+            allowDownload: false,
+            documents: [{ documentId: 'doc_a', requiresAccessKey: true }],
+          }).expect(201)
+        ).body as { share: Body };
+        const before = await prisma.shareLink.findUniqueOrThrow({
+          where: { id: share.id },
+          include: { documents: true },
+        });
+        const logged = (await activity(share.id)).length;
+
+        const full = editOf(share, { title: 'Cambiado' });
+        const omit = (record: Body, key: string): Body => {
+          const { [key]: _omitted, ...rest } = record;
+          return rest;
+        };
+        const body = path.startsWith('documents.')
+          ? {
+              ...full,
+              documents: (full.documents as Body[]).map((doc, index) =>
+                index === 0 ? omit(doc, path.split('.')[2] ?? '') : doc,
+              ),
+            }
+          : omit(full, path);
+        const res = await patch(`${BASE}/${share.id}`, 'owner', body).expect(422);
+
+        expect(res.body.error.code).toBe('VALIDATION');
+        expect(Object.keys(res.body.error.fieldErrors)).toContain(path);
+        const after = await prisma.shareLink.findUniqueOrThrow({
+          where: { id: share.id },
+          include: { documents: true },
+        });
+        expect(after).toEqual(before);
+        expect(after.title).toBe('Propuesta Kairos');
+        expect(after.documents[0]?.accessKeyHash).not.toBeNull();
+        expect(await activity(share.id)).toHaveLength(logged);
+      },
+    );
+
     it('answers 404 for an unknown link and 422 for a malformed body', async () => {
       await get(`${BASE}/missing`, 'owner').expect(404);
-      await patch(`${BASE}/missing`, 'owner', form()).expect(404);
+      await patch(`${BASE}/missing`, 'owner', {
+        ...form(),
+        allowDownload: true,
+        expiresAt: null,
+        documents: [{ documentId: 'doc_a', versionId: null, requiresAccessKey: false }],
+      }).expect(404);
       await post(`${BASE}/missing/revoke`, 'owner').expect(404);
       await get(`${BASE}/missing/access-log`, 'owner').expect(404);
       await post(BASE, 'owner', { title: 'x' }).expect(422);

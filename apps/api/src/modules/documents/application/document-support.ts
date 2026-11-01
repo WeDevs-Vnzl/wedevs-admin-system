@@ -40,7 +40,10 @@ import {
 } from './ports/document.repository.port';
 
 const INVALID_OPTION_KEY = 'validation.invalidOption';
-/** A document hangs from at most this many records (FE `uniqueTargets(30)`). */
+/**
+ * A document hangs from at most this many records (FE `uniqueTargets(30)`); more is `validation.tooLong` on
+ * `links`, as the FE's array `.max()` reads, from the DTO and from the use case alike.
+ */
 export const MAX_DOCUMENT_LINKS = 30;
 
 /** The matrix resource that governs reading each link target type (DT-142). */

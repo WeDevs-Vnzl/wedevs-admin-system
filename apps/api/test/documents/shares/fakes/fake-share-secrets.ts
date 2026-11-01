@@ -1,6 +1,7 @@
 import type {
   ShareSecretsPort,
   UnlockCookieInput,
+  UnlockGrant,
 } from '../../../../src/modules/documents/application/ports/share-secrets.port';
 import type { InMemoryUnitOfWork } from '../../../support/fakes/in-memory-unit-of-work';
 
@@ -39,7 +40,7 @@ export class FakeShareSecrets implements ShareSecretsPort {
     throw new Error('not used by the management use cases');
   }
 
-  verifyUnlock(): string[] {
+  verifyUnlock(): UnlockGrant[] {
     throw new Error('not used by the management use cases');
   }
 

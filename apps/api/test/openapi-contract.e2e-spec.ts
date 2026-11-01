@@ -406,6 +406,41 @@ describe('BE-4 contract: documents, share links and the portal', () => {
     expect(portal.map(({ operation }) => operation.security)).toEqual(Array(5).fill([]));
   });
 
+  it('declares CONFLICT where a Serializable retry can exhaust (unlock), and no 409 on the ReadCommitted portal routes', () => {
+    const codes = (path: string, method: string): string[] =>
+      Object.keys(
+        (full.paths[path]?.[method] as { responses?: Record<string, unknown> } | undefined)
+          ?.responses ?? {},
+      );
+    expect(codes('/api/v1/portal/{token}/documents/{documentId}/unlock', 'post')).toContain('409');
+    for (const [path, method] of [
+      ['/api/v1/portal/{token}', 'get'],
+      ['/api/v1/portal/{token}/views', 'post'],
+      ['/api/v1/portal/{token}/documents/{documentId}', 'get'],
+      ['/api/v1/portal/{token}/files/{documentId}', 'get'],
+    ] as const) {
+      expect(codes(path, method)).not.toContain('409');
+    }
+  });
+
+  it('documents the status of every file meta as the PENDING | READY enum', () => {
+    const files: JsonSchema[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (typeof node !== 'object' || node === null) return;
+      const props = (node as JsonSchema).properties as Record<string, JsonSchema> | undefined;
+      if (props?.originalName && props.sizeBytes && props.status) files.push(props.status);
+      Object.values(node).forEach(walk);
+    };
+    for (const name of ['DocumentDetailDto', 'DocumentVersionDetailDto', 'DocumentVersionRowDto']) {
+      walk(full.components.schemas[name]);
+    }
+    expect(files).toHaveLength(3);
+    expect(files.filter((status) => JSON.stringify(status.enum) !== '["PENDING","READY"]')).toEqual(
+      [],
+    );
+  });
+
   it('exposes no access key, hash or secret in a response except accessKey and generatedKeys of the share-link mutations', () => {
     expect(secretFindings(full)).toEqual([]);
   });

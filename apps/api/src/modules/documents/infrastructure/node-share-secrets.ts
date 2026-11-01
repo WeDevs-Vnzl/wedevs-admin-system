@@ -7,7 +7,11 @@ import {
   timingSafeEqual,
   type ScryptOptions,
 } from 'node:crypto';
-import type { ShareSecretsPort, UnlockCookieInput } from '../application/ports/share-secrets.port';
+import type {
+  ShareSecretsPort,
+  UnlockCookieInput,
+  UnlockGrant,
+} from '../application/ports/share-secrets.port';
 import {
   ACCESS_KEY_MAX_LENGTH,
   ACCESS_KEY_MIN_LENGTH,
@@ -75,16 +79,25 @@ function parseHash(stored: string): ParsedHash | null {
   return { options: { N, r: R, p: P }, salt: Buffer.from(salt, 'base64url'), hash: hashBuffer };
 }
 
-function isUnlockPayload(value: unknown): value is { l: string; ids: string[]; exp: number } {
+interface UnlockPayload {
+  readonly l: string;
+  /** Per document: its id and the instant (epoch ms) its own unlock ends. */
+  readonly g: readonly { readonly id: string; readonly exp: number }[];
+}
+
+/** The current payload shape; the first one (`ids` plus a single `exp`) fails here and reads as no unlock. */
+function isUnlockPayload(value: unknown): value is UnlockPayload {
   if (typeof value !== 'object' || value === null) return false;
-  const { l, ids, exp } = value as Record<string, unknown>;
+  const { l, g } = value as Record<string, unknown>;
   return (
     typeof l === 'string' &&
-    Array.isArray(ids) &&
-    ids.length <= MAX_UNLOCK_IDS &&
-    ids.every((id) => typeof id === 'string') &&
-    typeof exp === 'number' &&
-    Number.isInteger(exp)
+    Array.isArray(g) &&
+    g.length <= MAX_UNLOCK_IDS &&
+    g.every((entry) => {
+      if (typeof entry !== 'object' || entry === null) return false;
+      const { id, exp } = entry as Record<string, unknown>;
+      return typeof id === 'string' && typeof exp === 'number' && Number.isInteger(exp);
+    })
   );
 }
 
@@ -133,17 +146,25 @@ export class NodeShareSecrets implements ShareSecretsPort {
   }
 
   signUnlock(input: UnlockCookieInput): string {
+    // A grant never outlives 12 h from now, whatever the caller passes.
+    const ceiling = input.now.getTime() + UNLOCK_COOKIE_MAX_AGE_SECONDS * 1000;
+    const live = new Map<string, number>();
+    for (const grant of input.grants) {
+      const exp = Math.min(grant.expiresAt.getTime(), ceiling);
+      if (exp >= input.now.getTime()) {
+        live.set(grant.documentId, Math.max(exp, live.get(grant.documentId) ?? 0));
+      }
+    }
     const payload = Buffer.from(
       JSON.stringify({
         l: linkIdOf(input.token),
-        ids: [...new Set(input.documentIds)].slice(0, MAX_UNLOCK_IDS),
-        exp: input.now.getTime() + UNLOCK_COOKIE_MAX_AGE_SECONDS * 1000,
-      }),
+        g: [...live].slice(0, MAX_UNLOCK_IDS).map(([id, exp]) => ({ id, exp })),
+      } satisfies UnlockPayload),
     ).toString('base64url');
     return `${payload}.${this.sign(payload).toString('base64url')}`;
   }
 
-  verifyUnlock(value: string | undefined, token: string, now: Date): string[] {
+  verifyUnlock(value: string | undefined, token: string, now: Date): UnlockGrant[] {
     if (!value) return [];
     const [payload, signature, extra] = value.split('.');
     if (!payload || !signature || extra !== undefined) return [];
@@ -157,8 +178,10 @@ export class NodeShareSecrets implements ShareSecretsPort {
       return [];
     }
     if (!isUnlockPayload(decoded)) return [];
-    if (decoded.l !== linkIdOf(token) || decoded.exp < now.getTime()) return [];
-    return decoded.ids;
+    if (decoded.l !== linkIdOf(token)) return [];
+    return decoded.g
+      .filter((entry) => entry.exp >= now.getTime())
+      .map((entry) => ({ documentId: entry.id, expiresAt: new Date(entry.exp) }));
   }
 
   hashIp(ip: string): string {

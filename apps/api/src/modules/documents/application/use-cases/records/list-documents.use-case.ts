@@ -23,11 +23,12 @@ import {
 } from '../../../../../shared/domain/enums';
 import type { ListFilters, ListQuery } from '../../../../../shared/domain/list-query';
 import type { Paginated } from '../../../../../shared/domain/pagination';
-import type {
-  DocumentDetail,
-  DocumentListRow,
-  DocumentSupport,
-  DocumentViews,
+import {
+  DOCUMENT_LINK_RESOURCE,
+  type DocumentDetail,
+  type DocumentListRow,
+  type DocumentSupport,
+  type DocumentViews,
 } from '../../document-support';
 import type {
   DocumentLinkEntityType,
@@ -126,7 +127,7 @@ function buildCriteria(
   const links: Record<string, string[]> = {};
   for (const [facet, type, key] of LINK_FACETS) {
     const ids = values(filters, facet);
-    if (ids.length > 0 && !authorization.can(actor, 'read', LINK_RESOURCES[type])) {
+    if (ids.length > 0 && !authorization.can(actor, 'read', DOCUMENT_LINK_RESOURCE[type])) {
       throw new NotFoundError();
     }
     links[key] = ids;
@@ -156,15 +157,6 @@ function buildCriteria(
     today,
   };
 }
-
-const LINK_RESOURCES = {
-  CLIENT: 'client',
-  CONTACT: 'contact',
-  PROJECT: 'project',
-  INVOICE: 'invoice',
-  PAYMENT: 'payment',
-  EXPENSE: 'expense',
-} as const;
 
 /**
  * `GET /documents` (HU-20). Filters: `status[]`, `categoryId[]`, `typeId[]`, `format[]` (of the current

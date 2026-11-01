@@ -19,7 +19,8 @@ import { RecordShareView } from '../../../src/modules/documents/application/use-
 import { ResolveShareToken } from '../../../src/modules/documents/application/use-cases/portal/resolve-share-token.use-case';
 import { UnlockSharedDocument } from '../../../src/modules/documents/application/use-cases/portal/unlock-shared-document.use-case';
 import { NodeShareSecrets } from '../../../src/modules/documents/infrastructure/node-share-secrets';
-import type { DocumentFormat } from '../../../src/shared/domain/enums';
+import { UNLOCK_COOKIE_MAX_AGE_SECONDS } from '../../../src/modules/documents/domain/share-link';
+import type { DocumentFormat, FileStatus } from '../../../src/shared/domain/enums';
 import { FakeNoteTargets } from '../../commercial/notes/fakes/fake-note-targets';
 import { FixedClock } from '../../support/fakes/fixed-clock';
 import { InMemoryRowLocks } from '../../support/fakes/in-memory-row-locks';
@@ -44,7 +45,7 @@ export interface SeedDocument {
   readonly versionNumber?: number;
   readonly content?: string;
   readonly url?: string;
-  readonly file?: { id: string; name: string; mime: string; size: number; status?: string };
+  readonly file?: { id: string; name: string; mime: string; size: number; status?: FileStatus };
   /** The clear key; the hash is made by the world's real secrets. */
   readonly key?: string;
   readonly createdAt?: Date;
@@ -217,7 +218,13 @@ export function createPortalWorld() {
       );
     },
     cookieFor(documentIds: string[], token = TOKEN): string {
-      return secrets.signUnlock({ token, documentIds, now: clock.now() });
+      const now = clock.now();
+      const expiresAt = new Date(now.getTime() + UNLOCK_COOKIE_MAX_AGE_SECONDS * 1000);
+      return secrets.signUnlock({
+        token,
+        grants: documentIds.map((documentId) => ({ documentId, expiresAt })),
+        now,
+      });
     },
   };
   return world;
