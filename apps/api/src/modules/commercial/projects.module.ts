@@ -325,7 +325,7 @@ import { ProjectsController } from './interface/http/projects.controller';
       inject: [PROJECT_REPOSITORY],
     },
   ],
-  exports: [TechnologyUsageQueries],
+  exports: [TechnologyUsageQueries, ListProjects],
 })
 export class ProjectsModule implements OnModuleInit {
   constructor(
