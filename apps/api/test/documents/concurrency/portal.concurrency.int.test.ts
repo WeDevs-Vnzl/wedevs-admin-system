@@ -343,12 +343,23 @@ describe('recordShareView: N simultaneous views lose no count (contract choice 4
 
   it('views of the page and of one document racing all count', async () => {
     const world = buildPortalWorld();
+    // doc_a is key-protected, so its views carry the unlock cookie (a locked one is FORBIDDEN, uncounted).
+    const now = new Date();
+    const unlocked = world.secrets.signUnlock({
+      token: TOKEN,
+      grants: [{ documentId: 'doc_a', expiresAt: new Date(now.getTime() + 60_000) }],
+      now,
+    });
     await settled([
       ...Array.from({ length: 10 }, () =>
         world.recordView.execute({ token: TOKEN, visitor: visitor() }),
       ),
       ...Array.from({ length: 10 }, () =>
-        world.recordView.execute({ token: TOKEN, documentId: 'doc_a', visitor: visitor() }),
+        world.recordView.execute({
+          token: TOKEN,
+          documentId: 'doc_a',
+          visitor: { ...visitor(), unlockCookie: unlocked },
+        }),
       ),
     ]);
     const link = await admin.shareLink.findUniqueOrThrow({ where: { id: 'shr_a' } });
