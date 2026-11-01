@@ -139,7 +139,8 @@ export class OverviewsController {
   @RequiresGrant('activity', 'read')
   @ApiOperation({
     operationId: 'getActivityOverview',
-    summary: 'Activity figures { total, today, users } under the GET /activity filter (Owner, Admin)',
+    summary:
+      'Activity figures { total, today, users } under the GET /activity filter (Owner, Admin)',
   })
   @ApiOkResponse({ type: ActivityOverviewDto })
   @ApiErrorResponses('UNAUTHENTICATED', 'FORBIDDEN', 'VALIDATION', 'INTERNAL')

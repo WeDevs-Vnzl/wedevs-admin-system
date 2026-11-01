@@ -489,7 +489,10 @@ export const accountsOverviewSchema = z.object({
 export class AccountsOverviewDto extends createZodDto(accountsOverviewSchema) {}
 
 export function toAccountsOverviewResponse(overview: AccountsOverview): AccountsOverviewDto {
-  return { accounts: overview.accounts.map(toAccountCard), totalBalanceUsd: overview.totalBalanceUsd };
+  return {
+    accounts: overview.accounts.map(toAccountCard),
+    totalBalanceUsd: overview.totalBalanceUsd,
+  };
 }
 
 // ───────────────────────────── Documents ─────────────────────────────

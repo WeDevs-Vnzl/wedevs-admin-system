@@ -144,8 +144,11 @@ const DOCUMENT_ROWS = Symbol('DOCUMENT_ROWS');
     },
     {
       provide: GetActivityOverview,
-      useFactory: (authorization: AuthorizationPort, overview: OverviewReadPort, clock: ClockPort) =>
-        new GetActivityOverview(authorization, overview, clock),
+      useFactory: (
+        authorization: AuthorizationPort,
+        overview: OverviewReadPort,
+        clock: ClockPort,
+      ) => new GetActivityOverview(authorization, overview, clock),
       inject: [AUTHORIZATION, OVERVIEW_READ, CLOCK],
     },
   ],
