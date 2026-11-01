@@ -52,6 +52,7 @@ export default defineConfig({
         'src/shared/domain/money.ts',
         'src/shared/domain/business-date.ts',
         'src/modules/finance/domain/**/*.ts',
+        'src/modules/intelligence/domain/**/*.ts',
         'src/modules/finance/application/use-cases/{invoices,payments,accounts,billing}/**/*.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.int.test.ts', '**/*.e2e-spec.ts'],
@@ -64,6 +65,12 @@ export default defineConfig({
           statements: 90,
         },
         'src/modules/finance/domain/**': { lines: 90, functions: 90, branches: 90, statements: 90 },
+        'src/modules/intelligence/domain/**': {
+          lines: 90,
+          functions: 90,
+          branches: 90,
+          statements: 90,
+        },
         'src/modules/finance/application/use-cases/{invoices,payments,accounts,billing}/**': {
           lines: 90,
           functions: 90,
