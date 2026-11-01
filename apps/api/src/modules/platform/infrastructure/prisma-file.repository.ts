@@ -74,7 +74,7 @@ export class PrismaFileRepository implements FileRepository {
         invoice: { select: { id: true } },
         paymentReceipt: { select: { id: true } },
         expenseReceipt: { select: { id: true } },
-        documentVersion: { select: { id: true } },
+        documentVersions: { select: { id: true }, take: 1 },
         noteAttachments: { select: { noteId: true }, take: 1 },
       },
     });
@@ -83,7 +83,7 @@ export class PrismaFileRepository implements FileRepository {
       row.invoice !== null ||
       row.paymentReceipt !== null ||
       row.expenseReceipt !== null ||
-      row.documentVersion !== null ||
+      row.documentVersions.length > 0 ||
       row.noteAttachments.length > 0
     );
   }
