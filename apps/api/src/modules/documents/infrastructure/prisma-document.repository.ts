@@ -8,6 +8,7 @@ import {
 import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { searchCondition } from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
+import { FILE_META, userRefsById } from './prisma-read-helpers';
 import type {
   CurrentVersionView,
   DocumentLinkEntityType,
@@ -266,17 +267,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
     const versions = await db.documentVersion.findMany({
       where: { id: { in: versionIds } },
       include: {
-        file: {
-          select: {
-            id: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            status: true,
-            uploadedById: true,
-            createdAt: true,
-          },
-        },
+        file: { select: FILE_META },
       },
     });
     const counts = await db.documentVersion.groupBy({
@@ -297,14 +288,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
         ...versions.map((version) => version.createdById),
       ]),
     ];
-    const users = new Map<string, UserRef>(
-      (
-        await db.user.findMany({
-          where: { id: { in: userIds }, deletedAt: undefined },
-          select: { id: true, name: true, imageUrl: true },
-        })
-      ).map((user) => [user.id, user]),
-    );
+    const users = await userRefsById(db, userIds);
     const userRef = (id: string): UserRef => users.get(id) ?? { id, name: '', imageUrl: null };
 
     const versionById = new Map(versions.map((version) => [version.id, version]));

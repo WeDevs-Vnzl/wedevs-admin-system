@@ -10,7 +10,7 @@ import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { escapeLike } from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type { ShareCounters } from '../domain';
-import type { UserRef } from '../application/ports/document.repository.port';
+import { userRefsById } from './prisma-read-helpers';
 import type {
   NewShareLink,
   SharableDocument,
@@ -400,13 +400,9 @@ export class PrismaShareLinkRepository implements ShareLinkRepository {
       where: { shareLinkId: { in: [...ids] } },
       _count: { _all: true },
     });
-    const users = new Map<string, UserRef>(
-      (
-        await db.user.findMany({
-          where: { id: { in: links.map((link) => link.createdById) }, deletedAt: undefined },
-          select: { id: true, name: true, imageUrl: true },
-        })
-      ).map((user) => [user.id, user]),
+    const users = await userRefsById(
+      db,
+      links.map((link) => link.createdById),
     );
 
     const counters = (match: (row: (typeof grouped)[number]) => boolean): ShareCounters => {

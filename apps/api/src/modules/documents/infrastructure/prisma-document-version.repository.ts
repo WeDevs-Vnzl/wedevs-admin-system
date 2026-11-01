@@ -3,22 +3,12 @@ import type { DocumentFormat } from '../../../shared/domain/enums';
 import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type { UserRef } from '../application/ports/document.repository.port';
+import { FILE_META, userRefsById } from './prisma-read-helpers';
 import type {
   DocumentVersionRepository,
   DocumentVersionRow,
   DocumentVersionWithContent,
 } from '../application/ports/document-version.repository.port';
-
-/** The seven `File` columns a version may show: never `storageKey` or `bucket` (DT-140). */
-const FILE_META = {
-  id: true,
-  originalName: true,
-  mimeType: true,
-  sizeBytes: true,
-  status: true,
-  uploadedById: true,
-  createdAt: true,
-} as const;
 
 type VersionRow = Prisma.DocumentVersionGetPayload<{
   include: { file: { select: typeof FILE_META } };
@@ -100,11 +90,7 @@ export class PrismaDocumentVersionRepository implements DocumentVersionRepositor
   }
 
   private async users(ids: readonly string[]): Promise<Map<string, UserRef>> {
-    const rows = await this.host.db.user.findMany({
-      where: { id: { in: [...new Set(ids)] }, deletedAt: undefined },
-      select: { id: true, name: true, imageUrl: true },
-    });
-    return new Map(rows.map((user) => [user.id, user]));
+    return userRefsById(this.host.db, ids);
   }
 
   private toRow(

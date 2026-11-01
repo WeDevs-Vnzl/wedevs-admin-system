@@ -103,6 +103,10 @@ export class UpdateShareLink {
           return { kind: 'clear' };
         });
 
+        // Write order: the document rows, then the link row, then the activity entry. Nothing depends on it for
+        // correctness: the `ShareLink` row lock taken above serializes every edit and revoke of this link, and
+        // the unit of work commits all of it or none. The concurrency test pauses right after this first write
+        // to show a second edit cannot interleave its own document list.
         await this.support.shares.replaceDocuments(current.id, writes);
         await this.support.shares.update(current.id, {
           title: fields.title,
