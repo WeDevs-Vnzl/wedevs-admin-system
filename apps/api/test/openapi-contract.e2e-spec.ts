@@ -400,9 +400,11 @@ describe('BE-4 contract: documents, share links and the portal', () => {
     expect(authenticated.filter(({ operation }) => operation.security !== undefined)).toEqual([]);
   });
 
-  // Blocked: the five @ApiOperation of PortalController lack `security: []` (as health and the Clerk webhook
-  // have), so the document still inherits the global bearer for them. Needs portal.controller.ts, outside 5.1.
-  it.todo('declares no bearer requirement (security: []) on the five portal operations (C24)');
+  it('declares no bearer requirement (security: []) on the five portal operations (C24)', () => {
+    const portal = be4Operations.filter(({ path }) => path.startsWith('/api/v1/portal'));
+    expect(portal).toHaveLength(5);
+    expect(portal.map(({ operation }) => operation.security)).toEqual(Array(5).fill([]));
+  });
 
   it('exposes no access key, hash or secret in a response except accessKey and generatedKeys of the share-link mutations', () => {
     expect(secretFindings(full)).toEqual([]);

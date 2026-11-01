@@ -28507,6 +28507,7 @@
             "description": "INTERNAL"
           }
         },
+        "security": [],
         "summary": "The portal page of a share link (no side effect, no log row)",
         "tags": [
           "portal"
@@ -28586,6 +28587,7 @@
             "description": "INTERNAL"
           }
         },
+        "security": [],
         "summary": "What the viewer renders for one document; a locked one is FORBIDDEN",
         "tags": [
           "portal"
@@ -28685,6 +28687,7 @@
             "description": "INTERNAL"
           }
         },
+        "security": [],
         "summary": "Checks the access key of a document; a right key sets the signed unlock cookie",
         "tags": [
           "portal"
@@ -28783,6 +28786,7 @@
             "description": "INTERNAL"
           }
         },
+        "security": [],
         "summary": "Delivers a document: 302 to a signed 5-minute URL or to the stored link, or the markdown as text/markdown. DOWNLOAD is logged only for attachment",
         "tags": [
           "portal"
@@ -28864,6 +28868,7 @@
             "description": "INTERNAL"
           }
         },
+        "security": [],
         "summary": "Logs a VIEW of the link, or of one of its documents",
         "tags": [
           "portal"
