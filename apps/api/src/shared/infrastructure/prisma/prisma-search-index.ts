@@ -47,6 +47,35 @@ export class PrismaSearchIndex implements SearchIndexPort {
     });
   }
 
+  async upsertMany(entries: readonly SearchIndexEntry[]): Promise<void> {
+    const tx = this.host.requireTransaction('SearchIndexPort.upsertMany');
+    // One statement cannot touch a row twice: the last entry of a repeated key wins.
+    const unique = new Map(
+      entries.map((entry) => [`${entry.entityType}:${entry.entityId}`, entry] as const),
+    );
+    const rows = [...unique.values()];
+    for (let from = 0; from < rows.length; from += SET_TEXTS_CHUNK) {
+      const chunk = rows.slice(from, from + SET_TEXTS_CHUNK);
+      const optional = (value: string | null, cap: boolean): string | null =>
+        value === null ? null : cap ? truncateBody(clean(value)) : clean(value);
+      await tx.$executeRaw(Prisma.sql`
+        INSERT INTO "SearchEntry" ("id", "entityType", "entityId", "code", "title", "subtitle", "body",
+          "status", "archived", "updatedAt")
+        SELECT gen_random_uuid()::text, v."entityType"::"EntityType", v."entityId", v."code", v."title",
+          v."subtitle", v."body", v."status", v."archived", now()
+        FROM unnest(${chunk.map((e) => e.entityType)}::text[], ${chunk.map((e) => e.entityId)}::text[],
+          ${chunk.map((e) => optional(e.code, false))}::text[], ${chunk.map((e) => clean(e.title))}::text[],
+          ${chunk.map((e) => optional(e.subtitle, false))}::text[],
+          ${chunk.map((e) => optional(e.body, true))}::text[], ${chunk.map((e) => e.status)}::text[],
+          ${chunk.map((e) => e.archived)}::boolean[])
+          AS v("entityType", "entityId", "code", "title", "subtitle", "body", "status", "archived")
+        ON CONFLICT ("entityType", "entityId") DO UPDATE SET
+          "code" = EXCLUDED."code", "title" = EXCLUDED."title", "subtitle" = EXCLUDED."subtitle",
+          "body" = EXCLUDED."body", "status" = EXCLUDED."status", "archived" = EXCLUDED."archived",
+          "updatedAt" = now()`);
+    }
+  }
+
   async setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void> {
     const tx = this.host.requireTransaction('SearchIndexPort.setArchived');
     await tx.searchEntry.updateMany({ where: { entityType, entityId }, data: { archived } });
