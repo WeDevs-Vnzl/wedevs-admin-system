@@ -5,6 +5,7 @@ import { CommercialModule } from './modules/commercial/commercial.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { IntelligenceModule } from './modules/intelligence/intelligence.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { SharedInfrastructureModule } from './shared/infrastructure/shared-infrastructure.module';
@@ -21,6 +22,8 @@ import { SharedInterfaceModule } from './shared/interface/shared-interface.modul
     SharedInfrastructureModule,
     SharedInterfaceModule,
     IdentityModule,
+    // Before the owning contexts: `/x/overview` must register ahead of `/x/:id` (A1, X13).
+    IntelligenceModule,
     PlatformModule,
     SettingsModule,
     CommercialModule,
