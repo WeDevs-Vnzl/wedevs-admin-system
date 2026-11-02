@@ -14,6 +14,20 @@ export const SCHEDULES: readonly ScheduleDefinition[] = [
   { name: 'cleanup-files', pattern: '45 10 * * *' },
 ];
 
+/**
+ * DT-184: the Binance poll, once a day after the maintenance jobs. Not part of `SCHEDULES`: it is registered
+ * only when Binance is configured (`schedulesFor`).
+ */
+export const EXCHANGE_SYNC_SCHEDULE: ScheduleDefinition = {
+  name: 'exchange-sync',
+  pattern: '0 11 * * *',
+};
+
+/** The schedules the worker registers; `registerSchedules` removes any scheduler left out (DT-152). */
+export function schedulesFor(options: { readonly exchangeSync: boolean }): ScheduleDefinition[] {
+  return options.exchangeSync ? [...SCHEDULES, EXCHANGE_SYNC_SCHEDULE] : [...SCHEDULES];
+}
+
 export interface RetryPolicy {
   readonly attempts: number;
   readonly backoffDelayMs: number;

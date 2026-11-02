@@ -7,6 +7,7 @@ import {
 /** Fake `PaymentLinkRepository`. */
 export class InMemoryPaymentLinkRepository implements PaymentLinkRepository {
   private readonly rows = new Map<string, PaymentLink>();
+  private readonly confirmedOff = new Map<string, Date>();
 
   async save(link: PaymentLink): Promise<void> {
     this.rows.set(link.id, link);
@@ -38,5 +39,21 @@ export class InMemoryPaymentLinkRepository implements PaymentLinkRepository {
     for (const link of this.rows.values())
       if (isOpenLinkStatus(link.status)) ids.add(link.invoiceId);
     return [...ids].sort();
+  }
+
+  async listPendingProviderDeactivation(): Promise<PaymentLink[]> {
+    return [...this.rows.values()]
+      .filter(
+        (l) => l.status === 'DEACTIVATED' && l.externalId !== null && !this.confirmedOff.has(l.id),
+      )
+      .sort(
+        (a, b) =>
+          (a.deactivatedAt?.getTime() ?? 0) - (b.deactivatedAt?.getTime() ?? 0) ||
+          (a.id < b.id ? -1 : 1),
+      );
+  }
+
+  async markProviderDeactivated(linkId: string, at: Date): Promise<void> {
+    if (this.rows.has(linkId)) this.confirmedOff.set(linkId, at);
   }
 }

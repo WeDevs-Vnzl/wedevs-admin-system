@@ -13,4 +13,11 @@ export interface PaymentLinkRepository {
   listByInvoice(invoiceId: string): Promise<PaymentLink[]>;
   /** Invoices holding at least one `PENDING` or `ACTIVE` link: the daily job's worklist. */
   listInvoiceIdsWithOpenLinks(): Promise<string[]>;
+  /**
+   * `DEACTIVATED` links with an `externalId` whose provider deactivation is not confirmed yet, oldest
+   * deactivation first. The daily job repeats the call for each until it succeeds (DT-196).
+   */
+  listPendingProviderDeactivation(): Promise<PaymentLink[]>;
+  /** Records that the provider confirmed the link is off; the link leaves the pending list for good. */
+  markProviderDeactivated(linkId: string, at: Date): Promise<void>;
 }
