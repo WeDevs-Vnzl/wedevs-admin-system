@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
 import { TechnologyUsageQueries } from '../commercial/application/technology-usage.queries';
 import {
   ACTIVITY_LOG,
@@ -27,6 +28,7 @@ import {
   type TechnologyUsagePort,
 } from './application/ports/technology-usage.port';
 import { CommercialTechnologyUsageAdapter } from './infrastructure/commercial-technology-usage.adapter';
+import { TechnologiesExportSource } from './infrastructure/settings-export-sources';
 import { PrismaTechnologyRepository } from './infrastructure/prisma-technology.repository';
 import { TechnologiesController } from './interface/http/technologies.controller';
 
@@ -54,6 +56,11 @@ import { TechnologiesController } from './interface/http/technologies.controller
       useFactory: (technologies: TechnologyRepository, usage: TechnologyUsagePort) =>
         new ListTechnologies(technologies, usage),
       inject: [TECHNOLOGY_REPOSITORY, TECHNOLOGY_USAGE],
+    },
+    {
+      provide: TechnologiesExportSource,
+      useFactory: (list: ListTechnologies) => new TechnologiesExportSource(list),
+      inject: [ListTechnologies],
     },
     {
       provide: GetTechnology,
@@ -113,4 +120,14 @@ import { TechnologiesController } from './interface/http/technologies.controller
   ],
   exports: [TechnologyCatalog, TECHNOLOGY_USAGE],
 })
-export class TechnologiesModule {}
+export class TechnologiesModule implements OnModuleInit {
+  constructor(
+    private readonly exportRegistry: ExportSourceRegistry,
+    private readonly exportSource: TechnologiesExportSource,
+  ) {}
+
+  /** The `TECHNOLOGY` CSV export reads through `ListTechnologies` (DT-171). */
+  onModuleInit(): void {
+    this.exportRegistry.register(this.exportSource);
+  }
+}
