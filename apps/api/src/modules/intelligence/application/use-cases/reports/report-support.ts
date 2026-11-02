@@ -16,6 +16,8 @@ import type {
   ReportScope,
 } from '../../ports/report-inputs-read.port';
 
+export { REPORT_RANGE_PRESET_VALUES };
+
 /** Longest custom range, in calendar months: bounds the series every report builds. */
 export const REPORT_MAX_MONTHS = 120;
 export const DEFAULT_REPORT_PRESET: ReportRangePreset = 'LAST_12_MONTHS';
