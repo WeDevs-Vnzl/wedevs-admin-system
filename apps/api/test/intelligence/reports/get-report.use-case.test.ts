@@ -450,4 +450,94 @@ describe('GetReport: the ten reports', () => {
       expect(result.reportId).toBe(slug.toUpperCase().replaceAll('-', '_'));
     }
   });
+
+  it('labels fall back to ids for a category, a method and an account that no longer resolve', async () => {
+    const { getReport, facts, inputs } = buildReportsWorld();
+    inputs.categoryMonths = [{ categoryId: 'ecat_gone', month: '2026-10', amountUsd: '5.00' }];
+    inputs.accountFlows = [
+      { accountId: 'acc_gone', month: '2026-10', inflowUsd: '1.00', outflowUsd: '0.00' },
+    ];
+    facts.addFact(
+      fact({ kind: 'COLLECTED', date: '2026-10-02', amountUsd: '10.00', methodId: 'pm_gone' }),
+    );
+    const expenses = await getReport.execute(owner, { slug: 'expenses-by-month-category' });
+    if (expenses.reportId !== 'EXPENSES_BY_MONTH_CATEGORY') throw new Error(expenses.reportId);
+    expect(expenses.chart.series[0]).toMatchObject({ id: 'ecat_gone', label: 'ecat_gone' });
+    const flow = await getReport.execute(owner, { slug: 'account-flow' });
+    if (flow.reportId !== 'ACCOUNT_FLOW') throw new Error(flow.reportId);
+    expect(flow.rows[0]?.account.label).toBe('acc_gone');
+    const methods = await getReport.execute(owner, { slug: 'collections-by-method' });
+    if (methods.reportId !== 'COLLECTIONS_BY_METHOD') throw new Error(methods.reportId);
+    expect(methods.rows[0]).toMatchObject({ methodId: 'pm_gone', methodCode: 'pm_gone' });
+  });
+
+  it('a method without a code is shown by its label', async () => {
+    const { getReport, facts, inputs } = buildReportsWorld();
+    inputs.labelRows.METHOD.push({ id: 'pm_x', label: 'Efectivo', code: null });
+    facts.addFact(
+      fact({ kind: 'COLLECTED', date: '2026-10-02', amountUsd: '10.00', methodId: 'pm_x' }),
+    );
+    const result = await getReport.execute(owner, { slug: 'collections-by-method' });
+    if (result.reportId !== 'COLLECTIONS_BY_METHOD') throw new Error(result.reportId);
+    expect(result.rows[0]?.methodCode).toBe('Efectivo');
+  });
+
+  it('collections by method with nothing collected is an empty table, not a division by zero', async () => {
+    const { getReport } = buildReportsWorld();
+    const result = await getReport.execute(owner, { slug: 'collections-by-method' });
+    if (result.reportId !== 'COLLECTIONS_BY_METHOD') throw new Error(result.reportId);
+    expect(result.rows).toEqual([]);
+  });
+
+  it('taxes: a month with withholdings but no IVA rows still lists them', async () => {
+    const { getReport, inputs } = buildReportsWorld();
+    inputs.taxes = {
+      rates: [],
+      withholdings: [
+        {
+          month: '2026-10',
+          ivaWithheldUsd: '0.00',
+          islrWithheldUsd: '0.00',
+          otherWithheldUsd: '0.00',
+          igtfUsd: '4.00',
+        },
+      ],
+    };
+    const result = await getReport.execute(owner, {
+      slug: 'taxes-registered',
+      preset: 'THIS_MONTH',
+    });
+    if (result.reportId !== 'TAXES_REGISTERED') throw new Error(result.reportId);
+    expect(result.months[0]).toMatchObject({ ivaByRate: [], igtf: '4.00' });
+    expect(result.totals.igtf).toBe('4.00');
+  });
+
+  it('the largest collected goes first and ties break on billed, then id', async () => {
+    const { getReport, facts } = buildReportsWorld();
+    for (const [clientId, billed] of [
+      ['cli_b', '10.00'],
+      ['cli_a', '10.00'],
+      ['cli_c', '20.00'],
+    ] as const) {
+      facts.addFact(fact({ kind: 'BILLED', date: '2026-10-01', amountUsd: billed, clientId }));
+    }
+    const result = await getReport.execute(owner, { slug: 'revenue-by-client' });
+    if (result.reportId !== 'REVENUE_BY_CLIENT') throw new Error(result.reportId);
+    expect(result.rows.map((r) => r.client.id)).toEqual(['cli_c', 'cli_a', 'cli_b']);
+  });
+
+  it('does not swallow an unexpected failure of the range', async () => {
+    const { getReport } = buildReportsWorld();
+    await expect(
+      getReport.execute(owner, {
+        slug: 'collected-by-month',
+        preset: 'CUSTOM',
+        from: '2026-02-30',
+        to: '2026-03-01',
+      }),
+    ).rejects.toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: { from: ['validation.date.invalid'] },
+    });
+  });
 });

@@ -400,4 +400,32 @@ describe('GetKpis: set-based reads', () => {
     // Existence checks (none without ids) and at most one label read per kind.
     expect(world.inputs.totalCalls).toBeLessThanOrEqual(8 + 3);
   });
+
+  it('a breakdown key that no longer resolves keeps its key as label', async () => {
+    const empty = buildReportsWorld();
+    seed(empty);
+    empty.inputs.labelRows.CLIENT.length = 0;
+    const result = await empty.getKpis.execute(owner, { preset: 'THIS_MONTH' });
+    const ltv = result.kpis.find((k) => k.id === 'CLIENT_LTV');
+    expect(ltv?.breakdown?.map((b) => b.label)).toEqual(['cli_b', 'cli_a']);
+  });
+
+  it('values the balance of an account in a currency with no rate at zero, never a failure', async () => {
+    const world = buildReportsWorld();
+    world.inputs.balances = [{ currency: 'EUR', balance: '500.00' }];
+    world.facts.addFact({ kind: 'EXPENSE_PAID', date: '2026-10-02', amountUsd: '30.00' });
+    const result = await world.getKpis.execute(owner, { preset: 'THIS_MONTH' });
+    expect(result.kpis.find((k) => k.id === 'RUNWAY')?.value).toBe('0.00');
+  });
+
+  it('project margin leaves out a project whose margin has no base and tolerates windows without data', async () => {
+    const world = buildReportsWorld();
+    world.inputs.projectDays = [
+      { projectId: 'pry_a', date: '2026-10-02', collectedUsd: '0.00', expensesUsd: '5.00' },
+    ];
+    const result = await world.getKpis.execute(owner, { preset: 'THIS_MONTH' });
+    const margin = result.kpis.find((k) => k.id === 'PROJECT_MARGIN');
+    expect(margin?.value).toBeNull();
+    expect(margin?.breakdown).toEqual([]);
+  });
 });
