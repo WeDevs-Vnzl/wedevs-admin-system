@@ -446,6 +446,7 @@ import { ContactsController } from './interface/http/contacts.controller';
       inject: [RestoreContact],
     },
   ],
+  exports: [ListClients],
 })
 export class ClientsModule implements OnModuleInit {
   constructor(

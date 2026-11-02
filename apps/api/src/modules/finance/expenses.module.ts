@@ -273,7 +273,7 @@ import { RatesModule } from './rates.module';
       ],
     },
   ],
-  exports: [GenerateRecurringExpenses],
+  exports: [GenerateRecurringExpenses, ListExpenses],
 })
 export class ExpensesModule implements OnModuleInit {
   constructor(

@@ -263,5 +263,6 @@ import { ReadModelsModule } from './read-models.module';
       inject: [AUTHORIZATION, ACCOUNT_PARTNERS],
     },
   ],
+  exports: [ListAccounts],
 })
 export class AccountsModule {}
