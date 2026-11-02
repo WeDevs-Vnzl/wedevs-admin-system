@@ -169,7 +169,7 @@ describe('SetProjectStatus (mock setProjectStatus, HU-08)', () => {
     expect(w.billing.cancelCalls).toHaveLength(0);
   });
 
-  it('opens a Serializable unit of work only when cancelling (Q-BE3-1)', async () => {
+  it('opens a Serializable unit of work for every status change (DT-177, Q-BE3-1)', async () => {
     const cancelling = world('EN_CURSO', { startDate: '2026-01-01' });
     await cancelling.setProjectStatus.execute(
       actor('OWNER'),
@@ -182,7 +182,7 @@ describe('SetProjectStatus (mock setProjectStatus, HU-08)', () => {
       actor('OWNER'),
       input({ status: 'EN_CURSO', startDate: '2026-02-01' }),
     );
-    expect(other.uow.lastOptions?.isolation).not.toBe('Serializable');
+    expect(other.uow.lastOptions).toEqual({ isolation: 'Serializable' });
   });
 
   it('refuses a Viewer, an archived project and an unknown one', async () => {

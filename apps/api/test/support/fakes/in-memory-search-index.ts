@@ -31,6 +31,12 @@ export class InMemorySearchIndex implements SearchIndexPort, TransactionParticip
     this.pending.set(key(entry.entityType, entry.entityId), { ...entry });
   }
 
+  async upsertMany(entries: readonly SearchIndexEntry[]): Promise<void> {
+    this.uow.assertActive('SearchIndexPort.upsertMany');
+    for (const entry of entries)
+      this.pending.set(key(entry.entityType, entry.entityId), { ...entry });
+  }
+
   async setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void> {
     this.uow.assertActive('SearchIndexPort.setArchived');
     const k = key(entityType, entityId);

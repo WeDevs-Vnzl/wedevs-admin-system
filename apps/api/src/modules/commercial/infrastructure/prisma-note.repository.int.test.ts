@@ -8,6 +8,8 @@ import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../shared/domain/list-
 import type { RichTextDoc } from '../../../shared/domain/rich-text';
 import type { NewNote, NoteListCriteria } from '../application/ports/note.repository.port';
 import type { NoteLinkTarget } from '../domain/note-link';
+import { noteSearchEntry } from '../application/use-cases/note-support';
+import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
 import { PrismaNoteRepository } from './prisma-note.repository';
 
 const admin = createTestPrisma();
@@ -66,7 +68,12 @@ const criteria = (over: CriteriaOverrides = {}) => {
   } satisfies NoteListCriteria;
 };
 const ids = (page: { items: { id: string }[] }) => page.items.map((n) => n.id);
-const save = (note: NewNote) => uow.run(() => repository.insert(note));
+const searchIndex = new PrismaSearchIndex(host);
+const save = (note: NewNote) =>
+  uow.run(async () => {
+    await repository.insert(note);
+    await searchIndex.upsert(noteSearchEntry(note, false));
+  });
 
 async function seedFile(id: string, uploadedById = authorId) {
   return admin.file.create({

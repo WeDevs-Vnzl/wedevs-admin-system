@@ -7,7 +7,8 @@ import { PrismaUnitOfWork } from '../../../shared/infrastructure/prisma/prisma-u
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type { ClientListQuery } from '../application/ports/client.repository.port';
-import type { ClientRecord } from '../domain/client';
+import { clientSearchEntry, type ClientRecord } from '../domain/client';
+import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
 import { PrismaClientRepository } from './prisma-client.repository';
 
 const admin = createTestPrisma();
@@ -15,6 +16,7 @@ const service = new PrismaService({ DATABASE_URL: process.env.DATABASE_URL as st
 const host = new TransactionHost(service);
 const clients = new PrismaClientRepository(host);
 const uow = new PrismaUnitOfWork(host);
+const searchIndex = new PrismaSearchIndex(host);
 
 const listQuery = (over: Partial<ClientListQuery> = {}): ClientListQuery => ({
   page: 1,
@@ -26,7 +28,13 @@ const listQuery = (over: Partial<ClientListQuery> = {}): ClientListQuery => ({
 
 const insert = (over: Partial<ClientRecord> = {}) => {
   const record = clientRecord(over);
-  return uow.run(() => clients.insert(record)).then(() => record);
+  // The list resolves `q` through the `SearchEntry` the write path maintains (DT-153).
+  return uow
+    .run(async () => {
+      await clients.insert(record);
+      await searchIndex.upsert(clientSearchEntry(record));
+    })
+    .then(() => record);
 };
 
 beforeAll(async () => {

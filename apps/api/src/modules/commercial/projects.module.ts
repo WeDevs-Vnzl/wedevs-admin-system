@@ -1,3 +1,6 @@
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { Inject, Module, type OnModuleInit } from '@nestjs/common';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
@@ -52,6 +55,8 @@ import { SetProjectStatus } from './application/use-cases/set-project-status.use
 import { SetProjectTechnologies } from './application/use-cases/set-project-technologies.use-case';
 import { UpdateProject } from './application/use-cases/update-project.use-case';
 import { UpsertProjectLinks } from './application/use-cases/upsert-project-links.use-case';
+import { ProjectReindexSource } from './infrastructure/commercial-reindex-sources';
+import { ProjectExportSource } from './infrastructure/commercial-export-sources';
 import { PrismaProjectRepository } from './infrastructure/prisma-project.repository';
 import { ProjectRestoreHandler } from './infrastructure/project-restore.handler';
 import { ProjectTaggableResolver } from './infrastructure/project-taggable.resolver';
@@ -333,10 +338,17 @@ export class ProjectsModule implements OnModuleInit {
     @Inject(TAGGABLE_TARGET_REGISTRY) private readonly taggable: TaggableTargetRegistry,
     private readonly restoreHandler: ProjectRestoreHandler,
     private readonly taggableResolver: ProjectTaggableResolver,
+    @Inject(SearchReindexRegistry) private readonly reindexRegistry: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exportRegistry: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(PROJECT_REPOSITORY) private readonly projects: ProjectRepository,
+    private readonly listProjects: ListProjects,
   ) {}
 
   onModuleInit(): void {
     this.restoreHandlers.register(this.restoreHandler);
     this.taggable.register(this.taggableResolver);
+    this.reindexRegistry.register(new ProjectReindexSource(this.host, this.projects));
+    this.exportRegistry.register(new ProjectExportSource(this.listProjects));
   }
 }

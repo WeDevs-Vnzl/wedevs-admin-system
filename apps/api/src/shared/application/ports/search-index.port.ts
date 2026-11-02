@@ -27,6 +27,11 @@ export interface SearchTextsUpdate {
 export interface SearchIndexPort {
   /** Inserts or replaces the entry of `(entityType, entityId)`; idempotent. */
   upsert(entry: SearchIndexEntry): Promise<void>;
+  /**
+   * `upsert` of many entries in as few statements as the adapter can (same cleaning and body cap). A repeated
+   * `(entityType, entityId)` keeps the last entry; an empty list writes nothing.
+   */
+  upsertMany(entries: readonly SearchIndexEntry[]): Promise<void>;
   /** Flips the archived flag; a missing entry is a no-op. */
   setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void>;
   /**

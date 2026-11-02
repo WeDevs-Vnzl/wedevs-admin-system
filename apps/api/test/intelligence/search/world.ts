@@ -102,6 +102,10 @@ export class InMemoryIndex
     this.pending.set(key(entry.entityType, entry.entityId), { ...entry });
   }
 
+  async upsertMany(): Promise<void> {
+    throw new Error('not used by the reindex');
+  }
+
   async setArchived(): Promise<void> {
     throw new Error('not used by the reindex');
   }

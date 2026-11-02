@@ -61,9 +61,10 @@ export class SetProjectStatus {
   ): Promise<ProjectStatusChangeView> {
     assertCan(this.authorization, actor, 'update', 'project');
 
-    // Cancelling rewrites billing rows and read models: it opens the outermost unit of work `Serializable`
-    // (Q-BE3-1; a nested run cannot ask for a stricter level later). Other changes keep the default level.
-    const options = input.status === 'CANCELADO' ? ({ isolation: 'Serializable' } as const) : {};
+    // Every status change runs `Serializable` (DT-177): the entry carries the client names, which a rename
+    // rewrites in its own `Serializable` unit of work, and cancelling also rewrites billing rows and read models
+    // (Q-BE3-1). A nested run cannot ask for a stricter level later, so the outermost one opens it.
+    const options = { isolation: 'Serializable' } as const;
     const hints = await this.uow.run(async () => {
       const before = await loadLiveProject(this.projects, input.id);
       if (!canTransitionProject(before.status, input.status)) {

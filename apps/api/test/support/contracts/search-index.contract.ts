@@ -73,6 +73,35 @@ export function searchIndexContract(
       expect((await h.read('CLIENT', 'a'))?.archived).toBe(false);
     });
 
+    it('upsertMany writes the batch, replaces existing entries and keeps the last of a repeated id', async () => {
+      await h.uow.run(() => h.index.upsert(sampleSearchEntry('a')));
+      await h.uow.run(() =>
+        h.index.upsertMany([
+          { ...sampleSearchEntry('a'), title: 'Renamed' },
+          sampleSearchEntry('b'),
+          { ...sampleSearchEntry('c'), title: 'First' },
+          { ...sampleSearchEntry('c'), title: 'Last', archived: true },
+        ]),
+      );
+      expect(await h.count()).toBe(3);
+      expect(await h.read('CLIENT', 'a')).toMatchObject({ title: 'Renamed', code: 'CLI-a' });
+      expect(await h.read('CLIENT', 'b')).toEqual(sampleSearchEntry('b'));
+      expect(await h.read('CLIENT', 'c')).toMatchObject({ title: 'Last', archived: true });
+      await h.uow.run(() => h.index.upsertMany([]));
+      expect(await h.count()).toBe(3);
+    });
+
+    it('upsertMany rejects writes outside a unit of work and rolls back with it', async () => {
+      await expect(h.index.upsertMany([sampleSearchEntry('a')])).rejects.toThrow();
+      await expect(
+        h.uow.run(async () => {
+          await h.index.upsertMany([sampleSearchEntry('a')]);
+          throw new Error('rollback');
+        }),
+      ).rejects.toThrow('rollback');
+      expect(await h.count()).toBe(0);
+    });
+
     it('discards writes when the unit of work rolls back', async () => {
       await expect(
         h.uow.run(async () => {

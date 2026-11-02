@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CommercialModule } from '../../../src/modules/commercial/commercial.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
 import { ExportsModule } from '../../../src/modules/intelligence/exports.module';
 import type { AuthorizationPort } from '../../../src/shared/application/ports/authorization.port';
@@ -87,6 +88,8 @@ describe('POST /exports/{entity} (e2e)', () => {
   beforeAll(async () => {
     app = await createTestApp({
       modules: [ExportsModule],
+      // `AppModule` registers the real CLIENT source; this spec registers its own fake one.
+      without: [CommercialModule],
       authenticator,
       overrides: [
         { token: AUTHORIZATION, useValue: authorization },
@@ -241,7 +244,7 @@ describe('POST /exports/{entity} (e2e)', () => {
   });
 
   it('answers 404 for a whitelisted table without a registered source', async () => {
-    const res = await exportPost('OWNER', 'NOTE', body()).expect(404);
+    const res = await exportPost('OWNER', 'TAG', body()).expect(404);
     expect(JSON.parse(rawBody(res)).error.code).toBe('NOT_FOUND');
   });
 });

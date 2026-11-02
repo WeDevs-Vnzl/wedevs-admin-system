@@ -2,6 +2,7 @@ import type {
   ProjectListRequest,
   ProjectMetricsRow,
   ProjectRepository,
+  ProjectSearchSource,
 } from '../../../../src/modules/commercial/application/ports/project.repository.port';
 import type {
   ProjectClientLink,
@@ -255,6 +256,41 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
         ? [{ type: client.type, id: client.id, code: client.code, label: client.label }]
         : [];
     });
+  }
+
+  readonly legalNames = new Map<string, string>();
+
+  async clientLegalNames(ids: readonly string[]): Promise<Map<string, string>> {
+    const found = new Map<string, string>();
+    for (const id of ids) {
+      const client = this.clients.get(id);
+      if (client) found.set(id, this.legalNames.get(id) ?? `${client.label} C.A.`);
+    }
+    return found;
+  }
+
+  /** Calls to `projectSearchSourcesOfClient`, to assert the rename reads once. */
+  sourceReads = 0;
+
+  async projectSearchSourcesOfClient(clientId: string): Promise<ProjectSearchSource[]> {
+    this.sourceReads += 1;
+    return [...this.view().values()]
+      .filter((record) => record.clients.some((link) => link.clientId === clientId))
+      .sort((a, b) => (a.id < b.id ? -1 : 1))
+      .map((record) => ({
+        project: record,
+        clients: record.clients.flatMap((link) => {
+          const client = this.clients.get(link.clientId);
+          return client
+            ? [
+                {
+                  tradeName: client.label,
+                  legalName: this.legalNames.get(link.clientId) ?? `${client.label} C.A.`,
+                },
+              ]
+            : [];
+        }),
+      }));
   }
 
   async countLiveProjectsOfClient(clientId: string): Promise<number> {

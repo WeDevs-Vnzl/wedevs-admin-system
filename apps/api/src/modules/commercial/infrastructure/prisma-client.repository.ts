@@ -3,7 +3,11 @@ import { BUSINESS_TIME_ZONE } from '../../../shared/domain/business-date';
 import { ConflictError } from '../../../shared/domain/domain-error';
 import { pageWindow, paginated, type Paginated } from '../../../shared/domain/pagination';
 import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
-import { searchCondition } from '../../../shared/infrastructure/prisma/prisma-list';
+import {
+  hasSearchText,
+  searchCondition,
+  searchEntryMatch,
+} from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import { isUniqueViolation } from '../../../shared/infrastructure/prisma/unique-violation';
 import type {
@@ -21,6 +25,7 @@ import { taxIdKey } from '../domain/tax-id';
 /** The partial unique index on live clients (migration `complementary_sql`). */
 const TAX_ID_CONSTRAINT = 'client_taxid_country_active';
 
+/** The own columns the autocomplete `search` looks into (a selector, not a list: DT-168). */
 const SEARCH_COLUMNS = ['tradeName', 'legalName', 'code', 'taxId', 'email'] as const;
 
 /** Sort expressions over `"Client" c LEFT JOIN "ClientMetrics" m` (trusted constants, never user text). */
@@ -283,8 +288,8 @@ export class PrismaClientRepository implements ClientRepository {
           : Prisma.sql`COALESCE(m."overdueUsd", 0) = 0`,
       );
     }
-    const search = searchCondition(SEARCH_COLUMNS, query.q);
-    if (search) conditions.push(Prisma.sql`(${search})`);
+    // `q` resolves through the client's `SearchEntry` (DT-153); the archived mode stays on `deletedAt`.
+    if (hasSearchText(query.q)) conditions.push(searchEntryMatch('CLIENT', query.q));
     return conditions.length > 0
       ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
       : Prisma.empty;

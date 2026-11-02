@@ -12,6 +12,7 @@ import type { ContactRecord } from '../domain/contact';
 /** The partial unique index: one live primary contact per client (migration `complementary_sql`). */
 const PRIMARY_CONSTRAINT = 'contact_one_primary';
 
+/** The own columns the autocomplete `search` looks into (a selector, not a list: DT-168). */
 const SEARCH_COLUMNS = ['fullName', 'position', 'email', 'phone'] as const;
 
 type ContactRow = {
@@ -156,7 +157,7 @@ export class PrismaContactRepository implements ContactRepository {
     const db = this.host.db;
     const page = await listPage(db, {
       table: 'Contact',
-      searchColumns: SEARCH_COLUMNS,
+      searchEntryType: 'CONTACT',
       sortMap: {
         fullName: 'fullName',
         position: { path: 'position', nullable: true },
