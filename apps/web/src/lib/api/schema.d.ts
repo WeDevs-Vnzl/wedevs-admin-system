@@ -91,6 +91,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/{id}/exchange-snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Last Binance snapshot beside the system balance (null when the account is not the mapped wallet) */
+        get: operations["getExchangeSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/{id}/ledger": {
         parameters: {
             query?: never;
@@ -1486,6 +1503,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/invoices/{id}/payment-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every payment link of the invoice, newest first, with the capacity of a new one */
+        get: operations["listInvoicePaymentLinks"];
+        put?: never;
+        /** Create a Stripe payment link for part or all of what remains to collect (idempotent by requestId) */
+        post: operations["createInvoicePaymentLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/{id}/payment-links/{linkId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate an open payment link (idempotent) */
+        post: operations["deactivateInvoicePaymentLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invoices/{id}/restore": {
         parameters: {
             query?: never;
@@ -1520,6 +1572,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mcp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** MCP over Streamable HTTP (JSON-RPC 2.0); personal access token only */
+        post: operations["mcp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -1531,6 +1600,41 @@ export interface paths {
         get: operations["getMe"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/api-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Own personal access tokens */
+        get: operations["listMyApiTokens"];
+        put?: never;
+        /** Issue a personal access token (the secret is returned once) */
+        post: operations["issueMyApiToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/api-tokens/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke one own token */
+        post: operations["revokeMyApiToken"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2433,6 +2537,24 @@ export interface paths {
         patch: operations["updateFiscalSettings"];
         trace?: never;
     };
+    "/api/v1/settings/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stripe target account and method, Binance wallet account */
+        get: operations["getIntegrationMapping"];
+        /** Replace the integration mapping (settings grant) */
+        put: operations["updateIntegrationMapping"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/share-links": {
         parameters: {
             query?: never;
@@ -2802,6 +2924,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stripe payment events (signature-verified)
+         * @description Answers 200 for processed, duplicate, ignored and parked events; 401 for a bad signature (nothing is written); 404 when Stripe is not configured; 500 only on an unexpected failure so Stripe retries.
+         */
+        post: operations["receiveStripeWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2994,6 +3136,30 @@ export interface components {
             amountInvoiceCurrency: string;
             amountPaymentCurrency: string;
             invoiceId: string;
+        };
+        ApiTokenDto: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            id: string;
+            lastUsedAt: string | null;
+            name: string;
+            prefix: string;
+            revokedAt: string | null;
+        };
+        ApiTokenListDto: {
+            items: {
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                expiresAt: string;
+                id: string;
+                lastUsedAt: string | null;
+                name: string;
+                prefix: string;
+                revokedAt: string | null;
+            }[];
         };
         ApplyInstallmentTemplateDto: {
             installments?: {
@@ -3683,6 +3849,11 @@ export interface components {
             status: "PENDIENTE_VERIFICACION" | "CONFIRMADO";
             usdRate: string;
         };
+        CreatePaymentLinkDto: {
+            amount: string;
+            /** Format: uuid */
+            requestId: string;
+        };
         CreatePaymentMethodDto: {
             active?: boolean;
             code: string;
@@ -4333,6 +4504,23 @@ export interface components {
             pageSize: number;
             total: number;
         };
+        ExchangeSnapshotResponseDto: {
+            accountId: string;
+            snapshot: {
+                balances: {
+                    asset: string;
+                    free: string;
+                    locked: string;
+                }[];
+                /** Format: date-time */
+                syncedAt: string;
+            } | null;
+            systemBalance: {
+                balance: string;
+                balanceUsd: string | null;
+                currency: string;
+            };
+        };
         ExpenseCategoryNodeDto: {
             active: boolean;
             children: {
@@ -4716,6 +4904,15 @@ export interface components {
             skipped: number;
             updated: number;
         };
+        IntegrationMappingResponseDto: {
+            binance: {
+                accountId: string;
+            } | null;
+            stripe: {
+                accountId: string;
+                paymentMethodId: string;
+            } | null;
+        };
         InvitationDto: {
             /** Format: date-time */
             createdAt: string;
@@ -4801,6 +4998,26 @@ export interface components {
                 status: "BORRADOR" | "EMITIDA" | "PARCIAL" | "PAGADA" | "VENCIDA" | "ANULADA";
                 usdRate: string;
             };
+        };
+        InvoicePaymentLinksResponseDto: {
+            capacity: string;
+            links: {
+                amount: string;
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                deactivatedAt: string | null;
+                deactivationReason: string | null;
+                externalId: string | null;
+                id: string;
+                invoiceId: string;
+                paymentId: string | null;
+                requestId: string;
+                settledAt: string | null;
+                /** @enum {string} */
+                status: "PENDING" | "ACTIVE" | "COMPLETED" | "SETTLED" | "DEACTIVATED";
+                url: string | null;
+            }[];
         };
         InvoiceResponseDto: {
             allocations: {
@@ -4929,6 +5146,22 @@ export interface components {
                 overdue: string;
                 total: string;
             }[];
+        };
+        IssueApiTokenDto: {
+            expiresInDays?: number;
+            name: string;
+        };
+        IssuedApiTokenDto: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            id: string;
+            lastUsedAt: string | null;
+            name: string;
+            prefix: string;
+            revokedAt: string | null;
+            secret: string;
         };
         KpisResponseDto: {
             kpis: {
@@ -5114,6 +5347,23 @@ export interface components {
             };
             invoiceCurrency: string;
             paymentId: string;
+        };
+        PaymentLinkResponseDto: {
+            amount: string;
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            deactivatedAt: string | null;
+            deactivationReason: string | null;
+            externalId: string | null;
+            id: string;
+            invoiceId: string;
+            paymentId: string | null;
+            requestId: string;
+            settledAt: string | null;
+            /** @enum {string} */
+            status: "PENDING" | "ACTIVE" | "COMPLETED" | "SETTLED" | "DEACTIVATED";
+            url: string | null;
         };
         PaymentListResponseDto: {
             items: {
@@ -6157,6 +6407,12 @@ export interface components {
             } | null;
             vesRateMissing: boolean;
         };
+        StripeWebhookResponseDto: {
+            /** @enum {string} */
+            outcome: "processed" | "duplicate" | "ignored" | "parked";
+            /** @constant */
+            received: true;
+        };
         TagChipsResponseDto: {
             items: {
                 color: string;
@@ -6407,6 +6663,15 @@ export interface components {
             order?: number;
             percentage?: string | null;
             trigger?: string | null;
+        };
+        UpdateIntegrationMappingDto: {
+            binance?: {
+                accountId: string;
+            } | null;
+            stripe?: {
+                accountId: string;
+                paymentMethodId: string;
+            } | null;
         };
         UpdateInvoiceDto: {
             bcvRate?: string | null;
@@ -7058,6 +7323,63 @@ export interface operations {
             };
             /** @description NOT_FOUND */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getExchangeSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeSnapshotResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13654,6 +13976,227 @@ export interface operations {
             };
         };
     };
+    listInvoicePaymentLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoicePaymentLinksResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createInvoicePaymentLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentLinkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentLinkResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTEGRITY_LOCK */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deactivateInvoicePaymentLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentLinkResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     restoreInvoice: {
         parameters: {
             query?: never;
@@ -13799,6 +14342,58 @@ export interface operations {
             };
         };
     };
+    mcp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A JSON-RPC 2.0 request or batch */
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description The JSON-RPC 2.0 response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     getMe: {
         parameters: {
             query?: never;
@@ -13818,6 +14413,159 @@ export interface operations {
             };
             /** @description UNAUTHENTICATED */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listMyApiTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenListDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    issueMyApiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueApiTokenDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedApiTokenDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revokeMyApiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18114,6 +18862,111 @@ export interface operations {
             };
         };
     };
+    getIntegrationMapping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationMappingResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateIntegrationMapping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIntegrationMappingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationMappingResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     listShareLinks: {
         parameters: {
             query?: {
@@ -20065,6 +20918,52 @@ export interface operations {
             };
             /** @description CONFLICT */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    receiveStripeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeWebhookResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

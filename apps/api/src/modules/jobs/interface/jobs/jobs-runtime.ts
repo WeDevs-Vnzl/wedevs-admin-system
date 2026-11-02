@@ -4,6 +4,7 @@ import IORedis from 'ioredis';
 import { APP_LOGGER, type AppLogger } from '../../../../shared/interface/logger';
 import { DailyMaintenance } from '../../application/daily-maintenance';
 import { RunCleanupFiles } from '../../application/run-cleanup-files';
+import { RunExchangeSync } from '../../application/run-exchange-sync';
 import { RunRetention } from '../../application/run-retention';
 import {
   createMaintenanceWorker,
@@ -13,7 +14,7 @@ import {
 import {
   DEFAULT_RETRY,
   registerSchedules,
-  SCHEDULES,
+  schedulesFor,
   type RetryPolicy,
   type ScheduleDefinition,
 } from './schedules';
@@ -40,6 +41,8 @@ export class JobsRuntime implements OnApplicationShutdown {
     private readonly dailyMaintenance: DailyMaintenance,
     private readonly retention: RunRetention,
     private readonly cleanupFiles: RunCleanupFiles,
+    /** `null` while Binance is not configured: no `exchange-sync` handler and no scheduler (DT-193). */
+    @Inject(RunExchangeSync) private readonly exchangeSync: RunExchangeSync | null,
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
   ) {}
 
@@ -55,7 +58,7 @@ export class JobsRuntime implements OnApplicationShutdown {
     this.queue.on('error', (error) => this.logger.error({ err: error }, 'Jobs queue error'));
     await registerSchedules(
       this.queue,
-      options.schedules ?? SCHEDULES,
+      options.schedules ?? schedulesFor({ exchangeSync: this.exchangeSync !== null }),
       options.retry ?? DEFAULT_RETRY,
     );
     this.worker = createMaintenanceWorker(
@@ -64,6 +67,7 @@ export class JobsRuntime implements OnApplicationShutdown {
         'daily-maintenance': this.dailyMaintenance,
         retention: this.retention,
         'cleanup-files': this.cleanupFiles,
+        ...(this.exchangeSync ? { 'exchange-sync': this.exchangeSync } : {}),
       },
       {
         ...options,

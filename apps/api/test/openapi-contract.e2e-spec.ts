@@ -100,7 +100,7 @@ function expectedRoutes(app: NestExpressApplication): ExpectedRoute[] {
 
 /** Every BE-3 finance operation: the paths of the plan's contract choice 1 (`TASK-BE.md` BE-3). */
 const FINANCE_PATH =
-  /^\/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))(?!\/overview$)/;
+  /^\/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))(?!\/overview$|\/\{id\}\/(payment-links|exchange-snapshot))/;
 
 /**
  * Every BE-5 `intelligence` operation (`TASK-BE.md` BE-5 contract choices). The `/x/overview` routes sit under
@@ -138,7 +138,7 @@ const INTEGER_ALLOWLIST: ReadonlySet<string> = new Set([
 /** Names that carry a money amount, a rate or a percent; dates, notes, flags and ids are not. */
 const MONEY_NAME =
   /(amount|total|price|balance|rate|fee|igtf|iva|discount|credit|paid|allocated|net|tax|percent|usd|withheld|difference|adjustment|quantity|receivable|allocatable)/i;
-const NOT_MONEY_NAME = /(At|Note|Date|Start|Id)$|^has[A-Z]|^(pageCount|created|updated)$/;
+const NOT_MONEY_NAME = /(At|Note|Date|Start|Id|Reason)$|^has[A-Z]|^(pageCount|created|updated)$/;
 
 const SCALAR_TYPES: ReadonlySet<string> = new Set([
   'string',
@@ -170,6 +170,8 @@ function financeContractFindings(
     readonly counter?: RegExp;
     /** BE-5: any integer is a count (an amount is never an integer) and the pattern is not required. */
     readonly relaxed?: boolean;
+    /** DT-181 6a: with `relaxed`, a money string in a response must still carry the decimal pattern. */
+    readonly responsePattern?: boolean;
   } = { paths: FINANCE_PATH },
 ): string[] {
   const findings = new Set<string>();
@@ -210,7 +212,9 @@ function financeContractFindings(
     }
     const expected =
       side === 'request' && name === 'percentage' ? PERCENT_PATTERN : DECIMAL_PATTERN;
-    if (money && types.includes('string') && node.pattern !== expected && !scope.relaxed) {
+    const patternRequired =
+      !scope.relaxed || (scope.responsePattern === true && side === 'response');
+    if (money && types.includes('string') && node.pattern !== expected && patternRequired) {
       findings.add(`${where}: ${name} misses the decimal pattern (${side})`);
     }
     for (const key of ['anyOf', 'oneOf', 'allOf'] as const) {
@@ -583,6 +587,52 @@ describe('BE-5 contract: intelligence', () => {
         { name: string; schema: JsonSchema }[] | undefined
     )?.find((p) => p.name === 'entity')?.schema;
     expect(entity?.enum).toHaveLength(11);
+  });
+});
+
+/** The BE-6 `integrations` and `mcp` operations (`TASK-BE.md` BE-6 contract choices). */
+const BE6_PATH =
+  /^\/api\/v1\/(webhooks\/stripe|invoices\/\{id\}\/payment-links|settings\/integrations|accounts\/\{id\}\/exchange-snapshot|mcp|me\/api-tokens)/;
+
+describe('BE-6 contract and the decimal pattern of every money response (DT-181 6a, C8, C15)', () => {
+  const full = DOCUMENT as unknown as FullDocument;
+  // Counts, flags and free text that merely contain a money word; an amount is never one of these.
+  const counter =
+    /(Count|^meta$|^vesRateMissing$|^rateSource$|^taxId$|^netWeight$|^currency$|Currencies$|^expiresAt$|^lastUsed)/;
+  // BE-5 and BE-6 operations. The commercial `/clients` and `/projects` DTOs are outside this package.
+  const everything = {
+    paths: new RegExp(`${BE5_PATH.source}|${BE6_PATH.source}`),
+    counter,
+    relaxed: true,
+    responsePattern: true,
+  };
+
+  it('documents the 11 BE-6 operations', () => {
+    const operations = Object.entries(full.paths)
+      .filter(([path]) => BE6_PATH.test(path))
+      .flatMap(([, methods]) => Object.keys(methods));
+    expect(operations).toHaveLength(11);
+  });
+
+  it('types every money field of every response, BE-5 and BE-6 included, as a decimal string', () => {
+    expect(financeContractFindings(full, everything)).toEqual([]);
+  });
+
+  it('flags a BE-5 overview money string that lost its decimal pattern and a BE-6 amount planted as a number', () => {
+    const doc = structuredClone(full);
+    const plant = (schema: string, property: string, value: JsonSchema): void => {
+      const target = doc.components.schemas[schema];
+      if (!target) throw new Error(`${schema} is not in the document`);
+      target.properties = {
+        ...(target.properties as Record<string, JsonSchema>),
+        [property]: value,
+      };
+    };
+    plant('ClientsOverviewDto', 'totalInvoicedUsd', { type: 'string' });
+    plant('PaymentLinkResponseDto', 'amount', { type: 'number' });
+    const findings = financeContractFindings(doc, everything).join('\n');
+    expect(findings).toMatch(/totalInvoicedUsd misses the decimal pattern/);
+    expect(findings).toMatch(/payment-links: amount is a JSON number/);
   });
 });
 
