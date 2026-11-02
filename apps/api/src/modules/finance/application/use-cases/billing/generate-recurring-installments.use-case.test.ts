@@ -107,9 +107,7 @@ describe('generating the recurring periods of the day (HU-10, DT-129)', () => {
       return real(id);
     };
 
-    await expect(world.runGeneration.execute(SYSTEM_ACTOR)).rejects.toThrow(
-      'database unavailable',
-    );
+    await expect(world.runGeneration.execute(SYSTEM_ACTOR)).rejects.toThrow('database unavailable');
     expect(generated(first)).toHaveLength(0);
     expect(generated(second)).toHaveLength(0);
   });
