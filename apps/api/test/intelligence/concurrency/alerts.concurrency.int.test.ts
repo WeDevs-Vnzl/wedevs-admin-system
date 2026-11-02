@@ -45,10 +45,11 @@ function world(wrap: (repo: AlertStateRepository) => AlertStateRepository = (rep
   const states = wrap(new PrismaAlertStateRepository(host, new CuidGenerator()));
   const authorization = new MatrixAuthorization();
   const clock = new SystemClock();
+  const uow = new PrismaUnitOfWork(host);
   return {
-    uow: new PrismaUnitOfWork(host),
-    dismiss: new DismissAlert(authorization, states, clock),
-    markRead: new MarkAlertsRead(authorization, states, clock),
+    uow,
+    dismiss: new DismissAlert(authorization, uow, states, clock),
+    markRead: new MarkAlertsRead(authorization, uow, states, clock),
   };
 }
 

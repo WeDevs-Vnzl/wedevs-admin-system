@@ -1,5 +1,6 @@
 import type { CurrentUser } from '../../../../../shared/application/current-user';
 import type { AuthorizationPort } from '../../../../../shared/application/ports/authorization.port';
+import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import type { ClockPort } from '../../../../../shared/application/ports/clock.port';
 import {
   snoozeUntil,
@@ -23,6 +24,7 @@ export interface DismissAlertInput {
 export class DismissAlert {
   constructor(
     private readonly authorization: AuthorizationPort,
+    private readonly uow: UnitOfWorkPort,
     private readonly states: AlertStateRepository,
     private readonly clock: ClockPort,
   ) {}
@@ -34,7 +36,7 @@ export class DismissAlert {
       input.days === undefined
         ? { dismissedAt: now, dismissedUntil: null }
         : { dismissedAt: null, dismissedUntil: snoozeUntil(now, input.days) };
-    await this.states.hide(user.userId, input.alertKey, hiding, now);
+    await this.uow.run(() => this.states.hide(user.userId, input.alertKey, hiding, now));
     return toDismissalView(input.alertKey, hiding, now);
   }
 }

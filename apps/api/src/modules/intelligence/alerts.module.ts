@@ -2,7 +2,13 @@ import { Module } from '@nestjs/common';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
-import { AUTHORIZATION, CLOCK, ID_GENERATOR } from '../../shared/application/ports/tokens';
+import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
+import {
+  AUTHORIZATION,
+  CLOCK,
+  ID_GENERATOR,
+  UNIT_OF_WORK,
+} from '../../shared/application/ports/tokens';
 import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { SharedInterfaceModule } from '../../shared/interface/shared-interface.module';
 import {
@@ -51,28 +57,31 @@ import { AlertsController } from './interface/http/alerts.controller';
       provide: MarkAlertsRead,
       useFactory: (
         authorization: AuthorizationPort,
+        uow: UnitOfWorkPort,
         states: AlertStateRepository,
         clock: ClockPort,
-      ) => new MarkAlertsRead(authorization, states, clock),
-      inject: [AUTHORIZATION, ALERT_STATE_REPOSITORY, CLOCK],
+      ) => new MarkAlertsRead(authorization, uow, states, clock),
+      inject: [AUTHORIZATION, UNIT_OF_WORK, ALERT_STATE_REPOSITORY, CLOCK],
     },
     {
       provide: DismissAlert,
       useFactory: (
         authorization: AuthorizationPort,
+        uow: UnitOfWorkPort,
         states: AlertStateRepository,
         clock: ClockPort,
-      ) => new DismissAlert(authorization, states, clock),
-      inject: [AUTHORIZATION, ALERT_STATE_REPOSITORY, CLOCK],
+      ) => new DismissAlert(authorization, uow, states, clock),
+      inject: [AUTHORIZATION, UNIT_OF_WORK, ALERT_STATE_REPOSITORY, CLOCK],
     },
     {
       provide: RestoreAlert,
       useFactory: (
         authorization: AuthorizationPort,
+        uow: UnitOfWorkPort,
         states: AlertStateRepository,
         clock: ClockPort,
-      ) => new RestoreAlert(authorization, states, clock),
-      inject: [AUTHORIZATION, ALERT_STATE_REPOSITORY, CLOCK],
+      ) => new RestoreAlert(authorization, uow, states, clock),
+      inject: [AUTHORIZATION, UNIT_OF_WORK, ALERT_STATE_REPOSITORY, CLOCK],
     },
   ],
   exports: [ListAlerts],

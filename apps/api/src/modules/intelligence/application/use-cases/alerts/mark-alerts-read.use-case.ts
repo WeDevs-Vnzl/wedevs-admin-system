@@ -1,5 +1,6 @@
 import type { CurrentUser } from '../../../../../shared/application/current-user';
 import type { AuthorizationPort } from '../../../../../shared/application/ports/authorization.port';
+import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import type { ClockPort } from '../../../../../shared/application/ports/clock.port';
 import { assertMarkReadKeys } from '../../../domain/alert-state';
 import type { AlertStateRepository } from '../../ports/alert-state.repository.port';
@@ -17,6 +18,7 @@ export interface MarkAlertsReadInput {
 export class MarkAlertsRead {
   constructor(
     private readonly authorization: AuthorizationPort,
+    private readonly uow: UnitOfWorkPort,
     private readonly states: AlertStateRepository,
     private readonly clock: ClockPort,
   ) {}
@@ -24,7 +26,8 @@ export class MarkAlertsRead {
   async execute(user: CurrentUser, input: MarkAlertsReadInput): Promise<{ alertKeys: string[] }> {
     const alertKeys = assertMarkReadKeys(input.alertKeys);
     for (const key of alertKeys) assertKeyVisible(this.authorization, user, key);
-    await this.states.markRead(user.userId, alertKeys, this.clock.now());
+    const at = this.clock.now();
+    await this.uow.run(() => this.states.markRead(user.userId, alertKeys, at));
     return { alertKeys };
   }
 }
