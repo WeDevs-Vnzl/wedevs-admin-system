@@ -101,7 +101,7 @@ function build(rows: Row[] = [row(1)], entity = 'CLIENT') {
     return original(entry);
   };
   const useCase = new ExportCsv(registry, uow, activity, clock);
-  return { useCase, source, activity, log, registry };
+  return { useCase, source, activity, log, registry, uow };
 }
 
 const run = (useCase: ExportCsv, over: Partial<ExportCsvInput> = {}, entity: string = 'CLIENT') =>
@@ -188,6 +188,19 @@ describe('ExportCsv', () => {
     expect(source.calls.map((c) => c.page)).toEqual(
       Array.from({ length: EXPORT_MAX_ROWS / EXPORT_PAGE_SIZE }, (_, i) => i + 1),
     );
+  });
+
+  it('reads every page inside one RepeatableRead unit of work', async () => {
+    const { useCase, uow } = build(Array.from({ length: 250 }, (_, i) => row(i + 1)));
+    const isolations: (string | undefined)[] = [];
+    const original = uow.run.bind(uow);
+    uow.run = (work, options) => {
+      isolations.push(options?.isolation);
+      return original(work, options);
+    };
+    await run(useCase);
+    // The page reads share one snapshot; the EXPORT entry is written afterwards in its own default unit.
+    expect(isolations).toEqual(['RepeatableRead', undefined]);
   });
 
   it('is not truncated at exactly 10,000 rows', async () => {
