@@ -239,6 +239,7 @@ export class PrismaReportInputsRead implements ReportInputsReadPort {
 
   async receivableAt(closes: readonly DateOnly[], scope: ReportScope): Promise<ReceivableClose[]> {
     if (closes.length === 0) return [];
+    const scoped = factScope(scope);
     // The definition of `FinanceFactsReadPort.receivableAt` (DT-125), for many close dates at once; an
     // integration test pins both to the same figures. Withholdings carry no project, so a filtered read
     // takes the share of the invoice's withholding that matches its filtered billed amount.
@@ -246,23 +247,21 @@ export class PrismaReportInputsRead implements ReportInputsReadPort {
       WITH "closes" AS (SELECT DISTINCT c AS "close" FROM unnest((${[...closes]}::text[])::date[]) AS c),
       "per" AS (
         SELECT cl."close", f."invoiceId" AS "invoiceId",
-               MAX(f."dueDate") FILTER (WHERE f."kind" = 'BILLED') AS "dueDate",
-               COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'BILLED'), 0) AS "billed",
-               COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'COLLECTED'), 0) AS "collected"
+               MAX(f."dueDate") FILTER (WHERE f."kind" = 'BILLED' AND ${scoped}) AS "dueDate",
+               COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'BILLED' AND ${scoped}), 0) AS "billed",
+               COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'COLLECTED' AND ${scoped}), 0) AS "collected",
+               COALESCE(SUM(f."amountUsd") FILTER (WHERE f."kind" = 'BILLED'), 0) AS "wholeBilled",
+               COALESCE(SUM(f."amountUsd") FILTER (
+                 WHERE f."kind" IN ('WITHHELD_IVA', 'WITHHELD_ISLR', 'WITHHELD_OTHER')), 0) AS "withheld"
         FROM "closes" cl
-        JOIN "FinanceFact" f ON f."invoiceId" IS NOT NULL AND f."date" <= cl."close" AND ${factScope(scope)}
-        GROUP BY cl."close", f."invoiceId"),
+        JOIN "FinanceFact" f ON f."invoiceId" IS NOT NULL AND f."date" <= cl."close"
+        GROUP BY cl."close", f."invoiceId"
+        HAVING bool_or(${scoped})),
       "open" AS (
         SELECT b."close", b."dueDate",
                b."billed" - b."collected"
-                 - COALESCE(ROUND(w."withheld" * b."billed" / NULLIF(w."billed", 0), 2), 0) AS "balance"
+                 - COALESCE(ROUND(b."withheld" * b."billed" / NULLIF(b."wholeBilled", 0), 2), 0) AS "balance"
         FROM "per" b
-        CROSS JOIN LATERAL (
-          SELECT COALESCE(SUM(t."amountUsd") FILTER (WHERE t."kind" = 'BILLED'), 0) AS "billed",
-                 COALESCE(SUM(t."amountUsd") FILTER (
-                   WHERE t."kind" IN ('WITHHELD_IVA', 'WITHHELD_ISLR', 'WITHHELD_OTHER')), 0) AS "withheld"
-          FROM "FinanceFact" t
-          WHERE t."invoiceId" = b."invoiceId" AND t."date" <= b."close") w
         WHERE b."dueDate" IS NOT NULL)
       SELECT cl."close"::text AS "close",
              ${money(Prisma.sql`SUM(o."balance") FILTER (WHERE o."balance" > 0)`)} AS "total",
