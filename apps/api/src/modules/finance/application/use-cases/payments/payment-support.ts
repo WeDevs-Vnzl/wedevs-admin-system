@@ -6,7 +6,10 @@ import type {
   RowLockSet,
   RowLocksPort,
 } from '../../../../../shared/application/ports/row-locks.port';
-import type { SearchIndexPort } from '../../../../../shared/application/ports/search-index.port';
+import type {
+  SearchIndexEntry,
+  SearchIndexPort,
+} from '../../../../../shared/application/ports/search-index.port';
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { todayInCaracas, type DateOnly } from '../../../../../shared/domain/business-date';
 import {
@@ -89,6 +92,34 @@ const isSubset = (inner: readonly string[], outer: readonly string[]): boolean =
 
 export function todayOf(clock: ClockPort): DateOnly {
   return todayInCaracas(clock.now());
+}
+
+/** The `body` of a `PAYMENT` search entry: the reference and the method name (A15). One function for the mutation and the relabel. */
+export function paymentSearchBody(
+  reference: string | null,
+  methodName: string | null,
+): string | null {
+  return [reference, methodName].filter(Boolean).join(' ') || null;
+}
+
+/** The `PAYMENT` search entry (C12, DT-112): used by every mutation and by the reindex source. */
+export function paymentSearchEntry(
+  payment: Pick<PaymentRecord, 'id' | 'code' | 'reference' | 'status'>,
+  view: {
+    readonly client: { readonly label: string };
+    readonly method: { readonly name: string };
+  } | null,
+): SearchIndexEntry {
+  return {
+    entityType: 'PAYMENT',
+    entityId: payment.id,
+    code: payment.code,
+    title: payment.reference ?? payment.code,
+    subtitle: view?.client.label ?? null,
+    body: paymentSearchBody(payment.reference, view?.method.name ?? null),
+    status: payment.status,
+    archived: false,
+  };
 }
 
 /**
@@ -466,15 +497,6 @@ export class PaymentSupport {
   /** Writes the search entry of the payment. */
   async reindex(after: PaymentRecord): Promise<void> {
     const view = await this.payments.view(after.id);
-    await this.search.upsert({
-      entityType: 'PAYMENT',
-      entityId: after.id,
-      code: after.code,
-      title: after.reference ?? after.code,
-      subtitle: view?.client.label ?? null,
-      body: [after.reference, view?.method.name].filter(Boolean).join(' ') || null,
-      status: after.status,
-      archived: false,
-    });
+    await this.search.upsert(paymentSearchEntry(after, view));
   }
 }

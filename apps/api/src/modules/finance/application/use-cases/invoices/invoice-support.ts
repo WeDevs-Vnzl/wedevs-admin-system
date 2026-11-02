@@ -7,7 +7,10 @@ import type {
   RowLockSet,
   RowLocksPort,
 } from '../../../../../shared/application/ports/row-locks.port';
-import type { SearchIndexPort } from '../../../../../shared/application/ports/search-index.port';
+import type {
+  SearchIndexEntry,
+  SearchIndexPort,
+} from '../../../../../shared/application/ports/search-index.port';
 import {
   daysBetween,
   todayInCaracas,
@@ -142,6 +145,25 @@ export function toInvoiceRowOutput(row: InvoiceListRowView, today: DateOnly): In
 
 export function todayOf(clock: ClockPort): DateOnly {
   return todayInCaracas(clock.now());
+}
+
+/** The `INVOICE` search entry (C12, DT-112): used by every mutation and by the reindex source. */
+export function invoiceSearchEntry(
+  invoice: Pick<InvoiceRecord, 'id' | 'code' | 'invoiceNumber' | 'status' | 'archivedAt'> & {
+    readonly lines: readonly { readonly description: string }[];
+  },
+  clientLabel: string | null,
+): SearchIndexEntry {
+  return {
+    entityType: 'INVOICE',
+    entityId: invoice.id,
+    code: invoice.code,
+    title: invoice.invoiceNumber,
+    subtitle: clientLabel,
+    body: invoice.lines.map((line) => line.description).join(' '),
+    status: invoice.status,
+    archived: invoice.archivedAt !== null,
+  };
 }
 
 const unique = (values: readonly (string | null | undefined)[]): string[] => [
@@ -548,16 +570,7 @@ export class InvoiceSupport {
   /** Writes the search entry. Exported for payments: a recompute changes the status it shows. */
   async reindex(after: InvoiceRecord): Promise<void> {
     const view = await this.invoices.view(after.id);
-    await this.search.upsert({
-      entityType: 'INVOICE',
-      entityId: after.id,
-      code: after.code,
-      title: after.invoiceNumber,
-      subtitle: view?.client.label ?? null,
-      body: after.lines.map((line) => line.description).join(' '),
-      status: after.status,
-      archived: after.archivedAt !== null,
-    });
+    await this.search.upsert(invoiceSearchEntry(after, view?.client.label ?? null));
   }
 
   /** The activity entry alone, for a change that neither feeds a read model nor shows in the search. */

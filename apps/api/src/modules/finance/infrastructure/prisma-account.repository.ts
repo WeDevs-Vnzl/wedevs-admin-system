@@ -336,7 +336,7 @@ function toLedgerRow(row: RawLedgerRow, accountId: string): LedgerRow {
   };
 }
 
-function toRecord(row: {
+export function toRecord(row: {
   id: string;
   name: string;
   type: AccountRecord['type'];
