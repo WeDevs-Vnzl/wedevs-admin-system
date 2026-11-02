@@ -15,7 +15,10 @@ export class WorkerModule {}
 
 /** Creates the worker's application context, starts the schedules and closes on SIGTERM/SIGINT. */
 export async function startWorker(): Promise<INestApplicationContext> {
-  const context = await NestFactory.createApplicationContext(WorkerModule);
+  const context = await NestFactory.createApplicationContext(WorkerModule, {
+    // A bad environment must reject with its message (names only), not abort the process.
+    abortOnError: false,
+  });
   try {
     const config = context.get<WorkerConfig>(APP_CONFIG);
     if (config.SENTRY_DSN) Sentry.init({ dsn: config.SENTRY_DSN, environment: config.NODE_ENV });
