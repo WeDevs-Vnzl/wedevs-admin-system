@@ -15,7 +15,7 @@ import type { ListDocuments } from '../application/use-cases/records/list-docume
  * with the caller's own authorization and the same query, so the export is exactly what the list shows.
  */
 export class DocumentsExportSource implements ExportSource<DocumentListRow> {
-  readonly entity = 'documents';
+  readonly entity = 'DOCUMENT';
 
   readonly columns: Readonly<Record<string, ExportColumn<DocumentListRow>>> = {
     code: { type: 'text', value: (row) => row.code },

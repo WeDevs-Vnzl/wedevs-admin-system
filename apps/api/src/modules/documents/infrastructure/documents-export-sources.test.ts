@@ -52,7 +52,7 @@ function build(rows: readonly DocumentListRow[] = [row]) {
 
 describe('DocumentsExportSource (DT-171)', () => {
   it('is the "documents" entity', () => {
-    expect(build().source.entity).toBe('documents');
+    expect(build().source.entity).toBe('DOCUMENT');
   });
 
   it('whitelists exactly the columns of the documents table, none of them a file', () => {
