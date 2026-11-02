@@ -4,14 +4,12 @@ import type { CurrentUser as CurrentUserModel } from '../../../../shared/applica
 import { ApiErrorResponses } from '../../../../shared/interface/api-error-responses';
 import { CurrentUser } from '../../../../shared/interface/current-user.decorator';
 import { Authenticated, RequiresGrant } from '../../../../shared/interface/grant.decorator';
-import type { RichTextDoc } from '../../../../shared/domain/rich-text';
 import { ArchiveNote } from '../../application/use-cases/archive-note.use-case';
 import { AttachNoteFile } from '../../application/use-cases/attach-note-file.use-case';
 import { CreateNote } from '../../application/use-cases/create-note.use-case';
 import { GetNote } from '../../application/use-cases/get-note.use-case';
 import { LinkNote } from '../../application/use-cases/link-note.use-case';
 import { ListNotes } from '../../application/use-cases/list-notes.use-case';
-import type { NoteDetail, NoteListRow } from '../../application/use-cases/note-support';
 import { PinNote } from '../../application/use-cases/pin-note.use-case';
 import { RestoreNote } from '../../application/use-cases/restore-note.use-case';
 import { UnlinkNote } from '../../application/use-cases/unlink-note.use-case';
@@ -27,37 +25,10 @@ import {
   NoteListResponseDto,
   PinNoteDto,
   UpdateNoteDto,
+  toNoteDetailResponse,
+  toNoteListRowResponse,
 } from './dto/notes.dto';
 import { EntityRefDto, toEntityRefResponse } from './dto/contacts.dto';
-
-const commonOf = (note: NoteDetail | NoteListRow) => ({
-  id: note.id,
-  title: note.title,
-  author: note.author,
-  pinned: note.pinned,
-  tags: note.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
-  links: note.links.map(toEntityRefResponse),
-  createdAt: note.createdAt.toISOString(),
-  updatedAt: note.updatedAt.toISOString(),
-  archivedAt: note.archivedAt ? note.archivedAt.toISOString() : null,
-});
-
-function toDetail(note: NoteDetail): NoteDetailDto {
-  return {
-    ...commonOf(note),
-    content: note.content as RichTextDoc as unknown as Record<string, unknown>,
-    contentText: note.contentText,
-    attachments: note.attachments.map((file) => ({
-      id: file.id,
-      originalName: file.originalName,
-      mimeType: file.mimeType,
-      sizeBytes: file.sizeBytes,
-      status: file.status,
-      uploadedById: file.uploadedById,
-      createdAt: file.createdAt.toISOString(),
-    })),
-  };
-}
 
 /**
  * Notes (PRD §8.10, HU-23). Every route is guarded by the matrix row of `note`; the use case runs `can()`
@@ -95,11 +66,7 @@ export class NotesController {
     const page = await this.listNotes.execute(user, query);
     return {
       ...page,
-      items: page.items.map((row) => ({
-        ...commonOf(row),
-        excerpt: row.excerpt,
-        attachmentCount: row.attachmentCount,
-      })),
+      items: page.items.map(toNoteListRowResponse),
     };
   }
 
@@ -113,7 +80,7 @@ export class NotesController {
     @CurrentUser() user: CurrentUserModel,
     @Body() body: CreateNoteDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.createNote.execute(user, body));
+    return toNoteDetailResponse(await this.createNote.execute(user, body));
   }
 
   @Get(':id')
@@ -128,7 +95,7 @@ export class NotesController {
     @CurrentUser() user: CurrentUserModel,
     @Param() params: NoteIdParamsDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.getNote.execute(user, { id: params.id }));
+    return toNoteDetailResponse(await this.getNote.execute(user, { id: params.id }));
   }
 
   @Patch(':id')
@@ -142,7 +109,7 @@ export class NotesController {
     @Param() params: NoteIdParamsDto,
     @Body() body: UpdateNoteDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.updateNote.execute(user, { ...body, id: params.id }));
+    return toNoteDetailResponse(await this.updateNote.execute(user, { ...body, id: params.id }));
   }
 
   @Post(':id/pin')
@@ -157,7 +124,9 @@ export class NotesController {
     @Param() params: NoteIdParamsDto,
     @Body() body: PinNoteDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.pinNote.execute(user, { id: params.id, pinned: body.pinned }));
+    return toNoteDetailResponse(
+      await this.pinNote.execute(user, { id: params.id, pinned: body.pinned }),
+    );
   }
 
   @Post(':id/links')
@@ -178,7 +147,9 @@ export class NotesController {
     @Param() params: NoteIdParamsDto,
     @Body() body: NoteLinkTargetDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.linkNote.execute(user, { noteId: params.id, target: body }));
+    return toNoteDetailResponse(
+      await this.linkNote.execute(user, { noteId: params.id, target: body }),
+    );
   }
 
   @Post(':id/unlink')
@@ -203,7 +174,9 @@ export class NotesController {
     @Param() params: NoteIdParamsDto,
     @Body() body: NoteLinkTargetDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(await this.unlinkNote.execute(user, { noteId: params.id, target: body }));
+    return toNoteDetailResponse(
+      await this.unlinkNote.execute(user, { noteId: params.id, target: body }),
+    );
   }
 
   @Post(':id/attachments')
@@ -217,7 +190,7 @@ export class NotesController {
     @Param() params: NoteIdParamsDto,
     @Body() body: AttachNoteFileDto,
   ): Promise<NoteDetailDto> {
-    return toDetail(
+    return toNoteDetailResponse(
       await this.attachNoteFile.execute(user, { noteId: params.id, fileId: body.fileId }),
     );
   }

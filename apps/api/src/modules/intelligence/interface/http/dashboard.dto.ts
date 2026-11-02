@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import type { DashboardOutput } from '../../application/use-cases/dashboard/get-dashboard.use-case';
 import { ACTIVITY_ACTION_VALUES } from '../../../../shared/domain/enums';
 import {
   dateOnlySchema,
@@ -107,3 +108,38 @@ export const dashboardResponseSchema = z.object({
   ),
 });
 export class DashboardResponseDto extends createZodDto(dashboardResponseSchema) {}
+
+// Output mapping, shared with the MCP tool.
+export const toDashboardResponse = (out: DashboardOutput): DashboardResponseDto => ({
+  ...out,
+  kpis: [...out.kpis],
+  incomeVsExpenses: {
+    periods: out.incomeVsExpenses.periods,
+    series: out.incomeVsExpenses.series.map((s) => ({ id: s.id, values: s.values })),
+  },
+  invoicesDue: out.invoicesDue.map((row) => ({
+    ...row,
+    invoice: { ...row.invoice, code: row.invoice.code ?? null },
+    client: { ...row.client, code: row.client.code ?? null },
+  })),
+  installmentsToInvoice: out.installmentsToInvoice.map((row) => ({
+    ...row,
+    installment: { ...row.installment, code: row.installment.code ?? null },
+    project: { ...row.project, code: row.project.code ?? null },
+  })),
+  documentsExpiring: out.documentsExpiring.map((row) => ({
+    ...row,
+    document: { ...row.document, code: row.document.code ?? null },
+  })),
+  upcomingRecurringExpenses: out.upcomingRecurringExpenses.map((row) => ({
+    ...row,
+    expense: { ...row.expense, code: row.expense.code ?? null },
+  })),
+  recentActivity: out.recentActivity.map((row) => ({
+    id: row.id,
+    action: row.action as DashboardResponseDto['recentActivity'][number]['action'],
+    entity: row.entity ? { ...row.entity, code: row.entity.code ?? null } : null,
+    actorName: row.actorName,
+    createdAt: row.createdAt.toISOString(),
+  })),
+});

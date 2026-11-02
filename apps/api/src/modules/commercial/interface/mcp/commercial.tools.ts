@@ -1,7 +1,6 @@
 import type { Type } from '@nestjs/common';
 import { z, type ZodType } from 'zod';
 import type { CurrentUser } from '../../../../shared/application/current-user';
-import type { RichTextDoc } from '../../../../shared/domain/rich-text';
 import { idSchema } from '../../../../shared/interface/common.schemas';
 import type { McpToolDefinition } from '../../../../shared/interface/mcp-tool-registry';
 import { CreateClient } from '../../application/use-cases/create-client.use-case';
@@ -15,13 +14,7 @@ import { ListClients } from '../../application/use-cases/list-clients.use-case';
 import { ListContacts } from '../../application/use-cases/list-contacts.use-case';
 import { ListNotes } from '../../application/use-cases/list-notes.use-case';
 import { ListProjects } from '../../application/use-cases/list-projects.use-case';
-import type { NoteDetail, NoteListRow } from '../../application/use-cases/note-support';
 import { PinNote } from '../../application/use-cases/pin-note.use-case';
-import type {
-  ProjectDetailView,
-  ProjectLinkRecord,
-  ProjectListRowView,
-} from '../../application/use-cases/project-views';
 import { SetClientStatus } from '../../application/use-cases/set-client-status.use-case';
 import { SetPrimaryContact } from '../../application/use-cases/set-primary-contact.use-case';
 import { UnlinkNote } from '../../application/use-cases/unlink-note.use-case';
@@ -43,7 +36,6 @@ import {
   ListContactsQueryDto,
   UpdateContactDto,
   toContactResponse,
-  toEntityRefResponse,
 } from '../http/dto/contacts.dto';
 import {
   CreateNoteDto,
@@ -52,8 +44,15 @@ import {
   PinNoteDto,
   UpdateNoteDto,
   noteLinkTargetSchema,
+  toNoteDetailResponse,
+  toNoteListRowResponse,
 } from '../http/dto/notes.dto';
-import { ListProjectsQueryDto, ProjectIdParamsDto } from '../http/dto/projects.dto';
+import {
+  ListProjectsQueryDto,
+  ProjectIdParamsDto,
+  toProjectDetailResponse,
+  toProjectRowResponse,
+} from '../http/dto/projects.dto';
 
 /** Resolves an application use case of the booted app (the feature modules do not export them). */
 export type ResolveUseCase = <T>(token: Type<T>) => T;
@@ -80,82 +79,6 @@ function tool<S extends ZodType>(spec: ToolSpec<S>): McpToolDefinition {
 
 /** Route params and body (or query) of an HTTP route, flattened into one argument object. */
 const both = <A extends ZodType, B extends ZodType>(a: A, b: B) => z.intersection(a, b);
-
-// ───────────────────── Output mapping (the same shapes as the HTTP routes) ─────────────────────
-
-const toLink = (link: ProjectLinkRecord) => ({
-  id: link.id,
-  group: link.group,
-  label: link.label,
-  url: link.url,
-  order: link.order,
-});
-
-function toProjectRow(row: ProjectListRowView) {
-  return {
-    id: row.id,
-    code: row.code,
-    name: row.name,
-    clients: row.clients.map((item) => ({
-      client: toEntityRefResponse(item.client),
-      role: item.role,
-    })),
-    status: row.status,
-    startDate: row.startDate,
-    targetEndDate: row.targetEndDate,
-    stack: row.stack.map((tech) => ({ ...tech })),
-    tags: row.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
-    archivedAt: row.archivedAt ? row.archivedAt.toISOString() : null,
-    contractedValueUsd: row.contractedValueUsd,
-    invoicedUsd: row.invoicedUsd,
-    collectedUsd: row.collectedUsd,
-    toInvoiceUsd: row.toInvoiceUsd,
-  };
-}
-
-function toProjectDetail(view: ProjectDetailView) {
-  return {
-    ...toProjectRow(view),
-    summary: view.summary,
-    description: view.description
-      ? { type: 'doc', ...(view.description.content ? { content: view.description.content } : {}) }
-      : null,
-    endDate: view.endDate,
-    links: view.links.map(toLink),
-    hasBillingPlan: view.hasBillingPlan,
-    createdAt: view.createdAt.toISOString(),
-    updatedAt: view.updatedAt.toISOString(),
-  };
-}
-
-const noteCommon = (note: NoteDetail | NoteListRow) => ({
-  id: note.id,
-  title: note.title,
-  author: note.author,
-  pinned: note.pinned,
-  tags: note.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
-  links: note.links.map(toEntityRefResponse),
-  createdAt: note.createdAt.toISOString(),
-  updatedAt: note.updatedAt.toISOString(),
-  archivedAt: note.archivedAt ? note.archivedAt.toISOString() : null,
-});
-
-function toNoteDetail(note: NoteDetail) {
-  return {
-    ...noteCommon(note),
-    content: note.content as RichTextDoc as unknown as Record<string, unknown>,
-    contentText: note.contentText,
-    attachments: note.attachments.map((file) => ({
-      id: file.id,
-      originalName: file.originalName,
-      mimeType: file.mimeType,
-      sizeBytes: file.sizeBytes,
-      status: file.status,
-      uploadedById: file.uploadedById,
-      createdAt: file.createdAt.toISOString(),
-    })),
-  };
-}
 
 /**
  * MCP tools of the `commercial` context (DT-188): reads, and the non-money writes on clients, contacts and
@@ -250,7 +173,7 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       grant: { resource: 'project', action: 'read' },
       run: async (actor, input) => {
         const page = await resolve(ListProjects).execute(actor, input);
-        return { ...page, items: page.items.map(toProjectRow) };
+        return { ...page, items: page.items.map(toProjectRowResponse) };
       },
     }),
     tool({
@@ -259,7 +182,7 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       input: ProjectIdParamsDto.schema,
       grant: { resource: 'project', action: 'read' },
       run: async (actor, input) =>
-        toProjectDetail(await resolve(GetProject).execute(actor, input.id)),
+        toProjectDetailResponse(await resolve(GetProject).execute(actor, input.id)),
     }),
     tool({
       name: 'list_notes',
@@ -270,11 +193,7 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
         const page = await resolve(ListNotes).execute(actor, input);
         return {
           ...page,
-          items: page.items.map((row) => ({
-            ...noteCommon(row),
-            excerpt: row.excerpt,
-            attachmentCount: row.attachmentCount,
-          })),
+          items: page.items.map(toNoteListRowResponse),
         };
       },
     }),
@@ -284,21 +203,23 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       input: NoteIdParamsDto.schema,
       grant: { resource: 'note', action: 'read' },
       run: async (actor, input) =>
-        toNoteDetail(await resolve(GetNote).execute(actor, { id: input.id })),
+        toNoteDetailResponse(await resolve(GetNote).execute(actor, { id: input.id })),
     }),
     tool({
       name: 'create_note',
       description: 'Create a note linked to at least one record (the token user is the author).',
       input: CreateNoteDto.schema,
       grant: { resource: 'note', action: 'create' },
-      run: async (actor, input) => toNoteDetail(await resolve(CreateNote).execute(actor, input)),
+      run: async (actor, input) =>
+        toNoteDetailResponse(await resolve(CreateNote).execute(actor, input)),
     }),
     tool({
       name: 'update_note',
       description: 'Edit the title, content or tags of a note.',
       input: both(NoteIdParamsDto.schema, UpdateNoteDto.schema),
       grant: { resource: 'note', action: 'update' },
-      run: async (actor, input) => toNoteDetail(await resolve(UpdateNote).execute(actor, input)),
+      run: async (actor, input) =>
+        toNoteDetailResponse(await resolve(UpdateNote).execute(actor, input)),
     }),
     tool({
       name: 'pin_note',
@@ -306,7 +227,9 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       input: both(NoteIdParamsDto.schema, PinNoteDto.schema),
       grant: { resource: 'note', action: 'update' },
       run: async (actor, input) =>
-        toNoteDetail(await resolve(PinNote).execute(actor, { id: input.id, pinned: input.pinned })),
+        toNoteDetailResponse(
+          await resolve(PinNote).execute(actor, { id: input.id, pinned: input.pinned }),
+        ),
     }),
     tool({
       name: 'link_note',
@@ -314,7 +237,7 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       input: both(NoteIdParamsDto.schema, noteLinkTargetSchema),
       grant: { resource: 'note', action: 'update' },
       run: async (actor, { id, ...target }) =>
-        toNoteDetail(await resolve(LinkNote).execute(actor, { noteId: id, target })),
+        toNoteDetailResponse(await resolve(LinkNote).execute(actor, { noteId: id, target })),
     }),
     tool({
       name: 'unlink_note',
@@ -322,7 +245,7 @@ export function commercialTools(resolve: ResolveUseCase): McpToolDefinition[] {
       input: both(NoteIdParamsDto.schema, noteLinkTargetSchema),
       grant: { resource: 'note', action: 'update' },
       run: async (actor, { id, ...target }) =>
-        toNoteDetail(await resolve(UnlinkNote).execute(actor, { noteId: id, target })),
+        toNoteDetailResponse(await resolve(UnlinkNote).execute(actor, { noteId: id, target })),
     }),
   ];
 }

@@ -1,5 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import type { RichTextDoc } from '../../../../../shared/domain/rich-text';
+import type { NoteDetail, NoteListRow } from '../../../application/use-cases/note-support';
+import { toEntityRefResponse } from './contacts.dto';
 import { entityRefResponseSchema } from '../../../../../shared/interface/error-envelope';
 import { NOTE_LINK_ENTITY_TYPE_VALUES } from '../../../application/ports/note-target.port';
 import { NOTE_SORT_FIELDS } from '../../../application/ports/note.repository.port';
@@ -146,3 +149,40 @@ export class NoteListResponseDto extends createZodDto(noteListResponseSchema) {}
 
 export const archivedNoteSchema = z.object({ id: z.string(), archivedAt: timestampSchema });
 export class ArchivedNoteDto extends createZodDto(archivedNoteSchema) {}
+
+// ───────────────────────────── Output mapping (shared with the MCP tools) ─────────────────────────────
+
+const noteCommonResponse = (note: NoteDetail | NoteListRow) => ({
+  id: note.id,
+  title: note.title,
+  author: note.author,
+  pinned: note.pinned,
+  tags: note.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
+  links: note.links.map(toEntityRefResponse),
+  createdAt: note.createdAt.toISOString(),
+  updatedAt: note.updatedAt.toISOString(),
+  archivedAt: note.archivedAt ? note.archivedAt.toISOString() : null,
+});
+
+export function toNoteDetailResponse(note: NoteDetail) {
+  return {
+    ...noteCommonResponse(note),
+    content: note.content as RichTextDoc as unknown as Record<string, unknown>,
+    contentText: note.contentText,
+    attachments: note.attachments.map((file) => ({
+      id: file.id,
+      originalName: file.originalName,
+      mimeType: file.mimeType,
+      sizeBytes: file.sizeBytes,
+      status: file.status,
+      uploadedById: file.uploadedById,
+      createdAt: file.createdAt.toISOString(),
+    })),
+  };
+}
+
+export const toNoteListRowResponse = (row: NoteListRow) => ({
+  ...noteCommonResponse(row),
+  excerpt: row.excerpt,
+  attachmentCount: row.attachmentCount,
+});
