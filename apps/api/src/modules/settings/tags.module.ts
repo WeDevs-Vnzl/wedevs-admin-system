@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
 import {
   ACTIVITY_LOG,
   AUTHORIZATION,
@@ -25,6 +26,7 @@ import { GetTag } from './application/use-cases/get-tag.use-case';
 import { ListTags } from './application/use-cases/list-tags.use-case';
 import { UnassignTag } from './application/use-cases/unassign-tag.use-case';
 import { UpdateTag } from './application/use-cases/update-tag.use-case';
+import { TagsExportSource } from './infrastructure/settings-export-sources';
 import { PrismaTagAssignmentRepository } from './infrastructure/prisma-tag-assignment.repository';
 import { PrismaTagRepository } from './infrastructure/prisma-tag.repository';
 import { TagsController } from './interface/http/tags.controller';
@@ -51,6 +53,11 @@ import { TagsController } from './interface/http/tags.controller';
       provide: ListTags,
       useFactory: (tags: TagRepository) => new ListTags(tags),
       inject: [TAG_REPOSITORY],
+    },
+    {
+      provide: TagsExportSource,
+      useFactory: (list: ListTags) => new TagsExportSource(list),
+      inject: [ListTags],
     },
     {
       provide: GetTag,
@@ -104,4 +111,14 @@ import { TagsController } from './interface/http/tags.controller';
   ],
   exports: [TagAssignments, TAGGABLE_TARGET_REGISTRY],
 })
-export class TagsModule {}
+export class TagsModule implements OnModuleInit {
+  constructor(
+    private readonly exportRegistry: ExportSourceRegistry,
+    private readonly exportSource: TagsExportSource,
+  ) {}
+
+  /** The `TAG` CSV export reads through `ListTags` (DT-171). */
+  onModuleInit(): void {
+    this.exportRegistry.register(this.exportSource);
+  }
+}
