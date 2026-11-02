@@ -47,6 +47,7 @@
     "decimal.js": "10.6.0",
     "dotenv": "18.0.8",
     "file-type": "22.2.0",
+    "ioredis": "5.11.1",
     "nestjs-pino": "4.6.1",
     "nestjs-zod": "5.5.0",
     "pg": "8.23.1",
