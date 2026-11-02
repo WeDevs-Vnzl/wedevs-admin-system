@@ -17,6 +17,7 @@ import {
   type DocumentTypeDetailView,
 } from '../document-type-catalog';
 import type { DocumentTypeRepository } from '../ports/document-type.repository.port';
+import type { DocumentTypeSearchDependentsPort } from '../ports/document-type-search-dependents.port';
 
 export interface UpdateDocumentTypeInput extends DocumentTypeInput {
   readonly id: string;
@@ -35,7 +36,9 @@ const TYPE_FIELDS = [
 
 /**
  * `PATCH /document-types/{id}` (`settings` update). Every field is replaced, the category included; the
- * placement and name rules apply again. Logs the field diff only when something changed.
+ * placement and name rules apply again. Runs `Serializable` (X18: the unit of work retries it); when `name`
+ * changed it rewrites the type name in the documents' search entries (DT-166) before the activity entry. Logs
+ * the field diff only when something changed.
  */
 export class UpdateDocumentType {
   constructor(
@@ -44,6 +47,7 @@ export class UpdateDocumentType {
     private readonly types: DocumentTypeRepository,
     private readonly catalog: DocumentTypeCatalog,
     private readonly activity: ActivityLogPort,
+    private readonly dependents: DocumentTypeSearchDependentsPort,
   ) {}
 
   async execute(
@@ -53,14 +57,23 @@ export class UpdateDocumentType {
     assertCan(this.authorization, actor, 'update', 'settings');
     const fields = normalizeDocumentTypeFields(input);
 
-    return this.uow.run(async () => {
-      const row = await this.catalog.requireType(input.id);
-      await this.catalog.assertTypePlacement(fields.categoryId, fields.name, row.id);
-      const next: DocumentType = { id: row.id, ...fields };
-      const changes = diffFields({ ...row }, { ...next }, { fields: TYPE_FIELDS });
-      if (changes !== null) await this.types.update(next);
-      await recordSettingsChange(this.activity, actor, { id: next.id, label: next.name }, changes);
-      return this.catalog.typeDetail(next);
-    });
+    return this.uow.run(
+      async () => {
+        const row = await this.catalog.requireType(input.id);
+        await this.catalog.assertTypePlacement(fields.categoryId, fields.name, row.id);
+        const next: DocumentType = { id: row.id, ...fields };
+        const changes = diffFields({ ...row }, { ...next }, { fields: TYPE_FIELDS });
+        if (changes !== null) await this.types.update(next);
+        if (next.name !== row.name) await this.dependents.relabelType(next.id, next.name);
+        await recordSettingsChange(
+          this.activity,
+          actor,
+          { id: next.id, label: next.name },
+          changes,
+        );
+        return this.catalog.typeDetail(next);
+      },
+      { isolation: 'Serializable' },
+    );
   }
 }

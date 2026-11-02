@@ -47,7 +47,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
 
     const result = await world.generate.execute(GENERATION_ACTOR);
 
-    expect(result).toEqual({ created: 1, periodStarts: ['2026-10-05'] });
+    expect(result).toEqual({ created: 1, periodStarts: ['2026-10-05'], skippedIds: [] });
     expect(generatedBy(schedule.id)[0]).toMatchObject({
       status: 'PENDIENTE',
       periodStart: '2026-10-05',
@@ -84,7 +84,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
 
     const second = await world.generate.execute(GENERATION_ACTOR);
 
-    expect(second).toEqual({ created: 0, periodStarts: [] });
+    expect(second).toEqual({ created: 0, periodStarts: [], skippedIds: [] });
     expect(generatedBy(schedule.id)).toHaveLength(1);
   });
 
@@ -109,7 +109,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
 
     const result = await world.generate.execute(GENERATION_ACTOR);
 
-    expect(result).toEqual({ created: 0, periodStarts: [] });
+    expect(result).toEqual({ created: 0, periodStarts: [], skippedIds: [] });
     expect(generatedBy(schedule.id)).toHaveLength(0);
   });
 
@@ -128,6 +128,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
       created: 0,
       periodStarts: [],
+      skippedIds: [],
     });
 
     // The next period after the resume is generated as usual: 2026-11-05, on 2026-10-31.
@@ -169,6 +170,7 @@ describe('recurring generation (HU-17 CA1), business day 2026-10-09', () => {
     expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
       created: 0,
       periodStarts: [],
+      skippedIds: [],
     });
 
     world.rateTable.set('EUR', '0.90');
@@ -399,6 +401,7 @@ describe('time', () => {
     expect(await world.generate.execute(GENERATION_ACTOR)).toEqual({
       created: 0,
       periodStarts: [],
+      skippedIds: [],
     });
     expect(NOW).toContain('2026-10-09');
   });

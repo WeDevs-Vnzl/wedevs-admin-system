@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
+import type { ShareAccessLogRetentionPort } from '../application/ports/share-access-log-retention.port';
 import type { RateLimitPort, UnlockFailureWindow } from '../application/ports/rate-limit.port';
 import type {
   NewShareAccess,
@@ -15,7 +17,9 @@ import type {
  * so two simultaneous views queue on it and neither overwrites the other (contract choice 4).
  */
 @Injectable()
-export class PrismaShareAccessLog implements ShareAccessLogPort, RateLimitPort {
+export class PrismaShareAccessLog
+  implements ShareAccessLogPort, RateLimitPort, ShareAccessLogRetentionPort
+{
   constructor(private readonly host: TransactionHost) {}
 
   async append(entry: NewShareAccess): Promise<void> {
@@ -60,5 +64,25 @@ export class PrismaShareAccessLog implements ShareAccessLogPort, RateLimitPort {
         createdAt: { gt: window.since },
       },
     });
+  }
+
+  /**
+   * Retention (DT-74, A9). The cutoff is stated twice, in the candidate subquery and in the `DELETE` itself, so
+   * a row that is not strictly older is never deleted whatever the subquery saw. `SKIP LOCKED` leaves a row
+   * another transaction is changing for the next run. Lockout reads (`countFailures`) look only at the last
+   * minutes, far from the cutoff, and take no lock on these rows.
+   */
+  async deleteCreatedBefore(cutoff: Date, limit: number): Promise<number> {
+    const db = this.host.requireTransaction('ShareAccessLog.deleteCreatedBefore');
+    return db.$executeRaw(Prisma.sql`
+      DELETE FROM "ShareAccessLog"
+      WHERE "createdAt" < ${cutoff}
+        AND "id" IN (
+          SELECT "id" FROM "ShareAccessLog"
+          WHERE "createdAt" < ${cutoff}
+          ORDER BY "createdAt", "id"
+          LIMIT ${limit}
+          FOR UPDATE SKIP LOCKED
+        )`);
   }
 }

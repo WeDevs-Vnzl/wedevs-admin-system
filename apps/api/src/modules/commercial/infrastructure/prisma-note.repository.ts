@@ -205,7 +205,7 @@ export class PrismaNoteRepository implements NoteRepository {
     const direction = sort.direction;
     const page = await listPage(db, {
       table: 'Note',
-      searchColumns: ['title', 'contentText'],
+      searchEntryType: 'NOTE',
       sortMap: sortMapFor(direction),
       defaultSort: { field: 'createdAt', direction: 'desc' },
       where,

@@ -1,3 +1,4 @@
+import type { EntityType } from '../../domain/enums';
 import { Prisma } from './generated-client';
 import {
   type ArchivedMode,
@@ -63,7 +64,7 @@ export function escapeLike(value: string): string {
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-function quoteIdentifier(name: string): Prisma.Sql {
+export function quoteIdentifier(name: string): Prisma.Sql {
   if (!IDENTIFIER.test(name)) throw new Error(`Invalid SQL identifier: ${name}`);
   return Prisma.raw(`"${name}"`);
 }
@@ -86,10 +87,47 @@ export function searchCondition(
   return Prisma.join(conditions, ' OR ');
 }
 
+/** The `SearchEntry` columns a list `q` looks into (`data-rules.md` §7). */
+const SEARCH_ENTRY_COLUMNS = ['code', 'title', 'subtitle', 'body'] as const;
+
+/** Whether the list has a search text to resolve. */
+export const hasSearchText = (q: string | undefined): q is string => (q?.trim() ?? '') !== '';
+
+/**
+ * `"id" IN (SELECT "entityId" FROM "SearchEntry" …)` for the list of `entityType`: the accent-folded,
+ * case-insensitive "contains" of `searchCondition` over the entry's code, title, subtitle and body. It
+ * leaves the archived mode to the table's own `deletedAt`, so a stale `SearchEntry.archived` never decides.
+ */
+export function searchEntryMatch(entityType: EntityType, q: string): Prisma.Sql {
+  const text = searchCondition(SEARCH_ENTRY_COLUMNS, q);
+  if (!text) throw new Error('searchEntryMatch requires a non-blank search text');
+  return Prisma.sql`"id" IN (SELECT "entityId" FROM "SearchEntry" WHERE "entityType" = ${entityType}::"EntityType" AND (${text}))`;
+}
+
+/** `ORDER BY` for a whitelisted column: `"column" DIR, "id" ASC`. */
+export function orderBy(column: string, direction: 'asc' | 'desc'): Prisma.Sql {
+  return Prisma.sql`${Prisma.raw(`"${column}"`)} ${Prisma.raw(direction === 'asc' ? 'ASC' : 'DESC')}, "id" ASC`;
+}
+
+/** The search predicate of a list: its `SearchEntry` when `searchEntryType` is given, else its own columns. */
+function searchPredicate(
+  spec: Pick<ListPageSpec<unknown>, 'searchColumns' | 'searchEntryType' | 'query'>,
+): Prisma.Sql | null {
+  if (spec.searchEntryType) {
+    return hasSearchText(spec.query.q)
+      ? searchEntryMatch(spec.searchEntryType, spec.query.q)
+      : null;
+  }
+  return searchCondition(spec.searchColumns ?? [], spec.query.q);
+}
+
 export interface ListPageSpec<T> {
   /** Table (model) name, used for the search predicate. */
   readonly table: string;
-  readonly searchColumns: readonly string[];
+  /** Own columns `q` looks into. Replaced by `searchEntryType` when that is given. */
+  readonly searchColumns?: readonly string[];
+  /** Resolves `q` through the `SearchEntry` of this type (DT-168) instead of `searchColumns`. */
+  readonly searchEntryType?: EntityType;
   readonly sortMap: SortMap;
   readonly defaultSort: SortSpec;
   /** Resource filters already translated to a Prisma `where` (from `query.filters`). */
@@ -137,9 +175,12 @@ function sortSql(spec: SortSpec, map: SortMap): Prisma.Sql {
 
 /** `WHERE` body shared by the page and the count statements of a search. */
 export function buildSearchWhere(
-  spec: Pick<ListPageSpec<unknown>, 'searchColumns' | 'sqlWhere' | 'where' | 'query'>,
+  spec: Pick<
+    ListPageSpec<unknown>,
+    'searchColumns' | 'searchEntryType' | 'sqlWhere' | 'where' | 'query'
+  >,
 ): Prisma.Sql {
-  const search = searchCondition(spec.searchColumns, spec.query.q);
+  const search = searchPredicate(spec);
   if (!search) throw new Error('buildSearchWhere requires a non-blank search text');
   if (!spec.sqlWhere && Object.keys(spec.where ?? {}).length > 0) {
     throw new Error('ListPageSpec.sqlWhere is required when a search is combined with filters');
@@ -156,7 +197,14 @@ export function buildSearchWhere(
 export function buildSearchStatements(
   spec: Pick<
     ListPageSpec<unknown>,
-    'table' | 'searchColumns' | 'sqlWhere' | 'where' | 'query' | 'sortMap' | 'defaultSort'
+    | 'table'
+    | 'searchColumns'
+    | 'searchEntryType'
+    | 'sqlWhere'
+    | 'where'
+    | 'query'
+    | 'sortMap'
+    | 'defaultSort'
   >,
   window: { skip: number; take: number },
 ): { page: Prisma.Sql; count: Prisma.Sql } {
@@ -180,7 +228,7 @@ export async function listPage<T>(db: DbClient, spec: ListPageSpec<T>): Promise<
   const orderBy = buildOrderBy(query.sort, spec.sortMap, spec.defaultSort);
   const { skip, take } = pageWindow(query.page, query.pageSize);
 
-  if (!query.q?.trim() || spec.searchColumns.length === 0) {
+  if (!query.q?.trim() || (!spec.searchEntryType && !spec.searchColumns?.length)) {
     const where: Record<string, unknown> = { ...spec.where, ...archivedWhere(query.archived) };
     const items = await spec.find({ where, orderBy, skip, take });
     const total = await spec.count({ where });

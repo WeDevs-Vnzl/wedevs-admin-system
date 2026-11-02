@@ -218,7 +218,7 @@ export function toClientRef(record: Pick<ClientRecord, 'id' | 'code' | 'tradeNam
   return { type: 'CLIENT', id: record.id, code: record.code, label: record.tradeName };
 }
 
-/** The `SearchEntry` projection of a client: code, trade name, legal name, tax id and status. */
+/** The `SearchEntry` projection of a client: code, trade name, legal name, tax id and e-mail, and status (X5). */
 export function clientSearchEntry(record: ClientRecord) {
   return {
     entityType: 'CLIENT' as const,
@@ -226,7 +226,7 @@ export function clientSearchEntry(record: ClientRecord) {
     code: record.code,
     title: record.tradeName,
     subtitle: record.legalName,
-    body: record.taxId,
+    body: [record.taxId, record.email].filter((part) => part !== null).join(' '),
     status: record.status,
     archived: record.deletedAt !== null,
   };

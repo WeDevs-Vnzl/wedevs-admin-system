@@ -74,35 +74,42 @@ export class CreateProject {
     const clients = normalizeProjectClients(input.clients, now);
     const links = normalizeLinkInputs(input.links);
 
-    const id = await this.uow.run(async () => {
-      await this.references.assertClients(clients.map((link) => link.clientId));
-      await this.references.assertTechnologies(input.technologyIds);
+    const id = await this.uow.run(
+      async () => {
+        await this.references.assertClients(clients.map((link) => link.clientId));
+        await this.references.assertTechnologies(input.technologyIds);
 
-      const record: ProjectRecord = {
-        id: this.ids.next(),
-        code: await this.sequence.next('PRY'),
-        ...fields,
-        status: input.status,
-        clients,
-        technologyIds: [...input.technologyIds],
-        links: initialLinks(links, () => this.ids.next()),
-        createdAt: now,
-        updatedAt: now,
-        archivedAt: null,
-      };
-      await this.projects.insert(record, actor.userId);
-      await this.tags.replace(actor, { entityType: 'PROJECT', entityId: record.id }, input.tagIds);
+        const record: ProjectRecord = {
+          id: this.ids.next(),
+          code: await this.sequence.next('PRY'),
+          ...fields,
+          status: input.status,
+          clients,
+          technologyIds: [...input.technologyIds],
+          links: initialLinks(links, () => this.ids.next()),
+          createdAt: now,
+          updatedAt: now,
+          archivedAt: null,
+        };
+        await this.projects.insert(record, actor.userId);
+        await this.tags.replace(
+          actor,
+          { entityType: 'PROJECT', entityId: record.id },
+          input.tagIds,
+        );
 
-      await this.sync.log(actor, 'CREATE', record, {
-        metadata: { code: record.code, status: record.status },
-      });
-      for (const entry of await clientLinkEntries(this.projects, [], clients)) {
-        await this.sync.log(actor, entry.action, record, entry);
-      }
-      await this.sync.reindex(record);
-      await this.sync.recount(clients.map((link) => link.clientId));
-      return record.id;
-    });
+        await this.sync.log(actor, 'CREATE', record, {
+          metadata: { code: record.code, status: record.status },
+        });
+        for (const entry of await clientLinkEntries(this.projects, [], clients)) {
+          await this.sync.log(actor, entry.action, record, entry);
+        }
+        await this.sync.reindex(record);
+        await this.sync.recount(clients.map((link) => link.clientId));
+        return record.id;
+      },
+      { isolation: 'Serializable' },
+    );
 
     const created = await this.projects.findById(id);
     if (!created) throw new NotFoundError();

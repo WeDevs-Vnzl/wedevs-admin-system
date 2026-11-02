@@ -55,52 +55,55 @@ export class UpdateProject {
     assertCan(this.authorization, actor, 'update', 'project');
     const fields = normalizeProjectFields(input);
 
-    await this.uow.run(async () => {
-      const before = await loadLiveProject(this.projects, input.id);
-      assertStatusDates(before.status, fields);
-      const clients = normalizeProjectClients(input.clients, this.clock.now(), before.clients);
-      await this.references.assertClients(
-        clients.map((link) => link.clientId),
-        before.clients.map((link) => link.clientId),
-      );
-      await this.references.assertTechnologies(input.technologyIds, before.technologyIds);
+    await this.uow.run(
+      async () => {
+        const before = await loadLiveProject(this.projects, input.id);
+        assertStatusDates(before.status, fields);
+        const clients = normalizeProjectClients(input.clients, this.clock.now(), before.clients);
+        await this.references.assertClients(
+          clients.map((link) => link.clientId),
+          before.clients.map((link) => link.clientId),
+        );
+        await this.references.assertTechnologies(input.technologyIds, before.technologyIds);
 
-      const beforeTags = (await this.tags.chipsFor([TAG_TARGET(before.id)])).get(
-        `PROJECT:${before.id}`,
-      );
-      const beforeView = projectDiffView(
-        before,
-        await this.references.technologyNames(before.technologyIds),
-        (beforeTags ?? []).map((tag) => tag.name),
-      );
+        const beforeTags = (await this.tags.chipsFor([TAG_TARGET(before.id)])).get(
+          `PROJECT:${before.id}`,
+        );
+        const beforeView = projectDiffView(
+          before,
+          await this.references.technologyNames(before.technologyIds),
+          (beforeTags ?? []).map((tag) => tag.name),
+        );
 
-      await this.projects.updateFields({ ...before, ...fields }, actor.userId);
-      await this.projects.replaceClients(before.id, clients);
-      await this.projects.replaceTechnologies(before.id, input.technologyIds);
-      await this.tags.replace(actor, TAG_TARGET(before.id), input.tagIds);
+        await this.projects.updateFields({ ...before, ...fields }, actor.userId);
+        await this.projects.replaceClients(before.id, clients);
+        await this.projects.replaceTechnologies(before.id, input.technologyIds);
+        await this.tags.replace(actor, TAG_TARGET(before.id), input.tagIds);
 
-      const after = await reloadProject(this.projects, before.id);
-      const afterTags = (await this.tags.chipsFor([TAG_TARGET(after.id)])).get(
-        `PROJECT:${after.id}`,
-      );
-      const changes = projectChanges(
-        beforeView,
-        projectDiffView(
-          after,
-          await this.references.technologyNames(after.technologyIds),
-          (afterTags ?? []).map((tag) => tag.name),
-        ),
-      );
-      if (changes) await this.sync.log(actor, 'UPDATE', after, { changes });
-      for (const entry of await clientLinkEntries(this.projects, before.clients, after.clients)) {
-        await this.sync.log(actor, entry.action, after, entry);
-      }
-      await this.sync.reindex(after);
-      await this.sync.recount([
-        ...before.clients.map((link) => link.clientId),
-        ...after.clients.map((link) => link.clientId),
-      ]);
-    });
+        const after = await reloadProject(this.projects, before.id);
+        const afterTags = (await this.tags.chipsFor([TAG_TARGET(after.id)])).get(
+          `PROJECT:${after.id}`,
+        );
+        const changes = projectChanges(
+          beforeView,
+          projectDiffView(
+            after,
+            await this.references.technologyNames(after.technologyIds),
+            (afterTags ?? []).map((tag) => tag.name),
+          ),
+        );
+        if (changes) await this.sync.log(actor, 'UPDATE', after, { changes });
+        for (const entry of await clientLinkEntries(this.projects, before.clients, after.clients)) {
+          await this.sync.log(actor, entry.action, after, entry);
+        }
+        await this.sync.reindex(after);
+        await this.sync.recount([
+          ...before.clients.map((link) => link.clientId),
+          ...after.clients.map((link) => link.clientId),
+        ]);
+      },
+      { isolation: 'Serializable' },
+    );
 
     return this.views.detail(actor, await reloadProject(this.projects, input.id));
   }

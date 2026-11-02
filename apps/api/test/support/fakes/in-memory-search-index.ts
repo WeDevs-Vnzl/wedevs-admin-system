@@ -2,6 +2,7 @@ import type { EntityType } from '../../../src/shared/domain/enums';
 import type {
   SearchIndexEntry,
   SearchIndexPort,
+  SearchTextsUpdate,
 } from '../../../src/shared/application/ports/search-index.port';
 import type { InMemoryUnitOfWork, TransactionParticipant } from './in-memory-unit-of-work';
 
@@ -30,11 +31,33 @@ export class InMemorySearchIndex implements SearchIndexPort, TransactionParticip
     this.pending.set(key(entry.entityType, entry.entityId), { ...entry });
   }
 
+  async upsertMany(entries: readonly SearchIndexEntry[]): Promise<void> {
+    this.uow.assertActive('SearchIndexPort.upsertMany');
+    for (const entry of entries)
+      this.pending.set(key(entry.entityType, entry.entityId), { ...entry });
+  }
+
   async setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void> {
     this.uow.assertActive('SearchIndexPort.setArchived');
     const k = key(entityType, entityId);
     const current = this.pending.get(k);
     if (current) this.pending.set(k, { ...current, archived });
+  }
+
+  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number> {
+    this.uow.assertActive('SearchIndexPort.setTexts');
+    let changed = 0;
+    for (const row of rows) {
+      const k = key(entityType, row.entityId);
+      const current = this.pending.get(k);
+      if (!current) continue;
+      const subtitle = row.subtitle === undefined ? current.subtitle : row.subtitle;
+      const body = row.body === undefined ? current.body : row.body;
+      if (subtitle === current.subtitle && body === current.body) continue;
+      this.pending.set(k, { ...current, subtitle, body });
+      changed += 1;
+    }
+    return changed;
   }
 
   begin(): void {

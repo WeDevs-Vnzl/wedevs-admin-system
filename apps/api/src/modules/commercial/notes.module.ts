@@ -1,3 +1,6 @@
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { Inject, Module, type OnModuleInit } from '@nestjs/common';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
@@ -47,6 +50,8 @@ import { NoteRestoreHandler } from './infrastructure/note-restore.handler';
 import { NoteTaggableResolver } from './infrastructure/note-taggable.resolver';
 import { PlatformNoteAttachmentFiles } from './infrastructure/platform-note-attachment-files.adapter';
 import { PrismaNoteTargetAdapter } from './infrastructure/prisma-note-target.adapter';
+import { NoteReindexSource } from './infrastructure/commercial-reindex-sources';
+import { NoteExportSource } from './infrastructure/commercial-export-sources';
 import { PrismaNoteRepository } from './infrastructure/prisma-note.repository';
 import { NotesController } from './interface/http/notes.controller';
 
@@ -275,11 +280,18 @@ export class NotesModule implements OnModuleInit {
     private readonly fileResolver: NoteFileAccessResolver,
     private readonly restoreHandler: NoteRestoreHandler,
     private readonly taggableResolver: NoteTaggableResolver,
+    @Inject(SearchReindexRegistry) private readonly reindexRegistry: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exportRegistry: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(NOTE_REPOSITORY) private readonly notes: NoteRepository,
+    private readonly listNotes: ListNotes,
   ) {}
 
   onModuleInit(): void {
     this.fileAccess.register(this.fileResolver);
     this.restoreHandlers.register(this.restoreHandler);
     this.taggables.register(this.taggableResolver);
+    this.reindexRegistry.register(new NoteReindexSource(this.host, this.notes));
+    this.exportRegistry.register(new NoteExportSource(this.listNotes));
   }
 }

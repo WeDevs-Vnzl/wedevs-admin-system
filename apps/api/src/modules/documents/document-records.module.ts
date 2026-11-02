@@ -2,6 +2,8 @@ import { Inject, Module, type OnModuleInit } from '@nestjs/common';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
@@ -55,6 +57,8 @@ import { MarkExpiredDocuments } from './application/use-cases/records/mark-expir
 import { RestoreDocument } from './application/use-cases/records/restore-document.use-case';
 import { SetDocumentStatus } from './application/use-cases/records/set-document-status.use-case';
 import { UpdateDocumentMeta } from './application/use-cases/records/update-document-meta.use-case';
+import { DocumentsExportSource } from './infrastructure/documents-export-sources';
+import { DocumentsReindexSource } from './infrastructure/documents-reindex-source';
 import {
   DocumentNoteTargetResolver,
   DocumentRestoreHandler,
@@ -67,7 +71,7 @@ import { DocumentsController } from './interface/http/documents.controller';
  * Documents → records (PRD §8.9, HU-18 to HU-20): metadata, statuses, links, tags, search, archive and
  * restore, and the expiry step. From `onModuleInit` it registers the `DOCUMENT` taggable resolver in
  * settings' tag registry, the `DOCUMENT` note target in the note registry and the restore handler in the
- * trash. Exports `DocumentSupport` and `DocumentViews` (the version, share and portal packages build on
+ * trash, the `DOCUMENT` reindex source and the `documents` export source (DT-171). Exports `DocumentSupport` and `DocumentViews` (the version, share and portal packages build on
  * them), the repository token and `MarkExpiredDocuments` for BE-5's `daily-maintenance`. Not imported by
  * `AppModule` or `DocumentsModule` before package 5.1.
  */
@@ -278,13 +282,25 @@ import { DocumentsController } from './interface/http/documents.controller';
       useFactory: (documents: DocumentRepository) => new DocumentNoteTargetResolver(documents),
       inject: [DOCUMENT_REPOSITORY],
     },
+    DocumentsReindexSource,
+    {
+      provide: DocumentsExportSource,
+      useFactory: (list: ListDocuments) => new DocumentsExportSource(list),
+      inject: [ListDocuments],
+    },
     {
       provide: DocumentRestoreHandler,
       useFactory: (restore: RestoreDocument) => new DocumentRestoreHandler(restore),
       inject: [RestoreDocument],
     },
   ],
-  exports: [DOCUMENT_REPOSITORY, DocumentSupport, DocumentViews, MarkExpiredDocuments],
+  exports: [
+    DOCUMENT_REPOSITORY,
+    DocumentSupport,
+    DocumentViews,
+    ListDocuments,
+    MarkExpiredDocuments,
+  ],
 })
 export class DocumentRecordsModule implements OnModuleInit {
   constructor(
@@ -294,11 +310,17 @@ export class DocumentRecordsModule implements OnModuleInit {
     private readonly taggableResolver: DocumentTaggableResolver,
     private readonly noteTargetResolver: DocumentNoteTargetResolver,
     private readonly restoreHandler: DocumentRestoreHandler,
+    private readonly reindexRegistry: SearchReindexRegistry,
+    private readonly exportRegistry: ExportSourceRegistry,
+    private readonly reindexSource: DocumentsReindexSource,
+    private readonly exportSource: DocumentsExportSource,
   ) {}
 
   onModuleInit(): void {
     this.taggables.register(this.taggableResolver);
     this.noteTargets.register(this.noteTargetResolver);
     this.restoreHandlers.register(this.restoreHandler);
+    this.reindexRegistry.register(this.reindexSource);
+    this.exportRegistry.register(this.exportSource);
   }
 }

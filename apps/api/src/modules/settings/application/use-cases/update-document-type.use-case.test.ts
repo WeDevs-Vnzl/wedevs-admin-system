@@ -6,19 +6,34 @@ import {
 } from '../../../../shared/domain/domain-error';
 import { actor, createFixture } from '../../../../../test/settings/document-types/fixtures';
 import { DOCUMENT_TYPE_MESSAGES } from '../document-type-catalog';
+import type { DocumentTypeSearchDependentsPort } from '../ports/document-type-search-dependents.port';
 import { UpdateDocumentType } from './update-document-type.use-case';
 
 // Port of the update case of fe/src/mocks/services/document-types.test.ts ("document types").
+/** Records the relabels and the order against the activity log; `failWith` makes the relabel throw. */
+class FakeDependents implements DocumentTypeSearchDependentsPort {
+  readonly calls: { typeId: string; name: string; activityEntriesSoFar: number }[] = [];
+  failWith: Error | null = null;
+  constructor(private readonly entriesSoFar: () => number) {}
+  relabelType(typeId: string, name: string): Promise<number> {
+    this.calls.push({ typeId, name, activityEntriesSoFar: this.entriesSoFar() });
+    if (this.failWith) return Promise.reject(this.failWith);
+    return Promise.resolve(2);
+  }
+}
+
 function setup() {
   const fixture = createFixture();
+  const dependents = new FakeDependents(() => fixture.activity.entries.length);
   const useCase = new UpdateDocumentType(
     fixture.authorization,
     fixture.uow,
     fixture.types,
     fixture.catalog,
     fixture.activity,
+    dependents,
   );
-  return { ...fixture, useCase };
+  return { ...fixture, dependents, useCase };
 }
 
 const full = {
@@ -72,5 +87,49 @@ describe('UpdateDocumentType', () => {
   it('refuses a Member with FORBIDDEN', async () => {
     const { useCase } = setup();
     await expect(useCase.execute(actor('MEMBER'), full)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  describe('search entries of the dependants (DT-166, X18)', () => {
+    it('runs in a Serializable unit of work, so the unit of work retries it', async () => {
+      const { uow, useCase } = setup();
+      await useCase.execute(actor('OWNER'), { ...full, name: 'Adenda nueva' });
+      expect(uow.lastOptions?.isolation).toBe('Serializable');
+    });
+
+    it('relabels the dependants with the new name before the activity entry', async () => {
+      const { dependents, activity, useCase } = setup();
+      const before = activity.entries.length;
+      await useCase.execute(actor('OWNER'), { ...full, name: 'Adenda nueva' });
+      expect(dependents.calls).toEqual([
+        { typeId: 'dtyp_adenda', name: 'Adenda nueva', activityEntriesSoFar: before },
+      ]);
+      expect(activity.entries).toHaveLength(before + 1);
+    });
+
+    it('relabels nothing when the name stays, whatever else changes', async () => {
+      const { dependents, activity, useCase } = setup();
+      const before = activity.entries.length;
+      await useCase.execute(actor('OWNER'), { ...full, name: 'Adenda', nameEn: 'Other' });
+      expect(activity.entries).toHaveLength(before + 1);
+      expect(dependents.calls).toHaveLength(0);
+    });
+
+    it('relabels nothing when the edit is refused', async () => {
+      const { dependents, useCase } = setup();
+      await useCase.execute(actor('MEMBER'), { ...full, name: 'X' }).catch(() => undefined);
+      await useCase.execute(actor('OWNER'), { ...full, id: 'dtyp_nope' }).catch(() => undefined);
+      expect(dependents.calls).toHaveLength(0);
+    });
+
+    it('writes neither the type nor the activity entry when the relabel fails', async () => {
+      const { dependents, types, activity, useCase } = setup();
+      const before = activity.entries.length;
+      dependents.failWith = new Error('relabel failed');
+      await expect(
+        useCase.execute(actor('OWNER'), { ...full, name: 'Adenda nueva' }),
+      ).rejects.toThrow('relabel failed');
+      expect(types.rows.find((row) => row.id === 'dtyp_adenda')?.name).toBe('Adenda');
+      expect(activity.entries).toHaveLength(before);
+    });
   });
 });

@@ -13,6 +13,13 @@ export interface SearchIndexEntry {
   readonly archived: boolean;
 }
 
+/** New texts of one entry; an omitted field is left alone, `null` clears it. */
+export interface SearchTextsUpdate {
+  readonly entityId: string;
+  readonly subtitle?: string | null;
+  readonly body?: string | null;
+}
+
 /**
  * Write side of the global search index (C12). Valid only inside `UnitOfWorkPort.run`: called outside
  * one it is a programming error and throws, like `ActivityLogPort`.
@@ -20,6 +27,17 @@ export interface SearchIndexEntry {
 export interface SearchIndexPort {
   /** Inserts or replaces the entry of `(entityType, entityId)`; idempotent. */
   upsert(entry: SearchIndexEntry): Promise<void>;
+  /**
+   * `upsert` of many entries in as few statements as the adapter can (same cleaning and body cap). A repeated
+   * `(entityType, entityId)` keeps the last entry; an empty list writes nothing.
+   */
+  upsertMany(entries: readonly SearchIndexEntry[]): Promise<void>;
   /** Flips the archived flag; a missing entry is a no-op. */
   setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void>;
+  /**
+   * Set-based relabel of `subtitle` and `body` (same cleaning and body cap as `upsert`), only where the
+   * value differs, so an unchanged entry keeps its `updatedAt`. A missing entry is a no-op.
+   * Returns the rows changed.
+   */
+  setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number>;
 }

@@ -35,20 +35,23 @@ export class RestoreProject {
   async execute(actor: CurrentUser, id: string): Promise<RestoredProject> {
     assertCan(this.authorization, actor, 'restore', 'project');
 
-    return this.uow.run(async () => {
-      const archived = await this.projects.findByIdForUpdate(id);
-      if (!archived || archived.archivedAt === null) throw new NotFoundError();
-      await this.projects.lockClients(archived.clients.map((link) => link.clientId));
+    return this.uow.run(
+      async () => {
+        const archived = await this.projects.findByIdForUpdate(id);
+        if (!archived || archived.archivedAt === null) throw new NotFoundError();
+        await this.projects.lockClients(archived.clients.map((link) => link.clientId));
 
-      await this.projects.setArchived([id], null, null);
-      const restored = await reloadProject(this.projects, id);
-      await this.sync.log(actor, 'RESTORE', restored, { metadata: { code: restored.code } });
-      await this.sync.reindex(restored);
-      await this.sync.recount(restored.clients.map((link) => link.clientId));
-      return {
-        entity: { type: 'PROJECT', id: restored.id, code: restored.code, label: restored.name },
-        restoredAt: this.clock.now(),
-      };
-    });
+        await this.projects.setArchived([id], null, null);
+        const restored = await reloadProject(this.projects, id);
+        await this.sync.log(actor, 'RESTORE', restored, { metadata: { code: restored.code } });
+        await this.sync.reindex(restored);
+        await this.sync.recount(restored.clients.map((link) => link.clientId));
+        return {
+          entity: { type: 'PROJECT', id: restored.id, code: restored.code, label: restored.name },
+          restoredAt: this.clock.now(),
+        };
+      },
+      { isolation: 'Serializable' },
+    );
   }
 }

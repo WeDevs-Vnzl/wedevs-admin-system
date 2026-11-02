@@ -89,6 +89,24 @@ describe('prisma-list (pure parts)', () => {
       expect(count.values).toEqual(['abc']);
     });
 
+    it('resolves q through SearchEntry when searchEntryType is given, replacing searchColumns', () => {
+      const { page, count } = buildSearchStatements({ ...spec, searchEntryType: 'CLIENT' }, window);
+      expect(page.sql).toContain('"id" IN (SELECT "entityId" FROM "SearchEntry"');
+      expect(page.sql).not.toContain('"tradeName"');
+      expect(page.sql).toContain('"deletedAt" IS NULL');
+      expect(page.values).toEqual(['CLIENT', 'abc', 'abc', 'abc', 'abc', 25, 50]);
+      expect(count.values).toEqual(['CLIENT', 'abc', 'abc', 'abc', 'abc']);
+    });
+
+    it('needs no searchColumns when searchEntryType is given', () => {
+      const { searchColumns: _unused, ...withoutColumns } = spec;
+      const { page } = buildSearchStatements(
+        { ...withoutColumns, searchEntryType: 'CLIENT' },
+        window,
+      );
+      expect(page.sql).toContain('"SearchEntry"');
+    });
+
     it('orders nullable columns NULLS LAST in both directions and honours archived modes', () => {
       const asc = buildSearchStatements(
         {

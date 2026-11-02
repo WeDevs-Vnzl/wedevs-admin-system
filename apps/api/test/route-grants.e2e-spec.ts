@@ -5,6 +5,10 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readRouteGrant, type RouteGrant } from '../src/shared/interface/grant.decorator';
+import { MatrixAuthorization } from '../src/modules/identity/infrastructure/matrix-authorization';
+import type { CurrentUser } from '../src/shared/application/current-user';
+import { AUTHORIZATION } from '../src/shared/application/ports/tokens';
+import { FakeAuthenticator } from './support/fakes/fake-authenticator';
 import { createTestApp } from './support/test-app';
 
 interface InventoriedRoute {
@@ -112,6 +116,37 @@ const BE4_ROUTES: Readonly<Record<string, string>> = {
   'GET /api/v1/portal/{token}/files/{documentId}': 'public',
 };
 
+/**
+ * Every BE-5 `intelligence` route with the grant its handler declares (TASK-BE.md BE-5 contract choices, PRD
+ * §4). The per-record-type routes are `@Authenticated()` because the use case decides by type (C13, C14).
+ */
+const BE5_ROUTES: Readonly<Record<string, string>> = {
+  'GET /api/v1/shell': 'authenticated',
+  'GET /api/v1/dashboard': 'authenticated',
+  'GET /api/v1/clients/overview': 'client:read',
+  'GET /api/v1/projects/overview': 'project:read',
+  'GET /api/v1/invoices/overview': 'invoice:read',
+  'GET /api/v1/payments/overview': 'payment:read',
+  'GET /api/v1/expenses/overview': 'expense:read',
+  'GET /api/v1/accounts/overview': 'account:read',
+  'GET /api/v1/documents/overview': 'document:read',
+  'GET /api/v1/activity/overview': 'activity:read',
+  'GET /api/v1/clients/{id}/summary': 'client:read',
+  'GET /api/v1/projects/{id}/summary': 'project:read',
+  'GET /api/v1/reports/kpis': 'report:read',
+  'GET /api/v1/reports/{slug}': 'report:read',
+  'GET /api/v1/alerts': 'authenticated',
+  'POST /api/v1/alerts/read': 'authenticated',
+  'POST /api/v1/alerts/{key}/read': 'authenticated',
+  'POST /api/v1/alerts/{key}/dismiss': 'authenticated',
+  'POST /api/v1/alerts/{key}/restore': 'authenticated',
+  'GET /api/v1/search': 'authenticated',
+  'GET /api/v1/graph': 'authenticated',
+  'GET /api/v1/graph/{type}/{id}': 'authenticated',
+  'GET /api/v1/graph/nodes/{nodeId}/neighbours': 'authenticated',
+  'POST /api/v1/exports/{entity}': 'authenticated',
+};
+
 const toArray = (value: unknown): string[] => (Array.isArray(value) ? value : [value]) as string[];
 
 function joinPath(...parts: string[]): string {
@@ -209,7 +244,7 @@ describe('route inventory (full AppModule)', () => {
     const prefixes = /^(GET|POST|PUT|PATCH|DELETE) \/api\/v1\/(documents|share-links|portal)/;
     const declared = Object.fromEntries(
       inventory(app)
-        .filter((r) => prefixes.test(r.route))
+        .filter((r) => prefixes.test(r.route) && !(r.route in BE5_ROUTES))
         .map((r) => [r.route, r.requirement ?? r.grant]),
     );
     expect(Object.keys(BE4_ROUTES)).toHaveLength(29);
@@ -238,6 +273,22 @@ describe('route inventory (full AppModule)', () => {
     expect(byRoute.get('GET /api/v1/projects')).toBe('grant');
   });
 
+  it('inventories exactly the 24 BE-5 intelligence routes, each with its declared grant, and no new @Public() (C13, C24)', () => {
+    const routes = inventory(app);
+    const declared = Object.fromEntries(
+      routes.filter((r) => r.route in BE5_ROUTES).map((r) => [r.route, r.requirement ?? r.grant]),
+    );
+    expect(Object.keys(BE5_ROUTES)).toHaveLength(24);
+    expect(declared).toEqual(BE5_ROUTES);
+    // Everything under the intelligence controllers is non-public.
+    const intelligence = routes.filter((r) =>
+      /^(Overviews|Summaries|Shell|Dashboard|Reports|Alerts|Search|Graph|Exports)Controller\./.test(
+        r.handler,
+      ),
+    );
+    expect(intelligence.map((r) => r.grant)).not.toContain('public');
+  });
+
   it('inventories exactly the 57 BE-3 finance routes, each with its declared grant (C8, C13, C25)', () => {
     const declared = Object.fromEntries(
       inventory(app)
@@ -263,7 +314,7 @@ describe('route inventory (full AppModule)', () => {
       /^(GET|POST|PUT|PATCH|DELETE) \/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))/;
     const finance = inventory(app)
       .map((r) => r.route)
-      .filter((route) => financePrefixes.test(route));
+      .filter((route) => financePrefixes.test(route) && !(route in BE5_ROUTES));
     expect(finance.filter((route) => route.startsWith('DELETE'))).toEqual([]);
     expect(finance.sort()).toEqual(Object.keys(FINANCE_ROUTES).sort());
   });
@@ -304,5 +355,78 @@ describe('route inventory detects an undeclared or double-declared route', () =>
       'GET /api/v1/probe/auth/double:conflict',
       'GET /api/v1/probe/auth/undeclared:missing',
     ]);
+  });
+});
+
+const V1 = '/api/v1';
+
+/**
+ * Route shadowing (A1, X13) over the real `AppModule` registration order, with nothing appended: a static
+ * `/x/overview` must answer before the owner's `/x/:id` (which would reject `overview` as a malformed id or
+ * answer 404), and `/reports/kpis` before `/reports/{slug}`.
+ */
+describe('route shadowing of the static intelligence routes (production AppModule order)', () => {
+  const authenticator = new FakeAuthenticator();
+  let app: NestExpressApplication;
+  let token: string;
+
+  beforeAll(async () => {
+    app = await createTestApp({
+      authenticator,
+      probes: false,
+      overrides: [{ token: AUTHORIZATION, useValue: new MatrixAuthorization() }],
+    });
+    const owner: CurrentUser = {
+      userId: '00000000-0000-4000-8000-0000000000a1',
+      clerkId: 'user_shadow_owner',
+      role: 'OWNER',
+      email: 'shadow-owner@example.test',
+      name: 'Owner',
+    };
+    token = authenticator.issue(owner);
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+
+  const get = (path: string) =>
+    request(app.getHttpServer()).get(`${V1}${path}`).set('Authorization', `Bearer ${token}`);
+
+  it.each([
+    'clients',
+    'projects',
+    'invoices',
+    'payments',
+    'expenses',
+    'accounts',
+    'documents',
+    'activity',
+  ])('GET /%s/overview reaches the overview handler, not /%s/:id', async (module) => {
+    const res = await get(`/${module}/overview`);
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(res.body).toBeTypeOf('object');
+    // A shadowed route would answer with the id-validation or not-found envelope instead.
+    expect(res.body.error).toBeUndefined();
+  });
+
+  it('GET /reports/kpis answers the 18 KPIs, not a report with slug "kpis"', async () => {
+    const res = await get('/reports/kpis');
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(JSON.stringify(res.body)).not.toMatch(/REPORT_NOT_FOUND|NOT_FOUND/);
+  });
+
+  it('GET /reports/collected-by-month still reaches the slug route', async () => {
+    const res = await get('/reports/collected-by-month');
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+  });
+
+  it('GET /reports/<unknown slug> is a NOT_FOUND, so the slug is whitelisted by the use case', async () => {
+    const res = await get('/reports/not-a-report');
+    expect(res.status).toBe(404);
+  });
+
+  it('a normal id still reaches the owner: GET /clients/<uuid> is a 404, not an overview', async () => {
+    const res = await get('/clients/00000000-0000-4000-8000-000000000001');
+    expect(res.status).toBe(404);
   });
 });

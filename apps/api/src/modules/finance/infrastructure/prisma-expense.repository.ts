@@ -19,7 +19,13 @@ import type {
   ExpenseView,
 } from '../application/ports/expense.repository.port';
 import { EXPENSE_ERRORS } from '../domain/errors';
-import { anyOf, dateBound, hasSearchText, orderBy, searchPage } from './search-entry-page';
+import {
+  anyOf,
+  dateBound,
+  hasSearchText,
+  orderBy,
+  searchPage,
+} from '../../../shared/infrastructure/prisma/search-entry-page';
 
 const VIEW_INCLUDE = {
   category: { include: { parent: true } },

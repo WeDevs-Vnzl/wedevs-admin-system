@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { EntityType } from '../../domain/enums';
-import type { SearchIndexEntry, SearchIndexPort } from '../../application/ports/search-index.port';
+import type {
+  SearchIndexEntry,
+  SearchIndexPort,
+  SearchTextsUpdate,
+} from '../../application/ports/search-index.port';
+import { Prisma } from './generated-client';
 import { TransactionHost } from './transaction-host';
 
 /** Maximum characters of `SearchEntry.body` (plain text); longer content is cut, never rejected. */
@@ -16,6 +21,9 @@ export function truncateBody(value: string, max: number = SEARCH_BODY_MAX_CHARS)
   const isHighSurrogate = last >= 0xd800 && last <= 0xdbff;
   return value.slice(0, isHighSurrogate ? max - 1 : max);
 }
+
+/** Rows per `UPDATE … FROM unnest` statement of `setTexts`. */
+export const SET_TEXTS_CHUNK = 1_000;
 
 /** Writes `SearchEntry` rows in the current transaction (C12). */
 @Injectable()
@@ -39,8 +47,68 @@ export class PrismaSearchIndex implements SearchIndexPort {
     });
   }
 
+  async upsertMany(entries: readonly SearchIndexEntry[]): Promise<void> {
+    const tx = this.host.requireTransaction('SearchIndexPort.upsertMany');
+    // One statement cannot touch a row twice: the last entry of a repeated key wins.
+    const unique = new Map(
+      entries.map((entry) => [`${entry.entityType}:${entry.entityId}`, entry] as const),
+    );
+    const rows = [...unique.values()];
+    for (let from = 0; from < rows.length; from += SET_TEXTS_CHUNK) {
+      const chunk = rows.slice(from, from + SET_TEXTS_CHUNK);
+      const optional = (value: string | null, cap: boolean): string | null =>
+        value === null ? null : cap ? truncateBody(clean(value)) : clean(value);
+      await tx.$executeRaw(Prisma.sql`
+        INSERT INTO "SearchEntry" ("id", "entityType", "entityId", "code", "title", "subtitle", "body",
+          "status", "archived", "updatedAt")
+        SELECT gen_random_uuid()::text, v."entityType"::"EntityType", v."entityId", v."code", v."title",
+          v."subtitle", v."body", v."status", v."archived", now()
+        FROM unnest(${chunk.map((e) => e.entityType)}::text[], ${chunk.map((e) => e.entityId)}::text[],
+          ${chunk.map((e) => optional(e.code, false))}::text[], ${chunk.map((e) => clean(e.title))}::text[],
+          ${chunk.map((e) => optional(e.subtitle, false))}::text[],
+          ${chunk.map((e) => optional(e.body, true))}::text[], ${chunk.map((e) => e.status)}::text[],
+          ${chunk.map((e) => e.archived)}::boolean[])
+          AS v("entityType", "entityId", "code", "title", "subtitle", "body", "status", "archived")
+        ON CONFLICT ("entityType", "entityId") DO UPDATE SET
+          "code" = EXCLUDED."code", "title" = EXCLUDED."title", "subtitle" = EXCLUDED."subtitle",
+          "body" = EXCLUDED."body", "status" = EXCLUDED."status", "archived" = EXCLUDED."archived",
+          "updatedAt" = now()`);
+    }
+  }
+
   async setArchived(entityType: EntityType, entityId: string, archived: boolean): Promise<void> {
     const tx = this.host.requireTransaction('SearchIndexPort.setArchived');
     await tx.searchEntry.updateMany({ where: { entityType, entityId }, data: { archived } });
+  }
+
+  async setTexts(entityType: EntityType, rows: readonly SearchTextsUpdate[]): Promise<number> {
+    const tx = this.host.requireTransaction('SearchIndexPort.setTexts');
+    let changed = 0;
+    for (let from = 0; from < rows.length; from += SET_TEXTS_CHUNK) {
+      const chunk = rows.slice(from, from + SET_TEXTS_CHUNK);
+      const text = (value: string | null | undefined, cap: boolean): string | null =>
+        value === undefined || value === null
+          ? null
+          : cap
+            ? truncateBody(clean(value))
+            : clean(value);
+      const ids = chunk.map((row) => row.entityId);
+      const setSubtitle = chunk.map((row) => row.subtitle !== undefined);
+      const subtitles = chunk.map((row) => text(row.subtitle, false));
+      const setBody = chunk.map((row) => row.body !== undefined);
+      const bodies = chunk.map((row) => text(row.body, true));
+      changed += await tx.$executeRaw(Prisma.sql`
+        UPDATE "SearchEntry" AS s
+        SET "subtitle" = CASE WHEN v."setSubtitle" THEN v."subtitle" ELSE s."subtitle" END,
+            "body" = CASE WHEN v."setBody" THEN v."body" ELSE s."body" END,
+            "updatedAt" = now()
+        FROM unnest(${ids}::text[], ${setSubtitle}::boolean[], ${subtitles}::text[], ${setBody}::boolean[], ${bodies}::text[])
+          AS v("entityId", "setSubtitle", "subtitle", "setBody", "body")
+        WHERE s."entityType" = ${entityType}::"EntityType"
+          AND s."entityId" = v."entityId"
+          AND ((v."setSubtitle" AND s."subtitle" IS DISTINCT FROM v."subtitle")
+            OR (v."setBody" AND s."body" IS DISTINCT FROM v."body"))`);
+    }
+    return changed;
   }
 }

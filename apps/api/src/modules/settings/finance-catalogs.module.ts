@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 import {
+  PaymentMethodSearchDependents,
+  PaymentSearchDependentsModule,
+} from '../finance/payment-search-dependents.module';
+import {
   ACTIVITY_LOG,
   AUTHORIZATION,
   ID_GENERATOR,
@@ -21,6 +25,10 @@ import {
   PAYMENT_METHOD_REPOSITORY,
   type PaymentMethodRepository,
 } from './application/ports/payment-method.repository.port';
+import {
+  PAYMENT_METHOD_SEARCH_DEPENDENTS,
+  type PaymentMethodSearchDependentsPort,
+} from './application/ports/payment-method-search-dependents.port';
 import { SETTING_REPOSITORY, type SettingRepository } from './application/ports/setting.repository';
 import { CurrencyCatalogQuery } from './application/currency-catalog.query';
 import { ExpenseCategoryCatalogQuery } from './application/expense-category-catalog.query';
@@ -54,6 +62,7 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
  * `FiscalSettingsQuery`, `CurrencyCatalogQuery`, `ExpenseCategoryCatalogQuery` and `PaymentMethodCatalogQuery` are exported for BE-3. Exchange rates are BE-3.
  */
 @Module({
+  imports: [PaymentSearchDependentsModule],
   controllers: [
     CurrenciesController,
     PaymentMethodsController,
@@ -63,6 +72,7 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
   providers: [
     { provide: CURRENCY_REPOSITORY, useClass: PrismaCurrencyRepository },
     { provide: PAYMENT_METHOD_REPOSITORY, useClass: PrismaPaymentMethodRepository },
+    { provide: PAYMENT_METHOD_SEARCH_DEPENDENTS, useExisting: PaymentMethodSearchDependents },
     { provide: EXPENSE_CATEGORY_REPOSITORY, useClass: PrismaExpenseCategoryRepository },
     { provide: SETTING_REPOSITORY, useClass: PrismaSettingRepository },
     {
@@ -134,8 +144,15 @@ import { PaymentMethodsController } from './interface/http/payment-methods.contr
         uow: UnitOfWorkPort,
         methods: PaymentMethodRepository,
         activityLog: ActivityLogPort,
-      ) => new UpdatePaymentMethod(authorization, uow, methods, activityLog),
-      inject: [AUTHORIZATION, UNIT_OF_WORK, PAYMENT_METHOD_REPOSITORY, ACTIVITY_LOG],
+        dependents: PaymentMethodSearchDependentsPort,
+      ) => new UpdatePaymentMethod(authorization, uow, methods, activityLog, dependents),
+      inject: [
+        AUTHORIZATION,
+        UNIT_OF_WORK,
+        PAYMENT_METHOD_REPOSITORY,
+        ACTIVITY_LOG,
+        PAYMENT_METHOD_SEARCH_DEPENDENTS,
+      ],
     },
     {
       provide: ListExpenseCategories,

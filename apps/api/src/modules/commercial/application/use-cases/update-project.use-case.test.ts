@@ -85,7 +85,7 @@ describe('UpdateProject (mock updateProject)', () => {
     });
     expect(w.searchIndex.get('PROJECT', 'pry_kairos_web')).toMatchObject({
       title: 'Sitio Kairós 2',
-      body: 'Sitio corporativo\nNuevo',
+      body: 'Kairós C.A.\nSitio corporativo\nNuevo',
     });
   });
 

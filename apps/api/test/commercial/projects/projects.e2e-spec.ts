@@ -199,7 +199,7 @@ describe('projects (e2e)', { timeout: 120_000 }, () => {
       archived: false,
     });
     expect(search?.subtitle).toBe('Tornillo, Kairós');
-    expect(search?.body).toBe('Un proyecto de prueba\nDetalle');
+    expect(search?.body).toBe('Tornillo C.A.\nKairós C.A.\nUn proyecto de prueba\nDetalle');
     expect(await projectCount(kairos)).toBe(1);
     expect(await projectCount(tornillo)).toBe(1);
     expect(

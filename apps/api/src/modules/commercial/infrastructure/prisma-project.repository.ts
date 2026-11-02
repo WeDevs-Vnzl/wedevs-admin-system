@@ -8,12 +8,13 @@ import type { SortSpec } from '../../../shared/domain/list-query';
 import { pageWindow } from '../../../shared/domain/pagination';
 import type { RichTextDoc } from '../../../shared/domain/rich-text';
 import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
-import { archivedWhere, escapeLike } from '../../../shared/infrastructure/prisma/prisma-list';
+import { archivedWhere, searchEntryMatch } from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type {
   ProjectListRequest,
   ProjectMetricsRow,
   ProjectRepository,
+  ProjectSearchSource,
 } from '../application/ports/project.repository.port';
 import type { ProjectClientLink, ProjectRecord } from '../domain/project';
 import type { ProjectLinkRecord } from '../domain/project-link';
@@ -100,8 +101,9 @@ function orderBy(sort: SortSpec): Prisma.Sql {
 }
 
 /**
- * `WHERE` of the list, over `"Project" p`. Archived mode, facets and the free-text search (code, name and
- * the trade/legal names of the linked clients through `EXISTS`, accent- and case-insensitive).
+ * `WHERE` of the list, over `"Project" p`. Archived mode, facets and the free-text search, which resolves
+ * through the project's `SearchEntry` (code, name, the trade and legal names of the linked clients, summary and
+ * description text; accent- and case-insensitive, DT-153).
  */
 function listWhere(request: ProjectListRequest): Prisma.Sql {
   const { filters, archived } = request;
@@ -137,18 +139,8 @@ function listWhere(request: ProjectListRequest): Prisma.Sql {
     );
   }
   const text = filters.q?.trim();
-  if (text) parts.push(searchCondition(text));
+  if (text) parts.push(searchEntryMatch('PROJECT', text));
   return parts.length > 0 ? Prisma.join(parts, ' AND ') : Prisma.sql`TRUE`;
-}
-
-function searchCondition(text: string): Prisma.Sql {
-  const pattern = escapeLike(text);
-  const like = (column: Prisma.Sql) =>
-    Prisma.sql`unaccent(lower(${column})) LIKE '%' || unaccent(lower(${pattern})) || '%' ESCAPE '\\'`;
-  return Prisma.sql`(${like(Prisma.sql`p."code"`)} OR ${like(Prisma.sql`p."name"`)} OR EXISTS (
-    SELECT 1 FROM "ProjectClient" pcq JOIN "Client" cq ON cq."id" = pcq."clientId"
-    WHERE pcq."projectId" = p."id"
-      AND (${like(Prisma.sql`cq."tradeName"`)} OR ${like(Prisma.sql`cq."legalName"`)})))`;
 }
 
 /**
@@ -369,6 +361,50 @@ export class PrismaProjectRepository implements ProjectRepository {
       code: row.code,
       label: row.tradeName,
     }));
+  }
+
+  async clientLegalNames(ids: readonly string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.host.db.client.findMany({
+      where: { id: { in: [...new Set(ids)] }, ...archivedWhere('include') },
+      select: { id: true, legalName: true },
+    });
+    return new Map(rows.map((row) => [row.id, row.legalName]));
+  }
+
+  async projectSearchSourcesOfClient(clientId: string): Promise<ProjectSearchSource[]> {
+    // Two statements whatever the number of projects: the projects, then their links with the client names.
+    const rows = await this.host.db.project.findMany({
+      where: { clients: { some: { clientId } }, ...archivedWhere('include') },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        summary: true,
+        descriptionText: true,
+        status: true,
+        deletedAt: true,
+        clients: {
+          orderBy: INCLUDE.clients.orderBy,
+          select: { client: { select: { tradeName: true, legalName: true } } },
+        },
+      },
+    });
+    // Byte order, the one the lock order and the other writers agree on (not the database collation).
+    return rows
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .map((row) => ({
+        project: {
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          summary: row.summary,
+          descriptionText: row.descriptionText,
+          status: row.status,
+          archivedAt: row.deletedAt,
+        },
+        clients: row.clients.map((link) => link.client),
+      }));
   }
 
   async countLiveProjectsOfClient(clientId: string): Promise<number> {

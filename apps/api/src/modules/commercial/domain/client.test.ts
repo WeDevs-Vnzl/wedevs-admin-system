@@ -169,6 +169,11 @@ describe('projections', () => {
     expect(clientSearchEntry({ ...record, deletedAt: new Date() }).archived).toBe(true);
   });
 
+  it('puts the e-mail after the tax id in the entry body, because the list searches it (X5)', () => {
+    const withEmail = { ...record, email: 'hola@nube.example.com' };
+    expect(clientSearchEntry(withEmail).body).toBe('J-40111222-3 hola@nube.example.com');
+  });
+
   it('lists the sort keys of the contract', () => {
     expect(CLIENT_SORT_FIELDS).toContain('receivableUsd');
     expect(CLIENT_SORT_FIELDS).toHaveLength(10);

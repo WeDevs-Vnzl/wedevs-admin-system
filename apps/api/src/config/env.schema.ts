@@ -6,6 +6,8 @@ export const envSchema = z.object({
   APP_URL: z.url(),
   DATABASE_URL: z.string().min(1),
   SENTRY_DSN: z.string().min(1).optional(),
+  // Only the worker connects to Redis (DT-169): optional here, required when dist/worker.js boots.
+  REDIS_URL: z.string().min(1).optional(),
   CLERK_SECRET_KEY: z.string().min(1),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
   CLERK_JWT_KEY: z.string().min(1),

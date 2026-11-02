@@ -4,7 +4,9 @@ import type { AuthorizationPort } from '../../shared/application/ports/authoriza
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
 import type { SequencePort } from '../../shared/application/ports/sequence.port';
 import {
   ACTIVITY_LOG,
@@ -19,6 +21,7 @@ import {
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
 import { NotesModule } from '../commercial/notes.module';
 import { FinanceLookupsModule } from '../commercial/finance-lookups.module';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { NoteLinkTargetRegistry } from '../commercial/application/note-link-target.registry';
 import type { FileAccessRegistry } from '../platform/application/file-access.registry';
 import { FILE_ACCESS_REGISTRY } from '../platform/application/ports/file-access.port';
@@ -74,6 +77,8 @@ import {
   ExpenseTaggableResolver,
 } from './infrastructure/expense-registry.resolvers';
 import { PrismaExpenseRecurringRepository } from './infrastructure/prisma-expense-recurring.repository';
+import { ExpenseExportSource } from './infrastructure/finance-export-sources';
+import { ExpenseReindexSource } from './infrastructure/finance-reindex-sources';
 import { PrismaExpenseRepository } from './infrastructure/prisma-expense.repository';
 import { SettingsCurrencyCatalogAdapter } from './infrastructure/settings-currency-catalog.adapter';
 import { ExpensesController } from './interface/expenses/expenses.controller';
@@ -273,7 +278,7 @@ import { RatesModule } from './rates.module';
       ],
     },
   ],
-  exports: [GenerateRecurringExpenses],
+  exports: [GenerateRecurringExpenses, ListExpenses, ListRecurringExpenses],
 })
 export class ExpensesModule implements OnModuleInit {
   constructor(
@@ -281,9 +286,15 @@ export class ExpensesModule implements OnModuleInit {
     @Inject(TAGGABLE_TARGET_REGISTRY) private readonly taggables: TaggableTargetRegistry,
     @Inject(NoteLinkTargetRegistry) private readonly noteTargets: NoteLinkTargetRegistry,
     @Inject(EXPENSE_REPOSITORY) private readonly expenses: ExpenseRepository,
+    @Inject(SearchReindexRegistry) private readonly reindex: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exports: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(ListExpenses) private readonly list: ListExpenses,
   ) {}
 
   onModuleInit(): void {
+    this.reindex.register(new ExpenseReindexSource(this.host, this.expenses));
+    this.exports.register(new ExpenseExportSource(this.list));
     this.fileAccess.register(new ExpenseReceiptAccessResolver(this.expenses));
     this.taggables.register(new ExpenseTaggableResolver(this.expenses));
     this.noteTargets.register(new ExpenseNoteTargetResolver(this.expenses));

@@ -8,12 +8,14 @@ import {
 } from '../../../../test/finance/read-models/world';
 import { createTestPrisma, truncateBusinessTables } from '../../../../test/support/db';
 import { assertLocalDatabaseUrl } from '../../../../test/support/local-db-guard';
+import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service';
 import type {
   AccountRepository,
   LedgerFilter,
   NewAccount,
 } from '../application/ports/account.repository.port';
+import { accountSearchEntry } from '../application/use-cases/accounts/account-support';
 import { accountBalance } from '../domain/accounts';
 import { PrismaAccountRepository } from './prisma-account.repository';
 
@@ -23,6 +25,7 @@ const service = new PrismaService({
 });
 const world = buildWorld(service);
 const repository: AccountRepository = new PrismaAccountRepository(world.host);
+const searchIndex = new PrismaSearchIndex(world.host);
 const inTx = <T>(work: () => Promise<T>) => world.uow.run(work);
 
 const account = (over: Partial<NewAccount> & { id: string }): NewAccount => ({
@@ -125,6 +128,13 @@ describe('PrismaAccountRepository records (int)', () => {
     });
     await admin.account.update({ where: { id: 'acc_1' }, data: { balance: '9.00' } });
     await admin.account.update({ where: { id: 'acc_2' }, data: { balance: '100.00' } });
+    // `q` resolves through `SearchEntry` (DT-168): the use cases write the entry with the account.
+    await inTx(async () => {
+      for (const id of ['acc_1', 'acc_2', 'acc_3']) {
+        const stored = await repository.find(id);
+        if (stored) await searchIndex.upsert(accountSearchEntry(stored));
+      }
+    });
     const base = {
       page: 1,
       pageSize: 25,
