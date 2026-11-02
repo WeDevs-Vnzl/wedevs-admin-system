@@ -18,6 +18,10 @@ import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work
 import { NoteLinkTargetRegistry } from '../commercial/application/note-link-target.registry';
 import { NotesModule } from '../commercial/notes.module';
 import {
+  SHARE_ACCESS_LOG_RETENTION,
+  type ShareAccessLogRetentionPort,
+} from './application/ports/share-access-log-retention.port';
+import {
   SHARE_LINK_REPOSITORY,
   type ShareLinkRepository,
 } from './application/ports/share-link.repository.port';
@@ -29,25 +33,28 @@ import {
   ListShareLinks,
 } from './application/use-cases/shares/list-share-links.use-case';
 import { MarkExpiredShareLinks } from './application/use-cases/shares/mark-expired-share-links.use-case';
+import { PurgeShareAccessLog } from './application/use-cases/shares/purge-share-access-log.use-case';
 import { RevokeShareLink } from './application/use-cases/shares/revoke-share-link.use-case';
 import { SetShareDocumentAccessKey } from './application/use-cases/shares/set-share-document-access-key.use-case';
 import { ShareSupport, ShareViews } from './application/use-cases/shares/share-support';
 import { UpdateShareLink } from './application/use-cases/shares/update-share-link.use-case';
 import { NodeShareSecrets } from './infrastructure/node-share-secrets';
+import { PrismaShareAccessLog } from './infrastructure/prisma-share-access-log';
 import { PrismaShareLinkRepository } from './infrastructure/prisma-share-link.repository';
 import { ShareLinksController } from './interface/http/share-links.controller';
 
 /**
  * Documents → share links (PRD §8.11, HU-22): management of the portal links, their access keys and their
  * access log, plus the expired-links step. The links are Owner and Admin only. Exports the repository and the
- * secrets port (the portal package builds on them), the support and views, and `MarkExpiredShareLinks` for
- * BE-5's `daily-maintenance`. Not imported by `AppModule` or `DocumentsModule` before package 5.1.
+ * secrets port (the portal package builds on them), the support and views, `MarkExpiredShareLinks` for
+ * BE-5's `daily-maintenance` and `PurgeShareAccessLog` for the `retention` job. Not imported by `AppModule` or `DocumentsModule` before package 5.1.
  */
 @Module({
   imports: [NotesModule],
   controllers: [ShareLinksController],
   providers: [
     { provide: SHARE_LINK_REPOSITORY, useClass: PrismaShareLinkRepository },
+    { provide: SHARE_ACCESS_LOG_RETENTION, useClass: PrismaShareAccessLog },
     {
       provide: SHARE_SECRETS,
       useFactory: (config: AppConfig): ShareSecretsPort =>
@@ -152,7 +159,24 @@ import { ShareLinksController } from './interface/http/share-links.controller';
         new MarkExpiredShareLinks(uow, support),
       inject: [UNIT_OF_WORK, ShareSupport],
     },
+    {
+      provide: PurgeShareAccessLog,
+      useFactory: (
+        uow: UnitOfWorkPort,
+        retention: ShareAccessLogRetentionPort,
+        activityLog: ActivityLogPort,
+        clock: ClockPort,
+      ) => new PurgeShareAccessLog(uow, retention, activityLog, clock),
+      inject: [UNIT_OF_WORK, SHARE_ACCESS_LOG_RETENTION, ACTIVITY_LOG, CLOCK],
+    },
   ],
-  exports: [SHARE_LINK_REPOSITORY, SHARE_SECRETS, ShareSupport, ShareViews, MarkExpiredShareLinks],
+  exports: [
+    SHARE_LINK_REPOSITORY,
+    SHARE_SECRETS,
+    ShareSupport,
+    ShareViews,
+    MarkExpiredShareLinks,
+    PurgeShareAccessLog,
+  ],
 })
 export class ShareLinksModule {}
