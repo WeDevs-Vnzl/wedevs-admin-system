@@ -12,8 +12,8 @@ export interface PurgeCounts {
 
 /**
  * PRD §12 retention (DT-74): purges the `ShareAccessLog` older than 24 months. The purge writes its own
- * `SYSTEM_JOB` entry (same entity id as a runner summary) when it deleted rows, so the runner adds one only
- * for a run that deleted nothing: exactly one summary entry per step per run (A4).
+ * `SYSTEM_JOB` entries (same entity id as a runner summary), one per batch that deleted rows and in that batch's
+ * unit of work, so the runner adds one only for a run that deleted nothing: never a duplicate summary (A4).
  */
 export class RunRetention {
   constructor(

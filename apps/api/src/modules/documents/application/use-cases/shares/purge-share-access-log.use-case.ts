@@ -16,6 +16,9 @@ export const SHARE_ACCESS_LOG_RETENTION_MONTHS = 24;
 export const PURGE_BATCH_SIZE = 1000;
 export const PURGE_MAX_BATCHES = 100;
 
+/** Step name; also the entity id of its `SYSTEM_JOB` entries (the runner relies on it, A4). */
+const PURGE_SHARE_ACCESS_LOG_STEP = 'purge-share-access-log';
+
 /** Venezuela has no daylight saving since 2016: the Caracas day starts at 04:00 UTC. */
 const CARACAS_UTC_OFFSET = '-04:00';
 
@@ -48,8 +51,8 @@ export function accessLogCutoff(now: Date): Date {
  * of the Caracas day 24 months ago. `SYSTEM` only, no route (DT-130). Each batch has its own unit of work and
  * the adapter filters by the cutoff in the `DELETE` itself, so a row at exactly the cutoff, and every row of the
  * lockout window (15 minutes), is never touched. The run is bounded (`maxBatches`); what is left waits for the
- * next one. One `SYSTEM_JOB` entry with the counts when something was deleted; a rerun changes nothing and
- * writes nothing.
+ * next one. Each batch that deleted rows writes its own `SYSTEM_JOB` entry (that batch's count) in the same unit
+ * of work as its deletes, so they commit or roll back together (C12); a rerun changes nothing and writes nothing.
  */
 export class PurgeShareAccessLog {
   private readonly batchSize: number;
@@ -75,24 +78,24 @@ export class PurgeShareAccessLog {
     let deleted = 0;
     let batches = 0;
     while (batches < this.maxBatches) {
-      const count = await this.uow.run(() =>
-        this.retention.deleteCreatedBefore(cutoff, this.batchSize),
-      );
-      batches += 1;
+      const batch = batches + 1;
+      const count = await this.uow.run(async () => {
+        const removed = await this.retention.deleteCreatedBefore(cutoff, this.batchSize);
+        if (removed > 0) {
+          await this.activityLog.record({
+            actor,
+            action: 'SYSTEM_JOB',
+            entityType: 'SETTING',
+            entityId: PURGE_SHARE_ACCESS_LOG_STEP,
+            entityLabel: PURGE_SHARE_ACCESS_LOG_STEP,
+            metadata: { deleted: removed, batches: batch, cutoff: cutoff.toISOString() },
+          });
+        }
+        return removed;
+      });
+      batches = batch;
       deleted += count;
       if (count < this.batchSize) break;
-    }
-    if (deleted > 0) {
-      await this.uow.run(() =>
-        this.activityLog.record({
-          actor,
-          action: 'SYSTEM_JOB',
-          entityType: 'SETTING',
-          entityId: 'purge-share-access-log',
-          entityLabel: 'purge-share-access-log',
-          metadata: { deleted, batches, cutoff: cutoff.toISOString() },
-        }),
-      );
     }
     return { deleted, batches, cutoff };
   }
