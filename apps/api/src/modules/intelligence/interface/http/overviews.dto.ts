@@ -63,8 +63,8 @@ const clientRowSchema = z.object({
   status: z.enum(CLIENT_STATUS_VALUES),
   projectCount: z.number().int().nonnegative(),
   /** USD decimal string; `null` without `canSeeFinancials`. */
-  totalInvoicedUsd: z.string().nullable(),
-  receivableUsd: z.string().nullable(),
+  totalInvoicedUsd: decimalStringSchema.nullable(),
+  receivableUsd: decimalStringSchema.nullable(),
   tags: z.array(tagChip),
   lastActivityAt: timestampSchema.nullable(),
   archivedAt: timestampSchema.nullable(),
@@ -111,10 +111,10 @@ const projectRowSchema = z.object({
   tags: z.array(tagChip),
   archivedAt: timestampSchema.nullable(),
   /** USD decimal strings; `null` without `canSeeFinancials`. */
-  contractedValueUsd: z.string().nullable(),
-  invoicedUsd: z.string().nullable(),
-  collectedUsd: z.string().nullable(),
-  toInvoiceUsd: z.string().nullable(),
+  contractedValueUsd: decimalStringSchema.nullable(),
+  invoicedUsd: decimalStringSchema.nullable(),
+  collectedUsd: decimalStringSchema.nullable(),
+  toInvoiceUsd: decimalStringSchema.nullable(),
 });
 
 function toProjectRow(row: ProjectListRowView): z.infer<typeof projectRowSchema> {
