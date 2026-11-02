@@ -25,7 +25,7 @@ import type { ClientRepository } from '../ports/client.repository.port';
 import type { ClientSearchDependentsPort } from '../ports/client-search-dependents.port';
 import type { ContactRepository } from '../ports/contact.repository.port';
 import type { ProjectRepository } from '../ports/project.repository.port';
-import type { ProjectSync } from './project-sync';
+import { projectSearchEntry } from './project-sync';
 import { clientTarget, readClientDetail, tagNamesOf } from './client-support';
 
 /**
@@ -38,7 +38,7 @@ import { clientTarget, readClientDetail, tagNamesOf } from './client-support';
  * The first statement of the unit of work locks the `Client` row (DT-166): invoice and payment mutations take
  * it first too, so the rename queues with them, and `Project → Client → Invoice → Payment` is respected
  * because no project row is locked here. Writes follow the global tail: own entry, then, when the trade or
- * legal name changed, the entries of every project of the client (archived included, ascending id), then,
+ * legal name changed, the entries of every project of the client (archived included, ascending id) in one bulk write, then,
  * when the trade name changed, the dependants' labels, and the activity entry last.
  */
 export class UpdateClient {
@@ -52,8 +52,7 @@ export class UpdateClient {
     private readonly searchIndex: SearchIndexPort,
     private readonly clock: ClockPort,
     private readonly rowLocks: RowLocksPort,
-    private readonly projects: Pick<ProjectRepository, 'projectIdsOfClient' | 'findById'>,
-    private readonly sync: Pick<ProjectSync, 'reindex'>,
+    private readonly projects: Pick<ProjectRepository, 'projectSearchSourcesOfClient'>,
     private readonly dependents: ClientSearchDependentsPort,
   ) {}
 
@@ -90,10 +89,8 @@ export class UpdateClient {
         await this.searchIndex.upsert(clientSearchEntry(after));
         const tradeNameChanged = before.tradeName !== after.tradeName;
         if (tradeNameChanged || before.legalName !== after.legalName) {
-          for (const projectId of await this.projects.projectIdsOfClient(after.id)) {
-            const project = await this.projects.findById(projectId);
-            if (project) await this.sync.reindex(project);
-          }
+          const sources = await this.projects.projectSearchSourcesOfClient(after.id);
+          await this.searchIndex.upsertMany(sources.map(projectSearchEntry));
         }
         if (tradeNameChanged) await this.dependents.relabelClient(after.id, after.tradeName);
         await this.activityLog.record({

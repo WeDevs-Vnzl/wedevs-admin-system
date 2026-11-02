@@ -9,7 +9,7 @@ import type {
 import type { ActivityChanges } from '../../../../shared/domain/activity-diff';
 import type { ActivityAction } from '../../../../shared/domain/enums';
 import { earliestClientId, projectSearchDocument, type ProjectRecord } from '../../domain/project';
-import type { ProjectRepository } from '../ports/project.repository.port';
+import type { ProjectRepository, ProjectSearchSource } from '../ports/project.repository.port';
 
 export interface ProjectLogExtra {
   readonly changes?: ActivityChanges | null;
@@ -23,8 +23,32 @@ type ProjectEntrySource = Pick<ProjectRepository, 'clientRefs' | 'clientLegalNam
 /**
  * The `SearchEntry` of a project: code, name, status, the trade names of its clients (subtitle) and, in
  * front of the summary and description text, their legal names, because the list searches both (DT-153).
- * Archived clients count (A11). The one builder of the write path and of the `PROJECT` reindex source.
+ * The one builder of the single-project write path, the bulk path of a client rename and the `PROJECT`
+ * reindex source, so their entries are identical.
  */
+export function projectSearchEntry(source: ProjectSearchSource): SearchIndexEntry {
+  const { project, clients } = source;
+  const document = projectSearchDocument(
+    project,
+    clients.map((client) => client.tradeName),
+  );
+  const body = [
+    ...clients.map((client) => client.legalName),
+    ...(document.body ? [document.body] : []),
+  ].join('\n');
+  return {
+    entityType: 'PROJECT',
+    entityId: project.id,
+    code: document.code,
+    title: document.title,
+    subtitle: document.subtitle,
+    body: body.length > 0 ? body : null,
+    status: document.status,
+    archived: project.archivedAt !== null,
+  };
+}
+
+/** `projectSearchEntry` of one project whose clients are read now; archived clients count (A11). */
 export async function projectEntryOf(
   source: ProjectEntrySource,
   record: ProjectRecord,
@@ -34,24 +58,12 @@ export async function projectEntryOf(
     source.clientRefs(ids),
     source.clientLegalNames(ids),
   ]);
-  const names = ids
-    .map((id) => refs.find((ref) => ref.id === id)?.label)
-    .filter((label): label is string => label !== undefined);
-  const legal = ids
-    .map((id) => legalNames.get(id))
-    .filter((label): label is string => label !== undefined);
-  const document = projectSearchDocument(record, names);
-  const body = [...legal, ...(document.body ? [document.body] : [])].join('\n');
-  return {
-    entityType: 'PROJECT',
-    entityId: record.id,
-    code: document.code,
-    title: document.title,
-    subtitle: document.subtitle,
-    body: body.length > 0 ? body : null,
-    status: document.status,
-    archived: record.archivedAt !== null,
-  };
+  const clients = ids.flatMap((id) => {
+    const tradeName = refs.find((ref) => ref.id === id)?.label;
+    const legalName = legalNames.get(id);
+    return tradeName !== undefined && legalName !== undefined ? [{ tradeName, legalName }] : [];
+  });
+  return projectSearchEntry({ project: record, clients });
 }
 
 /**

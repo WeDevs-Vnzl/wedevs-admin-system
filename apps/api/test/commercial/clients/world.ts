@@ -5,7 +5,6 @@ import { CreateContact } from '../../../src/modules/commercial/application/use-c
 import { GetClient } from '../../../src/modules/commercial/application/use-cases/get-client.use-case';
 import { ListClients } from '../../../src/modules/commercial/application/use-cases/list-clients.use-case';
 import { ListContacts } from '../../../src/modules/commercial/application/use-cases/list-contacts.use-case';
-import { ProjectSync } from '../../../src/modules/commercial/application/use-cases/project-sync';
 import type { ClientSearchDependentsPort } from '../../../src/modules/commercial/application/ports/client-search-dependents.port';
 import { RestoreClient } from '../../../src/modules/commercial/application/use-cases/restore-client.use-case';
 import { RestoreContact } from '../../../src/modules/commercial/application/use-cases/restore-contact.use-case';
@@ -114,7 +113,6 @@ export function createWorld() {
   const ids = new SequentialIdGenerator('id');
   const rowLocks = new InMemoryRowLocks(uow);
   const projects = new InMemoryProjectRepository(uow);
-  const sync = new ProjectSync(projects, search, metrics, activity);
   const order: string[] = [];
   const dependents = new FakeClientSearchDependents(order);
 
@@ -131,7 +129,6 @@ export function createWorld() {
     finance,
     rowLocks,
     projects,
-    sync,
     dependents,
     order,
     assignmentRepo,
@@ -161,7 +158,6 @@ export function createWorld() {
       clock,
       rowLocks,
       projects,
-      sync,
       dependents,
     ),
     setClientStatus: new SetClientStatus(

@@ -29,6 +29,15 @@ export interface ProjectListRequest {
   readonly pageSize: number;
 }
 
+/** The columns a project's `SearchEntry` is built from, with its linked clients' names (link order). */
+export interface ProjectSearchSource {
+  readonly project: Pick<
+    ProjectRecord,
+    'id' | 'code' | 'name' | 'summary' | 'descriptionText' | 'status' | 'archivedAt'
+  >;
+  readonly clients: readonly { readonly tradeName: string; readonly legalName: string }[];
+}
+
 /** The money columns of the list and detail headline, decimal strings (`"0.00"` when the row is absent). */
 export interface ProjectMetricsRow {
   readonly contractedValueUsd: string;
@@ -87,8 +96,12 @@ export interface ProjectRepository {
   clientRefs(ids: readonly string[]): Promise<EntityRef[]>;
   /** Legal names of clients by id, archived ones included (the project entry carries them, DT-153). */
   clientLegalNames(ids: readonly string[]): Promise<Map<string, string>>;
-  /** Ids of every project linked to the client, archived ones included, ascending (the rename's reindex). */
-  projectIdsOfClient(clientId: string): Promise<string[]>;
+  /**
+   * What the `SearchEntry` of every project linked to the client is built from, archived ones included,
+   * ascending id, each with its linked clients' names in link order: a constant number of statements however
+   * many projects there are (the rename's bulk reindex).
+   */
+  projectSearchSourcesOfClient(clientId: string): Promise<ProjectSearchSource[]>;
   /** Live projects linked to the client (the value of `ClientMetrics.projectCount`). */
   countLiveProjectsOfClient(clientId: string): Promise<number>;
 

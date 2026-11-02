@@ -2,6 +2,7 @@ import type {
   ProjectListRequest,
   ProjectMetricsRow,
   ProjectRepository,
+  ProjectSearchSource,
 } from '../../../../src/modules/commercial/application/ports/project.repository.port';
 import type {
   ProjectClientLink,
@@ -268,11 +269,28 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
     return found;
   }
 
-  async projectIdsOfClient(clientId: string): Promise<string[]> {
+  /** Calls to `projectSearchSourcesOfClient`, to assert the rename reads once. */
+  sourceReads = 0;
+
+  async projectSearchSourcesOfClient(clientId: string): Promise<ProjectSearchSource[]> {
+    this.sourceReads += 1;
     return [...this.view().values()]
       .filter((record) => record.clients.some((link) => link.clientId === clientId))
-      .map((record) => record.id)
-      .sort();
+      .sort((a, b) => (a.id < b.id ? -1 : 1))
+      .map((record) => ({
+        project: record,
+        clients: record.clients.flatMap((link) => {
+          const client = this.clients.get(link.clientId);
+          return client
+            ? [
+                {
+                  tradeName: client.label,
+                  legalName: this.legalNames.get(link.clientId) ?? `${client.label} C.A.`,
+                },
+              ]
+            : [];
+        }),
+      }));
   }
 
   async countLiveProjectsOfClient(clientId: string): Promise<number> {

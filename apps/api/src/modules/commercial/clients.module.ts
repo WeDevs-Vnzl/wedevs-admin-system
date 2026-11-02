@@ -44,7 +44,6 @@ import {
   PROJECT_REPOSITORY,
   type ProjectRepository,
 } from './application/ports/project.repository.port';
-import { ProjectSync } from './application/use-cases/project-sync';
 import {
   CLIENT_FINANCE_DEPENDENTS,
   type ClientFinanceDependentsPort,
@@ -106,16 +105,6 @@ import { ContactsController } from './interface/http/contacts.controller';
     // The rename rewrites the client's projects' entries (DT-166); the repository is stateless over the
     // ambient transaction, so this instance serves the same rows `ProjectsModule`'s does.
     { provide: PROJECT_REPOSITORY, useClass: PrismaProjectRepository },
-    {
-      provide: ProjectSync,
-      useFactory: (
-        projects: ProjectRepository,
-        searchIndex: SearchIndexPort,
-        metrics: ClientMetricsWriterPort,
-        activityLog: ActivityLogPort,
-      ) => new ProjectSync(projects, searchIndex, metrics, activityLog),
-      inject: [PROJECT_REPOSITORY, SEARCH_INDEX, CLIENT_METRICS_WRITER, ACTIVITY_LOG],
-    },
     {
       provide: ClientTaggableResolver,
       useFactory: (clients: ClientRepository) => new ClientTaggableResolver(clients),
@@ -206,7 +195,6 @@ import { ContactsController } from './interface/http/contacts.controller';
         clock: ClockPort,
         rowLocks: RowLocksPort,
         projects: ProjectRepository,
-        sync: ProjectSync,
         dependents: ClientSearchDependentsPort,
       ) =>
         new UpdateClient(
@@ -220,7 +208,6 @@ import { ContactsController } from './interface/http/contacts.controller';
           clock,
           rowLocks,
           projects,
-          sync,
           dependents,
         ),
       inject: [
@@ -234,7 +221,6 @@ import { ContactsController } from './interface/http/contacts.controller';
         CLOCK,
         ROW_LOCKS,
         PROJECT_REPOSITORY,
-        ProjectSync,
         CLIENT_SEARCH_DEPENDENTS,
       ],
     },

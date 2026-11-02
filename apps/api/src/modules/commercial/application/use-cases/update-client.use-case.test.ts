@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { projectEntryOf } from './project-sync';
 import { projectRecord } from '../../../../../test/commercial/projects/fakes/world';
 import { clientInput, createWorld, rejection } from '../../../../../test/commercial/clients/world';
 
@@ -108,28 +109,27 @@ describe('UpdateClient', () => {
 });
 
 describe('UpdateClient rename (DT-166)', () => {
-  async function renameSetup() {
+  async function renameSetup(count = 2) {
     const { w, client } = await setup();
     w.projects.addClient(client.id, client.tradeName);
+    const link = [{ clientId: client.id, role: 'Contratante', linkedAt: new Date() }];
     w.projects.seed(
-      projectRecord({
-        id: 'pry_b',
-        code: 'PRY-0002',
-        clients: [{ clientId: client.id, role: 'Contratante', linkedAt: new Date() }],
-      }),
-      projectRecord({
-        id: 'pry_a',
-        code: 'PRY-0001',
-        archivedAt: new Date(),
-        clients: [{ clientId: client.id, role: 'Contratante', linkedAt: new Date() }],
-      }),
-      projectRecord({ id: 'pry_other', code: 'PRY-0003', clients: [] }),
+      // Seeded out of order and one archived: the rename writes them ascending, archived included.
+      ...Array.from({ length: count }, (_, i) =>
+        projectRecord({
+          id: `pry_${String(count - i).padStart(3, '0')}`,
+          code: `PRY-${String(count - i).padStart(4, '0')}`,
+          archivedAt: i === 0 ? new Date() : null,
+          clients: link,
+        }),
+      ),
+      projectRecord({ id: 'pry_other', code: 'PRY-9999', clients: [] }),
     );
     vi.spyOn(w.search, 'upsert').mockImplementation(async () => {
       w.order.push('upsert');
     });
-    vi.spyOn(w.sync, 'reindex').mockImplementation(async (record) => {
-      w.order.push(`reindex:${record.id}`);
+    vi.spyOn(w.search, 'upsertMany').mockImplementation(async (entries) => {
+      w.order.push(`upsertMany:${entries.map((entry) => entry.entityId).join(',')}`);
     });
     vi.spyOn(w.activity, 'record').mockImplementation(async () => {
       w.order.push('activity');
@@ -144,17 +144,40 @@ describe('UpdateClient rename (DT-166)', () => {
     expect(w.rowLocks.acquired).toEqual([{ rowClass: 'Client', id: client.id }]);
   });
 
-  it('on a tradeName change writes own entry, projects ascending (archived included), dependants, then activity', async () => {
+  it('on a tradeName change writes own entry, all projects in one bulk (ascending, archived included), dependants, then activity', async () => {
     const { w, client } = await renameSetup();
     await w.updateClient.execute(w.owner, { ...clientInput({ tradeName: 'Otro' }), id: client.id });
-    expect(w.order).toEqual([
-      'upsert',
-      'reindex:pry_a',
-      'reindex:pry_b',
-      'relabelClient',
-      'activity',
-    ]);
+    expect(w.order).toEqual(['upsert', 'upsertMany:pry_001,pry_002', 'relabelClient', 'activity']);
     expect(w.dependents.calls).toEqual([{ clientId: client.id, label: 'Otro' }]);
+  });
+
+  it('reads and writes the projects in a constant number of calls however many there are', async () => {
+    const { w, client } = await renameSetup(40);
+    const findById = vi.spyOn(w.projects, 'findById');
+    await w.updateClient.execute(w.owner, { ...clientInput({ tradeName: 'Otro' }), id: client.id });
+    expect(w.projects.sourceReads).toBe(1);
+    expect(findById).not.toHaveBeenCalled();
+    expect(w.order.filter((step) => step.startsWith('upsertMany'))).toHaveLength(1);
+  });
+
+  it('writes entries identical to the ones ProjectSync.reindex builds', async () => {
+    const { w, client } = await renameSetup();
+    vi.restoreAllMocks();
+    // The fake project repository stands in for the `Client` table, so it learns the new name here.
+    w.projects.addClient(client.id, 'Otro');
+    w.projects.legalNames.set(client.id, 'Razón Social S.A.');
+    await w.updateClient.execute(w.owner, { ...clientInput({ tradeName: 'Otro' }), id: client.id });
+    for (const id of ['pry_001', 'pry_002']) {
+      const record = await w.projects.findById(id);
+      expect(w.search.get('PROJECT', id)).toEqual(
+        record ? await projectEntryOf(w.projects, record) : undefined,
+      );
+    }
+    expect(w.search.get('PROJECT', 'pry_001')).toMatchObject({
+      subtitle: 'Otro',
+      body: 'Razón Social S.A.\nSitio corporativo',
+    });
+    expect(w.search.get('PROJECT', 'pry_002')).toMatchObject({ archived: true });
   });
 
   it('a legalName change reindexes the projects but does not relabel the dependants', async () => {
@@ -163,16 +186,17 @@ describe('UpdateClient rename (DT-166)', () => {
       ...clientInput({ legalName: 'Nube Austral S.A.' }),
       id: client.id,
     });
-    expect(w.order).toEqual(['upsert', 'reindex:pry_a', 'reindex:pry_b', 'activity']);
+    expect(w.order).toEqual(['upsert', 'upsertMany:pry_001,pry_002', 'activity']);
   });
 
-  it('an edit that changes neither name reindexes only its own entry and calls no dependant', async () => {
+  it('an edit that changes neither name reads and writes no project and calls no dependant', async () => {
     const { w, client } = await renameSetup();
     await w.updateClient.execute(w.owner, {
       ...clientInput({ email: 'x@nube.example.com', address: 'Otra' }),
       id: client.id,
     });
     expect(w.order).toEqual(['upsert', 'activity']);
+    expect(w.projects.sourceReads).toBe(0);
   });
 
   it('a no-op edit still locks and writes nothing', async () => {

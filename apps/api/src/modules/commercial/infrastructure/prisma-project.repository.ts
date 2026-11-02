@@ -14,6 +14,7 @@ import type {
   ProjectListRequest,
   ProjectMetricsRow,
   ProjectRepository,
+  ProjectSearchSource,
 } from '../application/ports/project.repository.port';
 import type { ProjectClientLink, ProjectRecord } from '../domain/project';
 import type { ProjectLinkRecord } from '../domain/project-link';
@@ -371,13 +372,39 @@ export class PrismaProjectRepository implements ProjectRepository {
     return new Map(rows.map((row) => [row.id, row.legalName]));
   }
 
-  async projectIdsOfClient(clientId: string): Promise<string[]> {
+  async projectSearchSourcesOfClient(clientId: string): Promise<ProjectSearchSource[]> {
+    // Two statements whatever the number of projects: the projects, then their links with the client names.
     const rows = await this.host.db.project.findMany({
       where: { clients: { some: { clientId } }, ...archivedWhere('include') },
-      select: { id: true },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        summary: true,
+        descriptionText: true,
+        status: true,
+        deletedAt: true,
+        clients: {
+          orderBy: INCLUDE.clients.orderBy,
+          select: { client: { select: { tradeName: true, legalName: true } } },
+        },
+      },
     });
     // Byte order, the one the lock order and the other writers agree on (not the database collation).
-    return rows.map((row) => row.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    return rows
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .map((row) => ({
+        project: {
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          summary: row.summary,
+          descriptionText: row.descriptionText,
+          status: row.status,
+          archivedAt: row.deletedAt,
+        },
+        clients: row.clients.map((link) => link.client),
+      }));
   }
 
   async countLiveProjectsOfClient(clientId: string): Promise<number> {

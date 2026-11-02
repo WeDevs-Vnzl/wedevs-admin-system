@@ -146,7 +146,6 @@ export function buildWorld(service: PrismaService, hooks: Hooks = {}) {
       clock,
       new PrismaRowLocks(host),
       projects,
-      sync,
       dependents,
     ),
     archiveClients: new ArchiveClients(

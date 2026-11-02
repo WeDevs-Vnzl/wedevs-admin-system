@@ -7,7 +7,7 @@ import { TransactionHost } from '../../../shared/infrastructure/prisma/transacti
 import type { ProjectListRequest } from '../application/ports/project.repository.port';
 import type { ProjectRecord } from '../domain/project';
 import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
-import { projectEntryOf } from '../application/use-cases/project-sync';
+import { projectEntryOf, projectSearchEntry } from '../application/use-cases/project-sync';
 import { PrismaProjectRepository } from './prisma-project.repository';
 
 const admin = createTestPrisma();
@@ -339,6 +339,38 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
       ['CLIENT', 'CLI-0002', 'Tornillo'],
     ]);
     await expect(repository.clientRefs([])).resolves.toEqual([]);
+  });
+
+  describe('projectSearchSourcesOfClient', () => {
+    it('reads the client projects ascending, archived included, with the clients in link order, and builds the same entries', async () => {
+      const k = { clientId: kairos.id, role: null, linkedAt: T('2026-01-01Z') };
+      const t = { clientId: tornillo.id, role: null, linkedAt: T('2026-01-02Z') };
+      await uow.run(async () => {
+        await repository.insert(record(2, { name: 'Zeta', clients: [k, t] }), ACTOR);
+        await repository.insert(
+          record(1, { name: 'Alfa', summary: 'Uno', clients: [t, k] }),
+          ACTOR,
+        );
+        await repository.insert(record(3, { name: 'Ajeno', clients: [t] }), ACTOR);
+        await repository.setArchived(['int_pry_1'], T('2026-03-01Z'), ACTOR);
+      });
+
+      const sources = await repository.projectSearchSourcesOfClient(kairos.id);
+
+      expect(sources.map((source) => source.project.id)).toEqual(['int_pry_1', 'int_pry_2']);
+      expect(sources[0]?.project.archivedAt).not.toBeNull();
+      expect(sources[1]?.clients).toEqual([
+        { tradeName: 'Kairós', legalName: 'Kairós S.A.' },
+        { tradeName: 'Tornillo', legalName: 'Tornillería Nacional C.A.' },
+      ]);
+      for (const source of sources) {
+        const stored = await repository.findById(source.project.id);
+        expect(projectSearchEntry(source)).toEqual(
+          stored ? await projectEntryOf(repository, stored) : null,
+        );
+      }
+      expect(await repository.projectSearchSourcesOfClient('missing')).toEqual([]);
+    });
   });
 
   describe('list', () => {
