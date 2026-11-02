@@ -1342,21 +1342,23 @@ model ApiToken {
 
 // CHECK (amount > 0) lives in the migration SQL. No per-invoice unique: several links may coexist (DT-196).
 model InvoicePaymentLink {
-  id                 String              @id @default(cuid())
-  invoiceId          String
-  requestId          String              @db.Uuid
-  provider           IntegrationProvider
-  externalId         String?             @unique
-  url                String?
-  amount             Decimal             @db.Decimal(18, 2)
-  currency           String
-  status             PaymentLinkStatus   @default(PENDING)
-  paymentId          String?             @unique
-  deactivationReason String?
-  createdAt          DateTime            @default(now())
-  createdById        String
-  deactivatedAt      DateTime?
-  settledAt          DateTime?
+  id                    String              @id @default(cuid())
+  invoiceId             String
+  requestId             String              @db.Uuid
+  provider              IntegrationProvider
+  externalId            String?             @unique
+  url                   String?
+  amount                Decimal             @db.Decimal(18, 2)
+  currency              String
+  status                PaymentLinkStatus   @default(PENDING)
+  paymentId             String?             @unique
+  deactivationReason    String?
+  createdAt             DateTime            @default(now())
+  createdById           String
+  deactivatedAt         DateTime?
+  settledAt             DateTime?
+  /// Set once the provider confirmed the link is off; null while a deactivation call is still owed.
+  providerDeactivatedAt DateTime?
 
   invoice     Invoice  @relation(fields: [invoiceId], references: [id])
   currencyRef Currency @relation(fields: [currency], references: [code])

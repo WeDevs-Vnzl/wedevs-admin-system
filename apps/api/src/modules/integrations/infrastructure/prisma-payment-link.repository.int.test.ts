@@ -43,6 +43,9 @@ function withReadableRequestIds(inner: PaymentLinkRepository): PaymentLinkReposi
     listByInvoice: async (invoiceId) =>
       (await inner.listByInvoice(invoiceId)).map((link) => fromDb(link) as PaymentLink),
     listInvoiceIdsWithOpenLinks: () => inner.listInvoiceIdsWithOpenLinks(),
+    listPendingProviderDeactivation: async () =>
+      (await inner.listPendingProviderDeactivation()).map((link) => fromDb(link) as PaymentLink),
+    markProviderDeactivated: (linkId, at) => inner.markProviderDeactivated(linkId, at),
   };
 }
 

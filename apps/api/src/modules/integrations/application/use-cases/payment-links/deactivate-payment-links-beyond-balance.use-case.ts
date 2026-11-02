@@ -9,14 +9,14 @@ import { deactivateLink, type PaymentLink } from '../../../domain/payment-link';
 import type { InvoiceForLink, InvoiceForLinkPort } from '../../ports/invoice-for-link.port';
 import type { PaymentLinkRepository } from '../../ports/payment-link.repository.port';
 import type { PaymentProviderPort } from '../../ports/payment-provider.port';
-import { PROVIDER_RETRY_WINDOW_MS, openLinksOf, reservedOf } from './payment-link-support';
+import { openLinksOf, reservedOf } from './payment-link-support';
 
 export interface DeactivateLinksResult {
   /** Links this run moved to `DEACTIVATED`. */
   readonly deactivated: readonly string[];
   /** Invoices a `CONFLICT` left for the next run (DT-129). */
   readonly skippedInvoiceIds: readonly string[];
-  /** Links whose provider call failed; their row is already `DEACTIVATED` and the next run retries the call. */
+  /** Links whose provider call failed; their row is already `DEACTIVATED` and every later run retries the call. */
   readonly providerFailures: readonly string[];
 }
 
@@ -25,8 +25,10 @@ export interface DeactivateLinksResult {
  * invoice with open links, under its `Invoice` lock: `linksToDeactivate` decides (an invoice no longer open
  * loses every open link, `PENDING` rows older than 24 hours go, then the newest links until the sum fits),
  * the rows become `DEACTIVATED` with an activity entry each and the unit of work commits. Only then the
- * provider calls run. A provider failure leaves the row `DEACTIVATED`; the next run repeats the call for
- * links deactivated within the retry window. A `ConflictError` skips the invoice until the next run.
+ * provider calls run for every link whose provider deactivation is still owed (the ones just deactivated and
+ * the ones an earlier run failed on), each confirmed on success. A provider failure leaves the row
+ * `DEACTIVATED` and unconfirmed: every later run repeats the call until it succeeds, whether or not the
+ * invoice still has an open link. A `ConflictError` skips the invoice until the next run.
  */
 export class DeactivatePaymentLinksBeyondBalance {
   constructor(
@@ -46,18 +48,23 @@ export class DeactivatePaymentLinksBeyondBalance {
     const failures: string[] = [];
     for (const invoiceId of await this.links.listInvoiceIdsWithOpenLinks()) {
       try {
-        const { changed, toCall } = await this.uow.run(() => this.reduce(invoiceId), {
+        const changed = await this.uow.run(() => this.reduce(invoiceId), {
           isolation: 'Serializable',
         });
         deactivated.push(...changed.map((link) => link.id));
-        for (const link of toCall) {
-          if (!(await this.callProvider(link))) failures.push(link.id);
-        }
       } catch (error) {
         // Only a conflict: a busy invoice must not abort the rest of the run.
         if (!(error instanceof ConflictError)) throw error;
         skipped.push(invoiceId);
       }
+    }
+    // This run's deactivations go first, newest link first as decided; older owed calls follow.
+    const order = new Map(deactivated.map((id, index) => [id, index]));
+    const owed = [...(await this.links.listPendingProviderDeactivation())].sort(
+      (a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity),
+    );
+    for (const link of owed) {
+      if (!(await this.callProvider(link))) failures.push(link.id);
     }
     return { deactivated, skippedInvoiceIds: skipped, providerFailures: failures };
   }
@@ -91,16 +98,7 @@ export class DeactivatePaymentLinksBeyondBalance {
       });
       changed.push(off);
     }
-    // Retry the calls that failed earlier: deactivated recently, already known to the provider.
-    const cutoff = now.getTime() - PROVIDER_RETRY_WINDOW_MS;
-    const retries = all.filter(
-      (link) =>
-        link.status === 'DEACTIVATED' &&
-        link.deactivatedAt !== null &&
-        link.deactivatedAt.getTime() >= cutoff,
-    );
-    const toCall = [...changed, ...retries].filter((link) => link.externalId !== null);
-    return { changed, toCall };
+    return changed;
   }
 
   /** An invoice that no longer resolves (deleted) is treated as not open. */
@@ -116,6 +114,7 @@ export class DeactivatePaymentLinksBeyondBalance {
   private async callProvider(link: PaymentLink): Promise<boolean> {
     try {
       await this.provider.deactivatePaymentLink(link.externalId as string);
+      await this.links.markProviderDeactivated(link.id, this.clock.now());
       return true;
     } catch {
       return false;

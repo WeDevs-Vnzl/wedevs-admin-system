@@ -93,4 +93,19 @@ export class PrismaPaymentLinkRepository implements PaymentLinkRepository {
     });
     return rows.map((row) => row.invoiceId);
   }
+
+  async listPendingProviderDeactivation(): Promise<PaymentLink[]> {
+    const rows = await this.host.db.invoicePaymentLink.findMany({
+      where: { status: 'DEACTIVATED', externalId: { not: null }, providerDeactivatedAt: null },
+      orderBy: [{ deactivatedAt: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map(toDomain);
+  }
+
+  async markProviderDeactivated(linkId: string, at: Date): Promise<void> {
+    await this.host.db.invoicePaymentLink.updateMany({
+      where: { id: linkId },
+      data: { providerDeactivatedAt: at },
+    });
+  }
 }

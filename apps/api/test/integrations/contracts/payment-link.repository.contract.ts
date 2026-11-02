@@ -84,6 +84,31 @@ export function paymentLinkRepositoryContract(
       expect(await repository.listInvoiceIdsWithOpenLinks()).toEqual(['inv-1']);
     });
 
+    it('lists deactivated links with an external id whose provider call is still owed, until confirmed', async () => {
+      const { repository } = await factory();
+      const at = new Date('2026-11-02T09:00:00Z');
+      const known = (id: string, externalId: string | null): PaymentLink => ({
+        ...link(id, 'inv-1', '2026-11-02T08:00:00Z'),
+        externalId,
+      });
+      await repository.save(deactivateLink(known('a', 'plink_a'), 'X', at));
+      await repository.save(deactivateLink(known('b', 'plink_b'), 'X', at));
+      await repository.save(deactivateLink(known('c', null), 'X', at));
+      await repository.save(known('d', 'plink_d'));
+      expect((await repository.listPendingProviderDeactivation()).map((l) => l.id)).toEqual([
+        'a',
+        'b',
+      ]);
+
+      await repository.markProviderDeactivated('a', new Date('2026-11-02T10:00:00Z'));
+      expect((await repository.listPendingProviderDeactivation()).map((l) => l.id)).toEqual(['b']);
+
+      // Saving the link again must not reopen a confirmed deactivation.
+      const stored = await repository.findById('a');
+      await repository.save(stored as PaymentLink);
+      expect((await repository.listPendingProviderDeactivation()).map((l) => l.id)).toEqual(['b']);
+    });
+
     it('returns null for unknown ids', async () => {
       const { repository } = await factory();
       expect(await repository.findById('nope')).toBeNull();
