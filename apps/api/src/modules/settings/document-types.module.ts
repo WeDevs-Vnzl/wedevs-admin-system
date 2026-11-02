@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DocumentUsageModule } from '../documents/document-usage.module';
+import { PrismaDocumentTypeSearchDependents } from '../documents/infrastructure/document-type-search-dependents.adapter';
 import { PrismaDocumentTypeUsage } from '../documents/infrastructure/prisma-document-type-usage';
 import {
   ACTIVITY_LOG,
@@ -24,6 +25,10 @@ import {
   DOCUMENT_TYPE_USAGE,
   type DocumentTypeUsagePort,
 } from './application/ports/document-type-usage.port';
+import {
+  DOCUMENT_TYPE_SEARCH_DEPENDENTS,
+  type DocumentTypeSearchDependentsPort,
+} from './application/ports/document-type-search-dependents.port';
 import { CreateDocumentCategory } from './application/use-cases/create-document-category.use-case';
 import { CreateDocumentType } from './application/use-cases/create-document-type.use-case';
 import { DeleteDocumentCategory } from './application/use-cases/delete-document-category.use-case';
@@ -52,6 +57,10 @@ import { DocumentTypesController } from './interface/http/document-types.control
     { provide: DOCUMENT_CATEGORY_REPOSITORY, useClass: PrismaDocumentCategoryRepository },
     { provide: DOCUMENT_TYPE_REPOSITORY, useClass: PrismaDocumentTypeRepository },
     { provide: DOCUMENT_TYPE_USAGE, useExisting: PrismaDocumentTypeUsage },
+    {
+      provide: DOCUMENT_TYPE_SEARCH_DEPENDENTS,
+      useExisting: PrismaDocumentTypeSearchDependents,
+    },
     {
       provide: DocumentTypeCatalog,
       useFactory: (
@@ -173,13 +182,15 @@ import { DocumentTypesController } from './interface/http/document-types.control
         types: DocumentTypeRepository,
         catalog: DocumentTypeCatalog,
         activity: ActivityLogPort,
-      ) => new UpdateDocumentType(authorization, uow, types, catalog, activity),
+        dependents: DocumentTypeSearchDependentsPort,
+      ) => new UpdateDocumentType(authorization, uow, types, catalog, activity, dependents),
       inject: [
         AUTHORIZATION,
         UNIT_OF_WORK,
         DOCUMENT_TYPE_REPOSITORY,
         DocumentTypeCatalog,
         ACTIVITY_LOG,
+        DOCUMENT_TYPE_SEARCH_DEPENDENTS,
       ],
     },
     {
