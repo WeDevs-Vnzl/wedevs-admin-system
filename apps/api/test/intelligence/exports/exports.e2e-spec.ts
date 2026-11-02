@@ -3,6 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommercialModule } from '../../../src/modules/commercial/commercial.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { IntelligenceModule } from '../../../src/modules/intelligence/intelligence.module';
 import { ExportsModule } from '../../../src/modules/intelligence/exports.module';
 import type { AuthorizationPort } from '../../../src/shared/application/ports/authorization.port';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
@@ -89,7 +90,7 @@ describe('POST /exports/{entity} (e2e)', () => {
     app = await createTestApp({
       modules: [ExportsModule],
       // `AppModule` registers the real CLIENT source; this spec registers its own fake one.
-      without: [CommercialModule],
+      without: [CommercialModule, IntelligenceModule],
       authenticator,
       overrides: [
         { token: AUTHORIZATION, useValue: authorization },

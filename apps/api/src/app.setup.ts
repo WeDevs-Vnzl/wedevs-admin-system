@@ -60,6 +60,7 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
   app.enableCors({
     origin: (origin, callback) => callback(null, origin === undefined || origin === allowedOrigin),
     credentials: true,
+    exposedHeaders: ['Content-Disposition', 'X-Export-Row-Count', 'X-Export-Truncated'],
   });
 
   if (config.NODE_ENV !== 'production') {

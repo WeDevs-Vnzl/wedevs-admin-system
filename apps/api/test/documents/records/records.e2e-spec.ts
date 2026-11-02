@@ -965,6 +965,7 @@ describe('documents records (e2e): HU-19, HU-20, DT-141, DT-142', () => {
         'GET /api/v1/documents',
         'POST /api/v1/documents',
         'GET /api/v1/documents/category-counts',
+        'GET /api/v1/documents/overview',
         'POST /api/v1/documents/archive',
         'GET /api/v1/documents/{id}',
         'PATCH /api/v1/documents/{id}',

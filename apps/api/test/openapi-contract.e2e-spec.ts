@@ -100,7 +100,14 @@ function expectedRoutes(app: NestExpressApplication): ExpectedRoute[] {
 
 /** Every BE-3 finance operation: the paths of the plan's contract choice 1 (`TASK-BE.md` BE-3). */
 const FINANCE_PATH =
-  /^\/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))/;
+  /^\/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))(?!\/overview$)/;
+
+/**
+ * Every BE-5 `intelligence` operation (`TASK-BE.md` BE-5 contract choices). The `/x/overview` routes sit under
+ * the owners' prefixes but belong here, so the BE-3 and BE-4 path filters exclude them.
+ */
+const BE5_PATH =
+  /^\/api\/v1\/(shell|dashboard|alerts|search|graph|exports|reports|[a-z-]+\/overview$|(clients|projects)\/\{id\}\/summary$)/;
 
 /** `decimalStringSchema` of the response DTOs (C8, C15). */
 const DECIMAL_PATTERN = '^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$';
@@ -155,7 +162,16 @@ const typesOf = (schema: JsonSchema): string[] => [schema.type].flat().filter(Bo
  * Request and response money fields must be `type: string` with the decimal pattern (requests carry it as
  * `.meta()`, their Zod refinements stay the only runtime check). Nullable ones are `string | null`.
  */
-function financeContractFindings(doc: FullDocument): string[] {
+function financeContractFindings(
+  doc: FullDocument,
+  scope: {
+    readonly paths: RegExp;
+    /** Names that are counts or flags, never money (exempt from the money checks). */
+    readonly counter?: RegExp;
+    /** BE-5: any integer is a count (an amount is never an integer) and the pattern is not required. */
+    readonly relaxed?: boolean;
+  } = { paths: FINANCE_PATH },
+): string[] {
   const findings = new Set<string>();
   const resolve = (node: JsonSchema): JsonSchema => {
     const ref = node.$ref;
@@ -175,9 +191,11 @@ function financeContractFindings(doc: FullDocument): string[] {
     const node = resolve(input);
     const path = ref ? [...seen, ref] : seen;
     const types = typesOf(node);
-    const money = name !== '' && MONEY_NAME.test(name) && !NOT_MONEY_NAME.test(name);
-    if (types.includes('number')) findings.add(`${where}: ${name || '(root)'} is a JSON number`);
-    if (types.includes('integer') && !INTEGER_ALLOWLIST.has(name)) {
+    const isCounter = scope.counter?.test(name) ?? false;
+    const money = name !== '' && MONEY_NAME.test(name) && !NOT_MONEY_NAME.test(name) && !isCounter;
+    if (types.includes('number') && !isCounter)
+      findings.add(`${where}: ${name || '(root)'} is a JSON number`);
+    if (types.includes('integer') && !INTEGER_ALLOWLIST.has(name) && !isCounter && !scope.relaxed) {
       findings.add(`${where}: ${name || '(root)'} is an integer outside the allowlist`);
     }
     // An array of scalars is the lossy nullable shape (`string[]` for `string | null`); objects and arrays of
@@ -186,13 +204,13 @@ function financeContractFindings(doc: FullDocument): string[] {
       ? ['array', ...typesOf(resolve((node.items ?? {}) as JsonSchema))]
       : types;
     const scalar = shape.length > 0 && shape.every((t) => SCALAR_TYPES.has(t) || t === 'array');
-    const counter = types.includes('integer') && INTEGER_ALLOWLIST.has(name);
+    const counter = types.includes('integer') && (INTEGER_ALLOWLIST.has(name) || isCounter);
     if (money && scalar && !counter && !shape.every((t) => t === 'string' || t === 'null')) {
       findings.add(`${where}: ${name} is money but typed ${types.join('|')}`);
     }
     const expected =
       side === 'request' && name === 'percentage' ? PERCENT_PATTERN : DECIMAL_PATTERN;
-    if (money && types.includes('string') && node.pattern !== expected) {
+    if (money && types.includes('string') && node.pattern !== expected && !scope.relaxed) {
       findings.add(`${where}: ${name} misses the decimal pattern (${side})`);
     }
     for (const key of ['anyOf', 'oneOf', 'allOf'] as const) {
@@ -210,7 +228,7 @@ function financeContractFindings(doc: FullDocument): string[] {
     }
   };
   for (const [path, methods] of Object.entries(doc.paths)) {
-    if (!FINANCE_PATH.test(path)) continue;
+    if (!scope.paths.test(path)) continue;
     for (const [method, operation] of Object.entries(methods)) {
       const where = `${method.toUpperCase()} ${path}`;
       for (const parameter of (operation.parameters ?? []) as {
@@ -324,7 +342,7 @@ describe('finance contract: money is a decimal string, never a JSON number (less
 });
 
 /** Every BE-4 operation: documents, share links and the portal (`TASK-BE.md` BE-4 contract choice 1). */
-const BE4_PATH = /^\/api\/v1\/(documents|share-links|portal)(\/|$)/;
+const BE4_PATH = /^\/api\/v1\/(documents|share-links|portal)(\/(?!overview$)|$)/;
 
 /** Names that would carry a secret or a hash: an access key, a scrypt hash, an IP hash, a salt, a storage key. */
 const SECRET_NAME = /(key|hash|secret|scrypt|salt)/i;
@@ -486,6 +504,85 @@ describe('BE-4 contract: documents, share links and the portal', () => {
       ];
     });
     expect(weak).toEqual([]);
+  });
+});
+
+/** Property names that would leak a secret, a hash or a storage location. */
+const LEAK_NAME = /(storageKey|publicId|hash|secret|password|scrypt|salt|signatureHash)/i;
+
+describe('BE-5 contract: intelligence', () => {
+  const full = DOCUMENT as unknown as FullDocument;
+  const operations = Object.entries(full.paths)
+    .filter(([path]) => BE5_PATH.test(path))
+    .flatMap(([path, methods]) =>
+      Object.entries(methods).map(([method, operation]) => ({ path, method, operation })),
+    );
+  // `meta` of a graph node is `string | number | null`: its numbers are counts, money there is a decimal string.
+  const scope = { paths: BE5_PATH, counter: /(Count|^meta$|^vesRateMissing$)/, relaxed: true };
+
+  it('documents the 24 BE-5 operations', () => {
+    expect(operations).toHaveLength(24);
+  });
+
+  it('declares no money as a JSON number and every amount as a decimal string, counts aside (C8, C15)', () => {
+    expect(financeContractFindings(full, scope)).toEqual([]);
+  });
+
+  it('flags a money property planted as a JSON number on a BE-5 response', () => {
+    const doc = structuredClone(full);
+    const schema = doc.components.schemas.InvoicesOverviewDto;
+    if (!schema) throw new Error('InvoicesOverviewDto is not in the document');
+    schema.properties = {
+      ...(schema.properties as Record<string, JsonSchema>),
+      totalAmount: { type: 'number' },
+    };
+    expect(financeContractFindings(doc, scope)).toContain(
+      'GET /api/v1/invoices/overview: totalAmount is a JSON number',
+    );
+  });
+
+  it('keeps the internal FinanceFactKind out of the document (DT-104)', () => {
+    expect(JSON.stringify(full)).not.toMatch(/FinanceFactKind/);
+    expect(Object.keys(full.components.schemas).filter((n) => /FactKind/.test(n))).toEqual([]);
+  });
+
+  it('exposes no hash, storage key or secret in any BE-5 response', () => {
+    const leaks = operations.flatMap(({ method, path, operation }) =>
+      responseProperties(full, operation)
+        .filter((name) => LEAK_NAME.test(name))
+        .map((name) => `${method.toUpperCase()} ${path}: ${name}`),
+    );
+    expect(leaks).toEqual([]);
+  });
+
+  it('documents pageSize as 25 | 50 | 100 and sort as a whitelist wherever a BE-5 operation takes a page', () => {
+    const lists = operations.filter(({ operation }) =>
+      ((operation.parameters ?? []) as { name: string }[]).some((p) => p.name === 'pageSize'),
+    );
+    const weak = lists.flatMap(({ method, path, operation }) => {
+      const params = operation.parameters as { name: string; schema: JsonSchema }[];
+      const pageSize = params.find((p) => p.name === 'pageSize')?.schema;
+      const sort = params.find((p) => p.name === 'sort')?.schema;
+      const where = `${method.toUpperCase()} ${path}`;
+      return [
+        ...(pageSize?.type === 'integer' &&
+        JSON.stringify(pageSize.enum) === JSON.stringify([25, 50, 100])
+          ? []
+          : [`${where}: pageSize is not the 25|50|100 integer enum`]),
+        ...(sort && Array.isArray(sort.enum) && sort.enum.length > 0
+          ? []
+          : [`${where}: sort is not the whitelisted enum`]),
+      ];
+    });
+    expect(weak).toEqual([]);
+  });
+
+  it('documents the export entity as the eleven-table enum of DT-171', () => {
+    const entity = (
+      full.paths['/api/v1/exports/{entity}']?.post?.parameters as
+        { name: string; schema: JsonSchema }[] | undefined
+    )?.find((p) => p.name === 'entity')?.schema;
+    expect(entity?.enum).toHaveLength(11);
   });
 });
 

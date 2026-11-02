@@ -9,6 +9,7 @@ import type { UserRole } from '../../src/shared/domain/enums';
 import { makeClient, makeNote, makeProject } from '../db/helpers';
 import { createTestPrisma, truncateBusinessTables } from '../support/db';
 import { FakeAuthenticator } from '../support/fakes/fake-authenticator';
+import { IntelligenceModule } from '../../src/modules/intelligence/intelligence.module';
 import { CommercialModule } from '../../src/modules/commercial/commercial.module';
 import { DocumentsModule } from '../../src/modules/documents/documents.module';
 import { FinanceModule } from '../../src/modules/finance/finance.module';
@@ -30,7 +31,7 @@ describe('trash (e2e)', () => {
     app = await createTestApp({
       modules: [TrashModule],
       // The real restore handlers would collide with the fakes registered below.
-      without: [CommercialModule, FinanceModule, DocumentsModule],
+      without: [CommercialModule, FinanceModule, DocumentsModule, IntelligenceModule],
       authenticator,
       authorization: trashPolicy,
     });
