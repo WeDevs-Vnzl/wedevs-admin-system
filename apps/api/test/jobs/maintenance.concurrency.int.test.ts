@@ -7,16 +7,17 @@ import { MarkExpiredShareLinks } from '../../src/modules/documents/application/u
 import { DailyMaintenance } from '../../src/modules/jobs/application/daily-maintenance';
 import { JobRunner } from '../../src/modules/jobs/application/job-runner';
 import { PrismaService } from '../../src/shared/infrastructure/prisma/prisma.service';
-import { Gate, gated } from '../commercial/concurrency/world';
 import { buildWorld } from '../finance/read-models/world';
 import { createTestPrisma, truncateBusinessTables } from '../support/db';
 import { seedWorld } from './seed';
 import { bootJobsWorld, SYSTEM_JOB_SUMMARIES, type JobsWorld } from './world';
 
 /**
- * Two `DailyMaintenance` runs overlapping (the queue never does this on purpose, but a stalled job re-run or a
- * second worker can): no duplicate period, no document, link or invoice processed twice, and no entry beyond
- * the five summaries each run owns (A4). The interleaving is forced through `Gate`, not timing.
+ * Two `DailyMaintenance` runs truly overlapping on a real database (the queue never does this on purpose, but a
+ * stalled job re-run or a second worker can). `Rendezvous` holds each run at the start of a step until the other
+ * run has arrived, so both execute the same step at the same moment instead of one after the other. Guarantees
+ * (A4): no duplicate installment or recurring expense period, no invoice, document or link transitioned twice,
+ * and one per-row entry per processed record plus the five step summaries each run owns.
  */
 const admin = createTestPrisma();
 const service = new PrismaService({ DATABASE_URL: process.env.DATABASE_URL as string });
@@ -40,22 +41,55 @@ beforeEach(async () => {
 const get = <T>(token: new (...args: never[]) => T): T =>
   world.context.get(token, { strict: false });
 
-function steps(
-  hooks: {
-    installments?: (step: GenerateRecurringInstallments) => GenerateRecurringInstallments;
-  } = {},
-) {
+/** Releases its waiters once `parties` of them arrived: the two runs enter the step together. */
+class Rendezvous {
+  private waiting: (() => void)[] = [];
+  constructor(private readonly parties: number) {}
+  async arrive(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.waiting.push(resolve);
+      if (this.waiting.length === this.parties) {
+        const release = this.waiting;
+        this.waiting = [];
+        for (const go of release) go();
+      }
+    });
+  }
+}
+
+/** The step's `execute` waits at `point` before it runs. */
+function overlapped<T extends { execute(...args: never[]): Promise<unknown> }>(
+  step: T,
+  point: Rendezvous,
+): T {
+  return new Proxy(step, {
+    get(target, prop, receiver) {
+      const value: unknown = Reflect.get(target, prop, receiver);
+      if (prop !== 'execute') return typeof value === 'function' ? value.bind(target) : value;
+      return async (...args: never[]) => {
+        await point.arrive();
+        return target.execute(...args);
+      };
+    },
+  });
+}
+
+function steps(points?: Record<string, Rendezvous>) {
+  const wrap = <T extends { execute(...args: never[]): Promise<unknown> }>(
+    name: string,
+    step: T,
+  ) => (points?.[name] ? overlapped(step, points[name]) : step);
   return {
-    markOverdueInvoices: get(MarkOverdueInvoices),
-    markExpiredDocuments: get(MarkExpiredDocuments),
-    generateRecurringInstallments: (hooks.installments ?? ((s) => s))(
-      get(GenerateRecurringInstallments),
-    ),
-    generateRecurringExpenses: get(GenerateRecurringExpenses),
-    markExpiredShareLinks: get(MarkExpiredShareLinks),
+    markOverdueInvoices: wrap('overdue', get(MarkOverdueInvoices)),
+    markExpiredDocuments: wrap('documents', get(MarkExpiredDocuments)),
+    generateRecurringInstallments: wrap('installments', get(GenerateRecurringInstallments)),
+    generateRecurringExpenses: wrap('expenses', get(GenerateRecurringExpenses)),
+    markExpiredShareLinks: wrap('links', get(MarkExpiredShareLinks)),
   };
 }
 const dailyOf = (s = steps()) => new DailyMaintenance(get(JobRunner), s);
+const pointsFor = (...names: string[]) =>
+  Object.fromEntries(names.map((name) => [name, new Rendezvous(2)]));
 
 async function expectNoDuplicates(summaries: number) {
   const periods = await admin.billingInstallment.findMany({
@@ -82,42 +116,28 @@ async function expectNoDuplicates(summaries: number) {
 }
 
 describe('two overlapping DailyMaintenance runs', () => {
-  it('the second run completes inside the first, between two of its steps', async () => {
-    const gate = new Gate();
-    const first = dailyOf(steps({ installments: (s) => gated(s, gate, ['execute'], 'before') }));
-    const second = dailyOf();
+  const ALL = ['overdue', 'documents', 'installments', 'expenses', 'links'] as const;
 
-    const running = first.execute();
-    await gate.arrived; // the first run finished the overdue and document steps and waits
-    await second.execute();
-    gate.release();
-    await running;
+  it('enter every step together and neither fails nor duplicates anything', async () => {
+    const points = pointsFor(...ALL);
+    const outcomes = await Promise.allSettled([
+      dailyOf(steps(points)).execute(),
+      dailyOf(steps(points)).execute(),
+    ]);
 
+    // A run that lost a serialization race skips that row (a conflict), it never fails the step.
+    expect(outcomes.map((o) => o.status)).toEqual(['fulfilled', 'fulfilled']);
     await expectNoDuplicates(10);
   });
 
-  it('the first run waits after the installments step while the second runs entirely', async () => {
-    const gate = new Gate();
-    const first = dailyOf(steps({ installments: (s) => gated(s, gate, ['execute'], 'after') }));
-    const second = dailyOf();
+  it.each(ALL)('hold both runs at the %s step only and release them together', async (name) => {
+    const points = pointsFor(name);
+    const outcomes = await Promise.allSettled([
+      dailyOf(steps(points)).execute(),
+      dailyOf(steps(points)).execute(),
+    ]);
 
-    const running = first.execute();
-    await gate.arrived; // installments committed by the first run
-    await second.execute();
-    gate.release();
-    await running;
-
+    expect(outcomes.map((o) => o.status)).toEqual(['fulfilled', 'fulfilled']);
     await expectNoDuplicates(10);
-  });
-
-  it('two runs started together end without a duplicate', async () => {
-    const outcomes = await Promise.allSettled([dailyOf().execute(), dailyOf().execute()]);
-
-    expect(outcomes.some((o) => o.status === 'fulfilled')).toBe(true);
-    // A run that lost a serialization race fails (and the queue retries it); the retry here:
-    for (const outcome of outcomes) if (outcome.status === 'rejected') await dailyOf().execute();
-    const summaries = await SYSTEM_JOB_SUMMARIES(admin);
-    expect(summaries % 5).toBe(0);
-    await expectNoDuplicates(summaries);
   });
 });

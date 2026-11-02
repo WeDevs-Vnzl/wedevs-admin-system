@@ -95,7 +95,7 @@ function cellOf(column: ExportColumn<unknown>, value: ExportCellValue): unknown 
  *
  * Authorization lives in the source: its `read` is the table's own list use case, so that list's `can()`
  * and money gates decide what the file holds. Columns are validated before anything is read; the rows are
- * read in pages of 100 up to the cap; the single `EXPORT` entry is written in a unit of work after them,
+ * read in pages of 100 up to the cap inside one RepeatableRead unit of work; the single `EXPORT` entry is written in a unit of work after them,
  * with the entity, the row count, the column ids and `truncated`, and no filter value or label.
  */
 export class ExportCsv {
@@ -115,14 +115,23 @@ export class ExportCsv {
     const resolved = this.resolveColumns(source.columns, input.columns);
     const ids = resolved.map((column) => column.id);
 
-    const rows: unknown[] = [];
-    let total = 0;
-    for (let page = 1; rows.length < EXPORT_MAX_ROWS; page += 1) {
-      const result = await source.read(user, input.query, { page, pageSize: EXPORT_PAGE_SIZE });
-      total = result.total;
-      rows.push(...result.rows.slice(0, EXPORT_MAX_ROWS - rows.length));
-      if (result.rows.length === 0 || page * EXPORT_PAGE_SIZE >= total) break;
-    }
+    // One read-only RepeatableRead unit of work for every page: the file is one snapshot, so a row written
+    // or archived meanwhile is neither repeated nor skipped. The nested list transactions join it. The
+    // transaction is bounded by the row cap (at most 100 pages) and the adapter's default timeout.
+    const { rows, total } = await this.uow.run(
+      async () => {
+        const collected: unknown[] = [];
+        let count = 0;
+        for (let page = 1; collected.length < EXPORT_MAX_ROWS; page += 1) {
+          const result = await source.read(user, input.query, { page, pageSize: EXPORT_PAGE_SIZE });
+          count = result.total;
+          collected.push(...result.rows.slice(0, EXPORT_MAX_ROWS - collected.length));
+          if (result.rows.length === 0 || page * EXPORT_PAGE_SIZE >= count) break;
+        }
+        return { rows: collected, total: count };
+      },
+      { isolation: 'RepeatableRead' },
+    );
     const truncated = total > EXPORT_MAX_ROWS;
 
     // Cells are keyed by position: `toCsv` reads dotted keys as paths and ids may contain dots.
