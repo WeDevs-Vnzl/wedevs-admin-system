@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { GetKpis } from '../../../src/modules/intelligence/application/use-cases/reports/get-kpis.use-case';
 import { PrismaFinanceFactsRead } from '../../../src/modules/intelligence/infrastructure/prisma-finance-facts-read';
 import { PrismaReportInputsRead } from '../../../src/modules/intelligence/infrastructure/prisma-report-inputs-read';

@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ExchangeRatePort } from '../../../src/modules/finance/application/ports/exchange-rate.port';
 import { GetKpis } from '../../../src/modules/intelligence/application/use-cases/reports/get-kpis.use-case';
 import { GetReport } from '../../../src/modules/intelligence/application/use-cases/reports/get-report.use-case';

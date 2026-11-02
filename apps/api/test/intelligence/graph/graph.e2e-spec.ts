@@ -1,7 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { GraphModule } from '../../../src/modules/intelligence/graph.module';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';

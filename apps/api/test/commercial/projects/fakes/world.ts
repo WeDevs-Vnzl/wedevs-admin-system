@@ -14,7 +14,7 @@ import { SetProjectTechnologies } from '../../../../src/modules/commercial/appli
 import { UpdateProject } from '../../../../src/modules/commercial/application/use-cases/update-project.use-case';
 import { UpsertProjectLinks } from '../../../../src/modules/commercial/application/use-cases/upsert-project-links.use-case';
 import type { ProjectRecord } from '../../../../src/modules/commercial/domain/project';
-import { MatrixAuthorization } from '../../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../../src/modules/identity/application/matrix-authorization';
 import { TagAssignments } from '../../../../src/modules/settings/application/tag-assignments';
 import type { CurrentUser } from '../../../../src/shared/application/current-user';
 import type { UserRole } from '../../../../src/shared/domain/enums';

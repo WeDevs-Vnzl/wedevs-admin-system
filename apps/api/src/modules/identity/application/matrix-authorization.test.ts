@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CurrentUser } from '../../../shared/application/current-user';
 import { USER_ROLE_VALUES, type UserRole } from '../../../shared/domain/enums';
@@ -42,5 +44,16 @@ describe('MatrixAuthorization', () => {
       false,
       false,
     ]);
+  });
+});
+
+describe('worker wiring (DT-181 5a)', () => {
+  it('jobs.module.ts imports nothing under another context infrastructure/', () => {
+    const source = readFileSync(resolve(__dirname, '../../jobs/jobs.module.ts'), 'utf8');
+    const imports = [...source.matchAll(/from '([^']+)'/g)].map((m) => m[1] ?? '');
+    const foreign = imports.filter((path) =>
+      /^\.\.\/(?!jobs\/).*\/infrastructure(\/|$)/.test(path),
+    );
+    expect(foreign).toEqual([]);
   });
 });

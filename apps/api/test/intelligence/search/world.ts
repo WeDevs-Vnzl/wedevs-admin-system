@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type {
   EntryComparison,
   SearchCriteria,

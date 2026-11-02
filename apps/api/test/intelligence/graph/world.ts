@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import { ExpandNode } from '../../../src/modules/intelligence/application/use-cases/graph/expand-node.use-case';

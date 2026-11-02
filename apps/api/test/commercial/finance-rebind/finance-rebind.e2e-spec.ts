@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { ExpensesModule } from '../../../src/modules/finance/expenses.module';
 import { InvoicesModule } from '../../../src/modules/finance/invoices.module';
 import { PaymentsModule } from '../../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';
 import { PrismaService } from '../../../src/shared/infrastructure/prisma/prisma.service';

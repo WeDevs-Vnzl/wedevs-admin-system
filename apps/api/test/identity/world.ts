@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../src/shared/application/current-user';
 import type { UserRecord } from '../../src/modules/identity/domain/user';
 import { FixedClock } from '../support/fakes/fixed-clock';

@@ -2,7 +2,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { APP_CONFIG } from '../../../src/config/config.module';
 import { parseEnv } from '../../../src/config/env.schema';
 import { PortalModule } from '../../../src/modules/documents/portal.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FILE_STORAGE } from '../../../src/modules/platform/application/ports/file-storage.port';
 import { AUTHORIZATION, CLOCK } from '../../../src/shared/application/ports/tokens';
 import type { FakeAuthenticator } from '../../support/fakes/fake-authenticator';

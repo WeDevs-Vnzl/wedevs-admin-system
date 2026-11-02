@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { buildOpenApiDocument } from '../../../src/app.setup';
 import { DocumentRecordsModule } from '../../../src/modules/documents/document-records.module';
 import { MarkExpiredDocuments } from '../../../src/modules/documents/application/use-cases/records/mark-expired-documents.use-case';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FILE_STORAGE } from '../../../src/modules/platform/application/ports/file-storage.port';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION, CLOCK } from '../../../src/shared/application/ports/tokens';

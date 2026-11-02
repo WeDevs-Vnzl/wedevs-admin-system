@@ -5,7 +5,7 @@ import { LoadDailyRates } from '../../../src/modules/finance/application/use-cas
 import { UpsertExchangeRate } from '../../../src/modules/finance/application/use-cases/rates/upsert-exchange-rate.use-case';
 import type { ExchangeRate } from '../../../src/modules/finance/application/ports/exchange-rate.repository.port';
 import { ManualRateSource } from '../../../src/modules/finance/infrastructure/manual-rate-source';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../src/shared/domain/list-query';

@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ClientListRow } from '../../../src/modules/commercial/application/use-cases/client-support';
 import type { ProjectListRowView } from '../../../src/modules/commercial/application/use-cases/project-views';
 import type { CurrentUser } from '../../../src/shared/application/current-user';

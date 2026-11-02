@@ -16,7 +16,7 @@ import { ListAccountPartners } from '../../../src/modules/finance/application/us
 import { ListAccounts } from '../../../src/modules/finance/application/use-cases/accounts/list-accounts.use-case';
 import { ReconcileAccount } from '../../../src/modules/finance/application/use-cases/accounts/reconcile-account.use-case';
 import { UpdateAccount } from '../../../src/modules/finance/application/use-cases/accounts/update-account.use-case';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../src/shared/domain/list-query';

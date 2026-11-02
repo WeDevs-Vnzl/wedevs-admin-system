@@ -16,7 +16,7 @@ import { MarkExpiredDocuments } from '../../../src/modules/documents/application
 import { RestoreDocument } from '../../../src/modules/documents/application/use-cases/records/restore-document.use-case';
 import { SetDocumentStatus } from '../../../src/modules/documents/application/use-cases/records/set-document-status.use-case';
 import { PrismaDocumentRepository } from '../../../src/modules/documents/infrastructure/prisma-document.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { ReserveFileForAttachment } from '../../../src/modules/platform/application/use-cases/reserve-file-for-attachment.use-case';
 import { PrismaFileRepository } from '../../../src/modules/platform/infrastructure/prisma-file.repository';

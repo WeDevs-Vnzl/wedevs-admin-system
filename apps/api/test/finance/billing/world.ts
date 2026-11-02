@@ -19,7 +19,7 @@ import type {
 } from '../../../src/modules/finance/application/ports/billing-projects.port';
 import type { ExchangeRate } from '../../../src/modules/finance/application/ports/exchange-rate.repository.port';
 import { ManualRateSource } from '../../../src/modules/finance/infrastructure/manual-rate-source';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import { FixedClock } from '../../support/fakes/fixed-clock';

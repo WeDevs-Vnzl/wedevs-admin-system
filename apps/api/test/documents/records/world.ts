@@ -35,7 +35,7 @@ import {
   DocumentRestoreHandler,
   DocumentTaggableResolver,
 } from '../../../src/modules/documents/infrastructure/document-registry.resolvers';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { ReserveFileForAttachment } from '../../../src/modules/platform/application/use-cases/reserve-file-for-attachment.use-case';
 import type { StoredFile } from '../../../src/modules/platform/domain/file';

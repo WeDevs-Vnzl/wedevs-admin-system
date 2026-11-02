@@ -1,4 +1,4 @@
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ExchangeRatePort } from '../../../src/modules/finance/application/ports/exchange-rate.port';
 import type { SelectedRate } from '../../../src/modules/finance/domain/rates';
 import { GetClientSummary } from '../../../src/modules/intelligence/application/use-cases/dashboard/get-client-summary.use-case';
