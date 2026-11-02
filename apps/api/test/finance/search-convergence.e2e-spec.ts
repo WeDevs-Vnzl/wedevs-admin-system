@@ -14,7 +14,7 @@ import {
   CLIENT_SEARCH_DEPENDENTS,
   type ClientSearchDependentsPort,
 } from '../../src/modules/commercial/application/ports/client-search-dependents.port';
-import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../src/shared/application/current-user';
 import { ExportSourceRegistry } from '../../src/shared/application/ports/export-source.port';
 import { SearchReindexRegistry } from '../../src/shared/application/ports/search-reindex.port';

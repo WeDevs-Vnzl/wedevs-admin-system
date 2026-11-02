@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentRecordsModule } from '../../src/modules/documents/document-records.module';
 import { PaymentsModule } from '../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import { FILE_STORAGE } from '../../src/modules/platform/application/ports/file-storage.port';
 import { DocumentTypesModule } from '../../src/modules/settings/document-types.module';
 import { FinanceCatalogsModule } from '../../src/modules/settings/finance-catalogs.module';

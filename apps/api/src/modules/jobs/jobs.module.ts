@@ -1,15 +1,10 @@
 import { Global, Module } from '@nestjs/common';
-import {
-  ACTIVITY_LOG,
-  AUTHENTICATOR,
-  AUTHORIZATION,
-  UNIT_OF_WORK,
-} from '../../shared/application/ports/tokens';
+import { ACTIVITY_LOG, AUTHENTICATOR, UNIT_OF_WORK } from '../../shared/application/ports/tokens';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
 import { APP_LOGGER, type AppLogger } from '../../shared/interface/logger';
 import { SharedInterfaceModule } from '../../shared/interface/shared-interface.module';
-import { MatrixAuthorization } from '../identity/infrastructure/matrix-authorization';
+import { AuthorizationModule } from '../identity/authorization.module';
 import { DocumentRecordsModule } from '../documents/document-records.module';
 import { ShareLinksModule } from '../documents/share-links.module';
 import { MarkExpiredDocuments } from '../documents/application/use-cases/records/mark-expired-documents.use-case';
@@ -36,11 +31,9 @@ import { JobsRuntime } from './interface/jobs/jobs-runtime';
  */
 @Global()
 @Module({
-  providers: [
-    { provide: AUTHORIZATION, useClass: MatrixAuthorization },
-    { provide: AUTHENTICATOR, useValue: { authenticate: () => Promise.resolve(null) } },
-  ],
-  exports: [AUTHORIZATION, AUTHENTICATOR],
+  imports: [AuthorizationModule],
+  providers: [{ provide: AUTHENTICATOR, useValue: { authenticate: () => Promise.resolve(null) } }],
+  exports: [AuthorizationModule, AUTHENTICATOR],
 })
 class WorkerIdentityModule {}
 

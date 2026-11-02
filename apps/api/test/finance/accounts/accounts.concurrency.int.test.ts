@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CreateMovement } from '../../../src/modules/finance/application/use-cases/accounts/create-movement.use-case';
 import { CreateTransfer } from '../../../src/modules/finance/application/use-cases/accounts/create-transfer.use-case';
 import { PrismaAccountRepository } from '../../../src/modules/finance/infrastructure/prisma-account.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type {
   IsolationLevel,

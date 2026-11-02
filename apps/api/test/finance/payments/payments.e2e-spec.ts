@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NoteLinkTargetRegistry } from '../../../src/modules/commercial/application/note-link-target.registry';
 import { PaymentsModule } from '../../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { FILE_ACCESS_REGISTRY } from '../../../src/modules/platform/application/ports/file-access.port';
 import { TAGGABLE_TARGET_REGISTRY } from '../../../src/modules/settings/application/ports/taggable-target.port';

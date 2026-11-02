@@ -12,7 +12,7 @@ import { PrismaExpenseCategoryRepository } from '../../../src/modules/settings/i
 import { PrismaExpenseReferences } from '../../../src/modules/finance/infrastructure/expense-references.adapter';
 import { PrismaExpenseRecurringRepository } from '../../../src/modules/finance/infrastructure/prisma-expense-recurring.repository';
 import { PrismaExpenseRepository } from '../../../src/modules/finance/infrastructure/prisma-expense.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { SequencePort } from '../../../src/shared/application/ports/sequence.port';
 import type { PrismaReadModelWriter } from '../../../src/modules/finance/infrastructure/prisma-read-model-writer';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';

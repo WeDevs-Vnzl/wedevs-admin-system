@@ -9,7 +9,7 @@ import { AccountsModule } from '../../../src/modules/finance/accounts.module';
 import { ExpensesModule } from '../../../src/modules/finance/expenses.module';
 import { InvoicesModule } from '../../../src/modules/finance/invoices.module';
 import { PaymentsModule } from '../../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { ReindexAll } from '../../../src/modules/intelligence/application/use-cases/search/reindex-all.use-case';
 import { SearchModule } from '../../../src/modules/intelligence/search.module';
 import { FILE_STORAGE } from '../../../src/modules/platform/application/ports/file-storage.port';

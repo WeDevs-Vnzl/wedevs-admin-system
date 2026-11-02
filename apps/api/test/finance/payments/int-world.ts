@@ -21,7 +21,7 @@ import { PrismaPaymentMethodRepository } from '../../../src/modules/settings/inf
 import { PrismaPaymentReferences } from '../../../src/modules/finance/infrastructure/payment-references.adapter';
 import { PrismaPaymentRepository } from '../../../src/modules/finance/infrastructure/prisma-payment.repository';
 import type { PrismaReadModelWriter } from '../../../src/modules/finance/infrastructure/prisma-read-model-writer';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ClockPort } from '../../../src/shared/application/ports/clock.port';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';
 import type { UnitOfWorkPort } from '../../../src/shared/application/ports/unit-of-work.port';

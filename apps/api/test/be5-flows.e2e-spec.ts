@@ -7,7 +7,7 @@ import { GenerateRecurringExpenses } from '../src/modules/finance/application/us
 import { MarkOverdueInvoices } from '../src/modules/finance/application/use-cases/invoices/mark-overdue-invoices.use-case';
 import { MarkExpiredDocuments } from '../src/modules/documents/application/use-cases/records/mark-expired-documents.use-case';
 import { MarkExpiredShareLinks } from '../src/modules/documents/application/use-cases/shares/mark-expired-share-links.use-case';
-import { MatrixAuthorization } from '../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../src/modules/identity/application/matrix-authorization';
 import { DailyMaintenance } from '../src/modules/jobs/application/daily-maintenance';
 import { JobRunner } from '../src/modules/jobs/application/job-runner';
 import type { CurrentUser } from '../src/shared/application/current-user';

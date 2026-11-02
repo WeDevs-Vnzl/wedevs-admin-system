@@ -5,7 +5,7 @@ import { NoteLinkTargetRegistry } from '../../../src/modules/commercial/applicat
 import { SYSTEM_ACTOR } from '../../../src/modules/finance/application/recompute-all';
 import { MarkOverdueInvoices } from '../../../src/modules/finance/application/use-cases/invoices/mark-overdue-invoices.use-case';
 import { InvoicesModule } from '../../../src/modules/finance/invoices.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { FILE_ACCESS_REGISTRY } from '../../../src/modules/platform/application/ports/file-access.port';
 import { RESTORE_HANDLER_REGISTRY } from '../../../src/modules/platform/application/ports/restore-handler.port';

@@ -7,7 +7,7 @@ import { ListTags } from '../../../src/modules/settings/application/use-cases/li
 import { UnassignTag } from '../../../src/modules/settings/application/use-cases/unassign-tag.use-case';
 import { UpdateTag } from '../../../src/modules/settings/application/use-cases/update-tag.use-case';
 import type { Tag } from '../../../src/modules/settings/domain/tag';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../src/shared/domain/list-query';
 import type { UserRole } from '../../../src/shared/domain/enums';

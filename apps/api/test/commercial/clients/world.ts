@@ -16,7 +16,7 @@ import { UpdateClient } from '../../../src/modules/commercial/application/use-ca
 import { UpdateContact } from '../../../src/modules/commercial/application/use-cases/update-contact.use-case';
 import type { ClientInput } from '../../../src/modules/commercial/domain/client';
 import type { ContactInput } from '../../../src/modules/commercial/domain/contact';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { TagAssignments } from '../../../src/modules/settings/application/tag-assignments';
 import type { Tag } from '../../../src/modules/settings/domain/tag';
 import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../src/shared/domain/list-query';

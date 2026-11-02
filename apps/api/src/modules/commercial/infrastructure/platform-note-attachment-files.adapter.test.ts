@@ -3,7 +3,7 @@ import { FileAccessRegistry } from '../../platform/application/file-access.regis
 import { ReserveFileForAttachment } from '../../platform/application/use-cases/reserve-file-for-attachment.use-case';
 import { InMemoryFileRepository } from '../../../../test/files/in-memory-file.repository';
 import { member, otherMember } from '../../../../test/commercial/notes/world';
-import { MatrixAuthorization } from '../../identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../identity/application/matrix-authorization';
 import { PlatformNoteAttachmentFiles } from './platform-note-attachment-files.adapter';
 
 const file = (id: string, uploadedById: string, status: 'READY' | 'PENDING' = 'READY') => ({

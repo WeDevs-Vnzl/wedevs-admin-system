@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { LoadDailyRates } from '../../../src/modules/finance/application/use-cases/rates/load-daily-rates.use-case';
 import { UpsertExchangeRate } from '../../../src/modules/finance/application/use-cases/rates/upsert-exchange-rate.use-case';
 import { PrismaExchangeRateRepository } from '../../../src/modules/finance/infrastructure/prisma-exchange-rate.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { CuidGenerator } from '../../../src/shared/infrastructure/id-generator.adapter';
 import { PrismaActivityLog } from '../../../src/shared/infrastructure/prisma/prisma-activity-log';
 import { PrismaClientMetricsWriter } from '../../../src/shared/infrastructure/prisma/prisma-client-metrics-writer';

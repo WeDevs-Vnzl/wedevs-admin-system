@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { AlertStateRepository } from '../../../src/modules/intelligence/application/ports/alert-state.repository.port';
 import { DismissAlert } from '../../../src/modules/intelligence/application/use-cases/alerts/dismiss-alert.use-case';
 import { MarkAlertsRead } from '../../../src/modules/intelligence/application/use-cases/alerts/mark-alerts-read.use-case';

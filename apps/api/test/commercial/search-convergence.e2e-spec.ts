@@ -6,7 +6,7 @@ import { NotesModule } from '../../src/modules/commercial/notes.module';
 import { ProjectsModule } from '../../src/modules/commercial/projects.module';
 import { InvoicesModule } from '../../src/modules/finance/invoices.module';
 import { PaymentsModule } from '../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import { FILE_STORAGE } from '../../src/modules/platform/application/ports/file-storage.port';
 import type { CurrentUser } from '../../src/shared/application/current-user';
 import { ExportSourceRegistry } from '../../src/shared/application/ports/export-source.port';

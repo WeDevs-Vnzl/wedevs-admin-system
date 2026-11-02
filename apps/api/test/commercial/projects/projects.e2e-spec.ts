@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildOpenApiDocument } from '../../../src/app.setup';
 import { TechnologyUsageQueries } from '../../../src/modules/commercial/application/technology-usage.queries';
 import { ProjectsModule } from '../../../src/modules/commercial/projects.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';
 import type { UserRole } from '../../../src/shared/domain/enums';

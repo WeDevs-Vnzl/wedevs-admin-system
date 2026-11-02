@@ -48,8 +48,8 @@ import { ResetPreference } from './application/use-cases/reset-preference.use-ca
 import { RevokeInvitation } from './application/use-cases/revoke-invitation.use-case';
 import { SetPreference } from './application/use-cases/set-preference.use-case';
 import { SyncClerkUser } from './application/use-cases/sync-clerk-user.use-case';
+import { MatrixAuthorization } from './application/matrix-authorization';
 import { ClerkIdentityProvider } from './infrastructure/clerk-identity-provider';
-import { MatrixAuthorization } from './infrastructure/matrix-authorization';
 import { PrismaLoginActivityRepository } from './infrastructure/prisma-login-activity.repository';
 import { PrismaUserPreferenceRepository } from './infrastructure/prisma-user-preference.repository';
 import { PrismaUserRepository } from './infrastructure/prisma-user.repository';

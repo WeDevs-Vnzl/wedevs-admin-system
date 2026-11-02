@@ -2,7 +2,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommercialModule } from '../../../src/modules/commercial/commercial.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { IntelligenceModule } from '../../../src/modules/intelligence/intelligence.module';
 import { ExportsModule } from '../../../src/modules/intelligence/exports.module';
 import type { AuthorizationPort } from '../../../src/shared/application/ports/authorization.port';

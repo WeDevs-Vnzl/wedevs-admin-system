@@ -5,7 +5,7 @@ import { configureApp } from '../../../src/app.setup';
 import { parseEnv } from '../../../src/config/env.schema';
 import { OverviewsModule } from '../../../src/modules/intelligence/overviews.module';
 import { AUTHENTICATOR, AUTHORIZATION, CLOCK } from '../../../src/shared/application/ports/tokens';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ClockPort } from '../../../src/shared/application/ports/clock.port';
 import { FakeAuthenticator } from '../../support/fakes/fake-authenticator';
 import { assertLocalDatabaseUrl } from '../../support/local-db-guard';

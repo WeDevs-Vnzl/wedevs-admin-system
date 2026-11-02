@@ -15,7 +15,7 @@ import {
 import { UpdateShareLink } from '../../../src/modules/documents/application/use-cases/shares/update-share-link.use-case';
 import { NodeShareSecrets } from '../../../src/modules/documents/infrastructure/node-share-secrets';
 import { PrismaShareLinkRepository } from '../../../src/modules/documents/infrastructure/prisma-share-link.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';
 import type { UnitOfWorkPort } from '../../../src/shared/application/ports/unit-of-work.port';
 import { CuidGenerator } from '../../../src/shared/infrastructure/id-generator.adapter';
