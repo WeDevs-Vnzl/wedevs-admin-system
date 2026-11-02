@@ -216,6 +216,8 @@ enum EntityType {
   TAG
   SETTING
   USER
+  PAYMENT_LINK
+  API_TOKEN
 }
 
 enum ActivityAction {
@@ -260,6 +262,7 @@ model User {
   dismissals  AlertState[]
   activity    ActivityLog[]
   movements   AccountMovement[]
+  apiTokens   ApiToken[]
 }
 
 model UserPreference {
@@ -544,12 +547,13 @@ model Invoice {
   deletedAt         DateTime?
   deletedById       String?
 
-  client        Client              @relation(fields: [clientId], references: [id])
-  currencyRef   Currency            @relation(fields: [currency], references: [code])
-  file          File?               @relation("InvoiceFile", fields: [fileId], references: [id])
+  client        Client               @relation(fields: [clientId], references: [id])
+  currencyRef   Currency             @relation(fields: [currency], references: [code])
+  file          File?                @relation("InvoiceFile", fields: [fileId], references: [id])
   lines         InvoiceLine[]
   taxLines      InvoiceTaxLine[]
   allocations   PaymentAllocation[]
+  paymentLinks  InvoicePaymentLink[]
   documentLinks DocumentLink[]
   noteLinks     NoteLink[]
   tags          TagAssignment[]
@@ -607,32 +611,36 @@ model PaymentMethod {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  code          String        @unique
-  clientId      String
-  date          DateTime      @db.Date
-  accountId     String
-  methodId      String
-  currency      String
-  amount        Decimal       @db.Decimal(18, 2)
-  igtfAmount    Decimal       @default(0) @db.Decimal(18, 2)
-  feeAmount     Decimal       @default(0) @db.Decimal(18, 2)
-  netCredited   Decimal       @db.Decimal(18, 2)
-  allocatable   Decimal       @db.Decimal(18, 2)
-  unallocated   Decimal       @db.Decimal(18, 2) // caché
-  usdRate       Decimal       @db.Decimal(20, 8)
-  amountUsd     Decimal       @db.Decimal(18, 2)
-  reference     String?
-  status        PaymentStatus @default(CONFIRMADO)
-  receiptFileId String?       @unique
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  createdById   String?
-  updatedById   String?
-  deletedAt     DateTime?
-  deletedById   String?
+  id               String               @id @default(cuid())
+  code             String               @unique
+  clientId         String
+  date             DateTime             @db.Date
+  accountId        String
+  methodId         String
+  currency         String
+  amount           Decimal              @db.Decimal(18, 2)
+  igtfAmount       Decimal              @default(0) @db.Decimal(18, 2)
+  feeAmount        Decimal              @default(0) @db.Decimal(18, 2)
+  netCredited      Decimal              @db.Decimal(18, 2)
+  allocatable      Decimal              @db.Decimal(18, 2)
+  unallocated      Decimal              @db.Decimal(18, 2) // caché
+  usdRate          Decimal              @db.Decimal(20, 8)
+  amountUsd        Decimal              @db.Decimal(18, 2)
+  reference        String?
+  status           PaymentStatus        @default(CONFIRMADO)
+  receiptFileId    String?              @unique
+  // Provider-originated payments; partial unique on the pair where both are set lives in the migration SQL.
+  externalProvider IntegrationProvider?
+  externalId       String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  createdById      String?
+  updatedById      String?
+  deletedAt        DateTime?
+  deletedById      String?
 
   client        Client              @relation(fields: [clientId], references: [id])
+  paymentLink   InvoicePaymentLink?
   account       Account             @relation(fields: [accountId], references: [id])
   method        PaymentMethod       @relation(fields: [methodId], references: [id])
   currencyRef   Currency            @relation(fields: [currency], references: [code])
@@ -1147,6 +1155,7 @@ model Currency {
   recurringCharges  RecurringCharge[]
   invoices          Invoice[]
   payments          Payment[]
+  paymentLinks      InvoicePaymentLink[]
   accounts          Account[]
   expenses          Expense[]
   recurringExpenses RecurringExpense[]
@@ -1274,4 +1283,85 @@ model ProjectMetrics {
   project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([toInvoiceUsd])
+}
+
+// ───────────────────────────── INTEGRACIONES (BE-6) ─────────────────────────────
+
+enum IntegrationProvider {
+  STRIPE
+  BINANCE
+  BANK
+}
+
+enum IntegrationEventOutcome {
+  PROCESSED
+  IGNORED
+  PARKED
+  FAILED
+}
+
+enum PaymentLinkStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  SETTLED
+  DEACTIVATED
+}
+
+model IntegrationEvent {
+  id          String                  @id @default(cuid())
+  provider    IntegrationProvider
+  eventId     String
+  type        String
+  outcome     IntegrationEventOutcome
+  reasonCode  String?
+  entityType  EntityType?
+  entityId    String?
+  receivedAt  DateTime                @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+  @@index([provider, outcome, receivedAt])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String    @db.VarChar(80)
+  prefix     String    @db.VarChar(12)
+  tokenHash  String    @unique // hex SHA-256
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, revokedAt])
+}
+
+// CHECK (amount > 0) lives in the migration SQL. No per-invoice unique: several links may coexist (DT-196).
+model InvoicePaymentLink {
+  id                 String              @id @default(cuid())
+  invoiceId          String
+  requestId          String              @db.Uuid
+  provider           IntegrationProvider
+  externalId         String?             @unique
+  url                String?
+  amount             Decimal             @db.Decimal(18, 2)
+  currency           String
+  status             PaymentLinkStatus   @default(PENDING)
+  paymentId          String?             @unique
+  deactivationReason String?
+  createdAt          DateTime            @default(now())
+  createdById        String
+  deactivatedAt      DateTime?
+  settledAt          DateTime?
+
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  currencyRef Currency @relation(fields: [currency], references: [code])
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+
+  @@unique([invoiceId, requestId])
+  @@index([invoiceId, status])
 }
