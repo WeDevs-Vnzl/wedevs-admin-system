@@ -46,6 +46,22 @@ real client, DT-143). Request logs mask the share token (`/portal/<token>`).
 variable. Add it to your local, uncommitted env file if you run the worker outside compose; the compose
 `worker` service sets `redis://redis:6379` itself.
 
+The worker validates its own, smaller environment (`workerEnvSchema`, DT-191): `NODE_ENV`, `APP_URL`,
+`DATABASE_URL`, `REDIS_URL` (required), `SENTRY_DSN` (optional), the three `CLOUDINARY_*` names, `SHARE_IP_SALT`,
+`SHARE_UNLOCK_SECRET` and the optional integration pairs below. It needs no `CLERK_*` variable and refuses to
+start naming only the missing or invalid variables.
+
+### BE-6 environment (optional integrations)
+
+Each pair is all-or-nothing: setting one name of a pair without the other makes the process refuse to start,
+naming the missing variable. With no pair set the integration is off.
+
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- Binance (read-only API key): `BINANCE_API_KEY`, `BINANCE_API_SECRET`.
+
+There is no bank variable (the bank adapter is deferred, DT-186). Add them to your local, uncommitted env file
+only when you need the integration; tests use fakes and never call Stripe or Binance.
+
 The project owner provisions the real values in the Clerk and Cloudinary dashboards and keeps them in a
 local, uncommitted env file or the deploy environment. Agents never read, request or print them. Tests, CI
 and `openapi:generate`/`openapi:check` use documented placeholders only and never call Clerk or Cloudinary.

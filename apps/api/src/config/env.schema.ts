@@ -1,6 +1,34 @@
 import { z } from 'zod';
 
-export const envSchema = z.object({
+const optionalSecret = z.string().min(1).optional();
+
+/** Optional integration credentials (BE-6). Each pair is all-or-nothing, see `requireCompletePairs`. */
+const integrationFields = {
+  STRIPE_SECRET_KEY: optionalSecret,
+  STRIPE_WEBHOOK_SECRET: optionalSecret,
+  BINANCE_API_KEY: optionalSecret,
+  BINANCE_API_SECRET: optionalSecret,
+};
+
+const INTEGRATION_PAIRS = [
+  ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
+  ['BINANCE_API_KEY', 'BINANCE_API_SECRET'],
+] as const;
+
+/** Refuses a half-configured pair; the issue names the missing variable only, never a value. */
+function requireCompletePairs(raw: Record<string, unknown>, ctx: z.RefinementCtx): void {
+  for (const pair of INTEGRATION_PAIRS) {
+    const present = pair.filter((name) => raw[name] !== undefined);
+    if (present.length === 0 || present.length === pair.length) continue;
+    for (const name of pair) {
+      if (raw[name] === undefined) {
+        ctx.addIssue({ code: 'custom', path: [name], message: 'required with its pair' });
+      }
+    }
+  }
+}
+
+const baseFields = {
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   APP_URL: z.url(),
@@ -20,9 +48,59 @@ export const envSchema = z.object({
   THROTTLE_TTL: z.coerce.number().int().min(1).default(60),
   THROTTLE_LIMIT: z.coerce.number().int().min(1).default(60),
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
-});
+  ...integrationFields,
+};
+
+export const envSchema = z.object(baseFields).superRefine(requireCompletePairs);
 
 export type AppConfig = z.infer<typeof envSchema>;
+
+/**
+ * The worker's environment (DT-181 9a, DT-191): no Clerk variable; Redis is required; Cloudinary and `SHARE_*`
+ * stay because the file cleanup and share-link steps use them; the integration pairs are optional.
+ */
+export const workerEnvSchema = z
+  .object({
+    NODE_ENV: baseFields.NODE_ENV,
+    APP_URL: baseFields.APP_URL,
+    DATABASE_URL: baseFields.DATABASE_URL,
+    SENTRY_DSN: baseFields.SENTRY_DSN,
+    REDIS_URL: z.string().min(1),
+    CLOUDINARY_CLOUD_NAME: baseFields.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: baseFields.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: baseFields.CLOUDINARY_API_SECRET,
+    SHARE_IP_SALT: baseFields.SHARE_IP_SALT,
+    SHARE_UNLOCK_SECRET: baseFields.SHARE_UNLOCK_SECRET,
+    ...integrationFields,
+  })
+  .superRefine(requireCompletePairs);
+
+export type WorkerConfig = z.infer<typeof workerEnvSchema>;
+
+export interface IntegrationsView {
+  readonly stripe: { readonly secretKey: string; readonly webhookSecret: string } | null;
+  readonly binance: { readonly apiKey: string; readonly apiSecret: string } | null;
+}
+
+/** Typed view of the optional integration pairs; `null` when the pair is not configured. */
+export function integrationsOf(
+  config: Pick<
+    AppConfig,
+    'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'BINANCE_API_KEY' | 'BINANCE_API_SECRET'
+  >,
+): IntegrationsView {
+  const { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, BINANCE_API_KEY, BINANCE_API_SECRET } = config;
+  return {
+    stripe:
+      STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET
+        ? { secretKey: STRIPE_SECRET_KEY, webhookSecret: STRIPE_WEBHOOK_SECRET }
+        : null,
+    binance:
+      BINANCE_API_KEY && BINANCE_API_SECRET
+        ? { apiKey: BINANCE_API_KEY, apiSecret: BINANCE_API_SECRET }
+        : null,
+  };
+}
 
 export class InvalidEnvError extends Error {
   readonly names: readonly string[];
@@ -34,12 +112,20 @@ export class InvalidEnvError extends Error {
   }
 }
 
+function invalidNames(error: z.ZodError): string[] {
+  return [...new Set(error.issues.map((issue) => String(issue.path[0] ?? 'unknown')))];
+}
+
 /** Validates the raw environment. Failures expose variable names only, never values. */
 export function parseEnv(raw: Record<string, string | undefined>): AppConfig {
   const result = envSchema.safeParse(raw);
   if (result.success) return result.data;
-  const names = [
-    ...new Set(result.error.issues.map((issue) => String(issue.path[0] ?? 'unknown'))),
-  ];
-  throw new InvalidEnvError(names);
+  throw new InvalidEnvError(invalidNames(result.error));
+}
+
+/** Same contract as `parseEnv` for the worker process. */
+export function parseWorkerEnv(raw: Record<string, string | undefined>): WorkerConfig {
+  const result = workerEnvSchema.safeParse(raw);
+  if (result.success) return result.data;
+  throw new InvalidEnvError(invalidNames(result.error));
 }
