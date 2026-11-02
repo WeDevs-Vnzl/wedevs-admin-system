@@ -159,6 +159,12 @@ export class RecordProviderPayment {
     if (result === 'DUPLICATE') return { outcome: 'DUPLICATE' };
 
     await this.support.lockPlan(plan);
+    // Another event for the same provider payment (payment_intent.succeeded and checkout.session.completed)
+    // may have committed while this one waited for the client lock: roll back and answer EXISTING on the next
+    // pass instead of letting the partial unique on (externalProvider, externalId) reject the insert.
+    if (await this.references.findPaymentId(input.provider, input.externalId)) {
+      throw new LockSetChangedError();
+    }
     await this.support.requireClient(values.clientId);
     await this.support.requireAccount(values.accountId, values.currency, true);
     await this.support.requireMethod(values.methodId, values.reference);
