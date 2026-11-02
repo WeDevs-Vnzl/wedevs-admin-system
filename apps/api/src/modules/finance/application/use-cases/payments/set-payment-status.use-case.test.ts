@@ -61,7 +61,13 @@ describe('setPaymentStatus: the payment link settlement (DT-199)', () => {
   it('a refused transition leaves the link as it was', async () => {
     const payment = await linkPayment('PENDIENTE_VERIFICACION');
     await setStatus.execute(world.owner, { id: payment.id, status: 'ANULADO' });
-    settlement.seedLink({ ...settlement.link('lnk_1')!, status: 'COMPLETED' });
+    settlement.seedLink({
+      id: 'lnk_1',
+      invoiceId: 'inv_link',
+      amount: '100.00',
+      status: 'COMPLETED',
+      paymentId: payment.id,
+    });
 
     await rejection(setStatus.execute(world.owner, { id: payment.id, status: 'CONFIRMADO' }));
 
