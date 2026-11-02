@@ -414,9 +414,14 @@ describe('billing (e2e)', () => {
       expect(await step.execute(SYSTEM_ACTOR)).toEqual({
         created: 1,
         periodStarts: ['2026-11-05'],
+        skippedIds: [],
       });
       // CA2: running it again the same day creates no duplicate.
-      expect(await step.execute(SYSTEM_ACTOR)).toEqual({ created: 0, periodStarts: [] });
+      expect(await step.execute(SYSTEM_ACTOR)).toEqual({
+        created: 0,
+        periodStarts: [],
+        skippedIds: [],
+      });
       expect(await periods(id)).toEqual(['2026-11-05']);
       const row = await admin.billingInstallment.findFirstOrThrow({
         where: { recurringChargeId: id },

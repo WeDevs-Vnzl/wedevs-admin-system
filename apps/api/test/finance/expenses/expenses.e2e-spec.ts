@@ -410,7 +410,7 @@ describe('expenses (e2e): HU-17', () => {
       const second = await generator.execute(GENERATION_ACTOR);
 
       expect(first.created).toBe(2);
-      expect(second).toEqual({ created: 0, periodStarts: [] });
+      expect(second).toEqual({ created: 0, periodStarts: [], skippedIds: [] });
       const list = await http()
         .get(`${BASE}/expenses?recurringOnly=true&sort=date:asc`)
         .set('Authorization', as('OWNER'))
