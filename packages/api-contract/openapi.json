@@ -713,7 +713,9 @@
                     "RECURRING_CHARGE",
                     "TAG",
                     "SETTING",
-                    "USER"
+                    "USER",
+                    "PAYMENT_LINK",
+                    "API_TOKEN"
                   ],
                   "type": "string"
                 },
@@ -1437,7 +1439,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -1499,7 +1503,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -7015,7 +7021,9 @@
                           "RECURRING_CHARGE",
                           "TAG",
                           "SETTING",
-                          "USER"
+                          "USER",
+                          "PAYMENT_LINK",
+                          "API_TOKEN"
                         ],
                         "type": "string"
                       }
@@ -7254,7 +7262,9 @@
                           "RECURRING_CHARGE",
                           "TAG",
                           "SETTING",
-                          "USER"
+                          "USER",
+                          "PAYMENT_LINK",
+                          "API_TOKEN"
                         ],
                         "type": "string"
                       }
@@ -7493,7 +7503,9 @@
                           "RECURRING_CHARGE",
                           "TAG",
                           "SETTING",
-                          "USER"
+                          "USER",
+                          "PAYMENT_LINK",
+                          "API_TOKEN"
                         ],
                         "type": "string"
                       }
@@ -7673,7 +7685,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -7748,7 +7762,9 @@
               "RECURRING_CHARGE",
               "TAG",
               "SETTING",
-              "USER"
+              "USER",
+              "PAYMENT_LINK",
+              "API_TOKEN"
             ],
             "type": "string"
           }
@@ -7796,7 +7812,9 @@
               "RECURRING_CHARGE",
               "TAG",
               "SETTING",
-              "USER"
+              "USER",
+              "PAYMENT_LINK",
+              "API_TOKEN"
             ],
             "type": "string"
           }
@@ -7844,7 +7862,9 @@
               "RECURRING_CHARGE",
               "TAG",
               "SETTING",
-              "USER"
+              "USER",
+              "PAYMENT_LINK",
+              "API_TOKEN"
             ],
             "type": "string"
           }
@@ -8177,7 +8197,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -8366,7 +8388,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -8437,7 +8461,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -8578,7 +8604,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   }
@@ -8767,7 +8795,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   }
@@ -8838,7 +8868,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   }
@@ -9094,7 +9126,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -9283,7 +9317,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -9354,7 +9390,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -10232,7 +10270,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -10310,7 +10350,9 @@
                           "RECURRING_CHARGE",
                           "TAG",
                           "SETTING",
-                          "USER"
+                          "USER",
+                          "PAYMENT_LINK",
+                          "API_TOKEN"
                         ],
                         "type": "string"
                       }
@@ -10434,7 +10476,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -10573,7 +10617,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -10664,7 +10710,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -10855,7 +10903,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -10930,7 +10980,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -12143,7 +12195,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -12218,7 +12272,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -12278,7 +12334,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -12478,7 +12536,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -12560,7 +12620,9 @@
                         "RECURRING_CHARGE",
                         "TAG",
                         "SETTING",
-                        "USER"
+                        "USER",
+                        "PAYMENT_LINK",
+                        "API_TOKEN"
                       ],
                       "type": "string"
                     }
@@ -12640,7 +12702,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -14189,7 +14253,9 @@
                               "RECURRING_CHARGE",
                               "TAG",
                               "SETTING",
-                              "USER"
+                              "USER",
+                              "PAYMENT_LINK",
+                              "API_TOKEN"
                             ],
                             "type": "string"
                           }
@@ -14469,7 +14535,9 @@
                               "RECURRING_CHARGE",
                               "TAG",
                               "SETTING",
-                              "USER"
+                              "USER",
+                              "PAYMENT_LINK",
+                              "API_TOKEN"
                             ],
                             "type": "string"
                           }
@@ -14692,7 +14760,9 @@
                               "RECURRING_CHARGE",
                               "TAG",
                               "SETTING",
-                              "USER"
+                              "USER",
+                              "PAYMENT_LINK",
+                              "API_TOKEN"
                             ],
                             "type": "string"
                           }
@@ -15239,7 +15309,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -15414,7 +15486,9 @@
                             "RECURRING_CHARGE",
                             "TAG",
                             "SETTING",
-                            "USER"
+                            "USER",
+                            "PAYMENT_LINK",
+                            "API_TOKEN"
                           ],
                           "type": "string"
                         }
@@ -15555,7 +15629,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   }
@@ -15730,7 +15806,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   }
@@ -15967,7 +16045,9 @@
                   "RECURRING_CHARGE",
                   "TAG",
                   "SETTING",
-                  "USER"
+                  "USER",
+                  "PAYMENT_LINK",
+                  "API_TOKEN"
                 ],
                 "type": "string"
               }
@@ -21588,7 +21668,9 @@
                     "RECURRING_CHARGE",
                     "TAG",
                     "SETTING",
-                    "USER"
+                    "USER",
+                    "PAYMENT_LINK",
+                    "API_TOKEN"
                   ],
                   "type": "string"
                 },
@@ -21614,7 +21696,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   },
@@ -21947,7 +22031,9 @@
                     "RECURRING_CHARGE",
                     "TAG",
                     "SETTING",
-                    "USER"
+                    "USER",
+                    "PAYMENT_LINK",
+                    "API_TOKEN"
                   ],
                   "type": "string"
                 },
@@ -21973,7 +22059,9 @@
                       "RECURRING_CHARGE",
                       "TAG",
                       "SETTING",
-                      "USER"
+                      "USER",
+                      "PAYMENT_LINK",
+                      "API_TOKEN"
                     ],
                     "type": "string"
                   },
