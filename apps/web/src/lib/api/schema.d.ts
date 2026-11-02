@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Accounts overview (Owner, Admin) */
+        get: operations["getAccountsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/partners": {
         parameters: {
             query?: never;
@@ -142,6 +159,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/activity/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity figures { total, today, users } under the GET /activity filter (Owner, Admin) */
+        get: operations["getActivityOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Own live alerts with the unread counter, most urgent first */
+        get: operations["listAlerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark up to 200 alerts read (idempotent); they stay listed */
+        post: operations["markAlertsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/{key}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss for good, or snooze for `days` (1 to 90) */
+        post: operations["dismissAlert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/{key}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark one alert read (idempotent) */
+        post: operations["markAlertRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/{key}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo a dismissal or snooze; keeps the read mark */
+        post: operations["restoreAlert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/allocations/{id}/deallocate": {
         parameters: {
             query?: never;
@@ -188,6 +307,23 @@ export interface paths {
         put?: never;
         /** Archive several clients and their contacts, all or nothing */
         post: operations["archiveClients"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clients overview; lists ranked by money are empty without the financial grant */
+        get: operations["getClientsOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -349,6 +485,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/clients/{id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Financial summary of a client (USD) with the rolling twelve-month collection */
+        get: operations["getClientSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/search": {
         parameters: {
             query?: never;
@@ -450,6 +603,23 @@ export interface paths {
         head?: never;
         /** Edit a currency, incl. its active flag (settings grant) */
         patch: operations["updateCurrency"];
+        trace?: never;
+    };
+    "/api/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The eight cards of a month, quarter or year, the twelve-month chart and the panels */
+        get: operations["getDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/document-categories": {
@@ -603,6 +773,23 @@ export interface paths {
         };
         /** Live documents per category id under the list facets (the category chips) */
         get: operations["countDocumentsByCategory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Documents overview; link chips follow read (DT-142) */
+        get: operations["getDocumentsOverview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -922,6 +1109,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Expenses overview (Owner, Admin) */
+        get: operations["getExpensesOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/{id}": {
         parameters: {
             query?: never;
@@ -968,6 +1172,23 @@ export interface paths {
         put?: never;
         /** Void an expense (ANULADO is final) */
         post: operations["voidExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exports/{entity}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** CSV of a table (at most 10,000 rows, UTF-8 BOM) with the columns and filters sent */
+        post: operations["exportCsv"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1042,6 +1263,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Global graph (clients, projects and documents by default) with its statistics */
+        get: operations["getGlobalGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/graph/nodes/{nodeId}/neighbours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One page (at most 50) of the neighbours of a node; `cursor` loads the next page */
+        get: operations["expandGraphNode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/graph/{type}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A record and its relations to the requested depth (1 by default, at most 3) */
+        get: operations["getEntityGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -1105,6 +1377,23 @@ export interface paths {
         put?: never;
         /** Register an invoice with lines and per-rate tax lines (FAC-####) */
         post: operations["createInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invoices/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invoices overview (Owner, Admin) */
+        get: operations["getInvoicesOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1491,6 +1780,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payments overview (Owner, Admin) */
+        get: operations["getPaymentsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/{id}": {
         parameters: {
             query?: never;
@@ -1657,6 +1963,23 @@ export interface paths {
         put?: never;
         /** Archive several projects, all or nothing */
         post: operations["archiveProjects"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projects overview; highestToInvoice is empty without the financial grant */
+        get: operations["getProjectsOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1885,6 +2208,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Financial summary of a project (PRD §8.4.4, USD) */
+        get: operations["getProjectSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{id}/technologies": {
         parameters: {
             query?: never;
@@ -2000,6 +2340,57 @@ export interface paths {
         put?: never;
         /** Pause, resume or finish a recurring expense (finished is final) */
         post: operations["setRecurringExpenseStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The 18 KPIs: value, previous period, change and a 12-month sparkline */
+        get: operations["getKpis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of the ten reports, by the kebab-case id (`collected-by-month`) */
+        get: operations["getReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Global search over every record type the caller may read (prefixes c: p: f: d: n:) */
+        get: operations["searchGlobal"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2123,6 +2514,23 @@ export interface paths {
         put?: never;
         /** Revoke a link: final, the portal answers 404 from then on */
         post: operations["revokeShareLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller, the VES rate chip and the alert counters */
+        get: operations["getShell"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2405,6 +2813,25 @@ export interface components {
             balanceUsd: string | null;
             currency: string;
         };
+        AccountFlowReportDto: {
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "AccountFlowReportDto";
+            rows: {
+                account: components["schemas"]["EntityRef"];
+                inflow: string;
+                outflow: string;
+                period: string;
+            }[];
+        };
         AccountLedgerResponseDto: {
             items: {
                 amount: string;
@@ -2471,6 +2898,29 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        AccountsOverviewDto: {
+            accounts: {
+                active: boolean;
+                balance: string;
+                balanceUsd: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                currency: string;
+                holderName: string | null;
+                id: string;
+                identifierMasked: string | null;
+                institution: string | null;
+                name: string;
+                notes: string | null;
+                openingBalance: string;
+                openingDate: string;
+                /** @enum {string} */
+                type: "BANCO_NACIONAL" | "BANCO_INTERNACIONAL" | "BILLETERA_DIGITAL" | "WALLET_CRIPTO" | "EFECTIVO";
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            totalBalanceUsd: string;
+        };
         ActivityListResponseDto: {
             items: {
                 /** @enum {string} */
@@ -2505,6 +2955,40 @@ export interface components {
             pageCount: number;
             pageSize: number;
             total: number;
+        };
+        ActivityOverviewDto: {
+            today: number;
+            total: number;
+            users: number;
+        };
+        AlertDismissalResponseDto: {
+            active: boolean;
+            alertKey: string;
+            dismissedUntil: string | null;
+        };
+        AlertsInboxResponseDto: {
+            byType: {
+                [key: string]: number;
+            };
+            items: {
+                alertKey: string;
+                amount: {
+                    amount: string;
+                    currency: string;
+                } | null;
+                context: string | null;
+                date: string | null;
+                days: number | null;
+                entity: components["schemas"]["EntityRef"] | null;
+                /** @enum {string} */
+                type: "INVOICE_OVERDUE" | "INVOICE_DUE_SOON" | "INSTALLMENT_TO_INVOICE" | "DOCUMENT_EXPIRING" | "DOCUMENT_EXPIRED" | "RECURRING_EXPENSE_PENDING" | "PAYMENT_PENDING_VERIFICATION" | "UNALLOCATED_CREDIT" | "MISSING_RATE";
+            }[];
+            readKeys: string[];
+            total: number;
+            unread: number;
+        };
+        AlertsReadResponseDto: {
+            alertKeys: string[];
         };
         AllocatePaymentDto: {
             amountInvoiceCurrency: string;
@@ -2611,6 +3095,27 @@ export interface components {
                 type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
             };
             remainingAmount: string;
+        };
+        BilledVsCollectedReportDto: {
+            chart: {
+                periods: string[];
+                series: {
+                    id: string;
+                    label?: string;
+                    values: string[];
+                }[];
+            };
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "BilledVsCollectedReportDto";
         };
         BillingPageResponseDto: {
             installments: {
@@ -2798,12 +3303,127 @@ export interface components {
             pageSize: number;
             total: number;
         };
+        ClientSummaryResponseDto: {
+            clientId: string;
+            collectedLast12MonthsUsd: string;
+            creditBalanceUsd: string;
+            overdueUsd: string;
+            projectCount: number;
+            receivableUsd: string;
+            totalCollectedUsd: string;
+            totalInvoicedUsd: string;
+        };
         ClientsArchiveResultDto: {
             archived: {
                 /** Format: date-time */
                 archivedAt: string;
                 archivedContacts: number;
                 id: string;
+            }[];
+        };
+        ClientsOverviewDto: {
+            countByStatus: {
+                ACTIVO: number;
+                INACTIVO: number;
+                PROSPECTO: number;
+            };
+            recentlyCreated: {
+                archivedAt: string | null;
+                code: string;
+                country: string;
+                id: string;
+                /** @enum {string} */
+                kind: "PERSONA" | "EMPRESA";
+                lastActivityAt: string | null;
+                projectCount: number;
+                receivableUsd: string | null;
+                /** @enum {string} */
+                status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                totalInvoicedUsd: string | null;
+                tradeName: string;
+            }[];
+            topByRevenue: {
+                archivedAt: string | null;
+                code: string;
+                collectedLast12MonthsUsd: string;
+                country: string;
+                id: string;
+                /** @enum {string} */
+                kind: "PERSONA" | "EMPRESA";
+                lastActivityAt: string | null;
+                projectCount: number;
+                receivableUsd: string | null;
+                /** @enum {string} */
+                status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                totalInvoicedUsd: string | null;
+                tradeName: string;
+            }[];
+            withOverdueBalance: {
+                archivedAt: string | null;
+                code: string;
+                country: string;
+                id: string;
+                /** @enum {string} */
+                kind: "PERSONA" | "EMPRESA";
+                lastActivityAt: string | null;
+                overdueUsd: string;
+                projectCount: number;
+                receivableUsd: string | null;
+                /** @enum {string} */
+                status: "PROSPECTO" | "ACTIVO" | "INACTIVO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                totalInvoicedUsd: string | null;
+                tradeName: string;
+            }[];
+        };
+        CollectedByMonthReportDto: {
+            /** @constant */
+            currency: "USD";
+            points: {
+                period: string;
+                value: string;
+            }[];
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "CollectedByMonthReportDto";
+        };
+        CollectionsByMethodReportDto: {
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "CollectionsByMethodReportDto";
+            rows: {
+                collected: string;
+                methodCode: string;
+                methodId: string;
+                share: string;
             }[];
         };
         CompanySettingsResponseDto: {
@@ -3165,8 +3785,76 @@ export interface components {
             name: string;
             symbol: string;
         };
+        DashboardResponseDto: {
+            /** @constant */
+            currency: "USD";
+            documentsExpiring: {
+                daysLeft: number;
+                document: components["schemas"]["EntityRef"];
+                expiresAt: string;
+            }[];
+            incomeVsExpenses: {
+                periods: string[];
+                series: {
+                    /** @enum {string} */
+                    id: "income" | "expenses";
+                    values: string[];
+                }[];
+            };
+            installmentsToInvoice: {
+                amount: string;
+                currency: string;
+                dueDate: string | null;
+                installment: components["schemas"]["EntityRef"];
+                project: components["schemas"]["EntityRef"];
+            }[];
+            invoicesDue: {
+                balance: string;
+                balanceUsd: string;
+                client: components["schemas"]["EntityRef"];
+                currency: string;
+                daysUntilDue: number;
+                dueDate: string;
+                invoice: components["schemas"]["EntityRef"];
+            }[];
+            kpis: {
+                changePercent: string | null;
+                /** @enum {string} */
+                id: "COLLECTED_MONTH" | "BILLED_MONTH" | "RECEIVABLE" | "EXPENSES_MONTH" | "RESULT_MONTH" | "ACCOUNTS_BALANCE" | "MRR" | "ACTIVE_PROJECTS";
+                previousValue: string | null;
+                secondaryValue: string | null;
+                /** @enum {string} */
+                unit: "USD" | "COUNT";
+                value: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            period: "month" | "quarter" | "year";
+            periodEnd: string;
+            periodStart: string;
+            recentActivity: {
+                /** @enum {string} */
+                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS";
+                actorName: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                entity: components["schemas"]["EntityRef"] | null;
+                id: string;
+            }[];
+            upcomingRecurringExpenses: {
+                amount: string;
+                amountUsd: string;
+                currency: string;
+                dueDate: string;
+                expense: components["schemas"]["EntityRef"];
+            }[];
+        };
         DeletedRefDto: {
             id: string;
+        };
+        /** @default {} */
+        DismissAlertBodyDto: {
+            days?: number;
         };
         DocumentCategoryBodyDto: {
             color?: string | null;
@@ -3437,6 +4125,147 @@ export interface components {
             url: string | null;
             versionNumber: number;
         };
+        DocumentsOverviewDto: {
+            byCategoryAndStatus: {
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                countByStatus: {
+                    [key: string]: number;
+                };
+            }[];
+            expiringCounts: {
+                days30: number;
+                days60: number;
+                days90: number;
+            };
+            expiringSoon: {
+                archivedAt: string | null;
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                code: string;
+                currentFormat: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                currentVersionNumber: number | null;
+                expiresAt: string | null;
+                id: string;
+                isShared: boolean;
+                links: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                }[];
+                /** @enum {string} */
+                status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                title: string;
+                type: {
+                    /** @enum {string} */
+                    defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                    hasExpiration: boolean;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    requiresSignature: boolean;
+                };
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            recent: {
+                archivedAt: string | null;
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                code: string;
+                currentFormat: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                currentVersionNumber: number | null;
+                expiresAt: string | null;
+                id: string;
+                isShared: boolean;
+                links: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                }[];
+                /** @enum {string} */
+                status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                title: string;
+                type: {
+                    /** @enum {string} */
+                    defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                    hasExpiration: boolean;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    requiresSignature: boolean;
+                };
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            staleDrafts: {
+                archivedAt: string | null;
+                category: {
+                    color: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                code: string;
+                currentFormat: ("MARKDOWN" | "ARCHIVO" | "ENLACE") | null;
+                currentVersionNumber: number | null;
+                expiresAt: string | null;
+                id: string;
+                isShared: boolean;
+                links: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                }[];
+                /** @enum {string} */
+                status: "BORRADOR" | "EN_REVISION" | "APROBADO" | "ENVIADO" | "FIRMADO" | "VENCIDO" | "ANULADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                title: string;
+                type: {
+                    /** @enum {string} */
+                    defaultFormat: "MARKDOWN" | "ARCHIVO" | "ENLACE";
+                    hasExpiration: boolean;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    requiresSignature: boolean;
+                };
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+        };
         DuplicatePaymentResponseDto: {
             duplicate: boolean;
             matches: {
@@ -3646,6 +4475,124 @@ export interface components {
             usdRate: string;
             vendor: string | null;
         };
+        ExpensesByMonthCategoryReportDto: {
+            chart: {
+                periods: string[];
+                series: {
+                    id: string;
+                    label?: string;
+                    values: string[];
+                }[];
+            };
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "ExpensesByMonthCategoryReportDto";
+        };
+        ExpensesOverviewDto: {
+            byCategory: {
+                key: string;
+                label?: string;
+                value: string;
+            }[];
+            byMonthAndCategory: {
+                periods: string[];
+                series: {
+                    id: string;
+                    label?: string;
+                    values: string[];
+                }[];
+            };
+            committedMonthly: string;
+            upcoming: {
+                account: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                accountAmount: string | null;
+                amount: string;
+                amountUsd: string;
+                category: {
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    parent: {
+                        id: string;
+                        name: string;
+                        nameEn: string | null;
+                    } | null;
+                };
+                code: string;
+                /** Format: date-time */
+                createdAt: string;
+                createdById: string | null;
+                currency: string;
+                date: string;
+                description: string;
+                dueDate: string | null;
+                id: string;
+                overdue: boolean;
+                paidAt: string | null;
+                periodStart: string | null;
+                project: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                receiptFileId: string | null;
+                recurring: boolean;
+                recurringExpense: {
+                    code: string | null;
+                    id: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                } | null;
+                /** @enum {string} */
+                status: "PENDIENTE" | "PAGADO" | "ANULADO";
+                /** Format: date-time */
+                updatedAt: string;
+                usdRate: string;
+                vendor: string | null;
+            }[];
+        };
+        ExportBodyDto: {
+            columns: {
+                id: string;
+                label: string;
+            }[];
+            /**
+             * @default {
+             *       "archived": "exclude",
+             *       "filters": {}
+             *     }
+             */
+            query: {
+                /**
+                 * @default exclude
+                 * @enum {string}
+                 */
+                archived: "exclude" | "only" | "include";
+                /** @default {} */
+                filters: {
+                    [key: string]: string | string[];
+                };
+                q?: string;
+                sort?: string;
+            };
+        };
         FileResponseDto: {
             /** Format: date-time */
             createdAt: string;
@@ -3670,6 +4617,73 @@ export interface components {
         GenerateMissingPeriodsResponseDto: {
             created: number;
             periodStarts: string[];
+        };
+        GlobalGraphResponseDto: {
+            edges: {
+                id: string;
+                label?: string;
+                relation: string;
+                source: string;
+                target: string;
+            }[];
+            nodes: {
+                archived: boolean;
+                code?: string;
+                degree: number;
+                entityId: string;
+                id: string;
+                label: string;
+                meta: {
+                    [key: string]: string | number | null;
+                };
+                status?: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG";
+            }[];
+            stats: {
+                edgeCount: number;
+                mostConnected: {
+                    degree: number;
+                    label: string;
+                    nodeId: string;
+                    /** @enum {string} */
+                    type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG";
+                }[];
+                nodeCount: number;
+            };
+            truncated: {
+                cursor: string;
+                nodeId: string;
+                remaining: number;
+            }[];
+        };
+        GraphResponseDto: {
+            edges: {
+                id: string;
+                label?: string;
+                relation: string;
+                source: string;
+                target: string;
+            }[];
+            nodes: {
+                archived: boolean;
+                code?: string;
+                degree: number;
+                entityId: string;
+                id: string;
+                label: string;
+                meta: {
+                    [key: string]: string | number | null;
+                };
+                status?: string;
+                /** @enum {string} */
+                type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG";
+            }[];
+            truncated: {
+                cursor: string;
+                nodeId: string;
+                remaining: number;
+            }[];
         };
         HealthResponseDto: {
             /** @constant */
@@ -3894,6 +4908,56 @@ export interface components {
             voidReason: string | null;
             voidedAt: string | null;
         };
+        InvoicesOverviewDto: {
+            aging: {
+                d0_30: string;
+                d31_60: string;
+                d61_90: string;
+                d90plus: string;
+            };
+            billedVsCollected: {
+                periods: string[];
+                series: {
+                    id: string;
+                    values: string[];
+                }[];
+            };
+            overdueCount: number;
+            totalsByCurrency: {
+                balance: string;
+                currency: string;
+                overdue: string;
+                total: string;
+            }[];
+        };
+        KpisResponseDto: {
+            kpis: {
+                breakdown?: {
+                    key: string;
+                    label?: string;
+                    value: string;
+                }[];
+                changePercent: string | null;
+                /** @enum {string} */
+                id: "MRR" | "ARR" | "DSO" | "COLLECTION_RATE" | "DELINQUENCY" | "PROJECT_MARGIN" | "OPERATING_MARGIN" | "FIXED_MONTHLY_EXPENSE" | "RUNWAY" | "REVENUE_CONCENTRATION" | "AVG_PROJECT_TICKET" | "CLIENT_LTV" | "NEW_CLIENTS" | "PROSPECT_CONVERSION" | "AVG_PROJECT_DURATION" | "ON_TIME_PROJECTS" | "STACK_USAGE" | "DOCUMENT_COVERAGE";
+                previousValue: string | null;
+                sparkline: {
+                    period: string;
+                    value: string;
+                }[];
+                /** @enum {string} */
+                unit: "USD" | "PERCENT" | "DAYS" | "MONTHS" | "COUNT";
+                value: string | null;
+            }[];
+            previousRange: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+        };
         LoadDailyRatesDto: {
             date: string;
             rates: {
@@ -3909,6 +4973,9 @@ export interface components {
         LoadDailyRatesResponseDto: {
             created: number;
             updated: number;
+        };
+        MarkAlertsReadBodyDto: {
+            alertKeys: string[];
         };
         MarkExpensePaidDto: {
             accountAmount?: string | null;
@@ -3931,6 +4998,23 @@ export interface components {
             partner: components["schemas"]["EntityRef"] | null;
             /** @enum {string} */
             type: "APORTE_CAPITAL" | "RETIRO_SOCIO" | "AJUSTE";
+        };
+        NetResultMonthlyReportDto: {
+            /** @constant */
+            currency: "USD";
+            points: {
+                period: string;
+                value: string | null;
+            }[];
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "NetResultMonthlyReportDto";
         };
         NoteDetailDto: {
             archivedAt: string | null;
@@ -4150,6 +5234,25 @@ export interface components {
             updatedAt: string;
             usdRate: string;
         };
+        PaymentsOverviewDto: {
+            byAccount: {
+                key: string;
+                label?: string;
+                value: string;
+            }[];
+            byMethod: {
+                key: string;
+                label?: string;
+                value: string;
+            }[];
+            collectedByMonth: {
+                period: string;
+                value: string;
+            }[];
+            pendingVerificationCount: number;
+            unallocatedCount: number;
+            unallocatedTotalUsd: string;
+        };
         PinNoteDto: {
             pinned: boolean;
         };
@@ -4359,6 +5462,147 @@ export interface components {
                 updatedAt: string;
             };
         };
+        ProjectSummaryResponseDto: {
+            allocatedExpenses: string;
+            collected: string;
+            contractedValue: string;
+            /** @constant */
+            currency: "USD";
+            invoiced: string;
+            margin: string;
+            marginPercent: string | null;
+            monthlyRecurring: string;
+            projectId: string;
+            receivable: string;
+            toInvoice: string | null;
+        };
+        ProjectsOverviewDto: {
+            countByStatus: {
+                [key: string]: number;
+            };
+            highestToInvoice: {
+                archivedAt: string | null;
+                clients: {
+                    client: {
+                        code: string | null;
+                        id: string;
+                        label: string;
+                        /** @enum {string} */
+                        type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                    };
+                    role: string | null;
+                }[];
+                code: string;
+                collectedUsd: string | null;
+                contractedValueUsd: string | null;
+                id: string;
+                invoicedUsd: string | null;
+                name: string;
+                stack: {
+                    category: string;
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                }[];
+                startDate: string | null;
+                /** @enum {string} */
+                status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                targetEndDate: string | null;
+                toInvoiceUsd: string | null;
+            }[];
+            topTechnologies: {
+                projectCount: number;
+                technology: {
+                    category: string;
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+            }[];
+            upcomingDeliveries: {
+                archivedAt: string | null;
+                clients: {
+                    client: {
+                        code: string | null;
+                        id: string;
+                        label: string;
+                        /** @enum {string} */
+                        type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                    };
+                    role: string | null;
+                }[];
+                code: string;
+                collectedUsd: string | null;
+                contractedValueUsd: string | null;
+                id: string;
+                invoicedUsd: string | null;
+                name: string;
+                stack: {
+                    category: string;
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                }[];
+                startDate: string | null;
+                /** @enum {string} */
+                status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                targetEndDate: string | null;
+                toInvoiceUsd: string | null;
+            }[];
+            withoutBillingPlan: {
+                archivedAt: string | null;
+                clients: {
+                    client: {
+                        code: string | null;
+                        id: string;
+                        label: string;
+                        /** @enum {string} */
+                        type: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER";
+                    };
+                    role: string | null;
+                }[];
+                code: string;
+                collectedUsd: string | null;
+                contractedValueUsd: string | null;
+                id: string;
+                invoicedUsd: string | null;
+                name: string;
+                stack: {
+                    category: string;
+                    color: string | null;
+                    iconSlug: string | null;
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                }[];
+                startDate: string | null;
+                /** @enum {string} */
+                status: "PROPUESTA" | "EN_CURSO" | "PAUSADO" | "ENTREGADO" | "MANTENIMIENTO" | "CANCELADO";
+                tags: {
+                    color: string;
+                    id: string;
+                    name: string;
+                }[];
+                targetEndDate: string | null;
+                toInvoiceUsd: string | null;
+            }[];
+        };
         PublishVersionDto: {
             changelog?: string | null;
             content?: string;
@@ -4376,6 +5620,35 @@ export interface components {
                 source: ("MANUAL" | "BCV" | "OTRA") | null;
                 usdRate: string;
             } | null;
+        };
+        ReceivablesAgingReportDto: {
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "ReceivablesAgingReportDto";
+            rows: {
+                buckets: {
+                    d0_30: string;
+                    d31_60: string;
+                    d61_90: string;
+                    d90plus: string;
+                };
+                client: components["schemas"]["EntityRef"];
+                total: string;
+            }[];
+            totals: {
+                d0_30: string;
+                d31_60: string;
+                d61_90: string;
+                d90plus: string;
+            };
         };
         ReconcileAccountDto: {
             date: string;
@@ -4549,6 +5822,43 @@ export interface components {
             /** Format: date-time */
             restoredAt: string;
         };
+        RevenueByClientReportDto: {
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "RevenueByClientReportDto";
+            rows: {
+                billed: string;
+                client: components["schemas"]["EntityRef"];
+                collected: string;
+            }[];
+        };
+        RevenueByProjectReportDto: {
+            /** @constant */
+            currency: "USD";
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "RevenueByProjectReportDto";
+            rows: {
+                collected: string;
+                margin: string | null;
+                marginPercent: string | null;
+                project: components["schemas"]["EntityRef"];
+            }[];
+        };
         RevokeInvitationResponseDto: {
             invitationId: string;
         };
@@ -4559,6 +5869,25 @@ export interface components {
             documentId: string;
             /** Format: date-time */
             draftUpdatedAt: string;
+        };
+        SearchResultsDto: {
+            entityType: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE") | null;
+            groups: {
+                /** @enum {string} */
+                entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE";
+                items: {
+                    archived: boolean;
+                    code: string | null;
+                    entityId: string;
+                    /** @enum {string} */
+                    entityType: "CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE";
+                    status: string | null;
+                    subtitle: string | null;
+                    title: string;
+                }[];
+                total: number;
+            }[];
+            query: string;
         };
         SetClientStatusDto: {
             /** @enum {string} */
@@ -4806,6 +6135,28 @@ export interface components {
                 url: string;
             };
         };
+        ShellResponseDto: {
+            alerts: {
+                byType: {
+                    [key: string]: number;
+                };
+                total: number;
+                unread: number;
+            };
+            user: {
+                email: string;
+                id: string;
+                name: string;
+                /** @enum {string} */
+                role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+            };
+            vesRate: {
+                date: string;
+                source: string | null;
+                usdRate: string;
+            } | null;
+            vesRateMissing: boolean;
+        };
         TagChipsResponseDto: {
             items: {
                 color: string;
@@ -4834,6 +6185,44 @@ export interface components {
             pageCount: number;
             pageSize: number;
             total: number;
+        };
+        TaxesRegisteredReportDto: {
+            /** @constant */
+            currency: "USD";
+            months: {
+                igtf: string;
+                islrWithheld: string;
+                ivaByRate: {
+                    ivaAmount: string;
+                    ivaRate: string;
+                    taxBase: string;
+                }[];
+                ivaTotal: string;
+                ivaWithheld: string;
+                otherWithheld: string;
+                period: string;
+            }[];
+            range: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            reportId: "TaxesRegisteredReportDto";
+            totals: {
+                igtf: string;
+                islrWithheld: string;
+                ivaByRate: {
+                    ivaAmount: string;
+                    ivaRate: string;
+                    taxBase: string;
+                }[];
+                ivaTotal: string;
+                ivaWithheld: string;
+                otherWithheld: string;
+            };
         };
         TechnologyDeletedDto: {
             id: string;
@@ -5373,6 +6762,52 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getAccountsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountsOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5942,6 +7377,357 @@ export interface operations {
             };
         };
     };
+    getActivityOverview: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: 25 | 50 | 100;
+                sort?: "createdAt:asc" | "createdAt:desc" | "action:asc" | "action:desc" | "entityType:asc" | "entityType:desc";
+                q?: string;
+                archived?: "exclude" | "only" | "include";
+                actorId?: string | string[];
+                actorType?: ("USER" | "SYSTEM" | "PUBLIC") | ("USER" | "SYSTEM" | "PUBLIC")[];
+                action?: ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS") | ("CREATE" | "UPDATE" | "DELETE" | "RESTORE" | "STATUS_CHANGE" | "LINK" | "UNLINK" | "UPLOAD" | "VERSION_PUBLISH" | "SHARE_CREATE" | "SHARE_REVOKE" | "ALLOCATE" | "DEALLOCATE" | "EXPORT" | "LOGIN" | "SETTINGS_CHANGE" | "SYSTEM_JOB" | "PORTAL_ACCESS")[];
+                entityType?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "RECURRING_EXPENSE" | "ACCOUNT" | "TRANSFER" | "ACCOUNT_MOVEMENT" | "DOCUMENT" | "NOTE" | "FILE" | "SHARE_LINK" | "BILLING_PLAN" | "INSTALLMENT" | "RECURRING_CHARGE" | "TAG" | "SETTING" | "USER")[];
+                entityId?: string | string[];
+                from?: string | string[];
+                to?: string | string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listAlerts: {
+        parameters: {
+            query?: {
+                types?: ("INVOICE_OVERDUE" | "INVOICE_DUE_SOON" | "INSTALLMENT_TO_INVOICE" | "DOCUMENT_EXPIRING" | "DOCUMENT_EXPIRED" | "RECURRING_EXPENSE_PENDING" | "PAYMENT_PENDING_VERIFICATION" | "UNALLOCATED_CREDIT" | "MISSING_RATE") | ("INVOICE_OVERDUE" | "INVOICE_DUE_SOON" | "INSTALLMENT_TO_INVOICE" | "DOCUMENT_EXPIRING" | "DOCUMENT_EXPIRED" | "RECURRING_EXPENSE_PENDING" | "PAYMENT_PENDING_VERIFICATION" | "UNALLOCATED_CREDIT" | "MISSING_RATE")[];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsInboxResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    markAlertsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAlertsReadBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsReadResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    dismissAlert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DismissAlertBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertDismissalResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    markAlertRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsReadResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restoreAlert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertDismissalResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     deallocatePayment: {
         parameters: {
             query?: never;
@@ -6194,6 +7980,52 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getClientsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientsOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6961,6 +8793,63 @@ export interface operations {
             };
         };
     };
+    getClientSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientSummaryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     searchContacts: {
         parameters: {
             query?: {
@@ -7402,6 +9291,55 @@ export interface operations {
             };
             /** @description NOT_FOUND */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDashboard: {
+        parameters: {
+            query?: {
+                period?: "month" | "quarter" | "year";
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8435,6 +10373,52 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDocumentsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10060,6 +12044,52 @@ export interface operations {
             };
         };
     };
+    getExpensesOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpensesOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     getExpense: {
         parameters: {
             query?: never;
@@ -10354,6 +12384,80 @@ export interface operations {
             };
         };
     };
+    exportCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity: "CLIENT" | "CONTACT" | "PROJECT" | "NOTE" | "TAG" | "TECHNOLOGY" | "ACTIVITY" | "INVOICE" | "PAYMENT" | "EXPENSE" | "DOCUMENT";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportBodyDto"];
+            };
+        };
+        responses: {
+            /** @description The file (text/csv; charset=utf-8). X-Export-Row-Count and X-Export-Truncated describe it. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "X-Export-Row-Count"?: number;
+                    "X-Export-Truncated"?: "true" | "false";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     confirmFileUpload: {
         parameters: {
             query?: never;
@@ -10566,6 +12670,203 @@ export interface operations {
             };
             /** @description NOT_FOUND */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGlobalGraph: {
+        parameters: {
+            query?: {
+                include?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG")[];
+                statuses?: string | string[];
+                tagIds?: string | string[];
+                technologyIds?: string | string[];
+                clientIds?: string | string[];
+                dateFrom?: string;
+                dateTo?: string;
+                onlyActive?: "true" | "false";
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalGraphResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    expandGraphNode: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                include?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG")[];
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path: {
+                nodeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getEntityGraph: {
+        parameters: {
+            query?: {
+                depth?: number;
+                include?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE" | "TECHNOLOGY" | "TAG")[];
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path: {
+                type: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10894,6 +13195,52 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getInvoicesOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoicesOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12734,6 +15081,52 @@ export interface operations {
             };
         };
     };
+    getPaymentsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentsOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     getPayment: {
         parameters: {
             query?: never;
@@ -13545,6 +15938,52 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getProjectsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectsOverviewDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14573,6 +17012,63 @@ export interface operations {
             };
         };
     };
+    getProjectSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectSummaryResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     setProjectTechnologies: {
         parameters: {
             query?: never;
@@ -15200,6 +17696,201 @@ export interface operations {
             };
             /** @description CONFLICT */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getKpis: {
+        parameters: {
+            query?: {
+                preset?: "THIS_MONTH" | "PREVIOUS_MONTH" | "QUARTER" | "YEAR" | "LAST_12_MONTHS" | "CUSTOM";
+                from?: string;
+                to?: string;
+                clientId?: string;
+                projectId?: string;
+                tagId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpisResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getReport: {
+        parameters: {
+            query?: {
+                preset?: "THIS_MONTH" | "PREVIOUS_MONTH" | "QUARTER" | "YEAR" | "LAST_12_MONTHS" | "CUSTOM";
+                from?: string;
+                to?: string;
+                clientId?: string;
+                projectId?: string;
+                tagId?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectedByMonthReportDto"] | components["schemas"]["BilledVsCollectedReportDto"] | components["schemas"]["RevenueByClientReportDto"] | components["schemas"]["RevenueByProjectReportDto"] | components["schemas"]["ReceivablesAgingReportDto"] | components["schemas"]["ExpensesByMonthCategoryReportDto"] | components["schemas"]["NetResultMonthlyReportDto"] | components["schemas"]["AccountFlowReportDto"] | components["schemas"]["CollectionsByMethodReportDto"] | components["schemas"]["TaxesRegisteredReportDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VALIDATION */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    searchGlobal: {
+        parameters: {
+            query: {
+                q: string;
+                entityTypes?: ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE")[] | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE") | ("CLIENT" | "CONTACT" | "PROJECT" | "INVOICE" | "PAYMENT" | "EXPENSE" | "ACCOUNT" | "DOCUMENT" | "NOTE")[];
+                includeArchived?: "true" | "false";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResultsDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -15916,6 +18607,43 @@ export interface operations {
             };
             /** @description VALIDATION */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INTERNAL */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getShell: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShellResponseDto"];
+                };
+            };
+            /** @description UNAUTHENTICATED */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
