@@ -1,12 +1,12 @@
+import { computeProjectMargin } from '../../../src/modules/finance/application/kpi-api';
 import {
   CLIENT_STATUS_VALUES,
   PROJECT_STATUS_VALUES,
   type ClientStatus,
   type ProjectStatus,
 } from '../../../src/shared/domain/enums';
-import { compareMoney, type MoneyString } from '../../../src/shared/domain/money';
+import { compareMoney, subMoney, type MoneyString } from '../../../src/shared/domain/money';
 import {
-  marginPercentOf,
   type ClientMetricsView,
   type ClientRankMetric,
   type EntityMetricsReadPort,
@@ -103,7 +103,10 @@ export class InMemoryEntityMetricsRead implements EntityMetricsReadPort {
       .filter((project) => !project.archived)
       .map(({ archived: _archived, ...rest }) => ({
         ...rest,
-        marginPercent: marginPercentOf(rest.marginUsd, rest.collectedUsd),
+        marginPercent: computeProjectMargin({
+          collectedUsd: rest.collectedUsd,
+          allocatedExpensesUsd: subMoney(rest.collectedUsd, rest.marginUsd),
+        }),
       }))
       .sort((a, b) => byText(a.name, b.name) || byText(a.projectId, b.projectId));
   }

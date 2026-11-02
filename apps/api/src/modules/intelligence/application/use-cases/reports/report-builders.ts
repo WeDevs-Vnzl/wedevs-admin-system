@@ -1,13 +1,11 @@
 import {
   addMoney,
   compareMoney,
-  roundMoney,
   subMoney,
   sumMoney,
-  toDecimal,
   type MoneyString,
 } from '../../../../../shared/domain/money';
-import { computeProjectMargin } from '../../../../finance/application/kpi-api';
+import { computeProjectMargin, percent } from '../../../../finance/application/kpi-api';
 import { monthsOf, rangeClose, type MonthKey } from '../../../domain/report-range';
 import type { FinanceFactsReadPort } from '../../ports/finance-facts-read.port';
 import type { ReportInputsReadPort, TaxesByMonth } from '../../ports/report-inputs-read.port';
@@ -30,9 +28,7 @@ export interface ReportDeps {
 
 /** `part` as a percentage of `total`, two decimals; `'0.00'` for an empty total. */
 function share(part: MoneyString, total: MoneyString): MoneyString {
-  return toDecimal(total).isZero()
-    ? ZERO
-    : roundMoney(toDecimal(part).times(100).dividedBy(toDecimal(total)).toFixed());
+  return percent(part, total) ?? ZERO;
 }
 
 const largestFirst = (a: MoneyString, b: MoneyString) => compareMoney(b, a);

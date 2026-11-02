@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { parseDateOnly, type DateOnly } from '../../../shared/domain/business-date';
 import type { EntityRef } from '../../../shared/domain/entity-ref';
-import { compareMoney, toUsd } from '../../../shared/domain/money';
+import { compareMoney, subMoney, toUsd } from '../../../shared/domain/money';
 import type { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import {
@@ -20,7 +20,7 @@ import type {
   RecurringChargeRow,
   UpcomingRecurringExpenseRow,
 } from '../application/ports/dashboard-panels-read.port';
-import { marginPercentOf } from '../application/ports/entity-metrics-read.port';
+import { computeProjectMargin } from '../../finance/application/kpi-api';
 
 const ZERO = '0.00';
 /** Money columns are `Decimal(18,2)`; the string never passes through a JS number (C15). */
@@ -250,7 +250,10 @@ export class PrismaDashboardPanelsRead implements DashboardPanelsReadPort {
         expensesUsd: money(m?.expensesUsd),
         marginUsd,
         monthlyRecurringUsd: money(m?.monthlyRecurringUsd),
-        marginPercent: marginPercentOf(marginUsd, collectedUsd),
+        marginPercent: computeProjectMargin({
+          collectedUsd,
+          allocatedExpensesUsd: subMoney(collectedUsd, marginUsd),
+        }),
       },
     };
   }
