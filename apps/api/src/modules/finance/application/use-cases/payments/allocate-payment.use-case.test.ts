@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { MatrixAuthorization } from '../../../../identity/application/matrix-authorization';
+import { InMemoryPaymentLinkSettlement } from '../../../../../../test/support/fakes/in-memory-payment-link-settlement';
+import { SequentialIdGenerator } from '../../../../../../test/support/fakes/sequential-id-generator';
+import { AllocatePayment } from './allocate-payment.use-case';
 import {
   NOW,
   WEB,
@@ -110,5 +114,73 @@ describe('deallocatePayment: a row that changed between the read and the lock', 
     expect(after.allocations.map((row) => row.id)).toEqual([second.id]);
     expect(await world.invoices.findById('inv_a')).toMatchObject({ balance: '400.00' });
     expect(await world.invoices.findById('inv_b')).toMatchObject({ balance: '300.00' });
+  });
+});
+
+describe('allocatePayment: the payment link settlement (DT-199)', () => {
+  function withSettlement() {
+    const settlement = new InMemoryPaymentLinkSettlement(world.uow);
+    const allocate = new AllocatePayment(
+      new MatrixAuthorization(),
+      world.uow,
+      world.support,
+      new SequentialIdGenerator('set'),
+      settlement,
+    );
+    const link = (over = {}) => ({
+      id: 'lnk_1',
+      invoiceId: 'inv_link',
+      amount: '120.00',
+      status: 'COMPLETED' as const,
+      paymentId: null as string | null,
+      ...over,
+    });
+    return { settlement, allocate, link };
+  }
+
+  it('settles the link when the payment is allocated to its invoice in full', async () => {
+    world.addInvoice('inv_link', '400.00', { projectId: WEB });
+    const payment = await credit300();
+    const { settlement, allocate, link } = withSettlement();
+    settlement.seedLink(link({ paymentId: payment.id }));
+
+    await allocate.execute(world.owner, draft(payment.id, 'inv_link', '120.00'));
+
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'SETTLED' });
+    expect(settlement.link('lnk_1')?.settledAt).toBe(NOW);
+  });
+
+  it('keeps the link reserved while only part of its amount is allocated', async () => {
+    world.addInvoice('inv_link', '400.00', { projectId: WEB });
+    const payment = await credit300();
+    const { settlement, allocate, link } = withSettlement();
+    settlement.seedLink(link({ paymentId: payment.id }));
+
+    await allocate.execute(world.owner, draft(payment.id, 'inv_link', '50.00'));
+
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'COMPLETED' });
+  });
+
+  it('leaves the link alone when the payment is allocated to another invoice', async () => {
+    world.addInvoice('inv_link', '400.00', { projectId: WEB });
+    world.addInvoice('inv_other', '400.00', { projectId: WEB });
+    const payment = await credit300();
+    const { settlement, allocate, link } = withSettlement();
+    settlement.seedLink(link({ paymentId: payment.id }));
+
+    await allocate.execute(world.owner, draft(payment.id, 'inv_other', '120.00'));
+
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'COMPLETED' });
+  });
+
+  it('a refused allocation leaves the link as it was', async () => {
+    world.addInvoice('inv_link', '100.00', { projectId: WEB });
+    const payment = await credit300();
+    const { settlement, allocate, link } = withSettlement();
+    settlement.seedLink(link({ paymentId: payment.id, amount: '200.00' }));
+
+    await rejection(allocate.execute(world.owner, draft(payment.id, 'inv_link', '200.00')));
+
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'COMPLETED' });
   });
 });
