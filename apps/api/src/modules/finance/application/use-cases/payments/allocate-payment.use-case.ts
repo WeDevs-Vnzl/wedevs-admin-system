@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '../../../../../shared/domain/domain-error';
 import { PAYMENT_ERRORS } from '../../../domain/errors';
+import type { PaymentLinkSettlementPort } from '../../ports/payment-link-settlement.port';
 import type { PaymentAllocationView, PaymentRecord } from '../../ports/payment.repository.port';
 import { throwIfAny } from '../../field-validation';
 import { PAYMENT_MESSAGES, allocationFieldErrors, type AllocationInput } from './payment-input';
@@ -36,6 +37,8 @@ export class AllocatePayment {
     private readonly uow: UnitOfWorkPort,
     private readonly support: PaymentSupport,
     private readonly ids: IdGeneratorPort,
+    /** DT-199: settles the payment link a link payment came from. Optional until the module wires it. */
+    private readonly settlement?: PaymentLinkSettlementPort,
   ) {}
 
   async execute(actor: CurrentUser, input: AllocatePaymentInput): Promise<PaymentAllocationView> {
@@ -75,6 +78,12 @@ export class AllocatePayment {
           updatedById: actor.userId,
         };
         await this.support.payments.update(after);
+        await this.settlement?.settleOnAllocation({
+          paymentId: before.id,
+          invoiceId: row.invoiceId,
+          allocatedInvoiceCurrency: row.amountInvoiceCurrency,
+          at: this.support.nowIso(),
+        });
         await this.support.settle({
           actor: actorOf(actor),
           action: 'ALLOCATE',
