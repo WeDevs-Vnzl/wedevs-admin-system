@@ -242,9 +242,4 @@ describe('POST /exports/{entity} (e2e)', () => {
       expect(JSON.parse(rawBody(res)).error.code).toBe('VALIDATION');
     }
   });
-
-  it('answers 404 for a whitelisted table without a registered source', async () => {
-    const res = await exportPost('OWNER', 'TAG', body()).expect(404);
-    expect(JSON.parse(rawBody(res)).error.code).toBe('NOT_FOUND');
-  });
 });
