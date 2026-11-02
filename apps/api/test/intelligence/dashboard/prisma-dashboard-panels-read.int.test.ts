@@ -345,6 +345,7 @@ describe('entity metrics', () => {
       marginPercent: '30.00',
     });
     expect(await port.projectMetrics(bare.id)).toMatchObject({ model: null });
+    expect((await port.projectMetrics(bare.id))?.metrics.marginPercent).toBeNull();
     expect(await port.projectMetrics('nope')).toBeNull();
   });
 });

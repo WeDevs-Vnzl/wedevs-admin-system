@@ -79,6 +79,8 @@ describe('PurgeShareAccessLog over PostgreSQL', () => {
     const first = await purgeWith({ batchSize: 3, maxBatches: 2 }).execute(SYSTEM);
     expect(first).toMatchObject({ deleted: 6, batches: 2 });
     expect(await remaining()).toEqual([ids[6], keep]);
+    const perBatch = await admin.activityLog.findMany({ where: { action: 'SYSTEM_JOB' } });
+    expect(perBatch.map((e) => (e.metadata as { deleted: number }).deleted)).toEqual([3, 3]);
 
     expect(await purgeWith({ batchSize: 3, maxBatches: 2 }).execute(SYSTEM)).toMatchObject({
       deleted: 1,
@@ -91,7 +93,7 @@ describe('PurgeShareAccessLog over PostgreSQL', () => {
     expect(await admin.activityLog.count({ where: { action: 'SYSTEM_JOB' } })).toBe(jobs);
   });
 
-  it('writes one SYSTEM_JOB entry per run that deleted rows, with the count', async () => {
+  it('writes a SYSTEM_JOB entry per batch that deleted rows, with the count', async () => {
     await seed(new Date('2020-01-01T00:00:00Z'));
     await seed(new Date('2020-01-02T00:00:00Z'));
     await purgeWith().execute(SYSTEM);

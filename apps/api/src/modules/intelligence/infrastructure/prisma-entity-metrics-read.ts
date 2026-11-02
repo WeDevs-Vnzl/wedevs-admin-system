@@ -6,9 +6,10 @@ import {
   type ProjectStatus,
 } from '../../../shared/domain/enums';
 import type { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
+import { computeProjectMargin } from '../../finance/application/kpi-api';
+import { subMoney } from '../../../shared/domain/money';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import {
-  marginPercentOf,
   type ClientMetricsView,
   type ClientRankMetric,
   type EntityMetricsReadPort,
@@ -69,10 +70,13 @@ function projectView(row: ProjectRow): ProjectMetricsView {
     collectedUsd,
     toInvoiceUsd: money(m?.toInvoiceUsd),
     receivableUsd: money(m?.receivableUsd),
-    expensesUsd: money(m?.expensesUsd),
+    expensesUsd: subMoney(collectedUsd, marginUsd),
     marginUsd,
     monthlyRecurringUsd: money(m?.monthlyRecurringUsd),
-    marginPercent: marginPercentOf(marginUsd, collectedUsd),
+    marginPercent: computeProjectMargin({
+      collectedUsd,
+      allocatedExpensesUsd: subMoney(collectedUsd, marginUsd),
+    }),
   };
 }
 

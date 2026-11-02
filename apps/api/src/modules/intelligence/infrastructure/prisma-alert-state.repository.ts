@@ -11,7 +11,8 @@ import type { AlertHiding } from '../domain/alert-state';
 /**
  * `AlertState` over single-statement upserts on `(userId, alertKey)` (`INSERT ... ON CONFLICT DO UPDATE`).
  * One statement is atomic under any isolation, so two writers of one key leave one row and a read mark never
- * overwrites a dismissal (each statement touches only its own columns). Own rows only; no activity (DT-79).
+ * overwrites a dismissal (each statement touches only its own columns). Own rows only; no activity (DT-79). Writes go through the `TransactionHost` client, so the use cases' unit of
+ * work (`UnitOfWorkPort`) carries them.
  */
 @Injectable()
 export class PrismaAlertStateRepository implements AlertStateRepository {

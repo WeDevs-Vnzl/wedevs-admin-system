@@ -17,6 +17,7 @@ import type {
 import type { AlertStateRepository } from '../../../src/modules/intelligence/application/ports/alert-state.repository.port';
 import { addDays, type DateOnly } from '../../../src/shared/domain/business-date';
 import { FixedClock } from '../../support/fakes/fixed-clock';
+import { InMemoryUnitOfWork } from '../../support/fakes/in-memory-unit-of-work';
 import { InMemoryAlertSources } from './fakes/in-memory-alert-sources';
 import { InMemoryAlertStateRepository } from './fakes/in-memory-alert-state.repository';
 
@@ -125,17 +126,19 @@ export interface AlertsWorld {
 /** The four use cases over the real permission matrix, in-memory ports and a frozen clock. */
 export function buildAlertsWorld(
   sources: AlertSourcesReadPort = new InMemoryAlertSources(),
-  states: AlertStateRepository = new InMemoryAlertStateRepository(),
+  states?: AlertStateRepository,
   clock: FixedClock = new FixedClock(NOW),
+  uow = new InMemoryUnitOfWork(),
 ): AlertsWorld {
+  const repo = states ?? new InMemoryAlertStateRepository(uow);
   const authorization = new MatrixAuthorization();
   return {
     clock,
     sources: sources as InMemoryAlertSources,
-    states: states as InMemoryAlertStateRepository,
-    list: new ListAlerts(authorization, sources, states, clock),
-    markRead: new MarkAlertsRead(authorization, states, clock),
-    dismiss: new DismissAlert(authorization, states, clock),
-    restore: new RestoreAlert(authorization, states, clock),
+    states: repo as InMemoryAlertStateRepository,
+    list: new ListAlerts(authorization, sources, repo, clock),
+    markRead: new MarkAlertsRead(authorization, uow, repo, clock),
+    dismiss: new DismissAlert(authorization, uow, repo, clock),
+    restore: new RestoreAlert(authorization, uow, repo, clock),
   };
 }

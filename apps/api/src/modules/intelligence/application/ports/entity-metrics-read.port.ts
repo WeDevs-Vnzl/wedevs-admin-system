@@ -1,9 +1,4 @@
-import {
-  compareMoney,
-  roundMoney,
-  toDecimal,
-  type MoneyString,
-} from '../../../../shared/domain/money';
+import type { MoneyString } from '../../../../shared/domain/money';
 import type { ClientStatus, ProjectStatus } from '../../../../shared/domain/enums';
 
 export const ENTITY_METRICS_READ = Symbol('ENTITY_METRICS_READ');
@@ -50,16 +45,6 @@ export const PROJECT_RANK_METRICS = [
   'margin',
 ] as const;
 export type ProjectRankMetric = (typeof PROJECT_RANK_METRICS)[number];
-
-/** Same formula as `computeProjectSummary` (project-summary.ts), applied to the stored columns. */
-export function marginPercentOf(
-  marginUsd: MoneyString,
-  collectedUsd: MoneyString,
-): MoneyString | null {
-  return compareMoney(collectedUsd, '0') > 0
-    ? roundMoney(toDecimal(marginUsd).times(100).dividedBy(toDecimal(collectedUsd)).toFixed())
-    : null;
-}
 
 /**
  * Read side over `ClientMetrics` and `ProjectMetrics` (DT-111, data-rules §3b). Archived clients and

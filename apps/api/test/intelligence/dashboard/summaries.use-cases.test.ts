@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { marginPercentOf } from '../../../src/modules/intelligence/application/ports/entity-metrics-read.port';
+import { computeProjectMargin } from '../../../src/modules/finance/application/kpi-api';
 import {
   ZERO_CLIENT_METRICS,
   ZERO_PROJECT_METRICS,
@@ -59,7 +59,7 @@ function seedProject(
       expensesUsd: '490.00',
       marginUsd,
       monthlyRecurringUsd: '50.00',
-      marginPercent: marginPercentOf(marginUsd, collectedUsd),
+      marginPercent: computeProjectMargin({ collectedUsd, allocatedExpensesUsd: '490.00' }),
     },
   });
 }

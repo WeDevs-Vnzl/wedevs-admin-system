@@ -33,7 +33,7 @@ function inPeriod(date: DateOnly | null, period: KpiPeriod): date is DateOnly {
 }
 
 /** round(numerator × 100 ÷ denominator, 2), or `null` when the denominator is not positive. */
-function percent(numerator: MoneyString, denominator: MoneyString): MoneyString | null {
+export function percent(numerator: MoneyString, denominator: MoneyString): MoneyString | null {
   const base = toDecimal(denominator);
   if (!base.greaterThan(0)) return null;
   return roundMoney(toDecimal(numerator).times(100).dividedBy(base).toFixed());

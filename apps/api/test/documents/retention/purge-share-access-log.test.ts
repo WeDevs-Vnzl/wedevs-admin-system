@@ -3,7 +3,10 @@ import { PurgeShareAccessLog } from '../../../src/modules/documents/application/
 import { ForbiddenError } from '../../../src/shared/domain/domain-error';
 import { FixedClock } from '../../support/fakes/fixed-clock';
 import { InMemoryActivityLog } from '../../support/fakes/in-memory-activity-log';
-import { InMemoryUnitOfWork } from '../../support/fakes/in-memory-unit-of-work';
+import {
+  InMemoryUnitOfWork,
+  type TransactionParticipant,
+} from '../../support/fakes/in-memory-unit-of-work';
 import { InMemoryShareAccessLogRetention } from './fakes/in-memory-share-access-log-retention';
 
 const SYSTEM = { actorType: 'SYSTEM', userId: null } as const;
@@ -87,20 +90,47 @@ describe('PurgeShareAccessLog (DT-74, A9)', () => {
     expect(await purge.execute(SYSTEM)).toMatchObject({ deleted: 5, batches: 1 });
   });
 
-  it('writes one SYSTEM_JOB entry with the count; a rerun changes nothing and writes none', async () => {
+  it('writes one SYSTEM_JOB entry per batch that deleted rows, with that batch count; a rerun writes none', async () => {
     const old = Array.from({ length: 25 }, (_, i) => new Date(Date.UTC(2020, 0, 1, 0, i)));
     const { purge, activity } = build(old, NOW, { batchSize: 10, maxBatches: 10 });
     await purge.execute(SYSTEM);
-    expect(activity.entries).toHaveLength(1);
+    expect(activity.entries).toHaveLength(3);
+    expect(activity.entries.map((e) => e.metadata)).toEqual([
+      { deleted: 10, batches: 1, cutoff: CUTOFF.toISOString() },
+      { deleted: 10, batches: 2, cutoff: CUTOFF.toISOString() },
+      { deleted: 5, batches: 3, cutoff: CUTOFF.toISOString() },
+    ]);
     expect(activity.entries[0]).toMatchObject({
       action: 'SYSTEM_JOB',
       entityType: 'SETTING',
       entityId: 'purge-share-access-log',
       actor: SYSTEM,
-      metadata: { deleted: 25, batches: 3, cutoff: CUTOFF.toISOString() },
     });
     const rerun = await purge.execute(SYSTEM);
     expect(rerun).toMatchObject({ deleted: 0, batches: 1 });
-    expect(activity.entries).toHaveLength(1);
+    expect(activity.entries).toHaveLength(3);
+  });
+
+  it('commits the deletes and the entry of a batch together: a failing entry rolls the deletes back', async () => {
+    const old = Array.from({ length: 5 }, (_, i) => new Date(Date.UTC(2020, 0, 1, 0, i)));
+    const clock = new FixedClock(NOW);
+    const uow = new InMemoryUnitOfWork();
+    const activity = new InMemoryActivityLog(uow);
+    const retention = new InMemoryShareAccessLogRetention(old);
+    uow.enlist({
+      snapshot: [] as Date[],
+      begin() {
+        this.snapshot = [...retention.rows];
+      },
+      commit() {},
+      rollback() {
+        retention.rows = this.snapshot;
+      },
+    } as TransactionParticipant & { snapshot: Date[] });
+    const failing = { record: () => Promise.reject(new Error('audit down')) };
+    const purge = new PurgeShareAccessLog(uow, retention, failing, clock);
+    await expect(purge.execute(SYSTEM)).rejects.toThrow('audit down');
+    expect(retention.rows).toHaveLength(5);
+    expect(activity.entries).toHaveLength(0);
   });
 });
