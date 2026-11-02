@@ -284,7 +284,13 @@ import { DocumentsController } from './interface/http/documents.controller';
       inject: [RestoreDocument],
     },
   ],
-  exports: [DOCUMENT_REPOSITORY, DocumentSupport, DocumentViews, MarkExpiredDocuments],
+  exports: [
+    DOCUMENT_REPOSITORY,
+    DocumentSupport,
+    DocumentViews,
+    ListDocuments,
+    MarkExpiredDocuments,
+  ],
 })
 export class DocumentRecordsModule implements OnModuleInit {
   constructor(

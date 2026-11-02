@@ -52,7 +52,7 @@ export function kpiValue(id: KpiId, w: KpiWindowData, data: KpiData): KpiValue {
   const mrr = (): MoneyString =>
     computeMrr(
       data.charges
-        .filter((c) => c.startDate <= window.to && (c.endDate === null || c.endDate >= window.to))
+        .filter((c) => c.startDate <= close && (c.endDate === null || c.endDate >= close))
         .map<KpiRecurringItem>((c) => ({
           amountUsd: c.monthlyAmountUsd,
           frequency: 'MENSUAL',

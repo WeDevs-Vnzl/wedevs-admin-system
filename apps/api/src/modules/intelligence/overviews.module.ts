@@ -7,11 +7,6 @@ import { ClientsModule } from '../commercial/clients.module';
 import { ListClients } from '../commercial/application/use-cases/list-clients.use-case';
 import { ListProjects } from '../commercial/application/use-cases/list-projects.use-case';
 import { ProjectsModule } from '../commercial/projects.module';
-import { DocumentViews } from '../documents/application/document-support';
-import {
-  DOCUMENT_REPOSITORY,
-  type DocumentRepository,
-} from '../documents/application/ports/document.repository.port';
 import { ListDocuments } from '../documents/application/use-cases/records/list-documents.use-case';
 import { DocumentRecordsModule } from '../documents/document-records.module';
 import { ListAccounts } from '../finance/application/use-cases/accounts/list-accounts.use-case';
@@ -63,16 +58,7 @@ const DOCUMENT_ROWS = Symbol('DOCUMENT_ROWS');
   controllers: [OverviewsController],
   providers: [
     { provide: OVERVIEW_READ, useClass: PrismaOverviewRead },
-    {
-      provide: DOCUMENT_ROWS,
-      useFactory: (
-        authorization: AuthorizationPort,
-        documents: DocumentRepository,
-        views: DocumentViews,
-        clock: ClockPort,
-      ) => new ListDocuments(authorization, documents, views, clock),
-      inject: [AUTHORIZATION, DOCUMENT_REPOSITORY, DocumentViews, CLOCK],
-    },
+    { provide: DOCUMENT_ROWS, useExisting: ListDocuments },
     {
       provide: GetClientsOverview,
       useFactory: (

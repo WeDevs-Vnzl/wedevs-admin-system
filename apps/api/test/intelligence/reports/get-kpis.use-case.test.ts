@@ -335,6 +335,17 @@ describe('GetKpis: the 18 cards', () => {
     });
   });
 
+  it('MRR of a running month stops at today, like the dashboard: a later charge does not count', async () => {
+    world.inputs.charges.push({
+      startDate: '2026-10-20',
+      endDate: null,
+      status: 'ACTIVO',
+      monthlyAmountUsd: '25.00',
+    });
+    const running = await world.getKpis.execute(owner, { preset: 'THIS_MONTH' });
+    expect(running.kpis.find((k) => k.id === 'MRR')?.value).toBe('150.00');
+  });
+
   it('HU-31 CA2: another range changes the value, the comparison and the sparkline end', async () => {
     const september = await world.getKpis.execute(owner, { preset: 'PREVIOUS_MONTH' });
     const card = september.kpis.find((k) => k.id === 'NEW_CLIENTS');
