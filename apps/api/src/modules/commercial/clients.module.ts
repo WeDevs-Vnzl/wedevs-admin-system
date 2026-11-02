@@ -3,6 +3,9 @@ import type { ActivityLogPort } from '../../shared/application/ports/activity-lo
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { ClientMetricsWriterPort } from '../../shared/application/ports/client-metrics-writer.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
@@ -69,6 +72,14 @@ import { SetClientStatus } from './application/use-cases/set-client-status.use-c
 import { SetPrimaryContact } from './application/use-cases/set-primary-contact.use-case';
 import { UpdateClient } from './application/use-cases/update-client.use-case';
 import { UpdateContact } from './application/use-cases/update-contact.use-case';
+import {
+  ClientReindexSource,
+  ContactReindexSource,
+} from './infrastructure/commercial-reindex-sources';
+import {
+  ClientExportSource,
+  ContactExportSource,
+} from './infrastructure/commercial-export-sources';
 import { ClientRestoreHandler } from './infrastructure/client-restore.handler';
 import { ClientTaggableResolver } from './infrastructure/client-taggable.resolver';
 import { ContactRestoreHandler } from './infrastructure/contact-restore.handler';
@@ -493,6 +504,13 @@ export class ClientsModule implements OnModuleInit {
     private readonly contactResolver: ContactTaggableResolver,
     private readonly clientHandler: ClientRestoreHandler,
     private readonly contactHandler: ContactRestoreHandler,
+    @Inject(SearchReindexRegistry) private readonly reindexRegistry: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exportRegistry: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(CLIENT_REPOSITORY) private readonly clients: ClientRepository,
+    @Inject(CONTACT_REPOSITORY) private readonly contacts: ContactRepository,
+    private readonly listClients: ListClients,
+    private readonly listContacts: ListContacts,
   ) {}
 
   onModuleInit(): void {
@@ -500,5 +518,9 @@ export class ClientsModule implements OnModuleInit {
     for (const resolver of resolvers) this.taggables.register(resolver);
     const handlers: RestoreHandler[] = [this.clientHandler, this.contactHandler];
     for (const handler of handlers) this.restoreHandlers.register(handler);
+    this.reindexRegistry.register(new ClientReindexSource(this.host, this.clients));
+    this.reindexRegistry.register(new ContactReindexSource(this.host, this.contacts));
+    this.exportRegistry.register(new ClientExportSource(this.listClients));
+    this.exportRegistry.register(new ContactExportSource(this.listContacts));
   }
 }
