@@ -1,4 +1,3 @@
-import { Global, Module } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,7 +6,6 @@ import { EXCHANGE } from '../../../src/modules/integrations/application/ports/ex
 import { INTEGRATION_EVENT_STORE } from '../../../src/modules/integrations/application/ports/integration-event-store.port';
 import { INTEGRATION_MAPPING } from '../../../src/modules/integrations/application/ports/integration-mapping.port';
 import { SyncExchangeAccount } from '../../../src/modules/integrations/application/use-cases/exchange/sync-exchange-account.use-case';
-import { ExchangeModule } from '../../../src/modules/integrations/exchange.module';
 import { SYSTEM_ACTOR } from '../../../src/shared/application/actor';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';
@@ -28,17 +26,6 @@ const admin = createTestPrisma(assertLocalDatabaseUrl(process.env.DATABASE_URL))
 const mapping = new StubMapping({ stripe: null, binance: { accountId: 'pending' } });
 const events = new InMemoryIntegrationEventStore();
 
-/** Stands in for the module that binds the integration adapters (3.1, wired by 4.1). */
-@Global()
-@Module({
-  providers: [
-    { provide: INTEGRATION_MAPPING, useValue: mapping },
-    { provide: INTEGRATION_EVENT_STORE, useValue: events },
-  ],
-  exports: [INTEGRATION_MAPPING, INTEGRATION_EVENT_STORE],
-})
-class IntegrationBindingsStub {}
-
 describe('GET /accounts/{id}/exchange-snapshot (e2e)', () => {
   let app: NestExpressApplication;
   let authenticator: FakeAuthenticator;
@@ -47,10 +34,11 @@ describe('GET /accounts/{id}/exchange-snapshot (e2e)', () => {
   beforeAll(async () => {
     authenticator = new FakeAuthenticator();
     app = await createTestApp({
-      modules: [IntegrationBindingsStub, ExchangeModule],
       authenticator,
       overrides: [
         { token: AUTHORIZATION, useValue: new MatrixAuthorization() },
+        { token: INTEGRATION_MAPPING, useValue: mapping },
+        { token: INTEGRATION_EVENT_STORE, useValue: events },
         {
           token: EXCHANGE,
           useValue: new InMemoryExchange(

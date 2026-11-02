@@ -13,6 +13,7 @@ import { IntelligenceModule } from '../../src/modules/intelligence/intelligence.
 import { CommercialModule } from '../../src/modules/commercial/commercial.module';
 import { DocumentsModule } from '../../src/modules/documents/documents.module';
 import { FinanceModule } from '../../src/modules/finance/finance.module';
+import { IntegrationsModule } from '../../src/modules/integrations/integrations.module';
 import { createTestApp } from '../support/test-app';
 import { FakeRestoreHandler, trashPolicy } from './harness';
 
@@ -31,7 +32,13 @@ describe('trash (e2e)', () => {
     app = await createTestApp({
       modules: [TrashModule],
       // The real restore handlers would collide with the fakes registered below.
-      without: [CommercialModule, FinanceModule, DocumentsModule, IntelligenceModule],
+      without: [
+        CommercialModule,
+        FinanceModule,
+        DocumentsModule,
+        IntelligenceModule,
+        IntegrationsModule,
+      ],
       authenticator,
       authorization: trashPolicy,
     });
