@@ -5,7 +5,8 @@ import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../shared/domain/list-
 import { PrismaUnitOfWork } from '../../../shared/infrastructure/prisma/prisma-unit-of-work';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
-import type { ContactRecord } from '../domain/contact';
+import { contactSearchEntry, type ContactRecord } from '../domain/contact';
+import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
 import { PrismaClientRepository } from './prisma-client.repository';
 import { PrismaContactRepository } from './prisma-contact.repository';
 
@@ -24,9 +25,14 @@ async function newClient() {
   return record;
 }
 
+const searchIndex = new PrismaSearchIndex(host);
+
 async function newContact(clientId: string, over: Partial<ContactRecord> = {}) {
   const record = contactRecord(clientId, over);
-  await uow.run(() => contacts.insert(record));
+  await uow.run(async () => {
+    await contacts.insert(record);
+    await searchIndex.upsert(contactSearchEntry(record));
+  });
   return record;
 }
 

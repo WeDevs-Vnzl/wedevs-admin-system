@@ -6,6 +6,8 @@ import { PrismaUnitOfWork } from '../../../shared/infrastructure/prisma/prisma-u
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type { ProjectListRequest } from '../application/ports/project.repository.port';
 import type { ProjectRecord } from '../domain/project';
+import { PrismaSearchIndex } from '../../../shared/infrastructure/prisma/prisma-search-index';
+import { projectEntryOf } from '../application/use-cases/project-sync';
 import { PrismaProjectRepository } from './prisma-project.repository';
 
 const admin = createTestPrisma();
@@ -374,6 +376,13 @@ describe('PrismaProjectRepository (int)', { timeout: 120_000 }, () => {
         );
         await repository.insert(record(4, { name: 'Archivado', clients: [k()] }), ACTOR);
         await repository.setArchived(['int_pry_4'], T('2026-03-01Z'), ACTOR);
+      });
+      await uow.run(async () => {
+        const search = new PrismaSearchIndex(host);
+        for (const id of ['int_pry_1', 'int_pry_2', 'int_pry_3', 'int_pry_4']) {
+          const stored = await repository.findById(id);
+          if (stored) await search.upsert(await projectEntryOf(repository, stored));
+        }
       });
       await admin.tagAssignment.create({ data: { tagId: tag.id, projectId: 'int_pry_2' } });
       return { tech, tag };

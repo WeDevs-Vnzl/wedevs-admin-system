@@ -8,7 +8,7 @@ import type { SortSpec } from '../../../shared/domain/list-query';
 import { pageWindow } from '../../../shared/domain/pagination';
 import type { RichTextDoc } from '../../../shared/domain/rich-text';
 import { Prisma } from '../../../shared/infrastructure/prisma/generated-client';
-import { archivedWhere, escapeLike } from '../../../shared/infrastructure/prisma/prisma-list';
+import { archivedWhere, searchEntryMatch } from '../../../shared/infrastructure/prisma/prisma-list';
 import { TransactionHost } from '../../../shared/infrastructure/prisma/transaction-host';
 import type {
   ProjectListRequest,
@@ -100,8 +100,9 @@ function orderBy(sort: SortSpec): Prisma.Sql {
 }
 
 /**
- * `WHERE` of the list, over `"Project" p`. Archived mode, facets and the free-text search (code, name and
- * the trade/legal names of the linked clients through `EXISTS`, accent- and case-insensitive).
+ * `WHERE` of the list, over `"Project" p`. Archived mode, facets and the free-text search, which resolves
+ * through the project's `SearchEntry` (code, name, the trade and legal names of the linked clients, summary and
+ * description text; accent- and case-insensitive, DT-153).
  */
 function listWhere(request: ProjectListRequest): Prisma.Sql {
   const { filters, archived } = request;
@@ -137,18 +138,8 @@ function listWhere(request: ProjectListRequest): Prisma.Sql {
     );
   }
   const text = filters.q?.trim();
-  if (text) parts.push(searchCondition(text));
+  if (text) parts.push(searchEntryMatch('PROJECT', text));
   return parts.length > 0 ? Prisma.join(parts, ' AND ') : Prisma.sql`TRUE`;
-}
-
-function searchCondition(text: string): Prisma.Sql {
-  const pattern = escapeLike(text);
-  const like = (column: Prisma.Sql) =>
-    Prisma.sql`unaccent(lower(${column})) LIKE '%' || unaccent(lower(${pattern})) || '%' ESCAPE '\\'`;
-  return Prisma.sql`(${like(Prisma.sql`p."code"`)} OR ${like(Prisma.sql`p."name"`)} OR EXISTS (
-    SELECT 1 FROM "ProjectClient" pcq JOIN "Client" cq ON cq."id" = pcq."clientId"
-    WHERE pcq."projectId" = p."id"
-      AND (${like(Prisma.sql`cq."tradeName"`)} OR ${like(Prisma.sql`cq."legalName"`)})))`;
 }
 
 /**
