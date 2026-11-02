@@ -147,6 +147,25 @@ const BE5_ROUTES: Readonly<Record<string, string>> = {
   'POST /api/v1/exports/{entity}': 'authenticated',
 };
 
+/**
+ * Every BE-6 `integrations` and `mcp` route with the grant its handler declares (TASK-BE.md BE-6 contract
+ * choices, DT-190). `POST /webhooks/stripe` is the only new `@Public()`; `POST /mcp` is `@Authenticated()` through
+ * the MCP authenticator and each tool declares its own grant.
+ */
+const BE6_ROUTES: Readonly<Record<string, string>> = {
+  'POST /api/v1/webhooks/stripe': 'public',
+  'GET /api/v1/invoices/{id}/payment-links': 'payment:read',
+  'POST /api/v1/invoices/{id}/payment-links': 'payment:create',
+  'POST /api/v1/invoices/{id}/payment-links/{linkId}/deactivate': 'payment:create',
+  'GET /api/v1/settings/integrations': 'settings:read',
+  'PUT /api/v1/settings/integrations': 'settings:update',
+  'GET /api/v1/accounts/{id}/exchange-snapshot': 'account:read',
+  'POST /api/v1/mcp': 'authenticated',
+  'GET /api/v1/me/api-tokens': 'authenticated',
+  'POST /api/v1/me/api-tokens': 'authenticated',
+  'POST /api/v1/me/api-tokens/{id}/revoke': 'authenticated',
+};
+
 const toArray = (value: unknown): string[] => (Array.isArray(value) ? value : [value]) as string[];
 
 function joinPath(...parts: string[]): string {
@@ -223,7 +242,7 @@ describe('route inventory (full AppModule)', () => {
     expect(violations(routes)).toEqual([]);
   });
 
-  it('the @Public() set is exactly health, the Clerk webhook and the five portal routes (api-contract.md §5)', () => {
+  it('the @Public() set is exactly health, the Clerk and Stripe webhooks and the five portal routes (api-contract.md §5)', () => {
     const publicRoutes = inventory(app)
       .filter((r) => r.grant === 'public')
       .map((r) => r.route);
@@ -231,6 +250,7 @@ describe('route inventory (full AppModule)', () => {
       [
         'GET /api/v1/health',
         'POST /api/v1/webhooks/clerk',
+        'POST /api/v1/webhooks/stripe',
         'GET /api/v1/portal/{token}',
         'POST /api/v1/portal/{token}/views',
         'POST /api/v1/portal/{token}/documents/{documentId}/unlock',
@@ -299,14 +319,34 @@ describe('route inventory (full AppModule)', () => {
     expect(declared).toEqual(FINANCE_ROUTES);
   });
 
-  it('applies the portal throttler to the portal controller only: 70 requests to health stay 200 under a limit of 60', async () => {
+  it('applies the portal and MCP throttlers to their controllers only: 70 requests to health stay 200 under a limit of 60', async () => {
     const guarded = inventory(app)
       .filter((r) => Reflect.getMetadata('__guards__', controllerOf(app, r.handler)) !== undefined)
       .map((r) => r.handler.split('.')[0]);
-    expect([...new Set(guarded)]).toEqual(['PortalController']);
+    expect([...new Set(guarded)].sort()).toEqual(['McpController', 'PortalController']);
     for (let i = 0; i < 70; i += 1) {
       await request(app.getHttpServer()).get('/api/v1/health').expect(200);
     }
+  });
+
+  it('inventories exactly the 11 BE-6 routes, each with its declared grant, and no bank statements route (C13, C24)', () => {
+    const routes = inventory(app);
+    const declared = Object.fromEntries(
+      routes.filter((r) => r.route in BE6_ROUTES).map((r) => [r.route, r.requirement ?? r.grant]),
+    );
+    expect(Object.keys(BE6_ROUTES)).toHaveLength(11);
+    expect(declared).toEqual(BE6_ROUTES);
+    expect(routes.filter((r) => /\/statements/.test(r.route))).toEqual([]);
+  });
+
+  it('POST /mcp is authenticated by the MCP authenticator only and no other route is', () => {
+    const marked = inventory(app)
+      .filter((r) => {
+        const controller = controllerOf(app, r.handler);
+        return Reflect.getMetadata('usesMcpAuthenticator', controller) === true;
+      })
+      .map((r) => r.route);
+    expect(marked).toEqual(['POST /api/v1/mcp']);
   });
 
   it('exposes no DELETE on finance and no finance route outside the documented set', () => {
@@ -314,7 +354,9 @@ describe('route inventory (full AppModule)', () => {
       /^(GET|POST|PUT|PATCH|DELETE) \/api\/v1\/(exchange-rates|invoices|payments|allocations|installments|recurring-charges|recurring-expenses|expenses|accounts|transfers|projects\/\{id\}\/(billing|installments|recurring-charges)|clients\/\{id\}\/(billable-installments|open-invoices|credit))/;
     const finance = inventory(app)
       .map((r) => r.route)
-      .filter((route) => financePrefixes.test(route) && !(route in BE5_ROUTES));
+      .filter(
+        (route) => financePrefixes.test(route) && !(route in BE5_ROUTES) && !(route in BE6_ROUTES),
+      );
     expect(finance.filter((route) => route.startsWith('DELETE'))).toEqual([]);
     expect(finance.sort()).toEqual(Object.keys(FINANCE_ROUTES).sort());
   });

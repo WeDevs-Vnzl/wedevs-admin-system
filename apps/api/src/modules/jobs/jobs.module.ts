@@ -1,4 +1,6 @@
 import { Global, Module } from '@nestjs/common';
+import { APP_CONFIG } from '../../config/config.module';
+import { integrationsOf, type WorkerConfig } from '../../config/env.schema';
 import { ACTIVITY_LOG, AUTHENTICATOR, UNIT_OF_WORK } from '../../shared/application/ports/tokens';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
@@ -18,9 +20,15 @@ import { GenerateRecurringExpenses } from '../finance/application/use-cases/expe
 import { MarkOverdueInvoices } from '../finance/application/use-cases/invoices/mark-overdue-invoices.use-case';
 import { CleanupFiles } from '../platform/application/use-cases/cleanup-files.use-case';
 import { PlatformModule } from '../platform/platform.module';
+import { DeactivatePaymentLinksBeyondBalance } from '../integrations/application/use-cases/payment-links/deactivate-payment-links-beyond-balance.use-case';
+import { SyncExchangeAccount } from '../integrations/application/use-cases/exchange/sync-exchange-account.use-case';
+import { ExchangeModule } from '../integrations/exchange.module';
+import { IntegrationBindingsModule } from '../integrations/integrations.module';
+import { PaymentLinksModule } from '../integrations/payment-links.module';
 import { DailyMaintenance } from './application/daily-maintenance';
 import { JobRunner, type JobFailureLogger } from './application/job-runner';
 import { RunCleanupFiles } from './application/run-cleanup-files';
+import { RunExchangeSync } from './application/run-exchange-sync';
 import { RunRetention } from './application/run-retention';
 import { JobsRuntime } from './interface/jobs/jobs-runtime';
 
@@ -56,6 +64,9 @@ const failureLogger = (logger: AppLogger): JobFailureLogger => ({
     ExpensesModule,
     DocumentRecordsModule,
     ShareLinksModule,
+    IntegrationBindingsModule,
+    PaymentLinksModule,
+    ExchangeModule,
   ],
   providers: [
     {
@@ -73,6 +84,8 @@ const failureLogger = (logger: AppLogger): JobFailureLogger => ({
         generateRecurringInstallments: GenerateRecurringInstallments,
         generateRecurringExpenses: GenerateRecurringExpenses,
         markExpiredShareLinks: MarkExpiredShareLinks,
+        deactivatePaymentLinks: DeactivatePaymentLinksBeyondBalance,
+        config: WorkerConfig,
       ) =>
         new DailyMaintenance(runner, {
           markOverdueInvoices,
@@ -80,6 +93,8 @@ const failureLogger = (logger: AppLogger): JobFailureLogger => ({
           generateRecurringInstallments,
           generateRecurringExpenses,
           markExpiredShareLinks,
+          // Stripe off: the step is absent and the job runs the other five unchanged (DT-193, DT-196).
+          ...(integrationsOf(config).stripe ? { deactivatePaymentLinks } : {}),
         }),
       inject: [
         JobRunner,
@@ -88,6 +103,8 @@ const failureLogger = (logger: AppLogger): JobFailureLogger => ({
         GenerateRecurringInstallments,
         GenerateRecurringExpenses,
         MarkExpiredShareLinks,
+        DeactivatePaymentLinksBeyondBalance,
+        APP_CONFIG,
       ],
     },
     {
@@ -101,6 +118,13 @@ const failureLogger = (logger: AppLogger): JobFailureLogger => ({
       useFactory: (runner: JobRunner, cleanup: CleanupFiles) =>
         new RunCleanupFiles(runner, cleanup),
       inject: [JobRunner, CleanupFiles],
+    },
+    {
+      provide: RunExchangeSync,
+      // `SyncExchangeAccount` is `null` while Binance is off: no handler, no schedule (DT-193).
+      useFactory: (runner: JobRunner, sync: SyncExchangeAccount | null) =>
+        sync ? new RunExchangeSync(runner, sync) : null,
+      inject: [JobRunner, SyncExchangeAccount],
     },
     JobsRuntime,
   ],

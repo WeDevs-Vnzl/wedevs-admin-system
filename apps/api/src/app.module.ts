@@ -5,7 +5,9 @@ import { CommercialModule } from './modules/commercial/commercial.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { IntelligenceModule } from './modules/intelligence/intelligence.module';
+import { McpModule } from './modules/mcp/mcp.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { SharedInfrastructureModule } from './shared/infrastructure/shared-infrastructure.module';
@@ -29,6 +31,8 @@ import { SharedInterfaceModule } from './shared/interface/shared-interface.modul
     CommercialModule,
     FinanceModule,
     DocumentsModule,
+    IntegrationsModule,
+    McpModule,
   ],
   providers: [{ provide: APP_GUARD, useExisting: AuthGuard }],
 })

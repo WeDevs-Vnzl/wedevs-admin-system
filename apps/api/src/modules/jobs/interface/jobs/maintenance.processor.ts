@@ -7,6 +7,8 @@ export interface MaintenanceHandlers {
   readonly 'daily-maintenance': { execute(): Promise<unknown> };
   readonly retention: { execute(): Promise<unknown> };
   readonly 'cleanup-files': { execute(): Promise<unknown> };
+  /** Present only when Binance is configured (DT-193); a stray `exchange-sync` job then fails as unknown. */
+  readonly 'exchange-sync'?: { execute(): Promise<unknown> };
 }
 
 export interface ProcessorOptions {
@@ -20,7 +22,9 @@ export function dispatch(handlers: MaintenanceHandlers, name: string): Promise<u
   if (!Object.hasOwn(handlers, name)) {
     return Promise.reject(new Error(`Unknown maintenance job: ${name}`));
   }
-  return handlers[name as keyof MaintenanceHandlers].execute();
+  const handler = handlers[name as keyof MaintenanceHandlers];
+  if (!handler) return Promise.reject(new Error(`Unknown maintenance job: ${name}`));
+  return handler.execute();
 }
 
 /**
