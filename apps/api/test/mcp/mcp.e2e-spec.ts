@@ -265,11 +265,9 @@ describe('MCP server (e2e): DT-188, DT-189, DT-190, DT-195, DT-198', () => {
         const route = ROUTE_OF[tool.name] ?? '';
         const declared = routes.get(route);
         expect(declared, `${tool.name} -> ${route}`).toBeDefined();
-        const grant = tool.grant as unknown;
+        const { grant } = tool;
         const toolGrant =
-          grant === 'authenticated'
-            ? 'authenticated'
-            : `${tool.grant.resource}:${tool.grant.action}`;
+          grant === 'authenticated' ? 'authenticated' : `${grant.resource}:${grant.action}`;
         expect(toolGrant, tool.name).toBe(declared);
       }
     });

@@ -14,7 +14,10 @@ export interface McpToolDefinition {
   readonly description: string;
   /** Validates and types the tool arguments; enforces their limits (lesson B2 lives in the use case too). */
   readonly input: ZodType;
-  readonly grant: { readonly resource: PermissionResource; readonly action: PermissionAction };
+  /** The HTTP route's grant, or `'authenticated'` for an `@Authenticated()` route whose use case decides by data. */
+  readonly grant:
+    | { readonly resource: PermissionResource; readonly action: PermissionAction }
+    | 'authenticated';
   /** Calls the same use case as the HTTP route, as the token's user, and returns its output DTO. */
   readonly handler: (actor: CurrentUser, input: unknown) => Promise<unknown>;
 }

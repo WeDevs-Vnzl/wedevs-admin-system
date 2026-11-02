@@ -26,7 +26,7 @@ export type ResolveUseCase = <T>(token: Type<T>) => T;
  * decides by data what the caller sees (DT-79, DT-195). The MCP server skips its grant check for it.
  * `McpToolDefinition['grant']` has no member for this yet, so the marker is cast here, in one place.
  */
-const AUTHENTICATED = 'authenticated' as unknown as McpToolDefinition['grant'];
+const AUTHENTICATED = 'authenticated' as const;
 
 interface ToolSpec<S extends ZodType> {
   readonly name: string;

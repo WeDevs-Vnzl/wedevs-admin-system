@@ -3,7 +3,6 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SYSTEM_ACTOR } from '../../../../shared/application/actor';
 import { ApiErrorResponses } from '../../../../shared/interface/api-error-responses';
 import { Public } from '../../../../shared/interface/public.decorator';
-// eslint-disable-next-line no-restricted-imports -- Rule (i) matches the folder name `stripe/`; this is our own use case, not the SDK
 import { HandleStripeWebhook } from '../../application/use-cases/stripe/handle-stripe-webhook.use-case';
 import { assertStripeEnabled, STRIPE_ENABLED } from './payment-links.availability';
 import { StripeWebhookResponseDto } from './webhooks.dto';

@@ -31,7 +31,6 @@ import {
 import { GetExchangeSnapshot } from './application/use-cases/exchange/get-exchange-snapshot.use-case';
 import { SyncExchangeAccount } from './application/use-cases/exchange/sync-exchange-account.use-case';
 // The rule (j) pattern `binance/**` also matches our own adapter folder; the SDK itself is never imported here.
-// eslint-disable-next-line no-restricted-imports
 import { BinanceExchange } from './infrastructure/binance/binance-exchange';
 import { ExchangeSnapshotController } from './interface/http/exchange-snapshot.controller';
 

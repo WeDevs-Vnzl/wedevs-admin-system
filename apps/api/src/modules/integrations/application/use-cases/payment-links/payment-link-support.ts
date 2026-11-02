@@ -12,8 +12,6 @@ export const PAYMENT_LINK_MESSAGES = {
 /** `deactivationReason` of a link a user closed by hand. */
 export const MANUAL_DEACTIVATION_REASON = 'MANUAL';
 
-/** A provider call that failed after the database change was committed is retried for this long. */
-export const PROVIDER_RETRY_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (value: string): boolean => UUID.test(value);

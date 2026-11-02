@@ -72,7 +72,7 @@ describe('callTool', () => {
 
   it('skips the grant check for an authenticated tool and leaves it to the use case', async () => {
     const { call, handler } = setup(
-      { grant: 'authenticated' as unknown as McpToolDefinition['grant'] },
+      { grant: 'authenticated' },
       () => false,
     );
     const result = await call('get_thing', { id: 'abc' });

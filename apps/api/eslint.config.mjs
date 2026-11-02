@@ -115,12 +115,13 @@ const processGroup = {
 // integrations/infrastructure/stripe, the Binance connector in integrations/infrastructure/binance, the MCP SDK in
 // modules/mcp/interface/mcp. The carve-out blocks at the end of this file drop one group each.
 const stripeGroup = {
-  group: ['stripe', 'stripe/**'],
+  // `regex`, not gitignore globs: `stripe/**` also matched first-party paths such as `use-cases/stripe/`.
+  regex: '^stripe(/.*)?$',
   message:
     'Rule (i): stripe is allowed only in src/modules/integrations/infrastructure/stripe/ (an SDK type never crosses a port).',
 };
 const binanceGroup = {
-  group: ['@binance/*', 'binance', 'binance/**', 'binance-api-node', 'node-binance-api'],
+  regex: '^(@binance/.+|binance(/.*)?|binance-api-node|node-binance-api)$',
   message:
     'Rule (j): the Binance connector is allowed only in src/modules/integrations/infrastructure/binance/.',
 };

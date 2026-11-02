@@ -21,6 +21,25 @@ const importing = (specifier: string) =>
   `import * as sdk from '${specifier}';\nexport const x = sdk;\n`;
 
 const cases: readonly Case[] = [
+  // First-party folders named after a provider are not the SDK
+  {
+    name: 'first-party use-cases/stripe import from a module',
+    file: `${INTEGRATIONS}/stripe.module.ts`,
+    code: importing('./application/use-cases/stripe/handle-stripe-webhook.use-case'),
+    expect: null,
+  },
+  {
+    name: 'first-party infrastructure/binance import from a module',
+    file: `${INTEGRATIONS}/exchange.module.ts`,
+    code: importing('./infrastructure/binance/binance-exchange'),
+    expect: null,
+  },
+  {
+    name: 'stripe subpath outside its adapter folder',
+    file: `${INTEGRATIONS}/stripe.module.ts`,
+    code: importing('stripe/cjs/stripe.cjs.node'),
+    expect: STRIPE,
+  },
   // Stripe: only integrations/infrastructure/stripe
   {
     name: 'stripe in its adapter folder',

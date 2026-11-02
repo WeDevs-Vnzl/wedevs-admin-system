@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SYSTEM_ACTOR } from '../../../shared/application/actor';
 import { RecordProviderPayment } from '../../finance/application/use-cases/payments/record-provider-payment.use-case';
-// eslint-disable-next-line no-restricted-imports -- Rule (i) matches the folder name `stripe/`; this is our own port, not the SDK
 import type {
   ProviderPaymentRecordingPort,
   RecordProviderPaymentCommand,

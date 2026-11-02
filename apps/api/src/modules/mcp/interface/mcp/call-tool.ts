@@ -54,8 +54,7 @@ export async function callTool(
   const tool = deps.registry.get(name);
   if (!tool) return failure(new NotFoundError(), deps.logger, name);
 
-  const grant = tool.grant as unknown;
-  if (grant !== AUTHENTICATED) {
+  if (tool.grant !== AUTHENTICATED) {
     const { resource, action } = tool.grant;
     if (!deps.authorization.can(actor, action, resource)) {
       return failure(new ForbiddenError(), deps.logger, name);

@@ -28,9 +28,7 @@ import {
   PAYMENT_PROVIDER,
   type PaymentProviderPort,
 } from './application/ports/payment-provider.port';
-// eslint-disable-next-line no-restricted-imports -- Rule (i) matches the folder name `stripe/`; these are our own use case and port, not the SDK
 import { HandleStripeWebhook } from './application/use-cases/stripe/handle-stripe-webhook.use-case';
-// eslint-disable-next-line no-restricted-imports -- same as above
 import {
   PROVIDER_PAYMENT_RECORDING,
   type ProviderPaymentRecordingPort,
@@ -40,7 +38,6 @@ import { FinanceProviderPaymentRecorder } from './infrastructure/finance-provide
 import { PrismaIntegrationEventStore } from './infrastructure/prisma-integration-event.store';
 import { PrismaPaymentLinkRepository } from './infrastructure/prisma-payment-link.repository';
 import { SettingsIntegrationMapping } from './infrastructure/settings-integration-mapping.adapter';
-// eslint-disable-next-line no-restricted-imports -- wiring the adapter folder, not the SDK
 import { createStripePaymentProvider } from './infrastructure/stripe/stripe-payment-provider';
 import { STRIPE_ENABLED } from './interface/http/payment-links.availability';
 import { StripeWebhookController } from './interface/http/webhooks.controller';
