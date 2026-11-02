@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { projectRecord } from '../../../../../test/commercial/projects/fakes/world';
 import { clientInput, createWorld, rejection } from '../../../../../test/commercial/clients/world';
 
 async function setup() {
@@ -103,5 +104,80 @@ describe('UpdateClient', () => {
         (await rejection(w.updateClient.execute(user, { ...clientInput(), id: client.id }))).code,
       ).toBe('FORBIDDEN');
     }
+  });
+});
+
+describe('UpdateClient rename (DT-166)', () => {
+  async function renameSetup() {
+    const { w, client } = await setup();
+    w.projects.addClient(client.id, client.tradeName);
+    w.projects.seed(
+      projectRecord({
+        id: 'pry_b',
+        code: 'PRY-0002',
+        clients: [{ clientId: client.id, role: 'Contratante', linkedAt: new Date() }],
+      }),
+      projectRecord({
+        id: 'pry_a',
+        code: 'PRY-0001',
+        archivedAt: new Date(),
+        clients: [{ clientId: client.id, role: 'Contratante', linkedAt: new Date() }],
+      }),
+      projectRecord({ id: 'pry_other', code: 'PRY-0003', clients: [] }),
+    );
+    vi.spyOn(w.search, 'upsert').mockImplementation(async () => {
+      w.order.push('upsert');
+    });
+    vi.spyOn(w.sync, 'reindex').mockImplementation(async (record) => {
+      w.order.push(`reindex:${record.id}`);
+    });
+    vi.spyOn(w.activity, 'record').mockImplementation(async () => {
+      w.order.push('activity');
+    });
+    w.order.length = 0;
+    return { w, client };
+  }
+
+  it('locks the Client row first, as the only lock', async () => {
+    const { w, client } = await renameSetup();
+    await w.updateClient.execute(w.owner, { ...clientInput({ tradeName: 'Otro' }), id: client.id });
+    expect(w.rowLocks.acquired).toEqual([{ rowClass: 'Client', id: client.id }]);
+  });
+
+  it('on a tradeName change writes own entry, projects ascending (archived included), dependants, then activity', async () => {
+    const { w, client } = await renameSetup();
+    await w.updateClient.execute(w.owner, { ...clientInput({ tradeName: 'Otro' }), id: client.id });
+    expect(w.order).toEqual([
+      'upsert',
+      'reindex:pry_a',
+      'reindex:pry_b',
+      'relabelClient',
+      'activity',
+    ]);
+    expect(w.dependents.calls).toEqual([{ clientId: client.id, label: 'Otro' }]);
+  });
+
+  it('a legalName change reindexes the projects but does not relabel the dependants', async () => {
+    const { w, client } = await renameSetup();
+    await w.updateClient.execute(w.owner, {
+      ...clientInput({ legalName: 'Nube Austral S.A.' }),
+      id: client.id,
+    });
+    expect(w.order).toEqual(['upsert', 'reindex:pry_a', 'reindex:pry_b', 'activity']);
+  });
+
+  it('an edit that changes neither name reindexes only its own entry and calls no dependant', async () => {
+    const { w, client } = await renameSetup();
+    await w.updateClient.execute(w.owner, {
+      ...clientInput({ email: 'x@nube.example.com', address: 'Otra' }),
+      id: client.id,
+    });
+    expect(w.order).toEqual(['upsert', 'activity']);
+  });
+
+  it('a no-op edit still locks and writes nothing', async () => {
+    const { w, client } = await renameSetup();
+    await w.updateClient.execute(w.owner, { ...clientInput(), id: client.id });
+    expect(w.order).toEqual([]);
   });
 });

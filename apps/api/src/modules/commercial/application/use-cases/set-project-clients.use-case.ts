@@ -41,26 +41,29 @@ export class SetProjectClients {
   async execute(actor: CurrentUser, input: SetProjectClientsInput): Promise<ProjectDetailView> {
     assertCan(this.authorization, actor, 'update', 'project');
 
-    await this.uow.run(async () => {
-      const before = await loadLiveProject(this.projects, input.id);
-      const clients = normalizeProjectClients(input.clients, this.clock.now(), before.clients);
-      await this.references.assertClients(
-        clients.map((link) => link.clientId),
-        before.clients.map((link) => link.clientId),
-      );
-      const entries = await clientLinkEntries(this.projects, before.clients, clients);
-      if (entries.length === 0) return;
+    await this.uow.run(
+      async () => {
+        const before = await loadLiveProject(this.projects, input.id);
+        const clients = normalizeProjectClients(input.clients, this.clock.now(), before.clients);
+        await this.references.assertClients(
+          clients.map((link) => link.clientId),
+          before.clients.map((link) => link.clientId),
+        );
+        const entries = await clientLinkEntries(this.projects, before.clients, clients);
+        if (entries.length === 0) return;
 
-      await this.projects.replaceClients(before.id, clients);
-      await this.projects.touch(before.id, actor.userId);
-      const after = await reloadProject(this.projects, before.id);
-      for (const entry of entries) await this.sync.log(actor, entry.action, after, entry);
-      await this.sync.reindex(after);
-      await this.sync.recount([
-        ...before.clients.map((link) => link.clientId),
-        ...after.clients.map((link) => link.clientId),
-      ]);
-    });
+        await this.projects.replaceClients(before.id, clients);
+        await this.projects.touch(before.id, actor.userId);
+        const after = await reloadProject(this.projects, before.id);
+        for (const entry of entries) await this.sync.log(actor, entry.action, after, entry);
+        await this.sync.reindex(after);
+        await this.sync.recount([
+          ...before.clients.map((link) => link.clientId),
+          ...after.clients.map((link) => link.clientId),
+        ]);
+      },
+      { isolation: 'Serializable' },
+    );
 
     return this.views.detail(actor, await reloadProject(this.projects, input.id));
   }

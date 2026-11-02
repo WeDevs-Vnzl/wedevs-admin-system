@@ -371,6 +371,24 @@ export class PrismaProjectRepository implements ProjectRepository {
     }));
   }
 
+  async clientLegalNames(ids: readonly string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.host.db.client.findMany({
+      where: { id: { in: [...new Set(ids)] }, ...archivedWhere('include') },
+      select: { id: true, legalName: true },
+    });
+    return new Map(rows.map((row) => [row.id, row.legalName]));
+  }
+
+  async projectIdsOfClient(clientId: string): Promise<string[]> {
+    const rows = await this.host.db.project.findMany({
+      where: { clients: { some: { clientId } }, ...archivedWhere('include') },
+      select: { id: true },
+    });
+    // Byte order, the one the lock order and the other writers agree on (not the database collation).
+    return rows.map((row) => row.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  }
+
   async countLiveProjectsOfClient(clientId: string): Promise<number> {
     return this.host.db.project.count({ where: { clients: { some: { clientId } } } });
   }

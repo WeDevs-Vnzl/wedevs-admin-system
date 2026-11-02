@@ -5,6 +5,8 @@ import { CreateContact } from '../../../src/modules/commercial/application/use-c
 import { GetClient } from '../../../src/modules/commercial/application/use-cases/get-client.use-case';
 import { ListClients } from '../../../src/modules/commercial/application/use-cases/list-clients.use-case';
 import { ListContacts } from '../../../src/modules/commercial/application/use-cases/list-contacts.use-case';
+import { ProjectSync } from '../../../src/modules/commercial/application/use-cases/project-sync';
+import type { ClientSearchDependentsPort } from '../../../src/modules/commercial/application/ports/client-search-dependents.port';
 import { RestoreClient } from '../../../src/modules/commercial/application/use-cases/restore-client.use-case';
 import { RestoreContact } from '../../../src/modules/commercial/application/use-cases/restore-contact.use-case';
 import { SearchClients } from '../../../src/modules/commercial/application/use-cases/search-clients.use-case';
@@ -24,9 +26,11 @@ import { InMemoryActivityLog } from '../../support/fakes/in-memory-activity-log'
 import { InMemoryClientMetricsWriter } from '../../support/fakes/in-memory-client-metrics-writer';
 import { InMemorySearchIndex } from '../../support/fakes/in-memory-search-index';
 import { InMemorySequence } from '../../support/fakes/in-memory-sequence';
+import { InMemoryRowLocks } from '../../support/fakes/in-memory-row-locks';
 import { InMemoryUnitOfWork } from '../../support/fakes/in-memory-unit-of-work';
 import { SequentialIdGenerator } from '../../support/fakes/sequential-id-generator';
 import { InMemoryTagAssignmentRepository, InMemoryTagRepository } from '../../settings/tags/fakes';
+import { InMemoryProjectRepository } from '../projects/fakes/in-memory-project.repository';
 import { FakeClientFinanceDependents } from './fakes/fake-client-finance-dependents';
 import { InMemoryClientRepository } from './fakes/in-memory-client.repository';
 import { InMemoryContactRepository } from './fakes/in-memory-contact.repository';
@@ -79,6 +83,19 @@ export async function rejection(promise: Promise<unknown>) {
   throw new Error('expected the promise to reject');
 }
 
+/** Records the relabels a rename asked for; `log` is shared with the other fakes to assert the order. */
+export class FakeClientSearchDependents implements ClientSearchDependentsPort {
+  readonly calls: { clientId: string; label: string }[] = [];
+
+  constructor(private readonly log: string[]) {}
+
+  async relabelClient(clientId: string, label: string): Promise<number> {
+    this.log.push('relabelClient');
+    this.calls.push({ clientId, label });
+    return 0;
+  }
+}
+
 /** Every in-memory port of the clients and contacts slice, wired with the real use cases and matrix. */
 export function createWorld() {
   const clock = new FixedClock(STAMP);
@@ -95,6 +112,11 @@ export function createWorld() {
   const tagRepo = new InMemoryTagRepository(uow, assignmentRepo);
   const assignments = new TagAssignments(tagRepo, assignmentRepo);
   const ids = new SequentialIdGenerator('id');
+  const rowLocks = new InMemoryRowLocks(uow);
+  const projects = new InMemoryProjectRepository(uow);
+  const sync = new ProjectSync(projects, search, metrics, activity);
+  const order: string[] = [];
+  const dependents = new FakeClientSearchDependents(order);
 
   const world = {
     clock,
@@ -107,6 +129,11 @@ export function createWorld() {
     clients,
     contacts,
     finance,
+    rowLocks,
+    projects,
+    sync,
+    dependents,
+    order,
     assignmentRepo,
     tagRepo,
     assignments,
@@ -132,6 +159,10 @@ export function createWorld() {
       activity,
       search,
       clock,
+      rowLocks,
+      projects,
+      sync,
+      dependents,
     ),
     setClientStatus: new SetClientStatus(
       authorization,

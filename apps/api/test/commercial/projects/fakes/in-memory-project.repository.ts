@@ -257,6 +257,24 @@ export class InMemoryProjectRepository implements ProjectRepository, Transaction
     });
   }
 
+  readonly legalNames = new Map<string, string>();
+
+  async clientLegalNames(ids: readonly string[]): Promise<Map<string, string>> {
+    const found = new Map<string, string>();
+    for (const id of ids) {
+      const client = this.clients.get(id);
+      if (client) found.set(id, this.legalNames.get(id) ?? `${client.label} C.A.`);
+    }
+    return found;
+  }
+
+  async projectIdsOfClient(clientId: string): Promise<string[]> {
+    return [...this.view().values()]
+      .filter((record) => record.clients.some((link) => link.clientId === clientId))
+      .map((record) => record.id)
+      .sort();
+  }
+
   async countLiveProjectsOfClient(clientId: string): Promise<number> {
     return [...this.view().values()].filter(
       (record) =>

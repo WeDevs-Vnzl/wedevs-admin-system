@@ -85,6 +85,10 @@ export interface ProjectRepository {
   liveClientIds(ids: readonly string[]): Promise<string[]>;
   /** Display refs of clients, archived ones included; unknown ids are absent. */
   clientRefs(ids: readonly string[]): Promise<EntityRef[]>;
+  /** Legal names of clients by id, archived ones included (the project entry carries them, DT-153). */
+  clientLegalNames(ids: readonly string[]): Promise<Map<string, string>>;
+  /** Ids of every project linked to the client, archived ones included, ascending (the rename's reindex). */
+  projectIdsOfClient(clientId: string): Promise<string[]>;
   /** Live projects linked to the client (the value of `ClientMetrics.projectCount`). */
   countLiveProjectsOfClient(clientId: string): Promise<number>;
 

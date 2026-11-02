@@ -8,6 +8,7 @@ import { RestoreClient } from '../../../src/modules/commercial/application/use-c
 import { RestoreContact } from '../../../src/modules/commercial/application/use-cases/restore-contact.use-case';
 import { SetProjectClients } from '../../../src/modules/commercial/application/use-cases/set-project-clients.use-case';
 import { SetProjectStatus } from '../../../src/modules/commercial/application/use-cases/set-project-status.use-case';
+import { UpdateClient } from '../../../src/modules/commercial/application/use-cases/update-client.use-case';
 import { UpdateProject } from '../../../src/modules/commercial/application/use-cases/update-project.use-case';
 import { UpsertProjectLinks } from '../../../src/modules/commercial/application/use-cases/upsert-project-links.use-case';
 import type { ClientRepository } from '../../../src/modules/commercial/application/ports/client.repository.port';
@@ -16,6 +17,9 @@ import type { ProjectRepository } from '../../../src/modules/commercial/applicat
 import { PrismaClientRepository } from '../../../src/modules/commercial/infrastructure/prisma-client.repository';
 import { PrismaContactRepository } from '../../../src/modules/commercial/infrastructure/prisma-contact.repository';
 import { PrismaProjectRepository } from '../../../src/modules/commercial/infrastructure/prisma-project.repository';
+import type { ClientSearchDependentsPort } from '../../../src/modules/commercial/application/ports/client-search-dependents.port';
+import { FinanceClientSearchDependents } from '../../../src/modules/finance/infrastructure/client-search-dependents.adapter';
+import { PrismaRowLocks } from '../../../src/shared/infrastructure/prisma/prisma-row-locks';
 import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
 import { TagAssignments } from '../../../src/modules/settings/application/tag-assignments';
 import { PrismaTagAssignmentRepository } from '../../../src/modules/settings/infrastructure/prisma-tag-assignment.repository';
@@ -97,6 +101,8 @@ export interface Hooks {
   /** Decorates the unit of work, e.g. to force `ReadCommitted` (the unlocked behavior). */
   uow?: (uow: UnitOfWorkPort) => UnitOfWorkPort;
   /** Replaces the fake billing port (e.g. with finance's adapter) over this world's own host and unit of work. */
+  /** Decorates the dependants' port of the rename (the real finance adapter by default). */
+  dependents?: (dependents: ClientSearchDependentsPort) => ClientSearchDependentsPort;
   billing?: (ctx: { host: TransactionHost; uow: UnitOfWorkPort }) => ProjectBillingPort;
 }
 
@@ -124,7 +130,25 @@ export function buildWorld(service: PrismaService, hooks: Hooks = {}) {
   const sync = new ProjectSync(projects, searchIndex, metrics, activityLog);
   const views = new ProjectViews(authorization, projects, catalog, assignments, billing);
 
+  const dependents = (hooks.dependents ?? ((d) => d))(
+    new FinanceClientSearchDependents(host, searchIndex),
+  );
+
   return {
+    updateClient: new UpdateClient(
+      authorization,
+      uow,
+      clients,
+      contacts,
+      assignments,
+      activityLog,
+      searchIndex,
+      clock,
+      new PrismaRowLocks(host),
+      projects,
+      sync,
+      dependents,
+    ),
     archiveClients: new ArchiveClients(
       authorization,
       uow,

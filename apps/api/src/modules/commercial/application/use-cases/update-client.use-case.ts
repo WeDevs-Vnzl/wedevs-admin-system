@@ -6,6 +6,7 @@ import {
   type AuthorizationPort,
 } from '../../../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../../../shared/application/ports/clock.port';
+import type { RowLocksPort } from '../../../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../../../shared/application/ports/search-index.port';
 import type { UnitOfWorkPort } from '../../../../shared/application/ports/unit-of-work.port';
 import { ConflictError, NotFoundError } from '../../../../shared/domain/domain-error';
@@ -21,7 +22,10 @@ import {
   type ClientRecord,
 } from '../../domain/client';
 import type { ClientRepository } from '../ports/client.repository.port';
+import type { ClientSearchDependentsPort } from '../ports/client-search-dependents.port';
 import type { ContactRepository } from '../ports/contact.repository.port';
+import type { ProjectRepository } from '../ports/project.repository.port';
+import type { ProjectSync } from './project-sync';
 import { clientTarget, readClientDetail, tagNamesOf } from './client-support';
 
 /**
@@ -30,6 +34,12 @@ import { clientTarget, readClientDetail, tagNamesOf } from './client-support';
  * live client (`NOT_FOUND`), the same tax id + country uniqueness excluding itself, tags, then diff. No
  * write, no activity and no reindex when nothing changed; otherwise `UPDATE` with the changed fields
  * (`address` as "changed", tags as names) and a reindex.
+ *
+ * The first statement of the unit of work locks the `Client` row (DT-166): invoice and payment mutations take
+ * it first too, so the rename queues with them, and `Project → Client → Invoice → Payment` is respected
+ * because no project row is locked here. Writes follow the global tail: own entry, then, when the trade or
+ * legal name changed, the entries of every project of the client (archived included, ascending id), then,
+ * when the trade name changed, the dependants' labels, and the activity entry last.
  */
 export class UpdateClient {
   constructor(
@@ -41,6 +51,10 @@ export class UpdateClient {
     private readonly activityLog: ActivityLogPort,
     private readonly searchIndex: SearchIndexPort,
     private readonly clock: ClockPort,
+    private readonly rowLocks: RowLocksPort,
+    private readonly projects: Pick<ProjectRepository, 'projectIdsOfClient' | 'findById'>,
+    private readonly sync: Pick<ProjectSync, 'reindex'>,
+    private readonly dependents: ClientSearchDependentsPort,
   ) {}
 
   async execute(
@@ -52,6 +66,7 @@ export class UpdateClient {
 
     return this.uow.run(
       async () => {
+        await this.rowLocks.lock({ Client: [input.id] });
         const before = await this.clients.findById(input.id);
         if (!before || before.deletedAt) throw new NotFoundError();
         const holder = await this.clients.findTaxIdHolder(values.taxId, values.country, before.id);
@@ -72,6 +87,15 @@ export class UpdateClient {
 
         const after: ClientRecord = { ...before, ...values, updatedAt: this.clock.now() };
         await this.clients.update(after);
+        await this.searchIndex.upsert(clientSearchEntry(after));
+        const tradeNameChanged = before.tradeName !== after.tradeName;
+        if (tradeNameChanged || before.legalName !== after.legalName) {
+          for (const projectId of await this.projects.projectIdsOfClient(after.id)) {
+            const project = await this.projects.findById(projectId);
+            if (project) await this.sync.reindex(project);
+          }
+        }
+        if (tradeNameChanged) await this.dependents.relabelClient(after.id, after.tradeName);
         await this.activityLog.record({
           actor: actorOf(actor),
           action: 'UPDATE',
@@ -81,7 +105,6 @@ export class UpdateClient {
           clientId: after.id,
           changes,
         });
-        await this.searchIndex.upsert(clientSearchEntry(after));
         return readClientDetail(this.contacts, this.assignments, after);
       },
       { isolation: 'Serializable' },

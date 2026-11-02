@@ -99,7 +99,7 @@ describe('CreateProject (mock createProject, HU-05)', () => {
       code: 'PRY-0001',
       title: 'Sitio de prueba',
       subtitle: 'Kairós, Tornillo',
-      body: 'Un proyecto de prueba\nDetalle largo',
+      body: 'Kairós C.A.\nTornillo C.A.\nUn proyecto de prueba\nDetalle largo',
       status: 'PROPUESTA',
       archived: false,
     });

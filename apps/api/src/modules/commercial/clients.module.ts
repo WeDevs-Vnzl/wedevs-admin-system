@@ -4,6 +4,7 @@ import type { AuthorizationPort } from '../../shared/application/ports/authoriza
 import type { ClientMetricsWriterPort } from '../../shared/application/ports/client-metrics-writer.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
+import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
 import type { SequencePort } from '../../shared/application/ports/sequence.port';
 import {
@@ -12,6 +13,7 @@ import {
   CLIENT_METRICS_WRITER,
   CLOCK,
   ID_GENERATOR,
+  ROW_LOCKS,
   SEARCH_INDEX,
   SEQUENCE,
   UNIT_OF_WORK,
@@ -31,6 +33,15 @@ import {
 import { TagAssignments } from '../settings/application/tag-assignments';
 import type { TaggableTargetRegistry } from '../settings/application/taggable-target.registry';
 import { TagsModule } from '../settings/tags.module';
+import {
+  CLIENT_SEARCH_DEPENDENTS,
+  type ClientSearchDependentsPort,
+} from './application/ports/client-search-dependents.port';
+import {
+  PROJECT_REPOSITORY,
+  type ProjectRepository,
+} from './application/ports/project.repository.port';
+import { ProjectSync } from './application/use-cases/project-sync';
 import {
   CLIENT_FINANCE_DEPENDENTS,
   type ClientFinanceDependentsPort,
@@ -64,6 +75,7 @@ import { ContactRestoreHandler } from './infrastructure/contact-restore.handler'
 import { ContactTaggableResolver } from './infrastructure/contact-taggable.resolver';
 import { PrismaClientRepository } from './infrastructure/prisma-client.repository';
 import { PrismaContactRepository } from './infrastructure/prisma-contact.repository';
+import { PrismaProjectRepository } from './infrastructure/prisma-project.repository';
 import { ClientsController } from './interface/http/clients.controller';
 import { ContactsController } from './interface/http/contacts.controller';
 
@@ -80,6 +92,19 @@ import { ContactsController } from './interface/http/contacts.controller';
   providers: [
     { provide: CLIENT_REPOSITORY, useClass: PrismaClientRepository },
     { provide: CONTACT_REPOSITORY, useClass: PrismaContactRepository },
+    // The rename rewrites the client's projects' entries (DT-166); the repository is stateless over the
+    // ambient transaction, so this instance serves the same rows `ProjectsModule`'s does.
+    { provide: PROJECT_REPOSITORY, useClass: PrismaProjectRepository },
+    {
+      provide: ProjectSync,
+      useFactory: (
+        projects: ProjectRepository,
+        searchIndex: SearchIndexPort,
+        metrics: ClientMetricsWriterPort,
+        activityLog: ActivityLogPort,
+      ) => new ProjectSync(projects, searchIndex, metrics, activityLog),
+      inject: [PROJECT_REPOSITORY, SEARCH_INDEX, CLIENT_METRICS_WRITER, ACTIVITY_LOG],
+    },
     {
       provide: ClientTaggableResolver,
       useFactory: (clients: ClientRepository) => new ClientTaggableResolver(clients),
@@ -168,6 +193,10 @@ import { ContactsController } from './interface/http/contacts.controller';
         activityLog: ActivityLogPort,
         searchIndex: SearchIndexPort,
         clock: ClockPort,
+        rowLocks: RowLocksPort,
+        projects: ProjectRepository,
+        sync: ProjectSync,
+        dependents: ClientSearchDependentsPort,
       ) =>
         new UpdateClient(
           authorization,
@@ -178,6 +207,10 @@ import { ContactsController } from './interface/http/contacts.controller';
           activityLog,
           searchIndex,
           clock,
+          rowLocks,
+          projects,
+          sync,
+          dependents,
         ),
       inject: [
         AUTHORIZATION,
@@ -188,6 +221,10 @@ import { ContactsController } from './interface/http/contacts.controller';
         ACTIVITY_LOG,
         SEARCH_INDEX,
         CLOCK,
+        ROW_LOCKS,
+        PROJECT_REPOSITORY,
+        ProjectSync,
+        CLIENT_SEARCH_DEPENDENTS,
       ],
     },
     {
