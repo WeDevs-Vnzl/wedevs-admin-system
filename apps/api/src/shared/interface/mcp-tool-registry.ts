@@ -16,8 +16,7 @@ export interface McpToolDefinition {
   readonly input: ZodType;
   /** The HTTP route's grant, or `'authenticated'` for an `@Authenticated()` route whose use case decides by data. */
   readonly grant:
-    | { readonly resource: PermissionResource; readonly action: PermissionAction }
-    | 'authenticated';
+    { readonly resource: PermissionResource; readonly action: PermissionAction } | 'authenticated';
   /** Calls the same use case as the HTTP route, as the token's user, and returns its output DTO. */
   readonly handler: (actor: CurrentUser, input: unknown) => Promise<unknown>;
 }
