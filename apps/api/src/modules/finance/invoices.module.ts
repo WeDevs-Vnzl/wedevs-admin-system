@@ -4,7 +4,9 @@ import type { AuthorizationPort } from '../../shared/application/ports/authoriza
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
 import type { SequencePort } from '../../shared/application/ports/sequence.port';
 import {
   ACTIVITY_LOG,
@@ -17,6 +19,7 @@ import {
   UNIT_OF_WORK,
 } from '../../shared/application/ports/tokens';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { NoteLinkTargetRegistry } from '../commercial/application/note-link-target.registry';
 import { FinanceLookups } from '../commercial/application/finance-lookups';
 import { FinanceLookupsModule } from '../commercial/finance-lookups.module';
@@ -79,6 +82,8 @@ import {
   InvoiceRestoreHandler,
   InvoiceTaggableResolver,
 } from './infrastructure/invoice-registry.resolvers';
+import { InvoiceExportSource } from './infrastructure/finance-export-sources';
+import { InvoiceReindexSource } from './infrastructure/finance-reindex-sources';
 import { PrismaInvoiceRepository } from './infrastructure/prisma-invoice.repository';
 import { SettingsCurrencyCatalogAdapter } from './infrastructure/settings-currency-catalog.adapter';
 import { InvoicesController } from './interface/http/invoices.controller';
@@ -248,10 +253,16 @@ export class InvoicesModule implements OnModuleInit {
     @Inject(NoteLinkTargetRegistry) private readonly noteTargets: NoteLinkTargetRegistry,
     @Inject(RESTORE_HANDLER_REGISTRY) private readonly restoreHandlers: RestoreHandlerRegistry,
     @Inject(INVOICE_REPOSITORY) private readonly invoices: InvoiceRepository,
+    @Inject(SearchReindexRegistry) private readonly reindex: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exports: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(ListInvoices) private readonly list: ListInvoices,
     @Inject(RestoreInvoice) private readonly restoreInvoice: RestoreInvoice,
   ) {}
 
   onModuleInit(): void {
+    this.reindex.register(new InvoiceReindexSource(this.host, this.invoices));
+    this.exports.register(new InvoiceExportSource(this.list));
     this.fileAccess.register(new InvoiceFileAccessResolver(this.invoices));
     this.taggables.register(new InvoiceTaggableResolver(this.invoices));
     this.noteTargets.register(new InvoiceNoteTargetResolver(this.invoices));

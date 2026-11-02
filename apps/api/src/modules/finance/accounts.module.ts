@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Inject, Module, type OnModuleInit } from '@nestjs/common';
 import type { ActivityLogPort } from '../../shared/application/ports/activity-log.port';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import {
   ACTIVITY_LOG,
   AUTHORIZATION,
@@ -44,6 +46,7 @@ import { ListAccounts } from './application/use-cases/accounts/list-accounts.use
 import { ReconcileAccount } from './application/use-cases/accounts/reconcile-account.use-case';
 import { UpdateAccount } from './application/use-cases/accounts/update-account.use-case';
 import { AccountPartnersAdapter } from './infrastructure/account-partners.adapter';
+import { AccountReindexSource } from './infrastructure/finance-reindex-sources';
 import { PrismaAccountRepository } from './infrastructure/prisma-account.repository';
 import { PrismaFinanceSources } from './infrastructure/prisma-finance-sources';
 import { SettingsCurrencyCatalogAdapter } from './infrastructure/settings-currency-catalog.adapter';
@@ -265,4 +268,13 @@ import { ReadModelsModule } from './read-models.module';
   ],
   exports: [ListAccounts],
 })
-export class AccountsModule {}
+export class AccountsModule implements OnModuleInit {
+  constructor(
+    @Inject(SearchReindexRegistry) private readonly reindex: SearchReindexRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+  ) {}
+
+  onModuleInit(): void {
+    this.reindex.register(new AccountReindexSource(this.host));
+  }
+}
