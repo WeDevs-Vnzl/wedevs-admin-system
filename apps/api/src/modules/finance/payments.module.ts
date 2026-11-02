@@ -4,7 +4,9 @@ import type { AuthorizationPort } from '../../shared/application/ports/authoriza
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import type { IdGeneratorPort } from '../../shared/application/ports/id-generator.port';
 import type { RowLocksPort } from '../../shared/application/ports/row-locks.port';
+import { ExportSourceRegistry } from '../../shared/application/ports/export-source.port';
 import type { SearchIndexPort } from '../../shared/application/ports/search-index.port';
+import { SearchReindexRegistry } from '../../shared/application/ports/search-reindex.port';
 import type { SequencePort } from '../../shared/application/ports/sequence.port';
 import {
   ACTIVITY_LOG,
@@ -17,6 +19,7 @@ import {
   UNIT_OF_WORK,
 } from '../../shared/application/ports/tokens';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
+import { TransactionHost } from '../../shared/infrastructure/prisma/transaction-host';
 import { NoteLinkTargetRegistry } from '../commercial/application/note-link-target.registry';
 import { FinanceLookupsModule } from '../commercial/finance-lookups.module';
 import { NotesModule } from '../commercial/notes.module';
@@ -68,6 +71,8 @@ import {
   PaymentReceiptAccessResolver,
   PaymentTaggableResolver,
 } from './infrastructure/payment-registry.resolvers';
+import { PaymentExportSource } from './infrastructure/finance-export-sources';
+import { PaymentReindexSource } from './infrastructure/finance-reindex-sources';
 import { PrismaPaymentRepository } from './infrastructure/prisma-payment.repository';
 import { PaymentsController } from './interface/http/payments.controller';
 import { InvoicesModule } from './invoices.module';
@@ -196,9 +201,15 @@ export class PaymentsModule implements OnModuleInit {
     @Inject(TAGGABLE_TARGET_REGISTRY) private readonly taggables: TaggableTargetRegistry,
     @Inject(NoteLinkTargetRegistry) private readonly noteTargets: NoteLinkTargetRegistry,
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
+    @Inject(SearchReindexRegistry) private readonly reindex: SearchReindexRegistry,
+    @Inject(ExportSourceRegistry) private readonly exports: ExportSourceRegistry,
+    @Inject(TransactionHost) private readonly host: TransactionHost,
+    @Inject(ListPayments) private readonly list: ListPayments,
   ) {}
 
   onModuleInit(): void {
+    this.reindex.register(new PaymentReindexSource(this.host, this.payments));
+    this.exports.register(new PaymentExportSource(this.list));
     this.fileAccess.register(new PaymentReceiptAccessResolver(this.payments));
     this.taggables.register(new PaymentTaggableResolver(this.payments));
     this.noteTargets.register(new PaymentNoteTargetResolver(this.payments));

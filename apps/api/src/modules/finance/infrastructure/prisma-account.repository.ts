@@ -93,7 +93,7 @@ export class PrismaAccountRepository implements AccountRepository {
     if (active !== undefined) conditions.push(Prisma.sql`"active" = ${active}`);
     const page = await listPage(this.db, {
       table: 'Account',
-      searchColumns: ['name', 'institution', 'currency', 'holderName'],
+      searchEntryType: 'ACCOUNT',
       sortMap: {
         name: 'name',
         type: 'type',
@@ -336,7 +336,7 @@ function toLedgerRow(row: RawLedgerRow, accountId: string): LedgerRow {
   };
 }
 
-function toRecord(row: {
+export function toRecord(row: {
   id: string;
   name: string;
   type: AccountRecord['type'];

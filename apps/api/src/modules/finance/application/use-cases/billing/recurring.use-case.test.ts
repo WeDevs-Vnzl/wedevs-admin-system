@@ -73,8 +73,8 @@ describe('recurring charges (HU-10)', () => {
     at('2026-10-29T15:00:00.000Z');
     const first = await world.runGeneration.execute(SYSTEM_ACTOR);
     const second = await world.runGeneration.execute(SYSTEM_ACTOR);
-    expect(first).toEqual({ created: 1, periodStarts: ['2026-11-05'] });
-    expect(second).toEqual({ created: 0, periodStarts: [] });
+    expect(first).toEqual({ created: 1, periodStarts: ['2026-11-05'], skippedIds: [] });
+    expect(second).toEqual({ created: 0, periodStarts: [], skippedIds: [] });
     expect(generated()).toHaveLength(1);
     expect((await world.repository.findCharge(chargeId))?.lastGeneratedPeriodStart).toBe(
       '2026-11-05',
@@ -190,6 +190,7 @@ describe('recurring charges (HU-10)', () => {
     expect(await world.runGeneration.execute(SYSTEM_ACTOR)).toEqual({
       created: 0,
       periodStarts: [],
+      skippedIds: [],
     });
     expect(generated()).toHaveLength(0);
   });

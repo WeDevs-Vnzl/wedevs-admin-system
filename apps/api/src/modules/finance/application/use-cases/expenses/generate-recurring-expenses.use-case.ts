@@ -7,7 +7,7 @@ import type { SearchIndexPort } from '../../../../../shared/application/ports/se
 import type { SequencePort } from '../../../../../shared/application/ports/sequence.port';
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import type { DateOnly } from '../../../../../shared/domain/business-date';
-import { ForbiddenError } from '../../../../../shared/domain/domain-error';
+import { ConflictError, ForbiddenError } from '../../../../../shared/domain/domain-error';
 import { roundMoney, toUsd } from '../../../../../shared/domain/money';
 import type { ExchangeRatePort } from '../../ports/exchange-rate.port';
 import type { ExpenseRepository, ExpenseRecord } from '../../ports/expense.repository.port';
@@ -24,6 +24,8 @@ import {
 export interface RecurringExpenseGenerationResult {
   readonly created: number;
   readonly periodStarts: DateOnly[];
+  /** Schedules a `CONFLICT` left for the next run (A6, DT-129); the rest was processed. */
+  readonly skippedIds: string[];
 }
 
 /** The actor of the scheduled step (`SYSTEM_JOB`); `execute` refuses any other actor. */
@@ -35,7 +37,8 @@ export const GENERATION_ACTOR: Actor = { actorType: 'SYSTEM', userId: null };
  * (CA1) and never a voided one again. A paused or finished schedule generates nothing. A non-USD schedule
  * without a rate on the day waits for one. Each schedule runs in its own Serializable unit of work under its
  * `RecurringExpense` lock, so two concurrent runs create one expense per period; the unique
- * `(recurringExpenseId, periodStart)` is the backstop. Pending expenses feed no balance, fact or metric.
+ * `(recurringExpenseId, periodStart)` is the backstop. A schedule that ends in a `CONFLICT` is skipped and listed
+ * in `skippedIds` for the next run, so a busy row does not abort the step. Pending expenses feed no balance, fact or metric.
  */
 export class GenerateRecurringExpenses {
   constructor(
@@ -54,11 +57,18 @@ export class GenerateRecurringExpenses {
   async execute(actor: Actor): Promise<RecurringExpenseGenerationResult> {
     if (actor.actorType !== 'SYSTEM') throw new ForbiddenError();
     const periodStarts: DateOnly[] = [];
+    const skippedIds: string[] = [];
     const scheduleIds = await this.recurring.activeIds();
     for (const id of scheduleIds) {
-      periodStarts.push(...(await this.generateFor(actor, id)));
+      try {
+        periodStarts.push(...(await this.generateFor(actor, id)));
+      } catch (error) {
+        // Only a conflict: a busy schedule must not abort the rest of the step, the next run picks it up.
+        if (!(error instanceof ConflictError)) throw error;
+        skippedIds.push(id);
+      }
     }
-    return { created: periodStarts.length, periodStarts };
+    return { created: periodStarts.length, periodStarts, skippedIds };
   }
 
   private generateFor(actor: Actor, id: string): Promise<DateOnly[]> {

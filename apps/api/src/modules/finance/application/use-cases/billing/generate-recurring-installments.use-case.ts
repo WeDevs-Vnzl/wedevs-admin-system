@@ -1,11 +1,20 @@
 import type { Actor } from '../../../../../shared/application/actor';
 import type { ClockPort } from '../../../../../shared/application/ports/clock.port';
 import { todayInCaracas, type DateOnly } from '../../../../../shared/domain/business-date';
-import { ForbiddenError, NotFoundError } from '../../../../../shared/domain/domain-error';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from '../../../../../shared/domain/domain-error';
 import type { BillingRepository } from '../../ports/billing.repository.port';
 import type { BillingTransaction } from './billing-transaction';
 import type { GenerateMissingPeriodsResult } from './generate-missing-periods.use-case';
 import type { RecurringGenerator } from './recurring-generator';
+
+export interface GenerateRecurringInstallmentsResult extends GenerateMissingPeriodsResult {
+  /** Charges a `CONFLICT` left for the next run (a concurrent write, a stale lock plan); the rest was processed. */
+  readonly skippedIds: readonly string[];
+}
 
 /**
  * Step of `daily-maintenance` (PRD §12, HU-10): generates every due period of every active recurring charge
@@ -15,7 +24,8 @@ import type { RecurringGenerator } from './recurring-generator';
  *
  * Each charge has its own unit of work that locks the project, its clients and the charge row first, so two
  * concurrent runs queue on the charge, the second one finds the periods and creates none. A charge whose
- * project was archived meanwhile is skipped.
+ * project was archived meanwhile is skipped. A charge that ends in a `CONFLICT` (A6, DT-129) is skipped too and
+ * listed in `skippedIds` for the next run; any other error still aborts the step.
  */
 export class GenerateRecurringInstallments {
   constructor(
@@ -25,14 +35,20 @@ export class GenerateRecurringInstallments {
     private readonly clock: ClockPort,
   ) {}
 
-  async execute(actor: Actor): Promise<GenerateMissingPeriodsResult> {
+  async execute(actor: Actor): Promise<GenerateRecurringInstallmentsResult> {
     if (actor.actorType !== 'SYSTEM') throw new ForbiddenError();
     const periodStarts: DateOnly[] = [];
+    const skippedIds: string[] = [];
     for (const id of await this.repository.activeChargeIds()) {
-      const created = await this.generateFor(actor, id);
-      periodStarts.push(...created);
+      try {
+        periodStarts.push(...(await this.generateFor(actor, id)));
+      } catch (error) {
+        // Only a conflict: a busy charge must not abort the rest of the step, the next run picks it up.
+        if (!(error instanceof ConflictError)) throw error;
+        skippedIds.push(id);
+      }
     }
-    return { created: periodStarts.length, periodStarts };
+    return { created: periodStarts.length, periodStarts, skippedIds };
   }
 
   private async generateFor(actor: Actor, chargeId: string): Promise<readonly DateOnly[]> {

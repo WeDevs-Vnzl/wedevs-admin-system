@@ -353,7 +353,7 @@ describe('voidExpense', () => {
 
     const result = await world.generate.execute(GENERATION_ACTOR);
 
-    expect(result).toEqual({ created: 0, periodStarts: [] });
+    expect(result).toEqual({ created: 0, periodStarts: [], skippedIds: [] });
   });
 });
 
