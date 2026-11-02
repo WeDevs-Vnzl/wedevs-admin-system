@@ -2,14 +2,24 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountsModule } from '../../src/modules/finance/accounts.module';
+import { FinanceDependentsModule } from '../../src/modules/finance/finance-dependents.module';
+import {
+  PaymentSearchDependentsModule,
+  PaymentMethodSearchDependents,
+} from '../../src/modules/finance/payment-search-dependents.module';
 import { ExpensesModule } from '../../src/modules/finance/expenses.module';
 import { InvoicesModule } from '../../src/modules/finance/invoices.module';
 import { PaymentsModule } from '../../src/modules/finance/payments.module';
+import {
+  CLIENT_SEARCH_DEPENDENTS,
+  type ClientSearchDependentsPort,
+} from '../../src/modules/commercial/application/ports/client-search-dependents.port';
 import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
 import type { CurrentUser } from '../../src/shared/application/current-user';
 import { ExportSourceRegistry } from '../../src/shared/application/ports/export-source.port';
 import { SearchReindexRegistry } from '../../src/shared/application/ports/search-reindex.port';
-import { AUTHORIZATION } from '../../src/shared/application/ports/tokens';
+import { AUTHORIZATION, UNIT_OF_WORK } from '../../src/shared/application/ports/tokens';
+import type { UnitOfWorkPort } from '../../src/shared/application/ports/unit-of-work.port';
 import { ForbiddenError } from '../../src/shared/domain/domain-error';
 import type { EntityType } from '../../src/shared/domain/enums';
 import { createTestPrisma, truncateBusinessTables } from '../support/db';
@@ -40,7 +50,14 @@ describe('finance list search converges on SearchEntry (e2e)', () => {
   beforeAll(async () => {
     authenticator = new FakeAuthenticator();
     app = await createTestApp({
-      modules: [AccountsModule, InvoicesModule, PaymentsModule, ExpensesModule],
+      modules: [
+        AccountsModule,
+        InvoicesModule,
+        PaymentsModule,
+        ExpensesModule,
+        FinanceDependentsModule,
+        PaymentSearchDependentsModule,
+      ],
       authenticator,
       overrides: [{ token: AUTHORIZATION, useValue: new MatrixAuthorization() }],
     });
@@ -281,6 +298,41 @@ describe('finance list search converges on SearchEntry (e2e)', () => {
             ?.read(member, { ...query, filters: {} }, { page: 1, pageSize: 25 }),
         ).rejects.toBeInstanceOf(ForbiddenError);
       }
+    });
+  });
+  describe('rename dependants relabel the entries in the caller unit of work', () => {
+    it('a client relabel moves the invoice and payment subtitles, so q follows the new label', async () => {
+      await post('/invoices', invoiceBody('E2E-3')).expect(201);
+      await post('/payments', paymentBody()).expect(201);
+      const dependents = app.get<ClientSearchDependentsPort>(CLIENT_SEARCH_DEPENDENTS, {
+        strict: false,
+      });
+
+      const changed = await app
+        .get<UnitOfWorkPort>(UNIT_OF_WORK)
+        .run(() => dependents.relabelClient('cli_e2e', 'Nuevo Nombre SA'), {
+          isolation: 'Serializable',
+        });
+
+      expect(changed).toBe(2);
+      expect((await get('/invoices?q=nuevo').expect(200)).body.total).toBe(1);
+      expect((await get('/payments?q=nuevo').expect(200)).body.total).toBe(1);
+      expect((await get('/invoices?q=kairos').expect(200)).body.total).toBe(0);
+    });
+
+    it('a method relabel moves the payment body, so q follows the new name', async () => {
+      await post('/payments', paymentBody()).expect(201);
+      const dependents = app.get(PaymentMethodSearchDependents);
+
+      const changed = await app
+        .get<UnitOfWorkPort>(UNIT_OF_WORK)
+        .run(() => dependents.relabelMethod(zelle, 'Transferencia Zelle'), {
+          isolation: 'Serializable',
+        });
+
+      expect(changed).toBe(1);
+      expect((await get('/payments?q=transferencia').expect(200)).body.total).toBe(1);
+      expect((await get('/payments?q=OP-777').expect(200)).body.total).toBe(1);
     });
   });
 });
