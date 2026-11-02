@@ -52,7 +52,7 @@ export class InMemoryApiTokenRepository implements ApiTokenRepository {
 
   async touchLastUsed(id: string, now: Date, staleBefore: Date): Promise<void> {
     const row = this.rows.find((r) => r.id === id);
-    if (!row || (row.lastUsedAt !== null && row.lastUsedAt.getTime() >= staleBefore.getTime())) {
+    if (!row || (row.lastUsedAt !== null && row.lastUsedAt.getTime() > staleBefore.getTime())) {
       return;
     }
     this.touchWrites += 1;

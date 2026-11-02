@@ -1,4 +1,5 @@
 import type { ApiTokenOwner } from '../../../src/modules/identity/application/ports/api-token.repository.port';
+import { AuthenticateApiToken } from '../../../src/modules/identity/application/use-cases/api-tokens/authenticate-api-token.use-case';
 import { IssueApiToken } from '../../../src/modules/identity/application/use-cases/api-tokens/issue-api-token.use-case';
 import { ListApiTokens } from '../../../src/modules/identity/application/use-cases/api-tokens/list-api-tokens.use-case';
 import { RevokeApiToken } from '../../../src/modules/identity/application/use-cases/api-tokens/revoke-api-token.use-case';
@@ -26,6 +27,7 @@ export function createTokenWorld() {
     issue: new IssueApiToken(uow, tokens, secrets, activity, clock, ids),
     list: new ListApiTokens(tokens),
     revoke: new RevokeApiToken(uow, tokens, activity, clock),
+    authenticate: new AuthenticateApiToken(tokens, secrets, clock),
   };
 }
 export type TokenWorld = ReturnType<typeof createTokenWorld>;

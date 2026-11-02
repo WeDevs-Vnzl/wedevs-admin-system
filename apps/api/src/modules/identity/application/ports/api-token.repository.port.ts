@@ -41,6 +41,6 @@ export interface ApiTokenRepository {
   findOwned(id: string, userId: string): Promise<ApiTokenRecord | null>;
   revoke(id: string, now: Date): Promise<void>;
   findByHash(tokenHash: string): Promise<ApiTokenWithOwner | null>;
-  /** Sets `lastUsedAt = now` only when it is null or older than `staleBefore` (one write per minute at most). */
+  /** Sets `lastUsedAt = now` only when it is null or not newer than `staleBefore` (one write per minute at most). */
   touchLastUsed(id: string, now: Date, staleBefore: Date): Promise<void>;
 }
