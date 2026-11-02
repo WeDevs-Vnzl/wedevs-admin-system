@@ -72,8 +72,9 @@ const reportSchemas = {
       z.object({
         project: entityRefResponseSchema,
         collected: money,
-        margin: money,
-        /** `null` while nothing is collected. */
+        /** `null` under a client filter: expense facts carry no client. */
+        margin: money.nullable(),
+        /** `null` while nothing is collected, and under a client filter. */
         marginPercent: money.nullable(),
       }),
     ),
@@ -94,7 +95,8 @@ const reportSchemas = {
   NetResultMonthlyReport: z.object({
     ...base,
     reportId: z.literal('NET_RESULT_MONTHLY'),
-    points: z.array(seriesPoint),
+    /** `value` is `null` under a client filter: expense facts carry no client. */
+    points: z.array(z.object({ period: month, value: money.nullable() })),
   }),
   AccountFlowReport: z.object({
     ...base,

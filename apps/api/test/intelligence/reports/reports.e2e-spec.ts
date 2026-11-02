@@ -462,9 +462,9 @@ describe('reports and KPIs (e2e)', () => {
       expect((byProject.rows as Body[]).map((r) => r.client.id)).toEqual(['cli_a']);
       const byTag = await report('revenue-by-client', '?tagId=tag_p');
       expect((byTag.rows as Body[]).map((r) => r.client.id)).toEqual(['cli_b']);
-      // Expenses carry no client: a client filter leaves them out of the net result.
+      // Expenses carry no client: a net result under a client filter has no answer.
       const net = await report('net-result-monthly', '?clientId=cli_a');
-      expect(net.points.slice(-1)).toEqual([{ period: '2026-10', value: '250.00' }]);
+      expect(net.points.slice(-1)).toEqual([{ period: '2026-10', value: null }]);
     });
 
     it('an empty range answers zeros, never an error', async () => {

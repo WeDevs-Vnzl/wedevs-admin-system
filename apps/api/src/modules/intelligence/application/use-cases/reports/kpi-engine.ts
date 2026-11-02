@@ -93,6 +93,7 @@ export function kpiValue(id: KpiId, w: KpiWindowData, data: KpiData): KpiValue {
       };
     }
     case 'PROJECT_MARGIN': {
+      if (data.clientScoped) return { value: null, breakdown: [], labelKind: 'PROJECT' };
       const collected = w.projectFlows.filter((row) => compareMoney(row.collectedUsd, ZERO) !== 0);
       const breakdown = collected
         .slice()
@@ -117,6 +118,7 @@ export function kpiValue(id: KpiId, w: KpiWindowData, data: KpiData): KpiValue {
       };
     }
     case 'OPERATING_MARGIN':
+      if (data.clientScoped) return { value: null };
       return { value: computeOperatingMargin({ collectedUsd, expensesUsd }) };
     case 'FIXED_MONTHLY_EXPENSE':
       return {
@@ -129,6 +131,7 @@ export function kpiValue(id: KpiId, w: KpiWindowData, data: KpiData): KpiValue {
         ),
       };
     case 'RUNWAY':
+      if (data.clientScoped) return { value: null };
       return {
         value: computeRunway({
           accountsBalanceUsd: data.accountsBalanceUsd,

@@ -52,6 +52,8 @@ export interface KpiWindowData {
  * just before, and the sparkline months (oldest first), plus the inputs that do not depend on a window.
  */
 export interface KpiData {
+  /** Expense facts carry no client, so figures built on expenses have no answer under a client filter. */
+  readonly clientScoped: boolean;
   readonly range: KpiWindowData;
   readonly previous: KpiWindowData;
   readonly months: readonly KpiWindowData[];
@@ -189,6 +191,7 @@ export async function loadKpiData(
   });
 
   return {
+    clientScoped: scope.clientId !== undefined,
     range: windowData(range, 0, flowsOf(current), lastThree(monthly, last)),
     previous: windowData(previous, 1, flowsOf(before), lastThree(previousMonthly, previousLast)),
     months: months.map((window, i) => {

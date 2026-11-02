@@ -89,6 +89,8 @@ export async function buildReport(
     range: { dateFrom: range.from, dateTo: range.to },
   };
   const periods = monthsOf(range);
+  // Expense facts carry no client, so figures built on expenses have no answer under a client filter.
+  const clientScoped = scope.clientId !== undefined;
 
   switch (id) {
     case 'COLLECTED_BY_MONTH': {
@@ -143,16 +145,18 @@ export async function buildReport(
       const rows = groups.map((group) => ({
         project: refOf(group.key),
         collected: group.amounts.COLLECTED,
-        margin: subMoney(group.amounts.COLLECTED, group.amounts.EXPENSE_PAID),
-        marginPercent: computeProjectMargin({
-          collectedUsd: group.amounts.COLLECTED,
-          allocatedExpensesUsd: group.amounts.EXPENSE_PAID,
-        }),
+        margin: clientScoped ? null : subMoney(group.amounts.COLLECTED, group.amounts.EXPENSE_PAID),
+        marginPercent: clientScoped
+          ? null
+          : computeProjectMargin({
+              collectedUsd: group.amounts.COLLECTED,
+              allocatedExpensesUsd: group.amounts.EXPENSE_PAID,
+            }),
       }));
       rows.sort(
         (a, b) =>
           largestFirst(a.collected, b.collected) ||
-          largestFirst(a.margin, b.margin) ||
+          largestFirst(a.margin ?? '0.00', b.margin ?? '0.00') ||
           byteOrder(a.project.id, b.project.id),
       );
       return { ...base, reportId: id, rows };
@@ -214,7 +218,7 @@ export async function buildReport(
         reportId: id,
         points: months.map((m) => ({
           period: m.month,
-          value: subMoney(m.amounts.COLLECTED, m.amounts.EXPENSE_PAID),
+          value: clientScoped ? null : subMoney(m.amounts.COLLECTED, m.amounts.EXPENSE_PAID),
         })),
       };
     }

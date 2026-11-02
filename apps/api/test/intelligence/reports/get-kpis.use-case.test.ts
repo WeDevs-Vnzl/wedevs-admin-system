@@ -346,6 +346,18 @@ describe('GetKpis: the 18 cards', () => {
     expect(running.kpis.find((k) => k.id === 'MRR')?.value).toBe('150.00');
   });
 
+  it('under a client filter the expense-based margins are null: expenses carry no client', async () => {
+    const scoped = await world.getKpis.execute(owner, { preset: 'THIS_MONTH', clientId: 'cli_a' });
+    const card = (id: string) => scoped.kpis.find((k) => k.id === id);
+    for (const id of ['OPERATING_MARGIN', 'PROJECT_MARGIN']) {
+      expect(card(id)).toMatchObject({ value: null, previousValue: null, changePercent: null });
+      expect(card(id)?.sparkline).toEqual([]);
+      expect(card(id)?.breakdown ?? []).toEqual([]);
+    }
+    expect(card('RUNWAY')?.value).toBeNull();
+    expect(card('MRR')?.value).not.toBeNull();
+  });
+
   it('HU-31 CA2: another range changes the value, the comparison and the sparkline end', async () => {
     const september = await world.getKpis.execute(owner, { preset: 'PREVIOUS_MONTH' });
     const card = september.kpis.find((k) => k.id === 'NEW_CLIENTS');

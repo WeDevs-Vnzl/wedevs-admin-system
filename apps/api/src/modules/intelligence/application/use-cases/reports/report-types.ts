@@ -47,6 +47,12 @@ interface ReportBase {
 }
 
 /** The ten reports of PRD §8.13.1, discriminated by `reportId`; every amount is a USD decimal string. */
+/** `value` is `null` under a client filter: expense facts carry no client. */
+export interface NetResultPoint {
+  period: MonthKey;
+  value: MoneyString | null;
+}
+
 export type ReportOutput =
   | (ReportBase & { reportId: 'COLLECTED_BY_MONTH'; points: SeriesPointOutput[] })
   | (ReportBase & {
@@ -62,7 +68,7 @@ export type ReportOutput =
       rows: {
         project: EntityRef;
         collected: MoneyString;
-        margin: MoneyString;
+        margin: MoneyString | null;
         marginPercent: MoneyString | null;
       }[];
     })
@@ -75,7 +81,7 @@ export type ReportOutput =
       reportId: 'EXPENSES_BY_MONTH_CATEGORY';
       chart: { periods: MonthKey[]; series: ChartSeriesOutput[] };
     })
-  | (ReportBase & { reportId: 'NET_RESULT_MONTHLY'; points: SeriesPointOutput[] })
+  | (ReportBase & { reportId: 'NET_RESULT_MONTHLY'; points: NetResultPoint[] })
   | (ReportBase & {
       reportId: 'ACCOUNT_FLOW';
       rows: { account: EntityRef; period: MonthKey; inflow: MoneyString; outflow: MoneyString }[];

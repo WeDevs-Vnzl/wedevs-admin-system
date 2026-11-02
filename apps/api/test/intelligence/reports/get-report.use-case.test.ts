@@ -339,6 +339,38 @@ describe('GetReport: the ten reports', () => {
     ]);
   });
 
+  it('under a client filter net result and project margin are null: expenses carry no client', async () => {
+    const { getReport, facts, inputs } = buildReportsWorld();
+    inputs.labelRows.CLIENT.push({ id: 'cli_a', label: 'Kairos', code: null });
+    inputs.labelRows.PROJECT.push({ id: 'pry_a', label: 'Web', code: null });
+    facts.addFact(
+      fact({
+        kind: 'COLLECTED',
+        date: '2026-10-02',
+        amountUsd: '100.00',
+        clientId: 'cli_a',
+        projectId: 'pry_a',
+      }),
+    );
+    const net = await getReport.execute(owner, { slug: 'net-result-monthly', clientId: 'cli_a' });
+    if (net.reportId !== 'NET_RESULT_MONTHLY') throw new Error(net.reportId);
+    expect(net.points.at(-1)?.period).toBe('2026-10');
+    expect(net.points.every((point) => point.value === null)).toBe(true);
+    const byProject = await getReport.execute(owner, {
+      slug: 'revenue-by-project',
+      clientId: 'cli_a',
+    });
+    if (byProject.reportId !== 'REVENUE_BY_PROJECT') throw new Error(byProject.reportId);
+    expect(byProject.rows).toEqual([
+      {
+        project: { type: 'PROJECT', id: 'pry_a', label: 'Web' },
+        collected: '100.00',
+        margin: null,
+        marginPercent: null,
+      },
+    ]);
+  });
+
   it('account flow: labelled rows by month then account', async () => {
     const { getReport, inputs } = buildReportsWorld();
     inputs.labelRows.ACCOUNT.push(
