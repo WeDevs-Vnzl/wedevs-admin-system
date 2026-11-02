@@ -61,6 +61,11 @@ import {
 } from './application/use-cases/payments/payment-reads.use-case';
 import { PaymentSupport } from './application/use-cases/payments/payment-support';
 import { SetPaymentStatus } from './application/use-cases/payments/set-payment-status.use-case';
+import {
+  PAYMENT_LINK_SETTLEMENT,
+  type PaymentLinkSettlementPort,
+} from './application/ports/payment-link-settlement.port';
+import { PrismaPaymentLinkSettlement } from './infrastructure/prisma-payment-link-settlement.adapter';
 import { UpdatePayment } from './application/use-cases/payments/update-payment.use-case';
 import {
   PlatformPaymentReceiptFiles,
@@ -184,10 +189,22 @@ import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
         uow: UnitOfWorkPort,
         support: PaymentSupport,
         ids: IdGeneratorPort,
-      ) => new AllocatePayment(a, uow, support, ids),
-      inject: [AUTHORIZATION, UNIT_OF_WORK, PaymentSupport, ID_GENERATOR],
+        settlement: PaymentLinkSettlementPort,
+      ) => new AllocatePayment(a, uow, support, ids, settlement),
+      inject: [AUTHORIZATION, UNIT_OF_WORK, PaymentSupport, ID_GENERATOR, PAYMENT_LINK_SETTLEMENT],
     },
-    ...[UpdatePayment, SetPaymentStatus, DeallocatePayment].map((useCase) => ({
+    { provide: PAYMENT_LINK_SETTLEMENT, useClass: PrismaPaymentLinkSettlement },
+    {
+      provide: SetPaymentStatus,
+      useFactory: (
+        a: AuthorizationPort,
+        uow: UnitOfWorkPort,
+        support: PaymentSupport,
+        settlement: PaymentLinkSettlementPort,
+      ) => new SetPaymentStatus(a, uow, support, settlement),
+      inject: [AUTHORIZATION, UNIT_OF_WORK, PaymentSupport, PAYMENT_LINK_SETTLEMENT],
+    },
+    ...[UpdatePayment, DeallocatePayment].map((useCase) => ({
       provide: useCase,
       useFactory: (a: AuthorizationPort, uow: UnitOfWorkPort, support: PaymentSupport) =>
         new useCase(a, uow, support),
