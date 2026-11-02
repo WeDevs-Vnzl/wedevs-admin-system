@@ -2,12 +2,16 @@ import { MatrixAuthorization } from '../../../src/modules/identity/infrastructur
 import type { ExchangeRatePort } from '../../../src/modules/finance/application/ports/exchange-rate.port';
 import type { SelectedRate } from '../../../src/modules/finance/domain/rates';
 import { GetClientSummary } from '../../../src/modules/intelligence/application/use-cases/dashboard/get-client-summary.use-case';
-import { GetDashboard } from '../../../src/modules/intelligence/application/use-cases/dashboard/get-dashboard.use-case';
+import {
+  GetDashboard,
+  type RecurringSchedulesSource,
+} from '../../../src/modules/intelligence/application/use-cases/dashboard/get-dashboard.use-case';
 import { GetProjectSummary } from '../../../src/modules/intelligence/application/use-cases/dashboard/get-project-summary.use-case';
 import { GetShell } from '../../../src/modules/intelligence/application/use-cases/dashboard/get-shell.use-case';
 import { ListAlerts } from '../../../src/modules/intelligence/application/use-cases/alerts/list-alerts.use-case';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { DateOnly } from '../../../src/shared/domain/business-date';
+import type { ListQuery } from '../../../src/shared/domain/list-query';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import { FixedClock } from '../../support/fakes/fixed-clock';
 import { InMemoryEntityMetricsRead } from '../../support/fakes/in-memory-entity-metrics-read';
@@ -49,6 +53,25 @@ export class FakeRates implements ExchangeRatePort {
   }
 }
 
+type ScheduleRow = Awaited<ReturnType<RecurringSchedulesSource['execute']>>['items'][number];
+
+/** The owner's `ListRecurringExpenses`, paged over seeded rows. */
+class FakeRecurringSchedules implements RecurringSchedulesSource {
+  rows: ScheduleRow[] = [];
+  queries: ListQuery[] = [];
+
+  async execute(_user: CurrentUser, query: ListQuery) {
+    this.queries.push(query);
+    const start = (query.page - 1) * query.pageSize;
+    return {
+      items: this.rows.slice(start, start + query.pageSize),
+      total: this.rows.length,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
+  }
+}
+
 export function buildDashboardWorld() {
   const authorization = new MatrixAuthorization();
   const clock = new FixedClock(NOW);
@@ -56,6 +79,7 @@ export function buildDashboardWorld() {
   const metrics = new InMemoryEntityMetricsRead();
   const panels = new InMemoryDashboardPanelsRead();
   const rates = new FakeRates();
+  const recurring = new FakeRecurringSchedules();
   const sources = new InMemoryAlertSources();
   const states = new InMemoryAlertStateRepository();
   const listAlerts = new ListAlerts(authorization, sources, states, clock);
@@ -65,9 +89,10 @@ export function buildDashboardWorld() {
     metrics,
     panels,
     rates,
+    recurring,
     sources,
     states,
-    dashboard: new GetDashboard(authorization, facts, metrics, panels, rates, clock),
+    dashboard: new GetDashboard(authorization, facts, metrics, panels, rates, clock, recurring),
     shell: new GetShell(listAlerts, rates, clock),
     clientSummary: new GetClientSummary(authorization, panels, facts, clock),
     projectSummary: new GetProjectSummary(authorization, panels),

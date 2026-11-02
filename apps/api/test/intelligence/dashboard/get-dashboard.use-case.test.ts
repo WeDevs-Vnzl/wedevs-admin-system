@@ -362,6 +362,66 @@ describe('GetDashboard', () => {
     },
   );
 
+  it('the recurring panel adds active schedules due in 30 days, valued at their own snapshot', async () => {
+    world.panels.recurringExpenses = [
+      {
+        expense: ref('EXPENSE', 'e1'),
+        dueDate: '2026-01-25',
+        amount: '10.00',
+        currency: 'USD',
+        amountUsd: '10.00',
+      },
+    ];
+    const schedule = (id: string, nextDueDate: string | null, amount = '50.00', usdRate = '1') => ({
+      id,
+      name: `Schedule ${id}`,
+      nextDueDate,
+      amount,
+      currency: usdRate === '1' ? 'USD' : 'VES',
+      usdRate,
+    });
+    world.recurring.rows = [
+      schedule('r_soon', '2026-01-20'),
+      schedule('r_ves', '2026-02-14', '360.00', '36'),
+      schedule('r_past', '2026-01-14'),
+      schedule('r_late', '2026-02-15'),
+      schedule('r_none', null),
+      ...Array.from({ length: 100 }, (_, i) => schedule(`r_pad${i}`, '2027-01-01')),
+      schedule('r_page2', '2026-01-16'),
+    ];
+    const out = await world.dashboard.execute(owner, {});
+    expect(out.upcomingRecurringExpenses).toEqual([
+      {
+        expense: { type: 'RECURRING_EXPENSE', id: 'r_page2', label: 'Schedule r_page2' },
+        dueDate: '2026-01-16',
+        amount: '50.00',
+        currency: 'USD',
+        amountUsd: '50.00',
+      },
+      {
+        expense: { type: 'RECURRING_EXPENSE', id: 'r_soon', label: 'Schedule r_soon' },
+        dueDate: '2026-01-20',
+        amount: '50.00',
+        currency: 'USD',
+        amountUsd: '50.00',
+      },
+      expect.objectContaining({ expense: expect.objectContaining({ id: 'e1' }) }),
+      {
+        expense: { type: 'RECURRING_EXPENSE', id: 'r_ves', label: 'Schedule r_ves' },
+        dueDate: '2026-02-14',
+        amount: '360.00',
+        currency: 'VES',
+        amountUsd: '10.00',
+      },
+    ]);
+    expect(world.recurring.queries.every((q) => q.filters.status === 'ACTIVO')).toBe(true);
+  });
+
+  it('a Member reads no schedule for the recurring panel', async () => {
+    await world.dashboard.execute(userOf('MEMBER'), {});
+    expect(world.recurring.queries).toEqual([]);
+  });
+
   it('an Admin reads the activity log', async () => {
     world.panels.activity = [
       { id: 'a1', action: 'UPDATE', entity: null, actorName: 'Ana', createdAt: new Date(NOW) },

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ExpensesModule } from '../finance/expenses.module';
+import { ListRecurringExpenses } from '../finance/application/use-cases/expenses/recurring-expense.use-cases';
 import type { AuthorizationPort } from '../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../shared/application/ports/clock.port';
 import { AUTHORIZATION, CLOCK } from '../../shared/application/ports/tokens';
@@ -39,7 +41,7 @@ import { SummariesController } from './interface/http/summaries.controller';
  * `DASHBOARD_PANELS_READ`. Wired into `AppModule` by package 6.1.
  */
 @Module({
-  imports: [SharedInterfaceModule, FinanceReadModule, AlertsModule, RatesModule],
+  imports: [ExpensesModule, SharedInterfaceModule, FinanceReadModule, AlertsModule, RatesModule],
   controllers: [ShellController, DashboardController, SummariesController],
   providers: [
     { provide: DASHBOARD_PANELS_READ, useClass: PrismaDashboardPanelsRead },
@@ -58,7 +60,8 @@ import { SummariesController } from './interface/http/summaries.controller';
         panels: DashboardPanelsReadPort,
         rates: ExchangeRatePort,
         clock: ClockPort,
-      ) => new GetDashboard(authorization, facts, metrics, panels, rates, clock),
+        schedules: ListRecurringExpenses,
+      ) => new GetDashboard(authorization, facts, metrics, panels, rates, clock, schedules),
       inject: [
         AUTHORIZATION,
         FINANCE_FACTS_READ,
@@ -66,6 +69,7 @@ import { SummariesController } from './interface/http/summaries.controller';
         DASHBOARD_PANELS_READ,
         EXCHANGE_RATE,
         CLOCK,
+        ListRecurringExpenses,
       ],
     },
     {

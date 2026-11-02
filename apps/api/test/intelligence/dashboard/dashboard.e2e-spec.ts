@@ -282,6 +282,33 @@ describe('dashboard, shell and summaries (e2e)', () => {
       expect(cardsOf(after.body).ACCOUNTS_BALANCE).toEqual(['1091.25', null, null, null]);
     });
 
+    it('the recurring panel shows an active schedule not yet generated', async () => {
+      const category = await prisma.expenseCategory.findFirstOrThrow();
+      const schedule = await prisma.recurringExpense.create({
+        data: {
+          name: 'Hosting',
+          categoryId: category.id,
+          currency: 'USD',
+          amount: '40.00',
+          frequency: 'MENSUAL',
+          dayOfPeriod: 20,
+          startDate: new Date('2026-01-20'),
+          usdRate: '1',
+          monthlyAmountUsd: '40.00',
+        },
+      });
+      const res = await get('owner', '/dashboard').expect(200);
+      expect(res.body.upcomingRecurringExpenses).toEqual([
+        {
+          expense: { type: 'RECURRING_EXPENSE', id: schedule.id, code: null, label: 'Hosting' },
+          dueDate: '2026-01-20',
+          amount: '40.00',
+          currency: 'USD',
+          amountUsd: '40.00',
+        },
+      ]);
+    });
+
     it('lists the panels within the next 30 days with their references', async () => {
       const doc = await makeDocument(prisma);
       await prisma.document.update({

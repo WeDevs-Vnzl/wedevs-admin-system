@@ -1,3 +1,4 @@
+import type { ListQuery } from '../../../../../shared/domain/list-query';
 import type { CurrentUser } from '../../../../../shared/application/current-user';
 import type { AuthorizationPort } from '../../../../../shared/application/ports/authorization.port';
 import type { ClockPort } from '../../../../../shared/application/ports/clock.port';
@@ -122,6 +123,26 @@ function card(
  * zero with no comparison and the financial panels are empty; documents follow `read document` and the
  * activity log `read activity`. A period that starts after today answers `VALIDATION` before any read.
  */
+/** The finance `ListRecurringExpenses`: it owns the schedule rules behind `nextDueDate` (C17). */
+export interface RecurringSchedulesSource {
+  execute(
+    user: CurrentUser,
+    query: ListQuery,
+  ): Promise<{
+    items: readonly {
+      id: string;
+      name: string;
+      nextDueDate: DateOnly | null;
+      amount: MoneyString;
+      currency: string;
+      usdRate: MoneyString;
+    }[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }>;
+}
+
 export class GetDashboard {
   constructor(
     private readonly authorization: AuthorizationPort,
@@ -130,6 +151,7 @@ export class GetDashboard {
     private readonly panels: DashboardPanelsReadPort,
     private readonly rates: ExchangeRatePort,
     private readonly clock: ClockPort,
+    private readonly schedules: RecurringSchedulesSource,
   ) {}
 
   async execute(user: CurrentUser, input: GetDashboardInput): Promise<DashboardOutput> {
@@ -280,13 +302,14 @@ export class GetDashboard {
     >
   > {
     const until = addDays(today, WINDOW_DAYS);
-    const [invoices, installments, documents, recurring, activity] = await Promise.all([
+    const [invoices, installments, documents, generated, schedules, activity] = await Promise.all([
       financial ? this.panels.invoicesDue(TOP_INVOICES) : [],
       financial ? this.panels.installmentsToInvoice(until) : [],
       this.authorization.can(user, 'read', 'document')
         ? this.panels.documentsExpiring(today, until)
         : [],
       financial ? this.panels.upcomingRecurringExpenses(until) : [],
+      financial ? this.upcomingSchedules(user, today, until) : [],
       this.authorization.can(user, 'read', 'activity')
         ? this.panels.recentActivity(RECENT_EVENTS)
         : [],
@@ -301,8 +324,45 @@ export class GetDashboard {
         ...row,
         daysLeft: daysBetween(today, row.expiresAt),
       })),
-      upcomingRecurringExpenses: recurring,
+      upcomingRecurringExpenses: [...generated, ...schedules].sort(
+        (a, b) =>
+          (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0) ||
+          (a.expense.id < b.expense.id ? -1 : a.expense.id > b.expense.id ? 1 : 0),
+      ),
       recentActivity: activity,
     };
+  }
+
+  /** Active schedules whose next period falls in the window, through the owner's list (its schedule rules). */
+  private async upcomingSchedules(
+    user: CurrentUser,
+    today: DateOnly,
+    until: DateOnly,
+  ): Promise<DashboardOutput['upcomingRecurringExpenses']> {
+    const rows: DashboardOutput['upcomingRecurringExpenses'] = [];
+    for (let page = 1, seen = 0, total = 1; seen < total; page += 1) {
+      const result = await this.schedules.execute(user, {
+        page,
+        pageSize: 100,
+        sort: null,
+        archived: 'exclude',
+        filters: { status: 'ACTIVO' },
+      });
+      if (result.items.length === 0) break;
+      seen += result.items.length;
+      total = result.total;
+      for (const row of result.items) {
+        if (row.nextDueDate === null || row.nextDueDate < today || row.nextDueDate > until)
+          continue;
+        rows.push({
+          expense: { type: 'RECURRING_EXPENSE', id: row.id, label: row.name },
+          dueDate: row.nextDueDate,
+          amount: row.amount,
+          currency: row.currency,
+          amountUsd: toUsd(row.amount, row.usdRate),
+        });
+      }
+    }
+    return rows;
   }
 }
