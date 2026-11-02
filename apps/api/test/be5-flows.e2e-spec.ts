@@ -299,4 +299,22 @@ describe('BE-5 flows (full app)', () => {
     expect(await prisma.alertState.count({ where: { userId: users.OWNER.userId } })).toBe(1);
     expect(await prisma.alertState.count({ where: { userId: users.ADMIN.userId } })).toBe(0);
   });
+
+  it('exposes the export headers to the FE origin only (CORS, choice 3)', async () => {
+    const exportFrom = (origin: string) =>
+      post('/exports/CLIENT', { columns: [{ id: 'code', label: 'Código' }] })
+        .set('Origin', origin)
+        .expect(200);
+    const allowed = await exportFrom('http://localhost:3001');
+    const exposed = String(allowed.headers['access-control-expose-headers'])
+      .split(',')
+      .map((name) => name.trim().toLowerCase());
+    expect(exposed).toEqual(
+      expect.arrayContaining(['content-disposition', 'x-export-row-count', 'x-export-truncated']),
+    );
+    expect(allowed.headers['x-export-row-count']).toBe('0');
+    const foreign = await exportFrom('https://evil.example.test');
+    expect(foreign.headers['access-control-expose-headers']).toBeUndefined();
+    expect(foreign.headers['access-control-allow-origin']).toBeUndefined();
+  });
 });
