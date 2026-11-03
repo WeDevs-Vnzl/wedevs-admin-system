@@ -27,11 +27,6 @@ import { SetProjectStatus } from '../../application/use-cases/set-project-status
 import { SetProjectTechnologies } from '../../application/use-cases/set-project-technologies.use-case';
 import { UpdateProject } from '../../application/use-cases/update-project.use-case';
 import { UpsertProjectLinks } from '../../application/use-cases/upsert-project-links.use-case';
-import type {
-  ProjectDetailView,
-  ProjectLinkRecord,
-  ProjectListRowView,
-} from '../../application/use-cases/project-views';
 import {
   ArchiveProjectDto,
   ArchiveProjectsDto,
@@ -52,6 +47,9 @@ import {
   SetProjectTechnologiesDto,
   UpdateProjectDto,
   UpsertProjectLinksDto,
+  toProjectDetailResponse,
+  toProjectLinkResponse,
+  toProjectRowResponse,
 } from './dto/projects.dto';
 import { toEntityRefResponse } from './dto/contacts.dto';
 
@@ -87,7 +85,7 @@ export class ProjectsController {
     @Query() query: ListProjectsQueryDto,
   ): Promise<ProjectListResponseDto> {
     const page = await this.listProjects.execute(user, query);
-    return { ...page, items: page.items.map(toRow) };
+    return { ...page, items: page.items.map(toProjectRowResponse) };
   }
 
   @Post()
@@ -100,7 +98,7 @@ export class ProjectsController {
     @CurrentUser() user: CurrentUserModel,
     @Body() body: CreateProjectDto,
   ): Promise<ProjectDetailDto> {
-    return toDetail(await this.createProject.execute(user, body));
+    return toProjectDetailResponse(await this.createProject.execute(user, body));
   }
 
   @Post('archive')
@@ -137,7 +135,7 @@ export class ProjectsController {
     @CurrentUser() user: CurrentUserModel,
     @Param() params: ProjectIdParamsDto,
   ): Promise<ProjectDetailDto> {
-    return toDetail(await this.getProject.execute(user, params.id));
+    return toProjectDetailResponse(await this.getProject.execute(user, params.id));
   }
 
   @Patch(':id')
@@ -154,7 +152,9 @@ export class ProjectsController {
     @Param() params: ProjectIdParamsDto,
     @Body() body: UpdateProjectDto,
   ): Promise<ProjectDetailDto> {
-    return toDetail(await this.updateProject.execute(user, { ...body, id: params.id }));
+    return toProjectDetailResponse(
+      await this.updateProject.execute(user, { ...body, id: params.id }),
+    );
   }
 
   @Put(':id/clients')
@@ -168,7 +168,9 @@ export class ProjectsController {
     @Param() params: ProjectIdParamsDto,
     @Body() body: SetProjectClientsDto,
   ): Promise<ProjectDetailDto> {
-    return toDetail(await this.setProjectClients.execute(user, { id: params.id, ...body }));
+    return toProjectDetailResponse(
+      await this.setProjectClients.execute(user, { id: params.id, ...body }),
+    );
   }
 
   @Put(':id/technologies')
@@ -185,7 +187,9 @@ export class ProjectsController {
     @Param() params: ProjectIdParamsDto,
     @Body() body: SetProjectTechnologiesDto,
   ): Promise<ProjectDetailDto> {
-    return toDetail(await this.setProjectTechnologies.execute(user, { id: params.id, ...body }));
+    return toProjectDetailResponse(
+      await this.setProjectTechnologies.execute(user, { id: params.id, ...body }),
+    );
   }
 
   @Put(':id/links')
@@ -203,7 +207,7 @@ export class ProjectsController {
     @Body() body: UpsertProjectLinksDto,
   ): Promise<ProjectLinksResponseDto> {
     const links = await this.upsertProjectLinks.execute(user, { id: params.id, ...body });
-    return { links: links.map(toLink) };
+    return { links: links.map(toProjectLinkResponse) };
   }
 
   @Post(':id/links/reorder')
@@ -219,7 +223,7 @@ export class ProjectsController {
     @Body() body: ReorderProjectLinksDto,
   ): Promise<ProjectLinksResponseDto> {
     const links = await this.reorderProjectLinks.execute(user, { id: params.id, ...body });
-    return { links: links.map(toLink) };
+    return { links: links.map(toProjectLinkResponse) };
   }
 
   @Delete(':id/links/:linkId')
@@ -236,7 +240,7 @@ export class ProjectsController {
       id: params.id,
       linkId: params.linkId,
     });
-    return { links: links.map(toLink) };
+    return { links: links.map(toProjectLinkResponse) };
   }
 
   @Post(':id/status')
@@ -255,7 +259,7 @@ export class ProjectsController {
     @Body() body: SetProjectStatusDto,
   ): Promise<ProjectStatusChangeDto> {
     const result = await this.setProjectStatus.execute(user, { id: params.id, ...body });
-    return { project: toDetail(result.project), hints: [...result.hints] };
+    return { project: toProjectDetailResponse(result.project), hints: [...result.hints] };
   }
 
   @Post(':id/archive')
@@ -308,47 +312,6 @@ export class ProjectsController {
 
 // ───────────────────────────── Output mapping ─────────────────────────────
 
-function toLink(link: ProjectLinkRecord) {
-  return { id: link.id, group: link.group, label: link.label, url: link.url, order: link.order };
-}
-
 function toArchived(archived: { id: string; archivedAt: Date }) {
   return { id: archived.id, archivedAt: archived.archivedAt.toISOString() };
-}
-
-function toRow(row: ProjectListRowView) {
-  return {
-    id: row.id,
-    code: row.code,
-    name: row.name,
-    clients: row.clients.map((item) => ({
-      client: toEntityRefResponse(item.client),
-      role: item.role,
-    })),
-    status: row.status,
-    startDate: row.startDate,
-    targetEndDate: row.targetEndDate,
-    stack: row.stack.map((tech) => ({ ...tech })),
-    tags: row.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
-    archivedAt: row.archivedAt ? row.archivedAt.toISOString() : null,
-    contractedValueUsd: row.contractedValueUsd,
-    invoicedUsd: row.invoicedUsd,
-    collectedUsd: row.collectedUsd,
-    toInvoiceUsd: row.toInvoiceUsd,
-  };
-}
-
-function toDetail(view: ProjectDetailView): ProjectDetailDto {
-  return {
-    ...toRow(view),
-    summary: view.summary,
-    description: view.description
-      ? { type: 'doc', ...(view.description.content ? { content: view.description.content } : {}) }
-      : null,
-    endDate: view.endDate,
-    links: view.links.map(toLink),
-    hasBillingPlan: view.hasBillingPlan,
-    createdAt: view.createdAt.toISOString(),
-    updatedAt: view.updatedAt.toISOString(),
-  };
 }

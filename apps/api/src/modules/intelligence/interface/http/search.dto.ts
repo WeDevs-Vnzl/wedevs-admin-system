@@ -5,6 +5,7 @@ import {
   SEARCHABLE_ENTITY_TYPE_VALUES,
   SEARCH_DEFAULT_LIMIT,
   SEARCH_MAX_LIMIT,
+  type SearchResults,
 } from '../../application/use-cases/search/search-global.use-case';
 
 const searchableTypeSchema = z.enum(SEARCHABLE_ENTITY_TYPE_VALUES);
@@ -69,3 +70,14 @@ export const searchResultsSchema = z.object({
   groups: z.array(searchGroupSchema),
 });
 export class SearchResultsDto extends createZodDto(searchResultsSchema) {}
+
+// Output mapping, shared with the MCP tool.
+export const toSearchResponse = (result: SearchResults): SearchResultsDto => ({
+  query: result.query,
+  entityType: result.entityType,
+  groups: result.groups.map((group) => ({
+    entityType: group.entityType,
+    total: group.total,
+    items: group.items.map((item) => ({ ...item })),
+  })),
+});

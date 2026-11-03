@@ -2687,9 +2687,14 @@
                   "type": "integer"
                 },
                 "receivableUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "status": {
@@ -2723,9 +2728,14 @@
                   "type": "array"
                 },
                 "totalInvoicedUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "tradeName": {
@@ -13895,15 +13905,25 @@
             "type": "string"
           },
           "collectedUsd": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "contractedValueUsd": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "createdAt": {
@@ -13947,9 +13967,14 @@
             "type": "string"
           },
           "invoicedUsd": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "links": {
@@ -14101,9 +14126,14 @@
             ]
           },
           "toInvoiceUsd": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "updatedAt": {
@@ -14229,24 +14259,39 @@
                   "type": "string"
                 },
                 "collectedUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "contractedValueUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "id": {
                   "type": "string"
                 },
                 "invoicedUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "name": {
@@ -14353,9 +14398,14 @@
                   ]
                 },
                 "toInvoiceUsd": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 }
               },
@@ -14460,15 +14510,25 @@
                 "type": "string"
               },
               "collectedUsd": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "contractedValueUsd": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "createdAt": {
@@ -14512,9 +14572,14 @@
                 "type": "string"
               },
               "invoicedUsd": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "links": {
@@ -14666,9 +14731,14 @@
                 ]
               },
               "toInvoiceUsd": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "updatedAt": {

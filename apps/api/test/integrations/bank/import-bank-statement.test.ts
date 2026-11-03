@@ -101,6 +101,16 @@ describe('ImportBankStatement', () => {
     expect(out.statementBalance).toBeNull();
   });
 
+  it('reads the ledger as the actor of the import', async () => {
+    const w = build();
+    await w.useCase.execute(owner, {
+      accountId: 'acc_1',
+      bytes: bytes('2026-10-05;10.00;;x'),
+      contentType: CT,
+    });
+    expect(w.ledger.actors).toEqual([owner]);
+  });
+
   it('refuses a Member and a Viewer before parsing anything', async () => {
     for (const actor of [member, viewer]) {
       const w = build();

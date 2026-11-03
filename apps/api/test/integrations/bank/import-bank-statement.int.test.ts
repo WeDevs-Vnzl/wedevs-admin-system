@@ -54,7 +54,7 @@ const createMovement = new CreateMovement(
   clock,
   ids,
 );
-const adapter = new FinanceAccountLedgerForMatch(getLedger, () => actor);
+const adapter = new FinanceAccountLedgerForMatch(getLedger);
 const importer = new ImportBankStatement(
   authorization,
   getAccount,
@@ -118,11 +118,19 @@ const STATEMENT = '2026-10-05;100.00;;deposit\n2026-10-06;-20.00;;fee\n2026-10-0
 
 describe('FinanceAccountLedgerForMatch (real database)', () => {
   it('maps the ledger rows of the window and skips the opening balance', async () => {
-    const records = await adapter.entries('acc_bank', '2026-10-01', '2026-10-10');
+    const records = await adapter.entries(actor, 'acc_bank', '2026-10-01', '2026-10-10');
     expect(records.map((r) => [r.kind, r.date, r.amount, r.reference])).toEqual([
       ['MOVEMENT', '2026-10-05', '100.00', null],
       ['MOVEMENT', '2026-10-06', '-20.00', null],
     ]);
+  });
+});
+
+describe('FinanceAccountLedgerForMatch actor', () => {
+  it('reads the ledger as the actor it is given, so a Member is refused', async () => {
+    await expect(
+      adapter.entries({ ...actor, role: 'MEMBER' }, 'acc_bank', '2026-10-01', '2026-10-10'),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });
 

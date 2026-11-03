@@ -5,7 +5,7 @@ import { ApiErrorResponses } from '../../../../shared/interface/api-error-respon
 import { CurrentUser } from '../../../../shared/interface/current-user.decorator';
 import { Authenticated } from '../../../../shared/interface/grant.decorator';
 import { SearchGlobal } from '../../application/use-cases/search/search-global.use-case';
-import { SearchQueryDto, SearchResultsDto } from './search.dto';
+import { SearchQueryDto, SearchResultsDto, toSearchResponse } from './search.dto';
 
 /**
  * Global search (PRD §7.6, HU-26). `@Authenticated()` because the grant is per record type: the use case
@@ -28,15 +28,6 @@ export class SearchController {
     @CurrentUser() user: CurrentUserModel,
     @Query() query: SearchQueryDto,
   ): Promise<SearchResultsDto> {
-    const result = await this.searchGlobal.execute(user, query);
-    return {
-      query: result.query,
-      entityType: result.entityType,
-      groups: result.groups.map((group) => ({
-        entityType: group.entityType,
-        total: group.total,
-        items: group.items.map((item) => ({ ...item })),
-      })),
-    };
+    return toSearchResponse(await this.searchGlobal.execute(user, query));
   }
 }

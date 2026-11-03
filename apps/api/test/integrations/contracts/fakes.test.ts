@@ -127,14 +127,22 @@ paymentLinkRepositoryContract('InMemory', () => ({
 describe('the remaining fakes', () => {
   it('scopes the ledger fake by account and date window', async () => {
     const ledger = new InMemoryAccountLedgerForBankMatch();
+    const actor = {
+      userId: 'u1',
+      clerkId: 'c1',
+      role: 'OWNER',
+      email: 'o@example.test',
+      name: 'O',
+    } as const;
     ledger.seed('acc-1', [
       { id: 'r1', kind: 'PAYMENT', date: '2026-11-01', amount: '10.00', reference: null },
       { id: 'r2', kind: 'EXPENSE', date: '2026-11-09', amount: '-5.00', reference: null },
     ]);
-    expect((await ledger.entries('acc-1', '2026-11-01', '2026-11-05')).map((r) => r.id)).toEqual([
-      'r1',
-    ]);
-    expect(await ledger.entries('acc-2', '2026-11-01', '2026-11-30')).toEqual([]);
+    expect(
+      (await ledger.entries(actor, 'acc-1', '2026-11-01', '2026-11-05')).map((r) => r.id),
+    ).toEqual(['r1']);
+    expect(await ledger.entries(actor, 'acc-2', '2026-11-01', '2026-11-30')).toEqual([]);
+    expect(ledger.actors).toEqual([actor, actor]);
   });
 
   it('refuses an unknown invoice and returns a known one', async () => {

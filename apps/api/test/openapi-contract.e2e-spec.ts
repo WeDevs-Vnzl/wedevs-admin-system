@@ -599,9 +599,12 @@ describe('BE-6 contract and the decimal pattern of every money response (DT-181 
   // Counts, flags and free text that merely contain a money word; an amount is never one of these.
   const counter =
     /(Count|^meta$|^vesRateMissing$|^rateSource$|^taxId$|^netWeight$|^currency$|Currencies$|^expiresAt$|^lastUsed)/;
-  // BE-5 and BE-6 operations. The commercial `/clients` and `/projects` DTOs are outside this package.
+  // Every response path (DT-181 6a closed for the commercial `/clients` and `/projects` DTOs too).
   const everything = {
-    paths: new RegExp(`${BE5_PATH.source}|${BE6_PATH.source}`),
+    // Excluded on purpose (pre-existing, outside BE-5/BE-6 and commercial, later batch): `settings/fiscal`
+    // (igtfRate, ivaDefaultRate, ivaRates), `payment-methods` (boolean `suggestsIgtf`) and `activity`
+    // (free-form `metadata`).
+    paths: /^\/api\/v1\/(?!settings\/fiscal|payment-methods|activity)/,
     counter,
     relaxed: true,
     responsePattern: true,
