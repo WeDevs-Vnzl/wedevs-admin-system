@@ -51,14 +51,15 @@ export function applyMockRoleOverride(
 }
 
 /**
- * The signed-in user for the mock service context: the BE session user (`null` when signed out) with the
+ * The signed-in user for the mock service context: the BE session user (`null` when signed out; a Clerk
+ * session without a local user redirects to the no-access state) with the
  * "View as role" cookie applied. The BE role stays the source of truth everywhere else (C13).
  */
 export async function getMockSessionUser(): Promise<SessionUser | null> {
   // Imported lazily: this module is also loaded by fixture code and tests, which must not pull the
   // server-only BE session at load time.
-  const { getSessionUser } = await import("@/server/auth/session");
-  const user = await getSessionUser();
+  const { getSessionUserOrRedirect } = await import("@/server/auth/session");
+  const user = await getSessionUserOrRedirect();
   if (!user) return null;
   const store = await cookies();
   return applyMockRoleOverride(user, store.get(MOCK_ROLE_COOKIE)?.value);

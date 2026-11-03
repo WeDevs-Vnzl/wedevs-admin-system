@@ -20,7 +20,13 @@ vi.mock("react", async (importOriginal) => ({
     ((...args: Parameters<T>) => (memo.slot ??= { value: fn(...args) }).value) as T,
 }));
 
-import { UnauthenticatedError, getSessionUser, requireSessionUser, toSessionUser } from "./session";
+import {
+  UnauthenticatedError,
+  getSessionUser,
+  getSessionUserOrRedirect,
+  requireSessionUser,
+  toSessionUser,
+} from "./session";
 
 /** A `GET /api/v1/me` 200 body as the generated `UserDetailDto` types it. */
 const meBody = {
@@ -135,5 +141,28 @@ describe("requireSessionUser", () => {
     mocks.auth.mockResolvedValue(signedInClerk);
     serveMe({ "GET /api/v1/me": errorEnvelope("UNAUTHENTICATED") });
     await expect(requireSessionUser()).rejects.toThrow("NEXT_REDIRECT:/sign-in?reason=no-access");
+  });
+});
+
+describe("getSessionUserOrRedirect (the mock service context and the app shell)", () => {
+  it("returns the user", async () => {
+    mocks.auth.mockResolvedValue(signedInClerk);
+    serveMe({ "GET /api/v1/me": { status: 200, body: meBody } });
+    expect((await getSessionUserOrRedirect())?.id).toBe("usr_ana");
+  });
+
+  it("is null without a Clerk session, with no BE call", async () => {
+    mocks.auth.mockResolvedValue({ userId: null, getToken: async () => null });
+    const api = serveMe({ "GET /api/v1/me": { status: 200, body: meBody } });
+    expect(await getSessionUserOrRedirect()).toBeNull();
+    expect(api.calls).toHaveLength(0);
+  });
+
+  it("redirects to /sign-in?reason=no-access when the Clerk session has no local user (BE 401)", async () => {
+    mocks.auth.mockResolvedValue(signedInClerk);
+    serveMe({ "GET /api/v1/me": errorEnvelope("UNAUTHENTICATED") });
+    await expect(getSessionUserOrRedirect()).rejects.toThrow(
+      "NEXT_REDIRECT:/sign-in?reason=no-access",
+    );
   });
 });

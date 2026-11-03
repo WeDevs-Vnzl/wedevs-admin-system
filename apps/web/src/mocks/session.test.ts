@@ -13,7 +13,7 @@ vi.mock("next/headers", () => ({
         : undefined,
   }),
 }));
-vi.mock("@/server/auth/session", () => ({ getSessionUser: be.getSessionUser }));
+vi.mock("@/server/auth/session", () => ({ getSessionUserOrRedirect: be.getSessionUser }));
 
 import { buildMockStore } from "./store";
 import { registerMockActor } from "./ctx";

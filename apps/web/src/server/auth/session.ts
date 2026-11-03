@@ -60,9 +60,7 @@ export const NO_ACCESS_PATH = "/sign-in?reason=no-access";
 
 /** The three outcomes of one `GET /api/v1/me` lookup, kept apart so each helper maps them its own way. */
 type SessionState =
-  | { kind: "signed-out" }
-  | { kind: "no-access" }
-  | { kind: "signed-in"; user: SessionUser };
+  { kind: "signed-out" } | { kind: "no-access" } | { kind: "signed-in"; user: SessionUser };
 
 /** One Clerk and one BE lookup per request (React `cache`); both public helpers read this. */
 const resolveSession: () => Promise<SessionState> = cache(async () => {
@@ -81,6 +79,17 @@ const resolveSession: () => Promise<SessionState> = cache(async () => {
  */
 export async function getSessionUser(): Promise<SessionUser | null> {
   const state = await resolveSession();
+  return state.kind === "signed-in" ? state.user : null;
+}
+
+/**
+ * The signed-in user of the current request, or `null` when signed out. A Clerk session without a local user
+ * redirects to `/sign-in?reason=no-access`. Read by the mock service context, so the `(app)` shell and every
+ * service call send an unknown Clerk user to the no-access state instead of failing.
+ */
+export async function getSessionUserOrRedirect(): Promise<SessionUser | null> {
+  const state = await resolveSession();
+  if (state.kind === "no-access") redirect(NO_ACCESS_PATH);
   return state.kind === "signed-in" ? state.user : null;
 }
 
