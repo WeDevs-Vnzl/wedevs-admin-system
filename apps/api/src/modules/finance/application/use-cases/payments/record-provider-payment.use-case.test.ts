@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ACC_VES,
   KAIROS,
@@ -147,6 +147,33 @@ describe('recordProviderPayment: a payment from a provider event', () => {
     });
     expect(world.payments.all).toHaveLength(1);
     expect(world.events.all.map((row) => row.eventId)).toEqual(['evt_1', 'evt_2']);
+  });
+
+  it('an event id already stored for another provider payment answers DUPLICATE and writes no payment', async () => {
+    await run();
+
+    const second = await run({ externalId: 'pi_2' });
+
+    expect(second).toEqual({ outcome: 'DUPLICATE' });
+    expect(world.payments.all).toHaveLength(1);
+    expect(world.events.all).toHaveLength(1);
+  });
+
+  it('a sibling event committed while waiting for the locks rolls back and answers EXISTING on the next pass', async () => {
+    const lookup = vi
+      .spyOn(world.settlement, 'findPaymentId')
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce('pay_sibling')
+      .mockResolvedValue('pay_sibling');
+
+    const result = await run();
+
+    expect(result).toEqual({ outcome: 'EXISTING', paymentId: 'pay_sibling' });
+    expect(lookup).toHaveBeenCalledTimes(3);
+    expect(world.payments.all).toHaveLength(0);
+    expect(world.events.all).toEqual([
+      expect.objectContaining({ eventId: 'evt_1', entityType: 'PAYMENT', entityId: 'pay_sibling' }),
+    ]);
   });
 
   it('without a rate the event is parked NO_RATE and nothing else is written', async () => {
