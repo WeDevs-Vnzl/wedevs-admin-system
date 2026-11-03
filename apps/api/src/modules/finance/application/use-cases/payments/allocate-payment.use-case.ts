@@ -118,6 +118,8 @@ export class DeallocatePayment {
     private readonly authorization: AuthorizationPort,
     private readonly uow: UnitOfWorkPort,
     private readonly support: PaymentSupport,
+    /** DT-199: reserves the amount of the payment link again. Optional until the module wires it. */
+    private readonly settlement?: PaymentLinkSettlementPort,
   ) {}
 
   async execute(actor: CurrentUser, input: DeallocatePaymentInput): Promise<PaymentOutput> {
@@ -142,6 +144,12 @@ export class DeallocatePayment {
         updatedById: actor.userId,
       };
       await this.support.payments.update(after);
+      if (before.status !== 'ANULADO') {
+        await this.settlement?.unsettleOnDeallocation({
+          paymentId: before.id,
+          invoiceId: allocation.invoiceId,
+        });
+      }
       await this.support.settle({
         actor: actorOf(actor),
         action: 'DEALLOCATE',

@@ -31,6 +31,16 @@ export interface PaymentLinkSettlementPort {
 
   /** DT-199: the `COMPLETED` link whose payment is `paymentId` becomes `SETTLED` when the payment is voided. */
   settleOnVoid(input: { readonly paymentId: string; readonly at: string }): Promise<boolean>;
+
+  /**
+   * DT-199: the allocation of `paymentId` to `invoiceId` was removed, so the `SETTLED` link of that pair goes
+   * back to `COMPLETED` (`settledAt` cleared) and its amount is reserved again until the payment is allocated
+   * or voided.
+   */
+  unsettleOnDeallocation(input: {
+    readonly paymentId: string;
+    readonly invoiceId: string;
+  }): Promise<boolean>;
 }
 
 /**

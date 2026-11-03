@@ -6,6 +6,8 @@ import { CLOCK, UNIT_OF_WORK } from '../../shared/application/ports/tokens';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
 import { NotFoundError } from '../../shared/domain';
 import { InvoicesModule } from '../finance/invoices.module';
+import { PAYMENT_LINK_SETTLEMENT } from '../finance/application/ports/payment-link-settlement.port';
+import { PROVIDER_EVENT_LOG } from '../finance/application/ports/provider-event-log.port';
 import { ProviderPaymentsModule } from '../finance/provider-payments.module';
 import { IntegrationMappingModule } from '../settings/integration-mapping.module';
 import {
@@ -34,8 +36,10 @@ import {
   type ProviderPaymentRecordingPort,
 } from './application/use-cases/stripe/provider-payment-recording.port';
 import { FinanceInvoiceForLink } from './infrastructure/finance-invoice-for-link.adapter';
+import { FinanceProviderEventLog } from './infrastructure/finance-provider-event-log.adapter';
 import { FinanceProviderPaymentRecorder } from './infrastructure/finance-provider-payment-recorder.adapter';
 import { PrismaIntegrationEventStore } from './infrastructure/prisma-integration-event.store';
+import { PrismaPaymentLinkSettlement } from './infrastructure/prisma-payment-link-settlement.adapter';
 import { PrismaPaymentLinkRepository } from './infrastructure/prisma-payment-link.repository';
 import { SettingsIntegrationMapping } from './infrastructure/settings-integration-mapping.adapter';
 import { createStripePaymentProvider } from './infrastructure/stripe/stripe-payment-provider';
@@ -43,14 +47,18 @@ import { STRIPE_ENABLED } from './interface/http/payment-links.availability';
 import { StripeWebhookController } from './interface/http/webhooks.controller';
 
 /**
- * The event store is global because `ProviderPaymentsModule` (finance) injects `INTEGRATION_EVENT_STORE` and
- * cannot import an `integrations` module (DT-110): finance declares the dependency, whoever wires the context
- * satisfies it. One binding, one Prisma adapter.
+ * Global because finance injects `PROVIDER_EVENT_LOG` and `PAYMENT_LINK_SETTLEMENT` and cannot import an
+ * `integrations` module (DT-110): finance declares the ports, `integrations` binds them. The settlement adapter
+ * shares the ambient `TransactionHost`, so its writes stay in the finance unit of work. One Prisma adapter each.
  */
 @Global()
 @Module({
-  providers: [{ provide: INTEGRATION_EVENT_STORE, useClass: PrismaIntegrationEventStore }],
-  exports: [INTEGRATION_EVENT_STORE],
+  providers: [
+    { provide: INTEGRATION_EVENT_STORE, useClass: PrismaIntegrationEventStore },
+    { provide: PROVIDER_EVENT_LOG, useClass: FinanceProviderEventLog },
+    { provide: PAYMENT_LINK_SETTLEMENT, useClass: PrismaPaymentLinkSettlement },
+  ],
+  exports: [INTEGRATION_EVENT_STORE, PROVIDER_EVENT_LOG, PAYMENT_LINK_SETTLEMENT],
 })
 export class IntegrationEventStoreModule {}
 

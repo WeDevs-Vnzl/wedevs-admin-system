@@ -15,10 +15,6 @@ import {
   UNIT_OF_WORK,
 } from '../../shared/application/ports/tokens';
 import type { UnitOfWorkPort } from '../../shared/application/ports/unit-of-work.port';
-import {
-  INTEGRATION_EVENT_STORE,
-  type IntegrationEventStore,
-} from '../integrations/application/ports/integration-event-store.port';
 import { FinanceLookupsModule } from '../commercial/finance-lookups.module';
 import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
 import { FinanceProjector } from './application/finance-projector';
@@ -34,6 +30,10 @@ import {
   type ProviderPaymentReferencePort,
 } from './application/ports/payment-link-settlement.port';
 import {
+  PROVIDER_EVENT_LOG,
+  type ProviderEventLogPort,
+} from './application/ports/provider-event-log.port';
+import {
   PAYMENT_RECEIPT_FILES,
   PAYMENT_REFERENCES,
   type PaymentReceiptFilesPort,
@@ -48,10 +48,7 @@ import { RecomputeInvoice } from './application/use-cases/invoices/recompute-inv
 import { PaymentSupport } from './application/use-cases/payments/payment-support';
 import { RecordProviderPayment } from './application/use-cases/payments/record-provider-payment.use-case';
 import { PrismaPaymentReferences } from './infrastructure/payment-references.adapter';
-import {
-  PrismaPaymentLinkSettlement,
-  PrismaProviderPaymentReference,
-} from './infrastructure/prisma-payment-link-settlement.adapter';
+import { PrismaProviderPaymentReference } from './infrastructure/prisma-payment-link-settlement.adapter';
 import { PrismaPaymentRepository } from './infrastructure/prisma-payment.repository';
 import { InvoicesModule } from './invoices.module';
 import { RatesModule } from './rates.module';
@@ -66,10 +63,10 @@ const NO_RECEIPTS: PaymentReceiptFilesPort = {
 
 /**
  * Finance → payments written from a provider event (A6, DT-183, DT-199). Exports `RecordProviderPayment`, which
- * `integrations` reaches through an adapter of its `ProviderPaymentRecorderPort`, and the settlement port the
- * payments module binds into `AllocatePayment` and `SetPaymentStatus`. It builds its own `PaymentSupport` over the
- * same adapters as `PaymentsModule` (which exports nothing). The importing module must make
- * `INTEGRATION_EVENT_STORE` resolvable; this module does not own that adapter. Not imported by `AppModule`.
+ * `integrations` reaches through an adapter of its `ProviderPaymentRecordingPort`. It builds its own
+ * `PaymentSupport` over the same adapters as `PaymentsModule` (which exports nothing). Finance imports nothing
+ * from `integrations` (DT-110): `PROVIDER_EVENT_LOG` and `PAYMENT_LINK_SETTLEMENT` are declared here and bound,
+ * globally, by `integrations`. Not imported by `AppModule`.
  */
 @Module({
   imports: [
@@ -83,7 +80,6 @@ const NO_RECEIPTS: PaymentReceiptFilesPort = {
     { provide: PAYMENT_REPOSITORY, useClass: PrismaPaymentRepository },
     { provide: PAYMENT_REFERENCES, useClass: PrismaPaymentReferences },
     { provide: PAYMENT_RECEIPT_FILES, useValue: NO_RECEIPTS },
-    { provide: PAYMENT_LINK_SETTLEMENT, useClass: PrismaPaymentLinkSettlement },
     { provide: PROVIDER_PAYMENT_REFERENCE, useClass: PrismaProviderPaymentReference },
     {
       provide: PaymentSupport,
@@ -134,7 +130,7 @@ const NO_RECEIPTS: PaymentReceiptFilesPort = {
         support: PaymentSupport,
         sequence: SequencePort,
         ids: IdGeneratorPort,
-        events: IntegrationEventStore,
+        events: ProviderEventLogPort,
         rates: ExchangeRatePort,
         links: PaymentLinkSettlementPort,
         references: ProviderPaymentReferencePort,
@@ -144,13 +140,13 @@ const NO_RECEIPTS: PaymentReceiptFilesPort = {
         PaymentSupport,
         SEQUENCE,
         ID_GENERATOR,
-        INTEGRATION_EVENT_STORE,
+        PROVIDER_EVENT_LOG,
         EXCHANGE_RATE,
         PAYMENT_LINK_SETTLEMENT,
         PROVIDER_PAYMENT_REFERENCE,
       ],
     },
   ],
-  exports: [RecordProviderPayment, PAYMENT_LINK_SETTLEMENT],
+  exports: [RecordProviderPayment],
 })
 export class ProviderPaymentsModule {}

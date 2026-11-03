@@ -184,6 +184,26 @@ describe('the DT-199 hooks over PostgreSQL', () => {
     expect(stored.settledAt).not.toBeNull();
   });
 
+  it('removing the allocation puts the link back to COMPLETED so its amount is reserved again', async () => {
+    const { w, paymentId } = await completedLinkPayment();
+    await w.setStatusWithSettlement.execute(owner, { id: paymentId, status: 'CONFIRMADO' });
+    const allocated = await w.allocateWithSettlement.execute(owner, {
+      paymentId,
+      invoiceId: 'inv_a',
+      amountPaymentCurrency: '100.00',
+      amountInvoiceCurrency: '100.00',
+    });
+    expect(await status()).toBe('SETTLED');
+    const allocationId = allocated.id;
+
+    await w.deallocateWithSettlement.execute(owner, { allocationId });
+
+    const stored = await admin.invoicePaymentLink.findUniqueOrThrow({ where: { id: 'lnk_1' } });
+    expect(stored.status).toBe('COMPLETED');
+    expect(stored.settledAt).toBeNull();
+    expect(stored.paymentId).toBe(paymentId);
+  });
+
   it('allocating only part of it keeps the link COMPLETED (still reserved)', async () => {
     const { w, paymentId } = await completedLinkPayment();
     await w.setStatusWithSettlement.execute(owner, { id: paymentId, status: 'CONFIRMADO' });

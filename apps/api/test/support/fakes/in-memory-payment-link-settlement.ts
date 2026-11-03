@@ -97,6 +97,19 @@ export class InMemoryPaymentLinkSettlement
     return true;
   }
 
+  async unsettleOnDeallocation(input: { paymentId: string; invoiceId: string }): Promise<boolean> {
+    const link = [...this.links.values()].find(
+      (l) =>
+        l.paymentId === input.paymentId &&
+        l.invoiceId === input.invoiceId &&
+        l.status === 'SETTLED',
+    );
+    if (!link) return false;
+    link.status = 'COMPLETED';
+    delete link.settledAt;
+    return true;
+  }
+
   async findPaymentId(provider: string, externalId: string): Promise<string | null> {
     return this.refs.get(`${provider}:${externalId}`) ?? null;
   }

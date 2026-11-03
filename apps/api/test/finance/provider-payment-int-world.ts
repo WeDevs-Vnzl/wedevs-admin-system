@@ -3,13 +3,14 @@ import type {
   IntegrationEventStore,
   RecordEventResult,
 } from '../../src/modules/integrations/application/ports/integration-event-store.port';
-import { AllocatePayment } from '../../src/modules/finance/application/use-cases/payments/allocate-payment.use-case';
+import {
+  AllocatePayment,
+  DeallocatePayment,
+} from '../../src/modules/finance/application/use-cases/payments/allocate-payment.use-case';
 import { RecordProviderPayment } from '../../src/modules/finance/application/use-cases/payments/record-provider-payment.use-case';
 import { SetPaymentStatus } from '../../src/modules/finance/application/use-cases/payments/set-payment-status.use-case';
-import {
-  PrismaPaymentLinkSettlement,
-  PrismaProviderPaymentReference,
-} from '../../src/modules/finance/infrastructure/prisma-payment-link-settlement.adapter';
+import { PrismaProviderPaymentReference } from '../../src/modules/finance/infrastructure/prisma-payment-link-settlement.adapter';
+import { PrismaPaymentLinkSettlement } from '../../src/modules/integrations/infrastructure/prisma-payment-link-settlement.adapter';
 import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import { CuidGenerator } from '../../src/shared/infrastructure/id-generator.adapter';
 import { PrismaSequence } from '../../src/shared/infrastructure/prisma/prisma-sequence';
@@ -90,6 +91,7 @@ export function buildProviderPaymentWorld(service: PrismaService, hooks: Payment
       ids,
       settlement,
     ),
+    deallocateWithSettlement: new DeallocatePayment(authorization, uow, paymentSupport, settlement),
     setStatusWithSettlement: new SetPaymentStatus(authorization, uow, paymentSupport, settlement),
   };
 }
