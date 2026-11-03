@@ -67,6 +67,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@clerk/testing": "2.2.53",
     "@playwright/test": "1.64.0",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
