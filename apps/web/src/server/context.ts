@@ -1,14 +1,17 @@
 import "server-only";
 // The only place that builds the service context (C11, DT-37). Hito 1: `db` is the mock store and the user
-// comes from the mock session; this file is one of the few allowed to import `@/mocks/**` (C9). Hito 2
-// swaps the body for the Prisma client and the Clerk-backed session; the signatures stay.
+// is the BE session user (`GET /api/v1/me`) with the mock role override; this file is one of the few allowed
+// to import `@/mocks/**` (C9). Hito 2 swaps the body for the Prisma client; the signatures stay.
 import {
   createMockContext,
   createMockPublicContext,
+  registerMockActor,
   type MockPublicServiceContext,
   type MockServiceContext,
 } from "@/mocks/ctx";
-import { requireSessionUser } from "@/server/auth/session";
+import { getMockStore } from "@/mocks/store";
+import { getMockSessionUser } from "@/mocks/session";
+import { UnauthenticatedError } from "@/server/auth/session";
 import { ServiceError } from "@/server/errors";
 
 /** `ctx = { db, user, now }`: what every service receives (C11). `now` is the only clock a service may read. */
@@ -25,8 +28,12 @@ export { ServiceError };
  * (actions map it to `UNAUTHENTICATED`).
  */
 export async function getServiceContext(): Promise<ServiceContext> {
-  const user = await requireSessionUser();
-  return createMockContext({ user, now: new Date() });
+  const user = await getMockSessionUser();
+  if (!user) throw new UnauthenticatedError();
+  const now = new Date();
+  const db = getMockStore();
+  registerMockActor(db, user, now);
+  return createMockContext({ user, now, db });
 }
 
 /** Context of a public portal call: never reads the session (C10 exception). */

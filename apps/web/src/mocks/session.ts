@@ -1,5 +1,6 @@
-// MOCK — Hito 1 session. Replaced by Clerk + the local `User` table in Hito 2 (H2-B2); this file is
-// deleted with `src/mocks/` at the close of Hito 2 (C9).
+// MOCK — Hito 1 mock bridge. The signed-in user is the BE session user (`GET /api/v1/me`, FE-INT-0 0.4);
+// the "View as role" cookie still overrides its role for the mock service context only, so unintegrated
+// modules keep their role demos. Deleted with `src/mocks/` at the close of the FE integration (C9).
 import { cookies } from "next/headers";
 import { userRoleSchema, type UserRole } from "@/lib/validators/enums";
 import type { SessionUser } from "@/server/auth/types";
@@ -7,7 +8,7 @@ import type { SessionUser } from "@/server/auth/types";
 /** MOCK-only "View as role" override (DT-40). Holds a `UserRole` value; anything else is ignored. */
 export const MOCK_ROLE_COOKIE = "wd_mock_role";
 
-/** Two fictional partners (Owners), as in the wireframes. No real people or real addresses (C5). */
+/** Two fictional partners (Owners), as in the wireframes. Fixtures only: they are not the signed-in user. */
 const ANDRES_MOLINA: SessionUser = {
   id: "usr_andres_molina",
   name: "Andrés Molina",
@@ -31,7 +32,7 @@ export const MOCK_USERS: readonly SessionUser[] = [
   },
 ];
 
-/** The user that is "signed in" by default in Hito 1. */
+/** A fixture Owner (the first of `MOCK_USERS`). Not the signed-in user since FE-INT-0 0.4. */
 export const MOCK_DEFAULT_USER: SessionUser = ANDRES_MOLINA;
 
 /** Validates the raw cookie value; `null` when absent or not a real role. */
@@ -40,14 +41,25 @@ export function parseMockRole(value: string | null | undefined): UserRole | null
   return parsed.success ? parsed.data : null;
 }
 
-/** Builds the mock session user: the default Owner, with the role replaced by a valid override. */
-export function resolveMockSessionUser(roleOverride?: string | null): SessionUser {
+/** Returns the user with the role replaced by a valid override; any other value returns the user as is. */
+export function applyMockRoleOverride(
+  user: SessionUser,
+  roleOverride: string | null | undefined,
+): SessionUser {
   const role = parseMockRole(roleOverride);
-  return role ? { ...MOCK_DEFAULT_USER, role } : { ...MOCK_DEFAULT_USER };
+  return role ? { ...user, role } : user;
 }
 
-/** Reads the `wd_mock_role` cookie of the current request and returns the mock session user. */
+/**
+ * The signed-in user for the mock service context: the BE session user (`null` when signed out) with the
+ * "View as role" cookie applied. The BE role stays the source of truth everywhere else (C13).
+ */
 export async function getMockSessionUser(): Promise<SessionUser | null> {
+  // Imported lazily: this module is also loaded by fixture code and tests, which must not pull the
+  // server-only BE session at load time.
+  const { getSessionUser } = await import("@/server/auth/session");
+  const user = await getSessionUser();
+  if (!user) return null;
   const store = await cookies();
-  return resolveMockSessionUser(store.get(MOCK_ROLE_COOKIE)?.value);
+  return applyMockRoleOverride(user, store.get(MOCK_ROLE_COOKIE)?.value);
 }

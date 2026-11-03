@@ -1,7 +1,9 @@
-// MOCK — tests for the Hito 1 mock session.
+// MOCK — tests for the Hito 1 mock bridge: the BE session user with the "View as role" override.
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SessionUser } from "@/server/auth/types";
 
 const cookieStore = vi.hoisted(() => ({ value: undefined as string | undefined }));
+const be = vi.hoisted(() => ({ getSessionUser: vi.fn() }));
 
 vi.mock("next/headers", () => ({
   cookies: async () => ({
@@ -11,21 +13,38 @@ vi.mock("next/headers", () => ({
         : undefined,
   }),
 }));
+vi.mock("@/server/auth/session", () => ({ getSessionUser: be.getSessionUser }));
 
+import { buildMockStore } from "./store";
+import { registerMockActor } from "./ctx";
+import { FIXED_NOW } from "./test-helpers";
 import {
   MOCK_DEFAULT_USER,
   MOCK_ROLE_COOKIE,
   MOCK_USERS,
+  applyMockRoleOverride,
   getMockSessionUser,
   parseMockRole,
-  resolveMockSessionUser,
 } from "./session";
+
+/** The user the BE returned through `GET /api/v1/me` (a real person, not a fixture). */
+const beUser: SessionUser = {
+  id: "user_clerk_ana",
+  name: "Ana Pérez",
+  email: "ana.perez@example.com",
+  imageUrl: null,
+  role: "MEMBER",
+  locale: "en",
+  theme: "dark",
+};
 
 beforeEach(() => {
   cookieStore.value = undefined;
+  be.getSessionUser.mockReset();
+  be.getSessionUser.mockResolvedValue(beUser);
 });
 
-describe("mock users", () => {
+describe("mock fixtures", () => {
   it("are two fictional Owners with example.com addresses", () => {
     expect(MOCK_USERS).toHaveLength(2);
     for (const u of MOCK_USERS) {
@@ -48,21 +67,16 @@ describe("parseMockRole", () => {
   });
 });
 
-describe("resolveMockSessionUser", () => {
-  it("returns the default Owner without an override", () => {
-    expect(resolveMockSessionUser()).toEqual(MOCK_DEFAULT_USER);
-    expect(resolveMockSessionUser(null).role).toBe("OWNER");
+describe("applyMockRoleOverride", () => {
+  it("keeps the identity and swaps only the role for a valid override", () => {
+    expect(applyMockRoleOverride(beUser, "VIEWER")).toEqual({ ...beUser, role: "VIEWER" });
   });
 
-  it("keeps the identity and swaps only the role", () => {
-    const user = resolveMockSessionUser("MEMBER");
-    expect(user).toEqual({ ...MOCK_DEFAULT_USER, role: "MEMBER" });
-  });
-
-  it("ignores an invalid override and never mutates the fixtures", () => {
-    expect(resolveMockSessionUser("ROOT").role).toBe("OWNER");
-    resolveMockSessionUser("VIEWER");
-    expect(MOCK_DEFAULT_USER.role).toBe("OWNER");
+  it("returns the user unchanged for a missing or invalid override, and never mutates it", () => {
+    expect(applyMockRoleOverride(beUser, null)).toBe(beUser);
+    expect(applyMockRoleOverride(beUser, "ROOT")).toBe(beUser);
+    applyMockRoleOverride(beUser, "ADMIN");
+    expect(beUser.role).toBe("MEMBER");
   });
 });
 
@@ -71,17 +85,36 @@ describe("getMockSessionUser (cookie wd_mock_role)", () => {
     expect(MOCK_ROLE_COOKIE).toBe("wd_mock_role");
   });
 
-  it("returns the Owner when the cookie is absent", async () => {
-    expect(await getMockSessionUser()).toEqual(MOCK_DEFAULT_USER);
+  it("is null when the BE has no session user", async () => {
+    be.getSessionUser.mockResolvedValue(null);
+    expect(await getMockSessionUser()).toBeNull();
   });
 
-  it("applies a valid role from the cookie", async () => {
+  it("signs in the BE user, not the fixture Owner", async () => {
+    expect(await getMockSessionUser()).toEqual(beUser);
+    expect((await getMockSessionUser())?.id).not.toBe(MOCK_DEFAULT_USER.id);
+  });
+
+  it("applies a valid role from the cookie to the mock context user", async () => {
     cookieStore.value = "ADMIN";
     expect((await getMockSessionUser())?.role).toBe("ADMIN");
   });
 
   it("ignores a tampered cookie", async () => {
     cookieStore.value = "SUPERUSER";
-    expect((await getMockSessionUser())?.role).toBe("OWNER");
+    expect((await getMockSessionUser())?.role).toBe("MEMBER");
+  });
+});
+
+describe("registerMockActor (ctx.ts)", () => {
+  it("adds the signed-in user to the store users once, keeping its name for actor lookups", () => {
+    const db = buildMockStore(FIXED_NOW, { fixedClock: true });
+    const before = db.users.length;
+    registerMockActor(db, beUser, FIXED_NOW);
+    registerMockActor(db, beUser, FIXED_NOW);
+    const rows = db.users.filter((row) => row.id === beUser.id);
+    expect(db.users).toHaveLength(before + 1);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ name: "Ana Pérez", email: "ana.perez@example.com" });
   });
 });
