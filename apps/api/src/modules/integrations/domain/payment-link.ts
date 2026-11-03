@@ -3,7 +3,7 @@ import type { IntegrationProvider } from './integration-event';
 
 /**
  * Payment link lifecycle (DT-182, DT-196, DT-199): PENDING -> ACTIVE -> COMPLETED -> SETTLED, and
- * PENDING | ACTIVE -> DEACTIVATED. Every function returns a new link and refuses an illegal step.
+ * PENDING | ACTIVE -> DEACTIVATED; a SETTLED link whose allocation was removed goes back to COMPLETED. Every function returns a new link and refuses an illegal step.
  */
 export const PAYMENT_LINK_STATUS_VALUES = [
   'PENDING',
@@ -38,7 +38,7 @@ const TRANSITIONS: Readonly<Record<PaymentLinkStatus, readonly PaymentLinkStatus
   PENDING: ['ACTIVE', 'DEACTIVATED'],
   ACTIVE: ['COMPLETED', 'DEACTIVATED'],
   COMPLETED: ['SETTLED'],
-  SETTLED: [],
+  SETTLED: ['COMPLETED'],
   DEACTIVATED: [],
 };
 
@@ -72,6 +72,12 @@ export function completeLink(link: PaymentLink, paymentId: string): PaymentLink 
 export function settleLink(link: PaymentLink, at: Date): PaymentLink {
   assertTransition(link, 'SETTLED');
   return { ...link, status: 'SETTLED', settledAt: at };
+}
+
+/** DT-199: the allocation that settled the link was removed; its amount is reserved again. */
+export function unsettleLink(link: PaymentLink): PaymentLink {
+  assertTransition(link, 'COMPLETED');
+  return { ...link, status: 'COMPLETED', settledAt: null };
 }
 
 export function deactivateLink(link: PaymentLink, reason: string, at: Date): PaymentLink {

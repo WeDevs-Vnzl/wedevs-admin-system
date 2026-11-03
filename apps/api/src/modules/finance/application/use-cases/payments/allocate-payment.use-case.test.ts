@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MatrixAuthorization } from '../../../../identity/application/matrix-authorization';
 import { InMemoryPaymentLinkSettlement } from '../../../../../../test/support/fakes/in-memory-payment-link-settlement';
 import { SequentialIdGenerator } from '../../../../../../test/support/fakes/sequential-id-generator';
-import { AllocatePayment } from './allocate-payment.use-case';
+import { AllocatePayment, DeallocatePayment } from './allocate-payment.use-case';
 import {
   NOW,
   WEB,
@@ -182,5 +182,46 @@ describe('allocatePayment: the payment link settlement (DT-199)', () => {
     await rejection(allocate.execute(world.owner, draft(payment.id, 'inv_link', '200.00')));
 
     expect(settlement.link('lnk_1')).toMatchObject({ status: 'COMPLETED' });
+  });
+});
+
+describe('deallocatePayment: the payment link settlement (DT-199)', () => {
+  async function settledLink() {
+    world.addInvoice('inv_link', '400.00', { projectId: WEB });
+    const payment = await credit300();
+    const settlement = new InMemoryPaymentLinkSettlement(world.uow);
+    const ids = new SequentialIdGenerator('set');
+    const allocate = new AllocatePayment(
+      new MatrixAuthorization(),
+      world.uow,
+      world.support,
+      ids,
+      settlement,
+    );
+    const deallocate = new DeallocatePayment(
+      new MatrixAuthorization(),
+      world.uow,
+      world.support,
+      settlement,
+    );
+    settlement.seedLink({
+      id: 'lnk_1',
+      invoiceId: 'inv_link',
+      amount: '120.00',
+      status: 'COMPLETED',
+      paymentId: payment.id,
+    });
+    const allocation = await allocate.execute(world.owner, draft(payment.id, 'inv_link', '120.00'));
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'SETTLED' });
+    return { settlement, deallocate, payment, allocation };
+  }
+
+  it('puts the SETTLED link back to COMPLETED and clears its settledAt, so its amount is reserved again', async () => {
+    const { settlement, deallocate, allocation } = await settledLink();
+
+    await deallocate.execute(world.owner, { allocationId: allocation.id });
+
+    expect(settlement.link('lnk_1')).toMatchObject({ status: 'COMPLETED' });
+    expect(settlement.link('lnk_1')?.settledAt).toBeUndefined();
   });
 });

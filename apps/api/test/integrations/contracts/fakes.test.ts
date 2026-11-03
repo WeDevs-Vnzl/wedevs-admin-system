@@ -6,7 +6,6 @@ import { InMemoryIntegrationEventStore } from '../../support/fakes/in-memory-int
 import { InMemoryInvoiceForPaymentLink } from '../../support/fakes/in-memory-invoice-for-payment-link';
 import { InMemoryPaymentLinkRepository } from '../../support/fakes/in-memory-payment-link-repository';
 import { InMemoryPaymentProvider } from '../../support/fakes/in-memory-payment-provider';
-import { InMemoryPaymentProviderRecorder } from '../../support/fakes/in-memory-payment-provider-recorder';
 import { bankContract } from './bank.contract';
 import { exchangeContract } from './exchange.contract';
 import { integrationEventStoreContract } from './integration-event-store.contract';
@@ -150,25 +149,5 @@ describe('the remaining fakes', () => {
     });
     expect((await invoices.load('inv-1')).openBalance).toBe('100.00');
     await expect(invoices.load('nope')).rejects.toMatchObject({ code: 'NOT_FOUND' });
-  });
-
-  it('records a provider payment once per external id', async () => {
-    const recorder = new InMemoryPaymentProviderRecorder();
-    const input = {
-      provider: 'STRIPE' as const,
-      eventId: 'evt_1',
-      externalId: 'pi_1',
-      clientId: 'c-1',
-      invoiceId: null,
-      linkId: null,
-      amount: '10.00',
-      currency: 'USD',
-      fee: null,
-      receivedAt: new Date('2026-11-02T10:00:00Z'),
-    };
-    const first = await recorder.record(input);
-    const second = await recorder.record({ ...input, eventId: 'evt_2' });
-    expect(first.created).toBe(true);
-    expect(second).toEqual({ paymentId: first.paymentId, created: false });
   });
 });

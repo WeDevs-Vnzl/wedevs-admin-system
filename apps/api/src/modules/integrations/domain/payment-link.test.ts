@@ -8,6 +8,7 @@ import {
   deactivateLink,
   isOpenLinkStatus,
   settleLink,
+  unsettleLink,
   type PaymentLink,
   type PaymentLinkStatus,
 } from './payment-link';
@@ -45,6 +46,13 @@ describe('payment link transitions', () => {
     expect(settled).toMatchObject({ status: 'SETTLED', settledAt: at });
   });
 
+  it('puts a SETTLED link back to COMPLETED and clears settledAt, and refuses it from any other status', () => {
+    const completed = completeLink(activateLink(base, { externalId: 'p', url: 'u' }), 'pay-1');
+    const reopened = unsettleLink(settleLink(completed, at));
+    expect(reopened).toMatchObject({ status: 'COMPLETED', paymentId: 'pay-1', settledAt: null });
+    expect(() => unsettleLink(completed)).toThrow(ConflictError);
+  });
+
   it('does not mutate its input', () => {
     activateLink(base, { externalId: 'plink_1', url: 'u' });
     expect(base.status).toBe('PENDING');
@@ -67,6 +75,7 @@ describe('payment link transitions', () => {
       ['PENDING', 'ACTIVE'],
       ['ACTIVE', 'COMPLETED'],
       ['COMPLETED', 'SETTLED'],
+      ['SETTLED', 'COMPLETED'],
       ['PENDING', 'DEACTIVATED'],
       ['ACTIVE', 'DEACTIVATED'],
     ];

@@ -9,17 +9,17 @@ import {
   ValidationFailedError,
 } from '../../../../../shared/domain/domain-error';
 import { toUsd } from '../../../../../shared/domain/money';
-import type {
-  IntegrationEventStore,
-  IntegrationEventEntry,
-} from '../../../../integrations/application/ports/integration-event-store.port';
-import type { RecordProviderPaymentInput } from '../../../../integrations/application/ports/provider-payment-recorder.port';
 import type { ExchangeRatePort } from '../../ports/exchange-rate.port';
 import type {
   PaymentLinkSettlementPort,
   ProviderPaymentReferencePort,
 } from '../../ports/payment-link-settlement.port';
 import type { PaymentRecord } from '../../ports/payment.repository.port';
+import type {
+  ProviderEventLogEntry,
+  ProviderEventLogPort,
+  ProviderName,
+} from '../../ports/provider-event-log.port';
 import { normalizePaymentFields, paymentFieldErrors, type PaymentFields } from './payment-input';
 import {
   MAX_PLAN_ATTEMPTS,
@@ -31,8 +31,25 @@ import {
 /** The invoice a provider event names belongs to another client than the event's. */
 export const INVOICE_CLIENT_MISMATCH = 'payments.validation.providerInvoiceClientMismatch';
 
+/** The provider payment a caller hands to finance (A6): the payment, the client, invoice and link it names. */
+export interface RecordProviderPaymentInput {
+  readonly provider: ProviderName;
+  /** The event that carried the payment; finance links it to the payment for audit. */
+  readonly eventId: string;
+  /** The provider's payment id: unique per provider on `Payment`. */
+  readonly externalId: string;
+  readonly clientId: string;
+  readonly invoiceId: string | null;
+  /** Link that produced the payment, marked `COMPLETED` inside the same unit of work (A13). */
+  readonly linkId: string | null;
+  readonly amount: string;
+  readonly currency: string;
+  readonly fee: string | null;
+  readonly receivedAt: Date;
+}
+
 /**
- * What `ProviderPaymentRecorderPort.record` receives plus what finance cannot derive: the event type for the
+ * What `RecordProviderPayment` receives plus what finance cannot derive: the event type for the
  * event row and the (account, method) the settings mapping names (DT-183). Both come from the caller.
  */
 export interface RecordProviderPaymentCommand extends RecordProviderPaymentInput {
@@ -69,7 +86,7 @@ export class RecordProviderPayment {
     private readonly support: PaymentSupport,
     private readonly sequence: SequencePort,
     private readonly ids: IdGeneratorPort,
-    private readonly events: IntegrationEventStore,
+    private readonly events: ProviderEventLogPort,
     private readonly rates: ExchangeRatePort,
     private readonly links: PaymentLinkSettlementPort,
     private readonly references: ProviderPaymentReferencePort,
@@ -111,7 +128,7 @@ export class RecordProviderPayment {
       receivedAt: input.receivedAt,
       processedAt: input.receivedAt,
     } as const;
-    const stored = (over: Partial<IntegrationEventEntry>): IntegrationEventEntry => ({
+    const stored = (over: Partial<ProviderEventLogEntry>): ProviderEventLogEntry => ({
       ...base,
       outcome: 'PROCESSED',
       reasonCode: null,
