@@ -162,6 +162,7 @@ describe('StripePaymentProvider.retrievePayment', () => {
       body: {
         id: 'pi_x',
         object: 'payment_intent',
+        status: 'succeeded',
         amount: 1000,
         amount_received: 1000,
         currency: 'usd',
@@ -175,6 +176,46 @@ describe('StripePaymentProvider.retrievePayment', () => {
       },
     }));
     expect((await provider.retrievePayment('pi_x')).fee).toBeNull();
+  });
+
+  it('refuses a payment intent that has not succeeded instead of recording its requested amount', async () => {
+    const { script, provider } = build();
+    script.on(() => ({
+      status: 200,
+      body: {
+        id: 'pi_p',
+        object: 'payment_intent',
+        status: 'requires_payment_method',
+        amount: 1000,
+        amount_received: 0,
+        currency: 'usd',
+        metadata: {},
+      },
+    }));
+    const error = await provider.retrievePayment('pi_p').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ValidationFailedError);
+    expect((error as ValidationFailedError).message).toBe('integrations.stripe.paymentNotSucceeded');
+  });
+
+  it('refuses a currency other than USD or EUR with the currency key', async () => {
+    const { script, provider } = build();
+    script.on(() => ({
+      status: 200,
+      body: {
+        id: 'pi_g',
+        object: 'payment_intent',
+        status: 'succeeded',
+        amount: 1000,
+        amount_received: 1000,
+        currency: 'gbp',
+        metadata: {},
+      },
+    }));
+    const error = await provider.retrievePayment('pi_g').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ValidationFailedError);
+    expect((error as ValidationFailedError).message).toBe(
+      'validation.paymentLinkCurrencyUnsupported',
+    );
   });
 });
 

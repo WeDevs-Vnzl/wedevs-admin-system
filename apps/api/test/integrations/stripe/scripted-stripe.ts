@@ -96,6 +96,7 @@ export function scriptedStripeApi(script: ScriptedStripeFetch): void {
           body: {
             id: 'pi_known',
             object: 'payment_intent',
+            status: 'succeeded',
             amount: 12_550,
             amount_received: 12_550,
             currency: 'usd',

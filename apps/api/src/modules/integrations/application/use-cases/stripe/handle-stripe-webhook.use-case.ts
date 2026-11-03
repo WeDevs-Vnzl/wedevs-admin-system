@@ -2,8 +2,8 @@ import type { Actor } from '../../../../../shared/application/actor';
 import type { ClockPort } from '../../../../../shared/application/ports/clock.port';
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import {
-  DomainError,
   ForbiddenError,
+  IntegrityLockedError,
   NotFoundError,
   ValidationFailedError,
 } from '../../../../../shared/domain';
@@ -18,6 +18,7 @@ import type { PaymentLinkRepository } from '../../ports/payment-link.repository.
 import type {
   PaymentProviderPort,
   ProviderEvent,
+  ProviderPayment,
   ProviderHeaders,
 } from '../../ports/payment-provider.port';
 import type { ProviderPaymentRecordingPort } from './provider-payment-recording.port';
@@ -36,8 +37,13 @@ export const STRIPE_PARK_REASONS = {
   invoiceNotFound: 'INVOICE_NOT_FOUND',
   currencyMismatch: 'CURRENCY_MISMATCH',
   invalidReference: 'INVALID_REFERENCE',
+  currencyUnsupported: 'CURRENCY_UNSUPPORTED',
+  paymentNotSucceeded: 'PAYMENT_NOT_SUCCEEDED',
 } as const;
 type ParkReason = (typeof STRIPE_PARK_REASONS)[keyof typeof STRIPE_PARK_REASONS];
+
+/** i18n key the adapter throws for a payment intent that has not succeeded. */
+export const PAYMENT_NOT_SUCCEEDED_KEY = 'integrations.stripe.paymentNotSucceeded';
 
 export interface StripeWebhookInput {
   readonly rawBody: string | Uint8Array;
@@ -82,11 +88,21 @@ export class HandleStripeWebhook {
     const target = (await this.mapping.load()).stripe;
     if (!target) return park(STRIPE_PARK_REASONS.noMapping);
 
-    const payment = await this.provider.retrievePayment(event.paymentId).catch((error: unknown) => {
-      if (error instanceof NotFoundError) return null;
+    let payment: ProviderPayment | null;
+    try {
+      payment = await this.provider.retrievePayment(event.paymentId);
+    } catch (error) {
+      if (error instanceof NotFoundError) return park(STRIPE_PARK_REASONS.paymentNotFound);
+      // The adapter refuses a currency we do not charge and a payment that has not succeeded: park, never retry.
+      if (error instanceof ValidationFailedError) {
+        return park(
+          error.message === PAYMENT_NOT_SUCCEEDED_KEY
+            ? STRIPE_PARK_REASONS.paymentNotSucceeded
+            : STRIPE_PARK_REASONS.currencyUnsupported,
+        );
+      }
       throw error;
-    });
-    if (!payment) return park(STRIPE_PARK_REASONS.paymentNotFound);
+    }
 
     const metadata = { ...payment.metadata, ...event.metadata };
     let clientId: string | null = null;
@@ -136,7 +152,17 @@ export class HandleStripeWebhook {
           return 'duplicate';
       }
     } catch (error) {
-      if (!(error instanceof DomainError)) throw error;
+      // Only a refusal of the references parks. A `ConflictError` (exhausted serialization retries, a changed
+      // lock set) is transient: it escapes, nothing is stored and Stripe retries the same event.
+      if (
+        !(
+          error instanceof ValidationFailedError ||
+          error instanceof NotFoundError ||
+          error instanceof IntegrityLockedError
+        )
+      ) {
+        throw error;
+      }
       // Finance refused the references (inactive account or method, vanished client, wrong currency). Its
       // unit of work rolled back, so the event is stored on its own as parked for the partner to review.
       return park(reasonOf(error));
@@ -166,7 +192,7 @@ export class HandleStripeWebhook {
   }
 }
 
-function reasonOf(error: DomainError): ParkReason {
+function reasonOf(error: Error): ParkReason {
   if (
     error instanceof ValidationFailedError &&
     error.fieldErrors &&

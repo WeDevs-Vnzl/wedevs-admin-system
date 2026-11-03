@@ -28,6 +28,8 @@ export class InMemoryPaymentProvider implements PaymentProviderPort {
   >();
   private readonly byKey = new Map<string, string>();
   private sequence = 0;
+  /** Test helper: the next `retrievePayment` calls throw this. */
+  failRetrieveWith: Error | null = null;
 
   /** Test helper: a body and headers the fake accepts for `event`. */
   signedEvent(event: ProviderEvent): { rawBody: string; headers: Record<string, string> } {
@@ -54,6 +56,7 @@ export class InMemoryPaymentProvider implements PaymentProviderPort {
   }
 
   async retrievePayment(paymentId: string): Promise<ProviderPayment> {
+    if (this.failRetrieveWith) throw this.failRetrieveWith;
     const payment = this.payments.get(paymentId);
     if (!payment) throw new NotFoundError();
     return payment;
