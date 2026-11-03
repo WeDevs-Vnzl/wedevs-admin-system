@@ -33,10 +33,7 @@ export interface OpenLinkForCapacity {
 }
 
 export type LinkDeactivationReason =
-  | 'INVOICE_NOT_OPEN'
-  | 'PENDING_EXPIRED'
-  | 'LINK_EXPIRED'
-  | 'BALANCE_SHRUNK';
+  'INVOICE_NOT_OPEN' | 'PENDING_EXPIRED' | 'LINK_EXPIRED' | 'BALANCE_SHRUNK';
 
 export interface LinkDeactivation {
   readonly linkId: string;

@@ -194,7 +194,9 @@ describe('StripePaymentProvider.retrievePayment', () => {
     }));
     const error = await provider.retrievePayment('pi_p').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ValidationFailedError);
-    expect((error as ValidationFailedError).message).toBe('integrations.stripe.paymentNotSucceeded');
+    expect((error as ValidationFailedError).message).toBe(
+      'integrations.stripe.paymentNotSucceeded',
+    );
   });
 
   it('refuses a currency other than USD or EUR with the currency key', async () => {

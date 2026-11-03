@@ -233,7 +233,9 @@ describe('HandleStripeWebhook (DT-183, A11)', () => {
       message: 'validation.paymentLinkCurrencyUnsupported',
     });
     expect(await w.deliver(eventOf())).toBe('parked');
-    expect(w.events.all()).toMatchObject([{ outcome: 'PARKED', reasonCode: 'CURRENCY_UNSUPPORTED' }]);
+    expect(w.events.all()).toMatchObject([
+      { outcome: 'PARKED', reasonCode: 'CURRENCY_UNSUPPORTED' },
+    ]);
     expect(w.recording.calls).toHaveLength(0);
   });
 

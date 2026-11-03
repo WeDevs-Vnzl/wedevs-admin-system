@@ -154,13 +154,11 @@ export class HandleStripeWebhook {
     } catch (error) {
       // Only a refusal of the references parks. A `ConflictError` (exhausted serialization retries, a changed
       // lock set) is transient: it escapes, nothing is stored and Stripe retries the same event.
-      if (
-        !(
-          error instanceof ValidationFailedError ||
-          error instanceof NotFoundError ||
-          error instanceof IntegrityLockedError
-        )
-      ) {
+      if (!(
+        error instanceof ValidationFailedError ||
+        error instanceof NotFoundError ||
+        error instanceof IntegrityLockedError
+      )) {
         throw error;
       }
       // Finance refused the references (inactive account or method, vanished client, wrong currency). Its
