@@ -157,14 +157,18 @@ describe('linksToDeactivate', () => {
     ]);
   });
 
-  it('deactivates PENDING links older than 24 hours, and only those', () => {
+  it('deactivates PENDING and ACTIVE links older than 24 hours (the Checkout Session is dead), and only those', () => {
     const links = [
       link('stale', '10.00', '2026-11-01T11:59:59Z', 'PENDING'),
       link('exact', '10.00', '2026-11-01T12:00:00Z', 'PENDING'),
       link('active-old', '10.00', '2026-10-01T12:00:00Z', 'ACTIVE'),
+      link('active-exact', '10.00', '2026-11-01T12:00:00Z', 'ACTIVE'),
     ];
     const out = linksToDeactivate('100.00', links, '0', { invoiceOpen: true, now });
-    expect(out.map((item) => [item.linkId, item.reason])).toEqual([['stale', 'PENDING_EXPIRED']]);
+    expect(out.map((item) => [item.linkId, item.reason]).sort()).toEqual([
+      ['active-old', 'LINK_EXPIRED'],
+      ['stale', 'PENDING_EXPIRED'],
+    ]);
   });
 
   it('does not count an expired link in the shrink pass', () => {

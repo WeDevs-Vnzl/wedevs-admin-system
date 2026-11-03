@@ -19,7 +19,10 @@ import { isOpenLinkStatus, type PaymentLinkStatus } from './payment-link';
 export const STRIPE_LINK_CURRENCIES = ['USD', 'EUR'] as const;
 /** Stripe's floor for both currencies. */
 export const PAYMENT_LINK_MINIMUM = '0.50';
-/** A `PENDING` link older than this never reached the provider and is deactivated by the daily job. */
+/**
+ * A `PENDING` link older than this never reached the provider; an `ACTIVE` one points at a Checkout Session
+ * that Stripe expired on its own (default 24 h). The daily job deactivates both.
+ */
 export const PENDING_LINK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export interface OpenLinkForCapacity {
@@ -29,7 +32,11 @@ export interface OpenLinkForCapacity {
   readonly status: PaymentLinkStatus;
 }
 
-export type LinkDeactivationReason = 'INVOICE_NOT_OPEN' | 'PENDING_EXPIRED' | 'BALANCE_SHRUNK';
+export type LinkDeactivationReason =
+  | 'INVOICE_NOT_OPEN'
+  | 'PENDING_EXPIRED'
+  | 'LINK_EXPIRED'
+  | 'BALANCE_SHRUNK';
 
 export interface LinkDeactivation {
   readonly linkId: string;
@@ -104,7 +111,7 @@ function newestFirst(a: OpenLinkForCapacity, b: OpenLinkForCapacity): number {
 
 /**
  * Which open links the daily job deactivates. An invoice that is no longer open loses every open link;
- * otherwise `PENDING` links older than 24 hours go first, then the newest remaining links until their sum
+ * otherwise links (`PENDING` or `ACTIVE`) older than 24 hours go first, then the newest remaining links until their sum
  * plus the reserved term fits the open balance. Completed and settled links are never touched.
  */
 export function linksToDeactivate(
@@ -120,13 +127,11 @@ export function linksToDeactivate(
     return open.map((link) => ({ linkId: link.id, reason: 'INVOICE_NOT_OPEN' }));
   }
   const cutoff = context.now.getTime() - PENDING_LINK_MAX_AGE_MS;
-  const expired = open.filter(
-    (link) => link.status === 'PENDING' && link.createdAt.getTime() < cutoff,
-  );
+  const expired = open.filter((link) => link.createdAt.getTime() < cutoff);
   const expiredIds = new Set(expired.map((link) => link.id));
   const out: LinkDeactivation[] = expired.map((link) => ({
     linkId: link.id,
-    reason: 'PENDING_EXPIRED',
+    reason: link.status === 'PENDING' ? 'PENDING_EXPIRED' : 'LINK_EXPIRED',
   }));
 
   const budget = floorAtZero(subMoney(openBalance, reserved));

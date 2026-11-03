@@ -54,7 +54,8 @@ describe('DeactivatePaymentLinksBeyondBalance: provider retry (DT-196)', () => {
     expect((await world.sweep.execute(SYSTEM_ACTOR)).providerFailures).toEqual(['lnk_2']);
     world.clock.advance(100 * DAY_MS);
     expect((await world.sweep.execute(SYSTEM_ACTOR)).providerFailures).toEqual([]);
-    expect(world.provider.deactivated).toEqual(['plink_fake_2']);
+    // lnk_1 is 100 days old by now, so the same run expires it too (its session is long dead).
+    expect(world.provider.deactivated).toEqual(['plink_fake_1', 'plink_fake_2']);
   });
 
   it('never calls the provider for a link that has no external id', async () => {
