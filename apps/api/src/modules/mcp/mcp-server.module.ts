@@ -1,4 +1,11 @@
-import { Module, type Type } from '@nestjs/common';
+import {
+  type MiddlewareConsumer,
+  Module,
+  type NestModule,
+  RequestMethod,
+  type Type,
+} from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
 import { ModuleRef } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_CONFIG } from '../../config/config.module';
@@ -51,4 +58,20 @@ import { McpThrottlerGuard } from './interface/mcp/mcp-throttler.guard';
   ],
   exports: [McpToolRegistry],
 })
-export class McpServerModule {}
+export class McpServerModule implements NestModule {
+  /**
+   * The server is stateless (contract choice 1): no GET stream and no session to DELETE. A middleware answers
+   * 405 with `Allow: POST`, so the route inventory and the OpenAPI document keep `POST /mcp` as the only route.
+   */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply((_req: Request, res: Response, _next: NextFunction) => {
+        res.setHeader('Allow', 'POST');
+        res.status(405).end();
+      })
+      .forRoutes(
+        { path: 'mcp', method: RequestMethod.GET, version: '1' },
+        { path: 'mcp', method: RequestMethod.DELETE, version: '1' },
+      );
+  }
+}

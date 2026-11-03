@@ -211,9 +211,16 @@ describe('MCP server (e2e): DT-188, DT-189, DT-190, DT-195, DT-198', () => {
       expect(res.body.result.serverInfo.name).toBe('wedevs-core');
     });
 
-    it('serves no GET stream: the server is stateless', async () => {
+    it('serves no GET stream: the server is stateless (405, Allow: POST)', async () => {
       const res = await http().get(`${V1}/mcp`).set(bearer(world.secrets.OWNER));
-      expect([404, 405]).toContain(res.status);
+      expect(res.status).toBe(405);
+      expect(res.headers.allow).toBe('POST');
+    });
+
+    it('has no session to delete: DELETE answers 405 with Allow: POST', async () => {
+      const res = await http().delete(`${V1}/mcp`).set(bearer(world.secrets.OWNER));
+      expect(res.status).toBe(405);
+      expect(res.headers.allow).toBe('POST');
     });
   });
 
