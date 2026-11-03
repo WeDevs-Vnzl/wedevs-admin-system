@@ -12,7 +12,7 @@ import {
   GenerateRecurringExpenses,
 } from '../../../src/modules/finance/application/use-cases/expenses/generate-recurring-expenses.use-case';
 import { ExpensesModule } from '../../../src/modules/finance/expenses.module';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';
 import type { UserRole } from '../../../src/shared/domain/enums';

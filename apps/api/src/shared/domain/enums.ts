@@ -152,6 +152,8 @@ export const ENTITY_TYPE_VALUES = [
   'TAG',
   'SETTING',
   'USER',
+  'PAYMENT_LINK',
+  'API_TOKEN',
 ] as const;
 export type EntityType = (typeof ENTITY_TYPE_VALUES)[number];
 

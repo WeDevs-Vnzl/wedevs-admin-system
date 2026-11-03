@@ -20,7 +20,7 @@ import { PrismaProjectRepository } from '../../../src/modules/commercial/infrast
 import type { ClientSearchDependentsPort } from '../../../src/modules/commercial/application/ports/client-search-dependents.port';
 import { FinanceClientSearchDependents } from '../../../src/modules/finance/infrastructure/client-search-dependents.adapter';
 import { PrismaRowLocks } from '../../../src/shared/infrastructure/prisma/prisma-row-locks';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { TagAssignments } from '../../../src/modules/settings/application/tag-assignments';
 import { PrismaTagAssignmentRepository } from '../../../src/modules/settings/infrastructure/prisma-tag-assignment.repository';
 import { PrismaTagRepository } from '../../../src/modules/settings/infrastructure/prisma-tag.repository';

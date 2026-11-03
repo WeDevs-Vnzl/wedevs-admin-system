@@ -2,7 +2,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { PaymentsModule } from '../../src/modules/finance/payments.module';
-import { MatrixAuthorization } from '../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../src/modules/identity/application/matrix-authorization';
 import { DocumentTypesModule } from '../../src/modules/settings/document-types.module';
 import { FinanceCatalogsModule } from '../../src/modules/settings/finance-catalogs.module';
 import { AUTHORIZATION } from '../../src/shared/application/ports/tokens';

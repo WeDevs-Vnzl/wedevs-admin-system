@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { BillingModule } from '../../../src/modules/finance/billing.module';
 import { SYSTEM_ACTOR } from '../../../src/modules/finance/application/recompute-all';
 import { GenerateRecurringInstallments } from '../../../src/modules/finance/application/use-cases/billing/generate-recurring-installments.use-case';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION, CLOCK } from '../../../src/shared/application/ports/tokens';
 import type { UserRole } from '../../../src/shared/domain/enums';

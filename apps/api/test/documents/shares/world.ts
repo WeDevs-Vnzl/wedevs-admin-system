@@ -19,7 +19,7 @@ import {
   ShareViews,
 } from '../../../src/modules/documents/application/use-cases/shares/share-support';
 import { UpdateShareLink } from '../../../src/modules/documents/application/use-cases/shares/update-share-link.use-case';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { DocumentFormat, UserRole } from '../../../src/shared/domain/enums';
 import { DEFAULT_LIST_QUERY, type ListQuery } from '../../../src/shared/domain/list-query';

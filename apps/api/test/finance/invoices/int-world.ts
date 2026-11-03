@@ -18,7 +18,7 @@ import { CommercialInvoiceReferences } from '../../../src/modules/finance/infras
 import { PrismaBillingRepository } from '../../../src/modules/finance/infrastructure/prisma-billing.repository';
 import { PrismaInvoiceRepository } from '../../../src/modules/finance/infrastructure/prisma-invoice.repository';
 import type { PrismaReadModelWriter } from '../../../src/modules/finance/infrastructure/prisma-read-model-writer';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { ClockPort } from '../../../src/shared/application/ports/clock.port';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';
 import type { UnitOfWorkPort } from '../../../src/shared/application/ports/unit-of-work.port';

@@ -1,5 +1,11 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import type {
+  ProjectDetailView,
+  ProjectLinkRecord,
+  ProjectListRowView,
+} from '../../../application/use-cases/project-views';
+import { toEntityRefResponse } from './contacts.dto';
 import { entityRefResponseSchema } from '../../../../../shared/interface/error-envelope';
 import {
   PROJECT_LINK_GROUP_VALUES,
@@ -8,6 +14,7 @@ import {
 } from '../../../../../shared/domain/enums';
 import {
   dateOnlySchema,
+  decimalStringSchema,
   idSchema,
   timestampSchema,
   VALIDATION_MESSAGES,
@@ -200,10 +207,10 @@ export class ProjectLinksResponseDto extends createZodDto(projectLinksResponseSc
 
 /** USD decimal strings; `null` without `canSeeFinancials` (C13). */
 const moneyHeadline = {
-  contractedValueUsd: z.string().nullable(),
-  invoicedUsd: z.string().nullable(),
-  collectedUsd: z.string().nullable(),
-  toInvoiceUsd: z.string().nullable(),
+  contractedValueUsd: decimalStringSchema.nullable(),
+  invoicedUsd: decimalStringSchema.nullable(),
+  collectedUsd: decimalStringSchema.nullable(),
+  toInvoiceUsd: decimalStringSchema.nullable(),
 };
 
 export const projectListRowSchema = z.object({
@@ -259,3 +266,46 @@ export const restoredProjectSchema = z.object({
   restoredAt: timestampSchema,
 });
 export class RestoredProjectDto extends createZodDto(restoredProjectSchema) {}
+
+// ───────────────────────────── Output mapping (shared with the MCP tools) ─────────────────────────────
+
+export function toProjectLinkResponse(link: ProjectLinkRecord) {
+  return { id: link.id, group: link.group, label: link.label, url: link.url, order: link.order };
+}
+
+export function toProjectRowResponse(row: ProjectListRowView) {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    clients: row.clients.map((item) => ({
+      client: toEntityRefResponse(item.client),
+      role: item.role,
+    })),
+    status: row.status,
+    startDate: row.startDate,
+    targetEndDate: row.targetEndDate,
+    stack: row.stack.map((tech) => ({ ...tech })),
+    tags: row.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
+    archivedAt: row.archivedAt ? row.archivedAt.toISOString() : null,
+    contractedValueUsd: row.contractedValueUsd,
+    invoicedUsd: row.invoicedUsd,
+    collectedUsd: row.collectedUsd,
+    toInvoiceUsd: row.toInvoiceUsd,
+  };
+}
+
+export function toProjectDetailResponse(view: ProjectDetailView): ProjectDetailDto {
+  return {
+    ...toProjectRowResponse(view),
+    summary: view.summary,
+    description: view.description
+      ? { type: 'doc', ...(view.description.content ? { content: view.description.content } : {}) }
+      : null,
+    endDate: view.endDate,
+    links: view.links.map(toProjectLinkResponse),
+    hasBillingPlan: view.hasBillingPlan,
+    createdAt: view.createdAt.toISOString(),
+    updatedAt: view.updatedAt.toISOString(),
+  };
+}

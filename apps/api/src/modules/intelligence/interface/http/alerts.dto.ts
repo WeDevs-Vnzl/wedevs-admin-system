@@ -6,7 +6,9 @@ import {
   ALERT_MAX_MARK_READ,
   ALERT_MAX_SNOOZE_DAYS,
   ALERT_TYPE_VALUES,
+  type AlertOutput,
 } from '../../application/use-cases/alerts/alert-support';
+import type { AlertsInboxOutput } from '../../application/use-cases/alerts/list-alerts.use-case';
 import {
   dateOnlySchema,
   decimalStringSchema,
@@ -92,3 +94,21 @@ export class AlertDismissalResponseDto extends createZodDto(
     active: z.boolean(),
   }),
 ) {}
+
+// Output mapping, shared with the MCP tool.
+const toAlertResponse = (alert: AlertOutput): AlertsInboxResponseDto['items'][number] => ({
+  ...alert,
+  entity: alert.entity
+    ? {
+        type: alert.entity.type,
+        id: alert.entity.id,
+        code: alert.entity.code ?? null,
+        label: alert.entity.label,
+      }
+    : null,
+});
+
+export const toInboxResponse = (inbox: AlertsInboxOutput): AlertsInboxResponseDto => ({
+  ...inbox,
+  items: inbox.items.map(toAlertResponse),
+});

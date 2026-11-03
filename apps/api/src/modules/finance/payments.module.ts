@@ -61,6 +61,10 @@ import {
 } from './application/use-cases/payments/payment-reads.use-case';
 import { PaymentSupport } from './application/use-cases/payments/payment-support';
 import { SetPaymentStatus } from './application/use-cases/payments/set-payment-status.use-case';
+import {
+  PAYMENT_LINK_SETTLEMENT,
+  type PaymentLinkSettlementPort,
+} from './application/ports/payment-link-settlement.port';
 import { UpdatePayment } from './application/use-cases/payments/update-payment.use-case';
 import {
   PlatformPaymentReceiptFiles,
@@ -84,7 +88,8 @@ import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
  * its allocations, the invoices' cached totals and installments' status, the facts, the account balance and the
  * client and project metrics in one `Serializable` unit of work, with every row locked once up front in the global
  * order. The invoice side comes from `InvoicesModule` (`RecomputeInvoice`, `InvoiceSupport.reindex`,
- * `INVOICE_REPOSITORY`). From `onModuleInit` it registers the receipt claim in platform's `FileAccessRegistry`, the
+ * `INVOICE_REPOSITORY`). `PAYMENT_LINK_SETTLEMENT` is injected optionally: `integrations` binds it globally (DT-110) and
+ * the payment link settlement is skipped where no such binding exists. From `onModuleInit` it registers the receipt claim in platform's `FileAccessRegistry`, the
  * `PAYMENT` taggable resolver in settings' tag registry and the `PAYMENT` note target. Not imported by
  * `AppModule`; package 6.1 wires it.
  */
@@ -184,15 +189,52 @@ import { FinanceCatalogsModule } from '../settings/finance-catalogs.module';
         uow: UnitOfWorkPort,
         support: PaymentSupport,
         ids: IdGeneratorPort,
-      ) => new AllocatePayment(a, uow, support, ids),
-      inject: [AUTHORIZATION, UNIT_OF_WORK, PaymentSupport, ID_GENERATOR],
+        settlement?: PaymentLinkSettlementPort,
+      ) => new AllocatePayment(a, uow, support, ids, settlement),
+      inject: [
+        AUTHORIZATION,
+        UNIT_OF_WORK,
+        PaymentSupport,
+        ID_GENERATOR,
+        { token: PAYMENT_LINK_SETTLEMENT, optional: true },
+      ],
     },
-    ...[UpdatePayment, SetPaymentStatus, DeallocatePayment].map((useCase) => ({
-      provide: useCase,
+    {
+      provide: SetPaymentStatus,
+      useFactory: (
+        a: AuthorizationPort,
+        uow: UnitOfWorkPort,
+        support: PaymentSupport,
+        settlement?: PaymentLinkSettlementPort,
+      ) => new SetPaymentStatus(a, uow, support, settlement),
+      inject: [
+        AUTHORIZATION,
+        UNIT_OF_WORK,
+        PaymentSupport,
+        { token: PAYMENT_LINK_SETTLEMENT, optional: true },
+      ],
+    },
+    {
+      provide: UpdatePayment,
       useFactory: (a: AuthorizationPort, uow: UnitOfWorkPort, support: PaymentSupport) =>
-        new useCase(a, uow, support),
+        new UpdatePayment(a, uow, support),
       inject: [AUTHORIZATION, UNIT_OF_WORK, PaymentSupport],
-    })),
+    },
+    {
+      provide: DeallocatePayment,
+      useFactory: (
+        a: AuthorizationPort,
+        uow: UnitOfWorkPort,
+        support: PaymentSupport,
+        settlement?: PaymentLinkSettlementPort,
+      ) => new DeallocatePayment(a, uow, support, settlement),
+      inject: [
+        AUTHORIZATION,
+        UNIT_OF_WORK,
+        PaymentSupport,
+        { token: PAYMENT_LINK_SETTLEMENT, optional: true },
+      ],
+    },
   ],
 })
 export class PaymentsModule implements OnModuleInit {

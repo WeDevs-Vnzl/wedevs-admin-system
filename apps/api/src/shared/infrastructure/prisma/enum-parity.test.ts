@@ -3,7 +3,13 @@ import * as domainEnums from '../../domain/enums';
 import { PrismaEnums as prismaEnums } from './generated-client';
 
 /** Prisma enums owned by a context domain, never exposed in DTOs (data-rules.md §10a, DT-104). */
-const CONTEXT_OWNED_ENUMS = ['FinanceFactKind', 'FinanceFactSource'];
+const CONTEXT_OWNED_ENUMS = [
+  'FinanceFactKind',
+  'FinanceFactSource',
+  'IntegrationProvider',
+  'IntegrationEventOutcome',
+  'PaymentLinkStatus',
+];
 
 const snake = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
 

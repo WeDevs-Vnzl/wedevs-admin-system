@@ -15,7 +15,7 @@ import { NoteFileAccessResolver } from '../../../src/modules/commercial/infrastr
 import { NoteRestoreHandler } from '../../../src/modules/commercial/infrastructure/note-restore.handler';
 import { NoteTaggableResolver } from '../../../src/modules/commercial/infrastructure/note-taggable.resolver';
 import { PlatformNoteAttachmentFiles } from '../../../src/modules/commercial/infrastructure/platform-note-attachment-files.adapter';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import { ReserveFileForAttachment } from '../../../src/modules/platform/application/use-cases/reserve-file-for-attachment.use-case';
 import type { StoredFile } from '../../../src/modules/platform/domain/file';

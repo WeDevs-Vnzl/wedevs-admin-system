@@ -51,7 +51,7 @@ import { UpdatePayment } from '../../../../src/modules/finance/application/use-c
 import { ImportRatesCsv } from '../../../../src/modules/finance/application/use-cases/rates/import-rates-csv.use-case';
 import { LoadDailyRates } from '../../../../src/modules/finance/application/use-cases/rates/load-daily-rates.use-case';
 import { UpsertExchangeRate } from '../../../../src/modules/finance/application/use-cases/rates/upsert-exchange-rate.use-case';
-import { MatrixAuthorization } from '../../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../../src/shared/application/current-user';
 import {
   AUTHORIZATION,

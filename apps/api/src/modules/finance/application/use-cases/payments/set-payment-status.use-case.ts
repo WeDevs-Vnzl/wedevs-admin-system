@@ -7,6 +7,7 @@ import {
 import type { UnitOfWorkPort } from '../../../../../shared/application/ports/unit-of-work.port';
 import { ConflictError, NotFoundError } from '../../../../../shared/domain/domain-error';
 import { PAYMENT_STATUS_VALUES, type PaymentStatus } from '../../../../../shared/domain/enums';
+import type { PaymentLinkSettlementPort } from '../../ports/payment-link-settlement.port';
 import type { PaymentRecord } from '../../ports/payment.repository.port';
 import { addError, textError, throwIfAny } from '../../field-validation';
 import { PAYMENT_MESSAGES } from './payment-input';
@@ -38,6 +39,8 @@ export class SetPaymentStatus {
     private readonly authorization: AuthorizationPort,
     private readonly uow: UnitOfWorkPort,
     private readonly support: PaymentSupport,
+    /** DT-199: settles the payment link of a voided link payment. Optional until the module wires it. */
+    private readonly settlement?: PaymentLinkSettlementPort,
   ) {}
 
   async execute(actor: CurrentUser, input: SetPaymentStatusInput): Promise<PaymentOutput> {
@@ -90,6 +93,9 @@ export class SetPaymentStatus {
         updatedById: actor.userId,
       };
       await this.support.payments.update(after);
+      if (input.status === 'ANULADO') {
+        await this.settlement?.settleOnVoid({ paymentId: before.id, at: this.support.nowIso() });
+      }
       await this.support.settle({
         actor: actorOf(actor),
         action: 'STATUS_CHANGE',

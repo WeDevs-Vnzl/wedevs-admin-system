@@ -111,6 +111,25 @@ const processGroup = {
   group: ['process', 'node:process'],
   message: 'Rule (g): importing process is allowed only in src/config.',
 };
+// (i)-(k) provider SDKs live only in their adapter folder (C11, BE-6): `stripe` in
+// integrations/infrastructure/stripe, the Binance connector in integrations/infrastructure/binance, the MCP SDK in
+// modules/mcp/interface/mcp. The carve-out blocks at the end of this file drop one group each.
+const stripeGroup = {
+  // `regex`, not gitignore globs: `stripe/**` also matched first-party paths such as `use-cases/stripe/`.
+  regex: '^stripe(/.*)?$',
+  message:
+    'Rule (i): stripe is allowed only in src/modules/integrations/infrastructure/stripe/ (an SDK type never crosses a port).',
+};
+const binanceGroup = {
+  regex: '^(@binance/.+|binance(/.*)?|binance-api-node|node-binance-api)$',
+  message:
+    'Rule (j): the Binance connector is allowed only in src/modules/integrations/infrastructure/binance/.',
+};
+const mcpGroup = {
+  group: ['@modelcontextprotocol/*'],
+  message: 'Rule (k): @modelcontextprotocol/sdk is allowed only in src/modules/mcp/interface/mcp/.',
+};
+const sdkGroups = [stripeGroup, binanceGroup, mcpGroup];
 const restrictImports = (...patterns) => ({
   'no-restricted-imports': ['error', { patterns }],
 });
@@ -213,7 +232,7 @@ export default tseslint.config(
       `${SRC}/generated/**`,
     ],
     rules: {
-      ...restrictImports(prismaGroup, processGroup),
+      ...restrictImports(prismaGroup, processGroup, ...sdkGroups),
       'no-restricted-syntax': ['error', ...processEnv],
     },
   },
@@ -222,7 +241,7 @@ export default tseslint.config(
     files: [`${SRC}/shared/infrastructure/**/*.ts`, `${SRC}/modules/*/infrastructure/**/*.ts`],
     ignores: TESTS,
     rules: {
-      ...restrictImports(processGroup),
+      ...restrictImports(processGroup, ...sdkGroups),
       'no-restricted-syntax': ['error', ...processEnv],
     },
   },
@@ -231,7 +250,12 @@ export default tseslint.config(
     files: [`${SRC}/modules/*/domain/**/*.ts`, `${SRC}/shared/domain/**/*.ts`],
     ignores: TESTS,
     rules: {
-      ...restrictImports(prismaGroup, processGroup, bareSpecifierGroup('a', 'domain')),
+      ...restrictImports(
+        prismaGroup,
+        processGroup,
+        ...sdkGroups,
+        bareSpecifierGroup('a', 'domain'),
+      ),
       'no-restricted-syntax': ['error', ...processEnv, ...clock],
     },
   },
@@ -240,8 +264,35 @@ export default tseslint.config(
     files: [`${SRC}/modules/*/application/**/*.ts`, `${SRC}/shared/application/**/*.ts`],
     ignores: TESTS,
     rules: {
-      ...restrictImports(prismaGroup, processGroup, bareSpecifierGroup('b', 'application')),
+      ...restrictImports(
+        prismaGroup,
+        processGroup,
+        ...sdkGroups,
+        bareSpecifierGroup('b', 'application'),
+      ),
       'no-restricted-syntax': ['error', ...processEnv, ...clock],
     },
+  },
+  // config may read the environment but never imports a provider SDK
+  {
+    files: [`${SRC}/config/**/*.ts`],
+    ignores: TESTS,
+    rules: restrictImports(...sdkGroups),
+  },
+  // Carve-outs: each adapter folder keeps every restriction except its own SDK
+  {
+    files: [`${SRC}/modules/integrations/infrastructure/stripe/**/*.ts`],
+    ignores: TESTS,
+    rules: restrictImports(processGroup, binanceGroup, mcpGroup),
+  },
+  {
+    files: [`${SRC}/modules/integrations/infrastructure/binance/**/*.ts`],
+    ignores: TESTS,
+    rules: restrictImports(processGroup, stripeGroup, mcpGroup),
+  },
+  {
+    files: [`${SRC}/modules/mcp/interface/mcp/**/*.ts`],
+    ignores: TESTS,
+    rules: restrictImports(prismaGroup, processGroup, stripeGroup, binanceGroup),
   },
 );

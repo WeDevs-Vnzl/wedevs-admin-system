@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CreateClient } from '../../../src/modules/commercial/application/use-cases/create-client.use-case';
 import { PrismaClientRepository } from '../../../src/modules/commercial/infrastructure/prisma-client.repository';
 import { PrismaContactRepository } from '../../../src/modules/commercial/infrastructure/prisma-contact.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { TagAssignments } from '../../../src/modules/settings/application/tag-assignments';
 import { PrismaTagAssignmentRepository } from '../../../src/modules/settings/infrastructure/prisma-tag-assignment.repository';
 import { PrismaTagRepository } from '../../../src/modules/settings/infrastructure/prisma-tag.repository';

@@ -6,6 +6,8 @@ export const ACTIVITY_LOG = Symbol('ACTIVITY_LOG');
 export const SEQUENCE = Symbol('SEQUENCE');
 export const AUTHORIZATION = Symbol('AUTHORIZATION');
 export const AUTHENTICATOR = Symbol('AUTHENTICATOR');
+/** Second authenticator, personal access tokens; bound only for `POST /mcp` (DT-190). */
+export const MCP_AUTHENTICATOR = Symbol('MCP_AUTHENTICATOR');
 export const SEARCH_INDEX = Symbol('SEARCH_INDEX');
 export const CLIENT_METRICS_WRITER = Symbol('CLIENT_METRICS_WRITER');
 export const REQUEST_CONTEXT = Symbol('REQUEST_CONTEXT');

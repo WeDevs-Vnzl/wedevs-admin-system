@@ -20,7 +20,7 @@ import { CommercialBillingProjectsAdapter } from '../../../src/modules/finance/i
 import { ManualRateSource } from '../../../src/modules/finance/infrastructure/manual-rate-source';
 import { PrismaBillingRepository } from '../../../src/modules/finance/infrastructure/prisma-billing.repository';
 import { PrismaExchangeRateRepository } from '../../../src/modules/finance/infrastructure/prisma-exchange-rate.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { ClockPort } from '../../../src/shared/application/ports/clock.port';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';

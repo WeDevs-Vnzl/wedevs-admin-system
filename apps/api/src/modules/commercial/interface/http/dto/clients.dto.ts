@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CLIENT_KIND_VALUES, CLIENT_STATUS_VALUES } from '../../../../../shared/domain/enums';
 import {
   dateOnlySchema,
+  decimalStringSchema,
   idSchema,
   timestampSchema,
 } from '../../../../../shared/interface/common.schemas';
@@ -101,9 +102,9 @@ export const clientListRowSchema = z.object({
   ...clientCoreShape,
   projectCount: z.number().int().nonnegative(),
   /** USD decimal string; `null` without `canSeeFinancials`. */
-  totalInvoicedUsd: z.string().nullable(),
+  totalInvoicedUsd: decimalStringSchema.nullable(),
   /** USD decimal string; `null` without `canSeeFinancials`. */
-  receivableUsd: z.string().nullable(),
+  receivableUsd: decimalStringSchema.nullable(),
   tags: z.array(tagChipSchema),
   lastActivityAt: timestampSchema.nullable(),
   archivedAt: timestampSchema.nullable(),

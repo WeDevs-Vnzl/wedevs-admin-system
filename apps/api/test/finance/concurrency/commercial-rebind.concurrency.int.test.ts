@@ -12,7 +12,7 @@ import { CommercialBillingProjectsAdapter } from '../../../src/modules/finance/i
 import { PrismaBillingRepository } from '../../../src/modules/finance/infrastructure/prisma-billing.repository';
 import { PrismaFinanceSources } from '../../../src/modules/finance/infrastructure/prisma-finance-sources';
 import { PrismaReadModelWriter } from '../../../src/modules/finance/infrastructure/prisma-read-model-writer';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';
 import type { UnitOfWorkPort } from '../../../src/shared/application/ports/unit-of-work.port';

@@ -27,7 +27,7 @@ import type {
   InvoiceLineRecord,
   InvoiceRecord,
 } from '../../../src/modules/finance/application/ports/invoice.repository.port';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { NotFoundError } from '../../../src/shared/domain/domain-error';
 import type { EntityRef } from '../../../src/shared/domain/entity-ref';

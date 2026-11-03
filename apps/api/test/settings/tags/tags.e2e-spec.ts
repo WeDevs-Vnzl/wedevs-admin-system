@@ -1,7 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { TAGGABLE_TARGET_REGISTRY } from '../../../src/modules/settings/application/ports/taggable-target.port';
 import type { TaggableTargetRegistry } from '../../../src/modules/settings/application/taggable-target.registry';
 import { TagsModule } from '../../../src/modules/settings/tags.module';

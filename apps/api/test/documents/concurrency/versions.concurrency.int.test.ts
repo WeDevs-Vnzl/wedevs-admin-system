@@ -14,7 +14,7 @@ import { UploadVersion } from '../../../src/modules/documents/application/use-ca
 import { SetDocumentStatus } from '../../../src/modules/documents/application/use-cases/records/set-document-status.use-case';
 import { PrismaDocumentRepository } from '../../../src/modules/documents/infrastructure/prisma-document.repository';
 import { PrismaDocumentVersionRepository } from '../../../src/modules/documents/infrastructure/prisma-document-version.repository';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { FileAccessRegistry } from '../../../src/modules/platform/application/file-access.registry';
 import type { FileRepository } from '../../../src/modules/platform/application/ports/file.repository.port';
 import { DeleteFile } from '../../../src/modules/platform/application/use-cases/delete-file.use-case';

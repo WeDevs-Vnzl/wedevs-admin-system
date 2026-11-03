@@ -1,7 +1,7 @@
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { EntityRef } from '../../../src/shared/domain/entity-ref';
 import type { UserRole } from '../../../src/shared/domain/enums';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { DismissAlert } from '../../../src/modules/intelligence/application/use-cases/alerts/dismiss-alert.use-case';
 import { ListAlerts } from '../../../src/modules/intelligence/application/use-cases/alerts/list-alerts.use-case';
 import { MarkAlertsRead } from '../../../src/modules/intelligence/application/use-cases/alerts/mark-alerts-read.use-case';

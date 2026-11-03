@@ -25,7 +25,7 @@ import type {
   ExpenseReferencesPort,
 } from '../../../src/modules/finance/application/ports/expense-references.port';
 import type { ExchangeRatePort } from '../../../src/modules/finance/application/ports/exchange-rate.port';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { NotFoundError } from '../../../src/shared/domain/domain-error';
 import type { UserRole } from '../../../src/shared/domain/enums';

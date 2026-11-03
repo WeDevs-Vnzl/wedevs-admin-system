@@ -35,7 +35,7 @@ import {
   computeInvoiceTotals,
   computeLineAmounts,
 } from '../../../src/modules/finance/domain/invoice-totals';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { NotFoundError } from '../../../src/shared/domain/domain-error';
 import type { EntityRef } from '../../../src/shared/domain/entity-ref';
 import { FixedClock } from '../../support/fakes/fixed-clock';

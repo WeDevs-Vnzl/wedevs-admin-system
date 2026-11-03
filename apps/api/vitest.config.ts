@@ -53,6 +53,7 @@ export default defineConfig({
         'src/shared/domain/business-date.ts',
         'src/modules/finance/domain/**/*.ts',
         'src/modules/intelligence/domain/**/*.ts',
+        'src/modules/integrations/domain/**/*.ts',
         'src/modules/finance/application/use-cases/{invoices,payments,accounts,billing}/**/*.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.int.test.ts', '**/*.e2e-spec.ts'],

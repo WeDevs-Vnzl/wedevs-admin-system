@@ -5,13 +5,9 @@ import { ApiErrorResponses } from '../../../../shared/interface/api-error-respon
 import { CurrentUser } from '../../../../shared/interface/current-user.decorator';
 import { Authenticated } from '../../../../shared/interface/grant.decorator';
 import { DismissAlert } from '../../application/use-cases/alerts/dismiss-alert.use-case';
-import {
-  ListAlerts,
-  type AlertsInboxOutput,
-} from '../../application/use-cases/alerts/list-alerts.use-case';
+import { ListAlerts } from '../../application/use-cases/alerts/list-alerts.use-case';
 import { MarkAlertsRead } from '../../application/use-cases/alerts/mark-alerts-read.use-case';
 import { RestoreAlert } from '../../application/use-cases/alerts/restore-alert.use-case';
-import type { AlertOutput } from '../../application/use-cases/alerts/alert-support';
 import {
   AlertDismissalResponseDto,
   AlertsInboxResponseDto,
@@ -19,24 +15,8 @@ import {
   DismissAlertBodyDto,
   ListAlertsQueryDto,
   MarkAlertsReadBodyDto,
+  toInboxResponse,
 } from './alerts.dto';
-
-const toAlertDto = (alert: AlertOutput): AlertsInboxResponseDto['items'][number] => ({
-  ...alert,
-  entity: alert.entity
-    ? {
-        type: alert.entity.type,
-        id: alert.entity.id,
-        code: alert.entity.code ?? null,
-        label: alert.entity.label,
-      }
-    : null,
-});
-
-const toInboxDto = (inbox: AlertsInboxOutput): AlertsInboxResponseDto => ({
-  ...inbox,
-  items: inbox.items.map(toAlertDto),
-});
 
 /**
  * The caller's alerts (PRD §7.9). Computed live; the caller's read, dismissed and snoozed state is its own
@@ -67,7 +47,7 @@ export class AlertsController {
     @Query() query: ListAlertsQueryDto,
   ): Promise<AlertsInboxResponseDto> {
     const types = query.types === undefined ? undefined : [query.types].flat();
-    return toInboxDto(await this.listAlerts.execute(user, { types, limit: query.limit }));
+    return toInboxResponse(await this.listAlerts.execute(user, { types, limit: query.limit }));
   }
 
   @Post('read')

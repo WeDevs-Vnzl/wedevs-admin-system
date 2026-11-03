@@ -31,7 +31,12 @@ export interface JobsWorld {
  */
 export async function bootJobsWorld(at: string = DAY): Promise<JobsWorld> {
   applyTestEnv();
-  Object.assign(process.env, { NODE_ENV: 'test', APP_URL: 'http://localhost:3001' });
+  // The worker env requires `REDIS_URL` (DT-191); this world never starts the queue runtime, so nothing connects.
+  Object.assign(process.env, {
+    NODE_ENV: 'test',
+    APP_URL: 'http://localhost:3001',
+    REDIS_URL: 'redis://localhost:6379',
+  });
   const clock = new FixedClock(at);
   const storage = new InMemoryFileStorage();
   const moduleRef = await Test.createTestingModule({ imports: [WorkerModule] })

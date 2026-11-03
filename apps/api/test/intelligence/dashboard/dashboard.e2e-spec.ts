@@ -1,7 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MatrixAuthorization } from '../../../src/modules/identity/infrastructure/matrix-authorization';
+import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { DashboardModule } from '../../../src/modules/intelligence/dashboard.module';
 import { AUTHORIZATION, CLOCK } from '../../../src/shared/application/ports/tokens';
 import { parseDateOnly } from '../../../src/shared/domain/business-date';
