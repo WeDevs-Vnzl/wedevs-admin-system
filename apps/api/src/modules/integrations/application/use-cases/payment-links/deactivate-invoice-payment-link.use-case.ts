@@ -46,7 +46,11 @@ export class DeactivateInvoicePaymentLink {
   ): Promise<PaymentLinkOutput> {
     assertCan(this.authorization, actor, 'create', 'payment');
     const link = await this.uow.run(() => this.close(actor, input), { isolation: 'Serializable' });
-    if (link.externalId !== null) await this.provider.deactivatePaymentLink(link.externalId);
+    if (link.externalId !== null) {
+      await this.provider.deactivatePaymentLink(link.externalId);
+      // Confirmed: the daily step no longer owes this link a provider call.
+      await this.links.markProviderDeactivated(link.id, this.clock.now());
+    }
     return toPaymentLinkOutput(link);
   }
 
