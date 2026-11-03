@@ -15,7 +15,8 @@ import { SystemClock } from '../../../src/shared/infrastructure/system-clock.ada
 import { buildInvoiceWorld } from '../../finance/invoices/int-world';
 import { Gate, gated, interleave, seedClient, seedInvoice } from '../../finance/concurrency/world';
 import { createTestPrisma, truncateBusinessTables } from '../../support/db';
-import { ScriptedProvider } from '../payment-links/world';
+import { InMemoryIntegrationMapping } from '../../support/fakes/in-memory-integration-mapping';
+import { FakeMappedAccounts, ScriptedProvider } from '../payment-links/world';
 
 /**
  * Concurrent link creations over real PostgreSQL (choice 5, DT-196, A13). The first transaction is paused
@@ -63,6 +64,11 @@ function buildWorld(provider: ScriptedProvider, hooks: { gate?: Gate } = {}) {
       activity,
       new CuidGenerator(),
       clock,
+      // The mapping and the account currency are not what this spec exercises: a USD Stripe target.
+      new InMemoryIntegrationMapping({
+        stripe: { accountId: 'acc_stripe', paymentMethodId: 'pm_stripe' },
+      }),
+      new FakeMappedAccounts(),
     ),
   };
 }

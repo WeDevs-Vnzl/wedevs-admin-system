@@ -9,7 +9,7 @@ import type { CurrentUser } from '../../../src/shared/application/current-user';
 import { AUTHORIZATION } from '../../../src/shared/application/ports/tokens';
 import type { UserRole } from '../../../src/shared/domain/enums';
 import type { DbClient } from '../../../src/shared/infrastructure/prisma/transaction-host';
-import { seedClient, seedInvoice } from '../../finance/read-models/world';
+import { seedAccount, seedClient, seedInvoice } from '../../finance/read-models/world';
 import { createTestPrisma, truncateBusinessTables } from '../../support/db';
 import { FakeAuthenticator } from '../../support/fakes/fake-authenticator';
 import { assertLocalDatabaseUrl } from '../../support/local-db-guard';
@@ -88,6 +88,9 @@ describe('payment-link routes (e2e): choice 1, 3, 5, DT-196, DT-197', () => {
       tokens[role] = authenticator.issue(user);
     }
     await seedClient(seedDb, 'cli_e2e');
+    await seedAccount(seedDb, 'acc_stripe', 'USD');
+    await seedAccount(seedDb, 'acc_stripe_eur', 'EUR');
+    await mapStripeTo('acc_stripe');
     await seedInvoice(seedDb, {
       id: 'inv_usd',
       clientId: 'cli_e2e',
@@ -101,6 +104,16 @@ describe('payment-link routes (e2e): choice 1, 3, 5, DT-196, DT-197', () => {
       lines: [{ id: 'l2', projectId: null, unitPrice: '4000.00', ivaRate: null }],
     });
   });
+
+  /** Settings survive `truncateBusinessTables`, so the mapping is written again before every test. */
+  const mapStripeTo = async (accountId: string | null) => {
+    const value = { stripe: accountId ? { accountId, paymentMethodId: 'pm_e2e' } : null };
+    await admin.setting.upsert({
+      where: { key: 'integrations.mapping' },
+      create: { key: 'integrations.mapping', value },
+      update: { value },
+    });
+  };
 
   const as = (role: UserRole) => `Bearer ${tokens[role]}`;
   const create = (invoice: string, amount: string, requestId: string, role: UserRole = 'OWNER') =>
@@ -168,6 +181,24 @@ describe('payment-link routes (e2e): choice 1, 3, 5, DT-196, DT-197', () => {
     });
     expect(await admin.invoicePaymentLink.count()).toBe(0);
     expect((await list('inv_ves')).body.capacity).toBe('0.00');
+  });
+
+  it('refuses a link when Stripe has no mapping or the mapped account is in another currency (capacity 0)', async () => {
+    await mapStripeTo(null);
+    const unmapped = await create('inv_usd', '10.00', REQ(9));
+    expect(unmapped.status).toBe(422);
+    expect(unmapped.body.error).toMatchObject({
+      code: 'VALIDATION',
+      message: 'validation.paymentLinkCurrencyUnsupported',
+    });
+    expect((await list('inv_usd')).body.capacity).toBe('0.00');
+
+    await mapStripeTo('acc_stripe_eur');
+    const wrongCurrency = await create('inv_usd', '10.00', REQ(9));
+    expect(wrongCurrency.status).toBe(422);
+    expect(wrongCurrency.body.error.message).toBe('validation.paymentLinkCurrencyUnsupported');
+    expect((await list('inv_usd')).body.capacity).toBe('0.00');
+    expect(await admin.invoicePaymentLink.count()).toBe(0);
   });
 
   it('deactivates a link, frees its capacity and is idempotent', async () => {
