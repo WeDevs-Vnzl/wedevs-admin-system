@@ -105,6 +105,7 @@ export class ImportBankStatement<R = unknown> {
     const first = dates[0] as string;
     const last = dates[dates.length - 1] as string;
     const records = await this.ledger.entries(
+      actor,
       input.accountId,
       addDays(first, -DEFAULT_MATCH_WINDOW_DAYS),
       addDays(last, DEFAULT_MATCH_WINDOW_DAYS),
