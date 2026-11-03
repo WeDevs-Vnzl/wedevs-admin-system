@@ -213,7 +213,15 @@ describe('MCP server (e2e): DT-188, DT-189, DT-190, DT-195, DT-198', () => {
 
     it('serves no GET stream: the server is stateless', async () => {
       const res = await http().get(`${V1}/mcp`).set(bearer(world.secrets.OWNER));
-      expect([404, 405]).toContain(res.status);
+      expect(res.status).toBe(405);
+      expect(res.headers.allow).toBe('POST');
+    });
+
+    it('serves no session to close: DELETE answers 405 too, and an anonymous one stays 401', async () => {
+      const res = await http().delete(`${V1}/mcp`).set(bearer(world.secrets.OWNER));
+      expect(res.status).toBe(405);
+      expect(res.headers.allow).toBe('POST');
+      expect((await http().delete(`${V1}/mcp`)).status).toBe(401);
     });
   });
 

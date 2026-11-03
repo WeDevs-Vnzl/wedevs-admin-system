@@ -1,5 +1,15 @@
-import { Controller, HttpCode, Inject, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Inject,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBody, ApiExcludeEndpoint, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Request, Response } from 'express';
 import type { CurrentUser as CurrentUserModel } from '../../../../shared/application/current-user';
@@ -57,5 +67,16 @@ export class McpController {
     });
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
+  }
+
+  /** No sessions and no server-to-client stream (DT-189): `GET` and `DELETE` answer 405, not 404. */
+  @Get()
+  @Delete()
+  @ApiExcludeEndpoint()
+  methodNotAllowed(@Res() res: Response): void {
+    res
+      .status(405)
+      .set('Allow', 'POST')
+      .json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null });
   }
 }
