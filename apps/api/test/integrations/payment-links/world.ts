@@ -3,11 +3,13 @@ import { CreateInvoicePaymentLink } from '../../../src/modules/integrations/appl
 import { DeactivateInvoicePaymentLink } from '../../../src/modules/integrations/application/use-cases/payment-links/deactivate-invoice-payment-link.use-case';
 import { DeactivatePaymentLinksBeyondBalance } from '../../../src/modules/integrations/application/use-cases/payment-links/deactivate-payment-links-beyond-balance.use-case';
 import { ListInvoicePaymentLinks } from '../../../src/modules/integrations/application/use-cases/payment-links/list-invoice-payment-links.use-case';
+import type { MappedAccountCurrencyPort } from '../../../src/modules/integrations/application/use-cases/payment-links/stripe-link-target.port';
 import type { InvoiceForLink } from '../../../src/modules/integrations/application/ports/invoice-for-link.port';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
 import type { RowLocksPort } from '../../../src/shared/application/ports/row-locks.port';
 import { FixedClock } from '../../support/fakes/fixed-clock';
 import { InMemoryActivityLog } from '../../support/fakes/in-memory-activity-log';
+import { InMemoryIntegrationMapping } from '../../support/fakes/in-memory-integration-mapping';
 import { InMemoryInvoiceForPaymentLink } from '../../support/fakes/in-memory-invoice-for-payment-link';
 import { InMemoryPaymentLinkRepository } from '../../support/fakes/in-memory-payment-link-repository';
 import { InMemoryPaymentProvider } from '../../support/fakes/in-memory-payment-provider';
@@ -68,6 +70,15 @@ export class ScriptedProvider extends InMemoryPaymentProvider {
   }
 }
 
+/** Fake `MappedAccountCurrencyPort`: the currency of each known active account; absent ids answer `null`. */
+export class FakeMappedAccounts implements MappedAccountCurrencyPort {
+  readonly currencies = new Map<string, string>([['acc_stripe', 'USD']]);
+
+  async currencyOf(_actor: CurrentUser, accountId: string): Promise<string | null> {
+    return this.currencies.get(accountId) ?? null;
+  }
+}
+
 export interface WorldOptions {
   readonly lockDecorator?: (locks: RowLocksPort) => RowLocksPort;
 }
@@ -83,6 +94,10 @@ export function buildWorld(options: WorldOptions = {}) {
   const links = new InMemoryPaymentLinkRepository();
   const provider = new ScriptedProvider();
   const authorization = new MatrixAuthorization();
+  const mapping = new InMemoryIntegrationMapping({
+    stripe: { accountId: 'acc_stripe', paymentMethodId: 'pm_stripe' },
+  });
+  const accounts = new FakeMappedAccounts();
   invoices.add(invoiceOf());
   return {
     uow,
@@ -92,6 +107,8 @@ export function buildWorld(options: WorldOptions = {}) {
     invoices,
     links,
     provider,
+    mapping,
+    accounts,
     create: new CreateInvoicePaymentLink(
       authorization,
       uow,
@@ -102,8 +119,10 @@ export function buildWorld(options: WorldOptions = {}) {
       activity,
       ids,
       clock,
+      mapping,
+      accounts,
     ),
-    list: new ListInvoicePaymentLinks(authorization, invoices, links),
+    list: new ListInvoicePaymentLinks(authorization, invoices, links, mapping, accounts),
     deactivate: new DeactivateInvoicePaymentLink(
       authorization,
       uow,

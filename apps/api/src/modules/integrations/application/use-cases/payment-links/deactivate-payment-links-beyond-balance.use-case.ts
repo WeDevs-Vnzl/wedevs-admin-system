@@ -23,7 +23,7 @@ export interface DeactivateLinksResult {
 /**
  * `DeactivatePaymentLinksBeyondBalance` (DT-196): the last step of the daily maintenance, `SYSTEM` only. Per
  * invoice with open links, under its `Invoice` lock: `linksToDeactivate` decides (an invoice no longer open
- * loses every open link, `PENDING` rows older than 24 hours go, then the newest links until the sum fits),
+ * loses every open link, `PENDING` and `ACTIVE` rows older than 24 hours go (the Checkout Session expired), then the newest links until the sum fits),
  * the rows become `DEACTIVATED` with an activity entry each and the unit of work commits. Only then the
  * provider calls run for every link whose provider deactivation is still owed (the ones just deactivated and
  * the ones an earlier run failed on), each confirmed on success. A provider failure leaves the row

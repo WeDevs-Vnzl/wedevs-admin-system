@@ -111,10 +111,13 @@ export class StripePaymentProvider implements PaymentProviderPort {
         transaction && transaction.currency.toUpperCase() === currency
           ? minorToDecimal(BigInt(transaction.fee), decimals)
           : null;
-      const received = intent.status === 'succeeded' ? intent.amount_received : intent.amount;
+      // Only money Stripe has actually received is a payment; `intent.amount` is what was asked for.
+      if (intent.status !== 'succeeded') {
+        throw new ValidationFailedError({ message: 'integrations.stripe.paymentNotSucceeded' });
+      }
       return {
         id: intent.id,
-        amount: minorToDecimal(BigInt(received), decimals),
+        amount: minorToDecimal(BigInt(intent.amount_received), decimals),
         currency,
         fee,
         paidAt: new Date((charge?.created ?? intent.created) * 1000),

@@ -1,7 +1,10 @@
 import { roundMoney, sumMoney } from '../../../../../shared/domain';
 import { STRIPE_LINK_CURRENCIES, linkCapacity } from '../../../domain/link-capacity';
 import { isOpenLinkStatus, type PaymentLink } from '../../../domain/payment-link';
+import type { CurrentUser } from '../../../../../shared/application/current-user';
+import type { IntegrationMappingPort } from '../../ports/integration-mapping.port';
 import type { InvoiceForLink } from '../../ports/invoice-for-link.port';
+import type { MappedAccountCurrencyPort } from './stripe-link-target.port';
 
 /** i18n keys of the link use cases (the BE returns keys, never text). */
 export const PAYMENT_LINK_MESSAGES = {
@@ -60,11 +63,30 @@ export function reservedOf(links: readonly PaymentLink[]): string {
   );
 }
 
-export const canCarryLinks = (invoice: InvoiceForLink): boolean =>
-  invoice.open && (STRIPE_LINK_CURRENCIES as readonly string[]).includes(invoice.currency);
+/**
+ * The currency Stripe money lands in: that of the account the Owner mapped. `null` when Stripe has no mapping
+ * or the mapped account is gone or inactive (a link could not be settled, so none may be created).
+ */
+export async function stripeTargetCurrency(
+  mapping: IntegrationMappingPort,
+  accounts: MappedAccountCurrencyPort,
+  actor: CurrentUser,
+): Promise<string | null> {
+  const { stripe } = await mapping.load();
+  return stripe ? accounts.currencyOf(actor, stripe.accountId) : null;
+}
+
+export const canCarryLinks = (invoice: InvoiceForLink, targetCurrency: string | null): boolean =>
+  invoice.open &&
+  (STRIPE_LINK_CURRENCIES as readonly string[]).includes(invoice.currency) &&
+  targetCurrency === invoice.currency;
 
 /** What a new link may still carry; zero for an invoice that cannot carry links at all. */
-export function capacityOf(invoice: InvoiceForLink, links: readonly PaymentLink[]): string {
-  if (!canCarryLinks(invoice)) return roundMoney('0');
+export function capacityOf(
+  invoice: InvoiceForLink,
+  links: readonly PaymentLink[],
+  targetCurrency: string | null,
+): string {
+  if (!canCarryLinks(invoice, targetCurrency)) return roundMoney('0');
   return linkCapacity(invoice.openBalance, openLinksOf(links), reservedOf(links));
 }

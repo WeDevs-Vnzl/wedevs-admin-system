@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_ACTOR } from '../../../src/shared/application/actor';
 import {
+  ConflictError,
   ForbiddenError,
+  IntegrityLockedError,
   NotFoundError,
   UnauthenticatedError,
   ValidationFailedError,
 } from '../../../src/shared/domain';
 import { buildWorld, eventOf, linkOf } from './world';
+
+/** Stands for finance's `LockSetChangedError`, a `ConflictError` subclass. */
+class LockSetChangedError extends ConflictError {}
 
 describe('HandleStripeWebhook (DT-183, A11)', () => {
   it('records a link payment: amount, currency, fee, link and invoice resolved from the database', async () => {
@@ -201,6 +206,49 @@ describe('HandleStripeWebhook (DT-183, A11)', () => {
       'INVALID_REFERENCE',
       'CURRENCY_MISMATCH',
     ]);
+  });
+
+  it('lets a conflict (exhausted serialization retries, changed lock set) escape so Stripe retries, and stores nothing', async () => {
+    const w = buildWorld();
+    w.recording.failWith = new ConflictError();
+    await expect(w.deliver(eventOf())).rejects.toBeInstanceOf(ConflictError);
+    w.recording.failWith = new LockSetChangedError();
+    await expect(w.deliver(eventOf())).rejects.toBeInstanceOf(LockSetChangedError);
+    expect(w.events.all()).toHaveLength(0);
+    // The same event delivered again once the conflict is gone is processed, not "duplicate".
+    w.recording.failWith = null;
+    expect(await w.deliver(eventOf())).toBe('processed');
+  });
+
+  it('parks an integrity lock refusal as INVALID_REFERENCE', async () => {
+    const w = buildWorld();
+    w.recording.failWith = new IntegrityLockedError();
+    expect(await w.deliver(eventOf())).toBe('parked');
+    expect(w.events.all()).toMatchObject([{ outcome: 'PARKED', reasonCode: 'INVALID_REFERENCE' }]);
+  });
+
+  it('parks CURRENCY_UNSUPPORTED when the provider payment is in a currency we do not charge', async () => {
+    const w = buildWorld();
+    w.provider.failRetrieveWith = new ValidationFailedError({
+      message: 'validation.paymentLinkCurrencyUnsupported',
+    });
+    expect(await w.deliver(eventOf())).toBe('parked');
+    expect(w.events.all()).toMatchObject([
+      { outcome: 'PARKED', reasonCode: 'CURRENCY_UNSUPPORTED' },
+    ]);
+    expect(w.recording.calls).toHaveLength(0);
+  });
+
+  it('parks PAYMENT_NOT_SUCCEEDED when the provider payment has not succeeded', async () => {
+    const w = buildWorld();
+    w.provider.failRetrieveWith = new ValidationFailedError({
+      message: 'integrations.stripe.paymentNotSucceeded',
+    });
+    expect(await w.deliver(eventOf())).toBe('parked');
+    expect(w.events.all()).toMatchObject([
+      { outcome: 'PARKED', reasonCode: 'PAYMENT_NOT_SUCCEEDED' },
+    ]);
+    expect(w.recording.calls).toHaveLength(0);
   });
 
   it('lets an unexpected failure escape so Stripe retries, and stores nothing', async () => {

@@ -49,6 +49,21 @@ describe('DeactivateInvoicePaymentLink', () => {
     expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('100.00');
   });
 
+  it('stamps the provider confirmation after a successful call, and not after a failed one', async () => {
+    const world = buildWorld();
+    await make(world, '40', REQ_1);
+    await make(world, '40', REQ_2);
+    await world.deactivate.execute(owner, { invoiceId: 'inv_1', linkId: 'lnk_1' });
+    expect(await world.links.listPendingProviderDeactivation()).toEqual([]);
+    world.provider.failDeactivate = 1;
+    await expect(
+      world.deactivate.execute(owner, { invoiceId: 'inv_1', linkId: 'lnk_2' }),
+    ).rejects.toThrow('provider down');
+    expect((await world.links.listPendingProviderDeactivation()).map((l) => l.id)).toEqual([
+      'lnk_2',
+    ]);
+  });
+
   it('is idempotent: a second call writes no second activity entry', async () => {
     const world = buildWorld();
     await make(world, '40', REQ_1);

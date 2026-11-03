@@ -78,6 +78,19 @@ describe('DeactivatePaymentLinksBeyondBalance', () => {
     expect(world.provider.deactivated).toEqual([]);
   });
 
+  it('deactivates an ACTIVE link older than 24 hours and expires its provider session', async () => {
+    const world = buildWorld();
+    await make(world, '30', REQ_1);
+    expect((await world.links.findById('lnk_1'))?.status).toBe('ACTIVE');
+    world.clock.advance(25 * 60 * 60 * 1000);
+    const out = await world.sweep.execute(SYSTEM_ACTOR);
+    expect(out.deactivated).toEqual(['lnk_1']);
+    expect((await world.links.findById('lnk_1'))?.deactivationReason).toBe('LINK_EXPIRED');
+    expect(world.provider.deactivated).toHaveLength(1);
+    // A day later nothing is left to do: the capacity is free again.
+    expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('100.00');
+  });
+
   it('treats an invoice that no longer resolves as not open', async () => {
     const world = buildWorld();
     await make(world, '30', REQ_1);

@@ -25,6 +25,46 @@ const seeded = (over: Partial<PaymentLink>): PaymentLink => ({
 });
 
 describe('CreateInvoicePaymentLink', () => {
+  it('refuses when the Owner has not mapped Stripe to an account, and the capacity reads zero', async () => {
+    const world = buildWorld();
+    world.mapping.set({ stripe: null });
+    await expect(create(world, '40', REQ_1)).rejects.toMatchObject({
+      code: 'VALIDATION',
+      message: 'validation.paymentLinkCurrencyUnsupported',
+    });
+    expect(await world.links.listByInvoice('inv_1')).toEqual([]);
+    expect(world.provider.createKeys).toEqual([]);
+    expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('0.00');
+  });
+
+  it('refuses when the mapped account is not in the invoice currency, and the capacity reads zero', async () => {
+    const world = buildWorld();
+    world.accounts.currencies.set('acc_stripe', 'EUR');
+    await expect(create(world, '40', REQ_1)).rejects.toMatchObject({
+      code: 'VALIDATION',
+      message: 'validation.paymentLinkCurrencyUnsupported',
+    });
+    expect(await world.links.listByInvoice('inv_1')).toEqual([]);
+    expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('0.00');
+  });
+
+  it('refuses when the mapped account is gone or inactive', async () => {
+    const world = buildWorld();
+    world.accounts.currencies.delete('acc_stripe');
+    await expect(create(world, '40', REQ_1)).rejects.toMatchObject({
+      message: 'validation.paymentLinkCurrencyUnsupported',
+    });
+    expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('0.00');
+  });
+
+  it('creates a EUR link when the mapped account is in EUR', async () => {
+    const world = buildWorld();
+    world.accounts.currencies.set('acc_stripe', 'EUR');
+    world.invoices.add(invoiceOf({ currency: 'EUR' }));
+    expect(await create(world, '40', REQ_1)).toMatchObject({ currency: 'EUR', status: 'ACTIVE' });
+    expect((await world.list.execute(owner, 'inv_1')).capacity).toBe('60.00');
+  });
+
   it('creates an ACTIVE link: lock first, Serializable, provider key, activity', async () => {
     const world = buildWorld();
     const isolations: (string | undefined)[] = [];
@@ -105,6 +145,7 @@ describe('CreateInvoicePaymentLink', () => {
 
   it('accepts EUR', async () => {
     const world = buildWorld();
+    world.accounts.currencies.set('acc_stripe', 'EUR');
     world.invoices.add(invoiceOf({ currency: 'EUR' }));
     expect((await create(world, '10', REQ_1)).currency).toBe('EUR');
   });

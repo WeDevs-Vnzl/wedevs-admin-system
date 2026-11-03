@@ -17,6 +17,7 @@ import {
 } from '../../../../../shared/domain';
 import { PAYMENT_LINK_MINIMUM, validateLinkRequest } from '../../../domain/link-capacity';
 import { activateLink, type PaymentLink } from '../../../domain/payment-link';
+import type { IntegrationMappingPort } from '../../ports/integration-mapping.port';
 import type { InvoiceForLink, InvoiceForLinkPort } from '../../ports/invoice-for-link.port';
 import type { PaymentLinkRepository } from '../../ports/payment-link.repository.port';
 import type { PaymentProviderPort } from '../../ports/payment-provider.port';
@@ -24,9 +25,11 @@ import {
   PAYMENT_LINK_MESSAGES,
   capacityOf,
   isUuid,
+  stripeTargetCurrency,
   toPaymentLinkOutput,
   type PaymentLinkOutput,
 } from './payment-link-support';
+import type { MappedAccountCurrencyPort } from './stripe-link-target.port';
 
 export interface CreateInvoicePaymentLinkInput {
   readonly invoiceId: string;
@@ -39,7 +42,8 @@ export interface CreateInvoicePaymentLinkInput {
 /**
  * `CreateInvoicePaymentLink` (choice 5, DT-196, DT-197, A13). `payment` `create` first. A `Serializable` unit
  * of work takes the `Invoice` row lock before anything else, answers a repeated `requestId` with its link,
- * reads the balance and the links, checks currency, minimum and capacity and inserts the link `PENDING`.
+ * reads the balance and the links, checks currency (the invoice's must be the one of the account the Stripe mapping
+ * points at; no mapping refuses too), minimum and capacity and inserts the link `PENDING`.
  * The provider call runs after the commit with the key `invoice-link:{linkId}`; a short unit of work then
  * sets `ACTIVE`, `url` and `externalId`. A failed call leaves the row `PENDING` (it still counts in the cap)
  * and a retry with the same `requestId` repeats the call with the same key.
@@ -55,6 +59,8 @@ export class CreateInvoicePaymentLink {
     private readonly activityLog: ActivityLogPort,
     private readonly ids: IdGeneratorPort,
     private readonly clock: ClockPort,
+    private readonly mapping: IntegrationMappingPort,
+    private readonly accounts: MappedAccountCurrencyPort,
   ) {}
 
   async execute(
@@ -68,7 +74,9 @@ export class CreateInvoicePaymentLink {
         fieldErrors: { requestId: [PAYMENT_LINK_MESSAGES.invalidRequestId] },
       });
     }
-    const link = await this.uow.run(() => this.reserve(actor, input), {
+    // Where the money lands, read before the unit of work: a link needs a Stripe mapping in the invoice currency.
+    const target = await stripeTargetCurrency(this.mapping, this.accounts, actor);
+    const link = await this.uow.run(() => this.reserve(actor, input, target), {
       isolation: 'Serializable',
     });
     if (link.status !== 'PENDING') return toPaymentLinkOutput(link);
@@ -79,6 +87,7 @@ export class CreateInvoicePaymentLink {
   private async reserve(
     actor: CurrentUser,
     input: CreateInvoicePaymentLinkInput,
+    target: string | null,
   ): Promise<PaymentLink> {
     await this.locks.lock({ Invoice: [input.invoiceId] });
     const existing = await this.links.findByRequestId(input.invoiceId, input.requestId);
@@ -88,8 +97,12 @@ export class CreateInvoicePaymentLink {
     if (!invoice.open) {
       throw new IntegrityLockedError({ message: PAYMENT_LINK_MESSAGES.invoiceNotOpen });
     }
+    // No Stripe mapping, or a mapped account in another currency: the payment could not be recorded (choice 5).
+    if (target !== invoice.currency) {
+      throw new ValidationFailedError({ message: 'validation.paymentLinkCurrencyUnsupported' });
+    }
     const all = await this.links.listByInvoice(invoice.id);
-    const amount = this.validate(invoice, input.amount, capacityOf(invoice, all));
+    const amount = this.validate(invoice, input.amount, capacityOf(invoice, all, target));
 
     const link: PaymentLink = {
       id: this.ids.next(),
