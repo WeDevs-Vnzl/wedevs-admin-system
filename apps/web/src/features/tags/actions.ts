@@ -1,17 +1,23 @@
 "use server";
 
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
+import { apiAction } from "@/lib/api/action";
+import type { TagListResponseDto } from "@/lib/api/types/taxonomy";
 import { entityHref } from "@/lib/entity-routes";
+import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
 import {
   assignTagsInputSchema,
   createTagInputSchema,
   tagFilterSchema,
   unassignTagInputSchema,
   updateTagInputSchema,
+  type TagFilter,
+  type TagFilterInput,
 } from "@/lib/validators/tags";
 import { exportCsv } from "@/mocks/services/export";
 import * as tags from "@/mocks/services/tags";
 import { defineAction } from "@/server/actions/define-action";
+import { toTagListQuery } from "./api-query";
 import { TAG_EXPORT_COLUMNS } from "./columns";
 import { CREATE_TAG_GRANTS } from "./grants";
 
@@ -79,12 +85,23 @@ export const unassignTagAction = defineAction({
   handler: (ctx, data) => tags.unassignTag(ctx, data),
 });
 
-/** Reference read behind the picker and the table (tag names and colours are catalogue data, DT-71). */
-export const listTagsAction = defineAction({
-  permission: "authenticated",
-  input: tagFilterSchema,
-  handler: (ctx, data) => tags.listTags(ctx, data),
+const listTags = apiAction<TagFilter, TagListResponseDto>({
+  call: (filter, api) => api.GET("/api/v1/tags", { params: { query: toTagListQuery(filter) } }),
 });
+
+/**
+ * Reference read behind the picker and the table (tag names and colours are catalogue data, DT-71). Any signed-in
+ * role reads it; the filter is checked for UX only, the BE re-validates.
+ */
+export async function listTagsAction(
+  input: TagFilterInput,
+): Promise<ActionResult<TagListResponseDto>> {
+  const parsed = tagFilterSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: { code: "VALIDATION", message: errorMessageKey("VALIDATION") } };
+  }
+  return listTags(parsed.data);
+}
 
 /** CSV of the Settings table, filtered as the table is (PRD §7.3). */
 export const exportTagsCsvAction = defineCsvExportAction({

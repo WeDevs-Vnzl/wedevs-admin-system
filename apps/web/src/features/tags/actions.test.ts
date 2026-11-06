@@ -210,20 +210,43 @@ describe("unassignTagAction", () => {
 });
 
 describe("listTagsAction", () => {
-  it('is reference data: every signed-in role may read it ("authenticated")', async () => {
-    signIn("VIEWER");
-    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+  const tag = {
+    id: "tag_ur",
+    name: "Urgente",
+    color: "#ff0000",
+    usageCount: 3,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  it('is reference data: every signed-in role reads GET /api/v1/tags ("authenticated")', async () => {
+    const { api, calls } = mockApi({
+      "GET /api/v1/tags": { body: { items: [tag], total: 1, page: 1, pageSize: 25, pageCount: 1 } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 25, q: "ur" })).toEqual({
       ok: true,
-      data: { total: getMockStore().tags.length },
+      data: { items: [tag], total: 1, page: 1, pageSize: 25, pageCount: 1 },
+    });
+    expect(calls[0]?.search.get("q")).toBe("ur");
+  });
+
+  it("maps the UNAUTHENTICATED envelope the BE sends without a session", async () => {
+    const { api } = mockApi({ "GET /api/v1/tags": errorEnvelope("UNAUTHENTICATED") });
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED", redirectTo: "/sign-in" },
     });
   });
 
-  it("requires a session", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+  it("answers VALIDATION for a page size the table cannot send, without calling the BE", async () => {
+    const { api, calls } = mockApi({});
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 33 as never })).toMatchObject({
       ok: false,
-      error: { code: "UNAUTHENTICATED" },
+      error: { code: "VALIDATION" },
     });
+    expect(calls).toHaveLength(0);
   });
 });
 
