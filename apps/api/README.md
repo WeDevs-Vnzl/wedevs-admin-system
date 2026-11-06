@@ -5,7 +5,7 @@ NestJS hexagonal backend. Commands only (run with bun, runtime is Node 24):
 ```
 bun install --frozen-lockfile
 bun run build            # nest build -> dist/
-bun run start            # node dist/main.js
+bun run start            # node --env-file-if-exists=.env dist/main.js (no file: process env only)
 bun run start:dev        # nest start --watch
 bun run lint             # eslint (incl. layer boundary rules)
 bun run format           # prettier --write
