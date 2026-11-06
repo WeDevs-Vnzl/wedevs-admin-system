@@ -35,6 +35,11 @@ export interface RichTextEditorProps {
   onBlur?: () => void;
   /** Where pasted or dropped images are uploaded (`features/files/upload-adapter.ts`). */
   uploadAdapter?: UploadAdapter;
+  /**
+   * Image insertion switch (default `true`). `false` hides the toolbar image button and rejects pasted or
+   * dropped images; existing image nodes still render (the allowlist is unchanged).
+   */
+  allowImages?: boolean;
   placeholder?: string;
   disabled?: boolean;
   id?: string;
@@ -60,6 +65,7 @@ export function RichTextEditor({
   onInvalid,
   onBlur,
   uploadAdapter,
+  allowImages = true,
   placeholder,
   disabled = false,
   id,
@@ -72,11 +78,14 @@ export function RichTextEditor({
   const invalidRef = useRef(onInvalid);
   const blurRef = useRef(onBlur);
   const editorRef = useRef<Editor | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const allowImagesRef = useRef(allowImages);
   useEffect(() => {
     adapterRef.current = uploadAdapter;
     changeRef.current = onChange;
     invalidRef.current = onInvalid;
     blurRef.current = onBlur;
+    allowImagesRef.current = allowImages;
   });
 
   const extensions = useMemo(
@@ -90,7 +99,7 @@ export function RichTextEditor({
 
   async function uploadImages(files: File[]) {
     const adapter = adapterRef.current;
-    if (!adapter) return;
+    if (!adapter || !allowImagesRef.current) return;
     for (const file of files) {
       const violation = checkUpload({ name: file.name, mime: file.type, size: file.size }, "general");
       if (violation) {
@@ -189,6 +198,8 @@ export function RichTextEditor({
     editor?.setEditable(!disabled);
   }, [editor, disabled]);
 
+  const canInsertImages = allowImages && Boolean(uploadAdapter);
+
   return (
     <div
       data-slot="rich-text-editor"
@@ -201,7 +212,30 @@ export function RichTextEditor({
         className,
       )}
     >
-      {editor ? <RichTextToolbar editor={editor} disabled={disabled} /> : null}
+      {editor ? (
+        <RichTextToolbar
+          editor={editor}
+          disabled={disabled}
+          {...(canInsertImages ? { onPickImage: () => fileInputRef.current?.click() } : {})}
+        />
+      ) : null}
+      {canInsertImages ? (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          tabIndex={-1}
+          aria-hidden="true"
+          data-slot="rich-text-image-input"
+          onChange={(event) => {
+            const files = imageFiles(event.target.files);
+            event.target.value = "";
+            if (files.length > 0) void uploadImages(files);
+          }}
+        />
+      ) : null}
       <EditorContent editor={editor} className={richTextProseClassName} />
     </div>
   );
