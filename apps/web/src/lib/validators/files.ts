@@ -177,13 +177,15 @@ export const fileDtoSchema = z.object({
 });
 export type FileDTO = z.infer<typeof fileDtoSchema>;
 
-/** Where and how to PUT the bytes. `url` is `null` for the Hito 1 mock adapter (nothing is uploaded). */
+/** Where and how to send the bytes. `url` is `null` for the Hito 1 mock adapter (nothing is uploaded). */
 export interface UploadTarget {
   fileId: string;
   url: string | null;
   headers?: Record<string, string>;
   /** ISO 8601 UTC expiry of the presigned URL (5-minute TTL, C23). */
   expiresAt?: string;
+  /** Signed form fields the Cloudinary multipart POST must carry before the file (BE upload intent). */
+  fields?: Record<string, string>;
 }
 
 export interface UploadPutOptions {

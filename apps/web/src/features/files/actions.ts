@@ -1,36 +1,28 @@
 "use server";
 
-import { confirmUploadInputSchema, requestUploadInputSchema } from "@/lib/validators/files";
-import * as files from "@/mocks/services/files";
-import { defineAction, type ActionPermission } from "@/server/actions/define-action";
-import { can } from "@/server/auth/permissions";
-import { ServiceError } from "@/server/errors";
+import { apiAction } from "@/lib/api/action";
+import type {
+  ConfirmUploadInput,
+  FileDTO,
+  RequestUploadInput,
+  UploadTarget,
+} from "@/lib/validators/files";
 
-// The matrix has no `file` resource: a file is always attached to something. Whoever can create one of
-// these records may upload; payment receipts additionally need `payment` (checked in the handler).
-const UPLOADERS: readonly [ActionPermission, ...ActionPermission[]] = [
-  { action: "create", resource: "document" },
-  { action: "create", resource: "note" },
-  { action: "create", resource: "invoice" },
-  { action: "create", resource: "payment" },
-  { action: "create", resource: "expense" },
-];
+// Thin proxies over the files API (C10). The BE decides who may upload (the Viewer gets FORBIDDEN; the
+// DT-41 limits and the magic bytes are enforced there); the client-side rules are a first line for UX only.
 
-/** `UploadAdapter.requestUpload` (C23). Hito 1 returns a mock file id and no upload URL. */
-export const requestUploadAction = defineAction({
-  permission: UPLOADERS,
-  input: requestUploadInputSchema,
-  handler: async (ctx, data) => {
-    if (data.context === "payment_receipt" && !can(ctx.user, "create", "payment")) {
-      throw new ServiceError("FORBIDDEN");
-    }
-    return files.requestUpload(ctx, data);
-  },
+/** `UploadAdapter.requestUpload`: registers a PENDING file and returns the signed Cloudinary parameters. */
+export const requestUploadAction = apiAction<RequestUploadInput, UploadTarget>({
+  call: (input, api) => api.POST("/api/v1/files/upload-intent", { body: input }),
 });
 
-/** `UploadAdapter.confirmUpload`: the file becomes `READY`. */
-export const confirmUploadAction = defineAction({
-  permission: UPLOADERS,
-  input: confirmUploadInputSchema,
-  handler: (ctx, data) => files.confirmUpload(ctx, data),
+/** `UploadAdapter.confirmUpload`: the BE checks the uploaded bytes and the file becomes `READY`. */
+export const confirmUploadAction = apiAction<ConfirmUploadInput, FileDTO>({
+  call: (input, api) => api.POST("/api/v1/files", { body: { fileId: input.fileId } }),
+});
+
+/** Deletes the caller's own unattached upload (an attached file answers `INTEGRITY_LOCK`). */
+export const deleteFileAction = apiAction<ConfirmUploadInput, undefined>({
+  call: (input, api) =>
+    api.DELETE("/api/v1/files/{id}", { params: { path: { id: input.fileId } } }),
 });
