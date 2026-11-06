@@ -1,6 +1,6 @@
 import { clerk } from "@clerk/testing/playwright";
 import type { Page } from "@playwright/test";
-import { requireEnv, roleEmail, type TestRole } from "./roles";
+import { roleEmail, type TestRole } from "./roles";
 
 /**
  * Signs the page in as the Clerk test user of `role` (DT-204). Used only by the `authenticated` project, which the
@@ -10,10 +10,13 @@ import { requireEnv, roleEmail, type TestRole } from "./roles";
  * protection is bypassed without a separate `setupClerkTestingToken` call. It needs Clerk to be loaded on the page,
  * so the page first opens `/sign-in`, which is a public route (`proxy.ts`).
  *
- * The Clerk secret key is read by the Clerk helpers from the environment; this file never reads or prints its value.
+ * The Clerk secret key is read by the Clerk helpers from the environment; this file only checks that it is set and
+ * never reads or prints its value.
  */
 export async function signInAs(page: Page, role: TestRole): Promise<void> {
-  requireEnv("CLERK_SECRET_KEY");
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error("Environment variable CLERK_SECRET_KEY is not set (E2E authenticated project, DT-204)");
+  }
   const emailAddress = roleEmail(role);
   await page.goto("/sign-in");
   await clerk.loaded({ page });
