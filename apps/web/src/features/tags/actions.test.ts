@@ -5,9 +5,13 @@ const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { getMockStore } from "@/mocks/store";
 import type { ExportCsvInputRaw } from "@/lib/validators/export";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -224,26 +228,57 @@ describe("listTagsAction", () => {
 });
 
 describe("exportTagsCsvAction", () => {
+  /** Routes the server client of the export action to an HTTP double of `POST /exports/TAG`. */
+  function exportApi(response?: () => Response) {
+    const mocked = mockApi({
+      "POST /api/v1/exports/TAG":
+        response ??
+        (() =>
+          new Response("h\r\n", {
+            status: 200,
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "X-Export-Row-Count": "2",
+              "X-Export-Truncated": "false",
+            },
+          })),
+    });
+    server.getServerApi.mockResolvedValue(mocked.api);
+    return mocked;
+  }
+
+  const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+    const { status, body } = errorEnvelope(code);
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
   const input: ExportCsvInputRaw = {
     entity: "TAG",
     query: { page: 1, pageSize: 25 },
     columns: ["name", "usageCount"],
   };
 
-  it("lets an Owner and an Admin export the tag table", async () => {
-    signIn("OWNER");
-    expect(await exportTagsCsvAction(input)).toMatchObject({ ok: true });
-    signIn("ADMIN");
-    expect(await exportTagsCsvAction(input)).toMatchObject({ ok: true });
+  it("posts the visible columns, translated labels and the query to /exports/TAG", async () => {
+    const { calls } = exportApi();
+    expect(await exportTagsCsvAction(input)).toMatchObject({
+      ok: true,
+      data: { rowCount: 2, truncated: false },
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.body).toMatchObject({
+      columns: [
+        { id: "name", label: expect.stringMatching(/^tags:.*name$/) },
+        { id: "usageCount", label: expect.stringMatching(/^tags:.*usageCount$/) },
+      ],
+      query: { archived: "exclude", filters: {} },
+    });
   });
 
-  it("refuses a Member and a Viewer: the export needs read on settings", async () => {
-    signIn("MEMBER");
-    expect(await exportTagsCsvAction(input)).toMatchObject({
-      ok: false,
-      error: { code: "FORBIDDEN" },
-    });
-    signIn("VIEWER");
+  it("maps the FORBIDDEN envelope the BE sends to Member and Viewer", async () => {
+    exportApi(errorResponse("FORBIDDEN"));
     expect(await exportTagsCsvAction(input)).toMatchObject({
       ok: false,
       error: { code: "FORBIDDEN" },

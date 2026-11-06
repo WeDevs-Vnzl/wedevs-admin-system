@@ -3,13 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) => `${namespace}:${key}`,
 }));
 
-import { addDays } from "@/lib/dates";
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { UserRole } from "@/lib/validators/enums";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -244,55 +247,75 @@ describe("searchProjectsAction", () => {
 });
 
 describe("exportProjectsCsvAction", () => {
+  /** Routes the server client of the export action to an HTTP double of `POST /exports/PROJECT`. */
+  function exportApi(response?: () => Response) {
+    const mocked = mockApi({
+      "POST /api/v1/exports/PROJECT":
+        response ??
+        (() =>
+          new Response("h\r\n", {
+            status: 200,
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "X-Export-Row-Count": "2",
+              "X-Export-Truncated": "false",
+            },
+          })),
+    });
+    server.getServerApi.mockResolvedValue(mocked.api);
+    return mocked;
+  }
+
+  const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+    const { status, body } = errorEnvelope(code);
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
   const payload = (query: object = {}, columns = ["code", "name", "contractedValueUsd"]) => ({
     entity: "PROJECT" as const,
     query,
     columns,
   });
 
-  it("exports the filtered rows with translated headers; technologyId is a facet", async () => {
+  it("posts the technology facet and the translated columns to /exports/PROJECT", async () => {
     as("MEMBER");
+    const { calls } = exportApi();
     const result = await exportProjectsCsvAction(
       payload({ filters: { technologyId: ["tec_next_js"] } }),
     );
-    expect(result).toMatchObject({ ok: true });
-    if (!result.ok) return;
-    const expected = getMockStore().projects.filter(
-      (p) => !p.archivedAt && p.technologyIds.includes("tec_next_js"),
-    );
-    expect(result.data.rowCount).toBe(expected.length);
-    const [header, ...rows] = result.data.content.replace(/^﻿/, "").trim().split("\r\n");
-    expect(header).toBe(
-      "projects:columns.code,projects:columns.name,projects:columns.contractedValueUsd",
-    );
-    expect(rows).toHaveLength(expected.length);
-    expect(rows.every((row) => row.endsWith("0.00"))).toBe(true);
+    expect(result).toMatchObject({ ok: true, data: { rowCount: 2 } });
+    expect(calls[0]?.body).toEqual({
+      columns: [
+        { id: "code", label: "projects:columns.code" },
+        { id: "name", label: "projects:columns.name" },
+        { id: "contractedValueUsd", label: "projects:columns.contractedValueUsd" },
+      ],
+      query: { archived: "exclude", filters: { technologyId: "tec_next_js" } },
+    });
   });
 
-  it("applies the delivery window facet and refuses unknown columns and non-readers", async () => {
+  it("splits the delivery window into deliveryFrom / deliveryTo and maps the BE error", async () => {
     as("OWNER");
-    // The fixture dates are computed from today, so the window is built around one of them.
-    const target = getMockStore().projects.find(
-      (project) => project.archivedAt === null && project.targetEndDate !== null,
-    )!.targetEndDate!;
-    const windowed = await exportProjectsCsvAction(
-      payload({ filters: { delivery: [addDays(target, -10), addDays(target, 10)] } }, [
-        "code",
-        "targetEndDate",
-        "stack",
-      ]),
+    const { calls } = exportApi();
+    await exportProjectsCsvAction(
+      payload({ filters: { delivery: ["2026-10-01", "2026-10-31"] } }, ["code", "targetEndDate"]),
     );
-    expect(windowed).toMatchObject({ ok: true });
-    if (windowed.ok) {
-      expect(windowed.data.content).toContain("PRY-");
-      expect(windowed.data.rowCount).toBeGreaterThan(0);
-    }
-    expect(await exportProjectsCsvAction(payload({}, ["code", "nope"]))).toMatchObject({
+    expect(calls[0]?.body).toMatchObject({
+      query: { filters: { deliveryFrom: "2026-10-01", deliveryTo: "2026-10-31" } },
+    });
+
+    exportApi(errorResponse("FORBIDDEN"));
+    expect(await exportProjectsCsvAction(payload())).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
+    });
+    expect(await exportProjectsCsvAction(payload({}, []))).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
     });
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect(await exportProjectsCsvAction(payload())).toMatchObject({ ok: false });
   });
 });
 

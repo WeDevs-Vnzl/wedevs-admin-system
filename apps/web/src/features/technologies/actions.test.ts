@@ -5,10 +5,14 @@ const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import {
   createTechnologyAction,
@@ -24,6 +28,32 @@ function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
   session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
 }
 
+/** Routes the server client of the export action to an HTTP double of `POST /exports/TECHNOLOGY`. */
+function exportApi(response?: () => Response) {
+  const mocked = mockApi({
+    "POST /api/v1/exports/TECHNOLOGY":
+      response ??
+      (() =>
+        new Response("h\r\n", {
+          status: 200,
+          headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "X-Export-Row-Count": "2",
+            "X-Export-Truncated": "false",
+          },
+        })),
+  });
+  server.getServerApi.mockResolvedValue(mocked.api);
+  return mocked;
+}
+
+const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+  const { status, body } = errorEnvelope(code);
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+};
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
 });
@@ -46,27 +76,28 @@ describe("technology actions: permissions (DT-71)", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("refuses the CSV export to Member with FORBIDDEN", async () => {
-    asRole("MEMBER");
+  it("maps the FORBIDDEN envelope of the CSV export", async () => {
+    exportApi(errorResponse("FORBIDDEN"));
     await expect(
       exportTechnologiesCsvAction({ entity: "TECHNOLOGY", query: listQuery, columns: ["name"] }),
     ).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
   });
 
-  it("exports the catalog with translated headers for Owner", async () => {
-    asRole("OWNER");
+  it("posts the translated catalog columns to /exports/TECHNOLOGY", async () => {
+    const { calls } = exportApi();
     const result = await exportTechnologiesCsvAction({
       entity: "TECHNOLOGY",
       query: listQuery,
       columns: ["name", "usageCount"],
     });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    // The file starts with the UTF-8 BOM (PD-2).
-    expect(result.data.content.replace(/^\ufeff/, "").split("\r\n")[0]).toBe(
-      "catalogs:technologies.table.columns.name,catalogs:technologies.table.columns.usageCount",
-    );
-    expect(result.data.rowCount).toBeGreaterThan(0);
+    expect(result).toMatchObject({ ok: true, data: { rowCount: 2 } });
+    expect(calls[0]?.body).toMatchObject({
+      columns: [
+        { id: "name", label: "catalogs:technologies.table.columns.name" },
+        { id: "usageCount", label: "catalogs:technologies.table.columns.usageCount" },
+      ],
+      query: { archived: "exclude" },
+    });
   });
 
   it("resolves a Simple Icons slug for Owner and Admin (read on settings)", async () => {
