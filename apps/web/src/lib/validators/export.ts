@@ -93,6 +93,7 @@ export interface ExportSource<Row, Filter = unknown, Ctx = unknown> {
   entity: ExportEntity;
   facets: readonly TableFacetDescriptor[];
   filterSchema: z.ZodType<Filter, unknown>;
+  // MOCK — until cleanup: ignored by defineCsvExportAction (the BE builds the file).
   list: (ctx: Ctx, filter: Filter) => Promise<Paginated<Row>>;
   columns: Record<string, ExportColumnSpec<Row>>;
 }
