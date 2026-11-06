@@ -1,17 +1,21 @@
 "use server";
 
+import { apiAction } from "@/lib/api/action";
 import { entityHref } from "@/lib/entity-routes";
-import { restoreFromTrashInputSchema, trashFilterSchema } from "@/lib/validators/trash";
-import * as trash from "@/mocks/services/trash";
+import {
+  restoreFromTrashInputSchema,
+  type TrashFilterInput,
+} from "@/lib/validators/trash";
+import * as trash from "@/mocks/services/trash"; // MOCK — until cleanup
 import { defineAction } from "@/server/actions/define-action";
+import { toTrashListQuery } from "./api-query";
 
 const SETTINGS_TRASH_PATH = "/settings/trash";
 
-/** Reads the trash for the table (Owner and Admin). */
-export const listTrashAction = defineAction({
-  permission: { action: "read", resource: "trash" },
-  input: trashFilterSchema,
-  handler: (ctx, data) => trash.listTrash(ctx, data),
+/** Reads the trash for the table (Owner and Admin). The BE decides who may read it (`can()`). */
+export const listTrashAction = apiAction({
+  call: (input: TrashFilterInput, api) =>
+    api.GET("/api/v1/trash", { params: { query: toTrashListQuery(input) } }),
 });
 
 /**
@@ -25,5 +29,5 @@ export const restoreFromTrashAction = defineAction({
     const href = entityHref({ type: data.entityType, id: data.entityId });
     return href ? [SETTINGS_TRASH_PATH, href] : [SETTINGS_TRASH_PATH];
   },
-  handler: (ctx, data) => trash.restoreFromTrash(ctx, data),
+  handler: (ctx, data) => trash.restoreFromTrash(ctx, data), // MOCK — until cleanup
 });
