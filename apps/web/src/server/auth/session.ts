@@ -2,27 +2,19 @@ import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import type { UserDetailDto } from "@/lib/api/dto";
 import { getServerApi } from "@/lib/api/server";
-import type { UserRole } from "@/lib/validators/enums";
 import type { SessionLocale, SessionTheme, SessionUser } from "./types";
 
 // The session user comes from the BE: `GET /api/v1/me` (BE-1, Q-BE1-2). The role is the BE's DB role
 // (C13); nothing here reads Clerk metadata. The "View as role" mock override lives in `@/mocks/session`
 // and applies to the mock service context only (C9).
 
-/**
- * The fields of `GET /api/v1/me` the session reads. The generated `UserDetailDto` satisfies it, and the
- * call in `getSessionUser` type-checks the response against it, so contract drift fails `tsc`.
- */
-export interface MeProfile {
-  id: string;
-  name: string;
-  email: string;
-  imageUrl: string | null;
-  role: UserRole;
-  locale: string;
-  theme: string;
-}
+/** The fields of `GET /api/v1/me` the session reads, picked from the generated DTO (C8). */
+export type MeProfile = Pick<
+  UserDetailDto,
+  "id" | "name" | "email" | "imageUrl" | "role" | "locale" | "theme"
+>;
 
 /** Thrown by `requireSessionUser` when nobody is signed in. Actions map it to `UNAUTHENTICATED`. */
 export class UnauthenticatedError extends Error {
