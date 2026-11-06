@@ -6,12 +6,6 @@
   "menu": {
     "title": "Modo de prueba"
   },
-  "viewAs": {
-    "label": "Ver como rol",
-    "description": "Cambia tu rol solo para esta sesión de prueba. No modifica ningún usuario.",
-    "current": "Viendo como {role}",
-    "changed": "Ahora ves la aplicación como {role}"
-  },
   "reset": {
     "label": "Restablecer datos de prueba",
     "title": "¿Restablecer los datos de prueba?",
