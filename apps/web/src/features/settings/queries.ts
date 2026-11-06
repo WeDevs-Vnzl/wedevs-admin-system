@@ -5,8 +5,11 @@ import {
   SETTINGS_SECTIONS,
   type SettingsSection,
 } from "@/config/settings-nav";
-import * as companySettings from "@/mocks/services/company-settings";
+import { toActionResult } from "@/lib/api/errors";
+import { getServerApi } from "@/lib/api/server";
 import { getServiceContext } from "@/server/context";
+import { toCompanySettings } from "./company";
+import { unwrapOrBoundary } from "./query-boundary";
 
 /** The Configuración sections the signed-in user may see, in §8.15 order. */
 export async function getVisibleSettingsSections(): Promise<SettingsSection[]> {
@@ -24,5 +27,8 @@ export async function getOpenableSettingsSection(slug: string): Promise<Settings
 
 /** The company profile (name, legal name, RIF, address, logo) for Settings → Empresa. */
 export async function getCompanySettings() {
-  return companySettings.getCompanySettings(await getServiceContext());
+  const api = await getServerApi();
+  return toCompanySettings(
+    unwrapOrBoundary(toActionResult(await api.GET("/api/v1/settings/company"))),
+  );
 }

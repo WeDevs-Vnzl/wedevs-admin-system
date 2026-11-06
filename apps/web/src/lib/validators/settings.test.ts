@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import type { FiscalSettingsResponseDto } from "@/lib/api/types/identity";
 import en from "@/i18n/messages/en/settings.json";
 import es from "@/i18n/messages/es/settings.json";
 import {
@@ -12,6 +13,7 @@ import {
   settingsDtoSchema,
   updateCompanySettingsInputSchema,
   type CompanySettingsService,
+  type FiscalSettings,
 } from "./settings";
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -117,5 +119,27 @@ describe("CompanySettingsService (A1)", () => {
   it("the update input is still the company schema (name required, logo optional)", () => {
     expect(updateCompanySettingsInputSchema.safeParse({ name: "WeDevs" }).success).toBe(true);
     expect(updateCompanySettingsInputSchema.safeParse({ name: "" }).success).toBe(false);
+  });
+});
+
+describe("fiscal settings vs the generated API (DT-219)", () => {
+  // GAP (reported to Root): the BE dropped `igtfMethodCodes` from `GET /settings/fiscal` (DT-70, IGTF has a
+  // single source: `igtfCurrencies`), while `FiscalSettings` still requires it. Every other field matches.
+  it("the GET /api/v1/settings/fiscal response is assignable to FiscalSettings, except igtfMethodCodes", () => {
+    expectTypeOf<FiscalSettingsResponseDto>().toExtend<Omit<FiscalSettings, "igtfMethodCodes">>();
+    expectTypeOf<FiscalSettingsResponseDto>().not.toHaveProperty("igtfMethodCodes");
+  });
+
+  it("a response-shaped body satisfies the fiscal schema once the optional list defaults", () => {
+    const body: FiscalSettingsResponseDto = {
+      ivaRates: ["16", "8", "0"],
+      ivaDefaultRate: "16",
+      igtfRate: "3",
+      igtfCurrencies: ["USD"],
+      invoiceDefaultDueDays: 15,
+    };
+    const parsed = fiscalSettingsSchema.safeParse(body);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.igtfMethodCodes).toEqual([]);
   });
 });
