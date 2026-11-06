@@ -4,7 +4,8 @@ import { assertBackendHealthy } from "./support/backend";
 import { OWNER_NAME_ENV, requireEnv } from "./support/roles";
 
 // FE-INT-0 package 0.5 (docs/TASK.md). Titles carry the project tag: `@unauthenticated` runs in the `unauthenticated`
-// project (agents and CI, with the Clerk dev publishable key only, DT-204, DT-214); `@authenticated` runs in the `authenticated` project (the user, locally).
+// project (CI, and agents against the user's running FE; no signed-in user, DT-204, DT-214); `@authenticated` runs
+// in the `authenticated` project (the user, locally).
 // The BE is checked first: this file needs the local BE up (apps/api), started by the Tester outside this worker.
 
 const UNKNOWN_PORTAL_TOKEN = "e2e-unknown-portal-token";

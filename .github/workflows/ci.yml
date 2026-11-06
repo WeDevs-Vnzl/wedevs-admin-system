@@ -119,7 +119,7 @@ jobs:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
       API_PORT: "3001"
       # The Clerk dev publishable key is not a secret (it ships in the bundle): a repository variable (DT-214).
-      # Without it every FE route answers 500. No Clerk secret key exists in CI.
+      # Without it every FE route answers 500. The dev secret key is a repository secret, read only by the E2E step.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       DATABASE_URL: postgresql://postgres:dev@localhost:5432/core
       DIRECT_URL: postgresql://postgres:dev@localhost:5432/core
@@ -170,11 +170,17 @@ jobs:
         run: bun run api:check
       - if: steps.affected.outputs.run == 'true'
         run: bun run i18n:check
-      - name: Require the Clerk dev publishable key
+      - name: Require the Clerk dev keys
         if: steps.affected.outputs.run == 'true'
+        env:
+          HAS_CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY != '' }}
         run: |
           if [ -z "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
             echo "::error::Repository variable NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is not set (DT-214)"
+            exit 1
+          fi
+          if [ "$HAS_CLERK_SECRET_KEY" != "true" ]; then
+            echo "::error::Repository secret CLERK_SECRET_KEY (Clerk dev instance) is not set (DT-214)"
             exit 1
           fi
       - if: steps.affected.outputs.run == 'true'
@@ -197,9 +203,11 @@ jobs:
       - name: Start BE and app, run E2E, stop both
         if: steps.affected.outputs.run == 'true'
         env:
-          # Literal placeholders, not secrets: the unauthenticated E2E never reaches Clerk's or Cloudinary's APIs.
-          # Svix decodes the webhook secret at boot, so its placeholder is valid base64.
-          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          # The Clerk dev secret key (repository secret, DT-214): the Next server's clerkMiddleware verifies the
+          # dev-instance handshake a real browser triggers with it. The BE reads the same name.
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          # Literal placeholders, not secrets: the unauthenticated E2E never reaches the BE's Clerk or Cloudinary
+          # calls. Svix decodes the webhook secret at boot, so its placeholder is valid base64.
           CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
           CLERK_JWT_KEY: ci-placeholder-jwt-key
           CLERK_WEBHOOK_SECRET: whsec_Y2ktcGxhY2Vob2xkZXItd2ViaG9vay1zZWNyZXQ=
@@ -237,7 +245,9 @@ jobs:
 
           # Only the unauthenticated project: the authenticated one needs Clerk test users and the secret key,
           # and stays user-run (DT-204). The legacy mock-backed specs need a session since FE-INT-0.
-          bun x playwright test --project=unauthenticated
+          # The secret key above is for the BE and the Next server; Playwright runs without it, so the global setup
+          # skips the Clerk testing-token call the unauthenticated project does not need.
+          env -u CLERK_SECRET_KEY bun x playwright test --project=unauthenticated
 
       - name: Stop BE and app (safety net)
         if: always()
