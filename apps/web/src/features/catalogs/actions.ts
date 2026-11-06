@@ -1,19 +1,21 @@
 "use server";
 
+import { apiAction } from "@/lib/api/action";
 import {
-  createCurrencyInputSchema,
-  createExpenseCategoryInputSchema,
-  createPaymentMethodInputSchema,
   exchangeRateFiltersSchema,
   getRateForInputSchema,
   importRatesCsvInputSchema,
   quickRateLoadInputSchema,
+  upsertExchangeRateInputSchema,
+  createCurrencyInputSchema,
+  createExpenseCategoryInputSchema,
+  createPaymentMethodInputSchema,
   updateCurrencyInputSchema,
   updateExpenseCategoryInputSchema,
   updatePaymentMethodInputSchema,
-  upsertExchangeRateInputSchema,
 } from "@/lib/validators/catalogs";
-import { updateFiscalSettingsInputSchema } from "@/lib/validators/settings";
+import type { updateFiscalSettingsInputSchema } from "@/lib/validators/settings";
+import type { z } from "@/lib/validators/zod";
 import * as catalogs from "@/mocks/services/catalogs";
 import { defineAction } from "@/server/actions/define-action";
 
@@ -30,6 +32,15 @@ export const lookupRateAction = defineAction({
 
 // ───────────────────────────── Settings writes (Owner and Admin, `settings` row) ─────────────────────────────
 
+// Action inputs are the forms' schema inputs (defaults optional): the schemas validate for UX, the BE decides.
+type CreateCurrencyInput = z.input<typeof createCurrencyInputSchema>;
+type UpdateCurrencyInput = z.input<typeof updateCurrencyInputSchema>;
+type CreatePaymentMethodInput = z.input<typeof createPaymentMethodInputSchema>;
+type UpdatePaymentMethodInput = z.input<typeof updatePaymentMethodInputSchema>;
+type CreateExpenseCategoryInput = z.input<typeof createExpenseCategoryInputSchema>;
+type UpdateExpenseCategoryInput = z.input<typeof updateExpenseCategoryInputSchema>;
+type UpdateFiscalSettingsInput = z.input<typeof updateFiscalSettingsInputSchema>;
+
 const PATHS = {
   currencies: "/settings/currencies",
   rates: "/settings/rates",
@@ -38,19 +49,16 @@ const PATHS = {
   expenseCategories: "/settings/expense-categories",
 } as const;
 
-export const createCurrencyAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: createCurrencyInputSchema,
+export const createCurrencyAction = apiAction({
+  call: (input: CreateCurrencyInput, api) => api.POST("/api/v1/currencies", { body: input }),
   revalidate: [PATHS.currencies],
-  handler: (ctx, data) => catalogs.createCurrency(ctx, data),
 });
 
 /** Edits a currency, incl. activating or deactivating it (C19: catalogs are retired, never deleted). */
-export const updateCurrencyAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateCurrencyInputSchema,
+export const updateCurrencyAction = apiAction({
+  call: ({ code, ...body }: UpdateCurrencyInput, api) =>
+    api.PATCH("/api/v1/currencies/{code}", { params: { path: { code } }, body }),
   revalidate: [PATHS.currencies],
-  handler: (ctx, data) => catalogs.updateCurrency(ctx, data),
 });
 
 /** Settings → Tasas table: the rows of one page (the table refreshes through it on a query change). */
@@ -83,37 +91,41 @@ export const importRatesCsvAction = defineAction({
   handler: (ctx, data) => catalogs.importRatesCsv(ctx, data),
 });
 
-export const updateFiscalSettingsAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateFiscalSettingsInputSchema,
+/** Fiscal rates and amounts stay decimal strings (C15); the BE keeps no per-method IGTF code list. */
+export const updateFiscalSettingsAction = apiAction({
+  call: (input: UpdateFiscalSettingsInput, api) =>
+    api.PATCH("/api/v1/settings/fiscal", {
+      body: {
+        ivaRates: input.ivaRates,
+        ivaDefaultRate: input.ivaDefaultRate,
+        igtfRate: input.igtfRate,
+        igtfCurrencies: input.igtfCurrencies,
+        invoiceDefaultDueDays: input.invoiceDefaultDueDays,
+      },
+    }),
   revalidate: [PATHS.fiscal],
-  handler: (ctx, data) => catalogs.updateFiscalSettings(ctx, data),
 });
 
-export const createPaymentMethodAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: createPaymentMethodInputSchema,
+export const createPaymentMethodAction = apiAction({
+  call: (input: CreatePaymentMethodInput, api) =>
+    api.POST("/api/v1/payment-methods", { body: input }),
   revalidate: [PATHS.paymentMethods],
-  handler: (ctx, data) => catalogs.createPaymentMethod(ctx, data),
 });
 
-export const updatePaymentMethodAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updatePaymentMethodInputSchema,
+export const updatePaymentMethodAction = apiAction({
+  call: ({ id, ...body }: UpdatePaymentMethodInput, api) =>
+    api.PATCH("/api/v1/payment-methods/{id}", { params: { path: { id } }, body }),
   revalidate: [PATHS.paymentMethods],
-  handler: (ctx, data) => catalogs.updatePaymentMethod(ctx, data),
 });
 
-export const createExpenseCategoryAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: createExpenseCategoryInputSchema,
+export const createExpenseCategoryAction = apiAction({
+  call: (input: CreateExpenseCategoryInput, api) =>
+    api.POST("/api/v1/expense-categories", { body: input }),
   revalidate: [PATHS.expenseCategories],
-  handler: (ctx, data) => catalogs.createExpenseCategory(ctx, data),
 });
 
-export const updateExpenseCategoryAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateExpenseCategoryInputSchema,
+export const updateExpenseCategoryAction = apiAction({
+  call: ({ id, ...body }: UpdateExpenseCategoryInput, api) =>
+    api.PATCH("/api/v1/expense-categories/{id}", { params: { path: { id } }, body }),
   revalidate: [PATHS.expenseCategories],
-  handler: (ctx, data) => catalogs.updateExpenseCategory(ctx, data),
 });

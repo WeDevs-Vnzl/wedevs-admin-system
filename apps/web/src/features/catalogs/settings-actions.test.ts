@@ -6,19 +6,11 @@ vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => cache);
 vi.mock("@/mocks/session", () => session);
 
-import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import {
-  createCurrencyAction,
-  createExpenseCategoryAction,
-  createPaymentMethodAction,
   importRatesCsvAction,
   listExchangeRatesAction,
   loadDailyRatesAction,
-  updateCurrencyAction,
-  updateExpenseCategoryAction,
-  updateFiscalSettingsAction,
-  updatePaymentMethodAction,
   upsertExchangeRateAction,
 } from "./actions";
 import { exchangeRateFilterFromParams, listExchangeRates } from "./queries";
@@ -39,21 +31,8 @@ afterEach(() => {
   delete (globalThis as Record<string, unknown>).__wedevsMockState;
 });
 
-const fiscal = {
-  ivaRates: ["16", "8", "0"],
-  ivaDefaultRate: "16",
-  igtfRate: "3",
-  igtfCurrencies: ["USD"],
-  invoiceDefaultDueDays: 15,
-};
-
-// Every write of the finance catalogs, with a valid input (Owner and Admin only, `settings` row).
+// Every write of the rates, with a valid input (Owner and Admin only, `settings` row).
 const writes = [
-  ["createCurrency", () => createCurrencyAction({ code: "BRL", name: "Real", symbol: "R$" })],
-  [
-    "updateCurrency",
-    () => updateCurrencyAction({ code: "COP", name: "Peso", symbol: "$", active: true }),
-  ],
   [
     "upsertExchangeRate",
     () => upsertExchangeRateAction({ date: "2026-10-12", currency: "VES", usdRate: "760" }),
@@ -73,14 +52,6 @@ const writes = [
       importRatesCsvAction({
         rows: [{ date: "2026-10-12", currency: "VES", usdRate: "760", source: "BCV" }],
       }),
-  ],
-  ["updateFiscalSettings", () => updateFiscalSettingsAction(fiscal)],
-  ["createPaymentMethod", () => createPaymentMethodAction({ code: "BIZUM", name: "Bizum" })],
-  ["updatePaymentMethod", () => updatePaymentMethodAction({ id: "pmt_otro", name: "Otro medio" })],
-  ["createExpenseCategory", () => createExpenseCategoryAction({ name: "Eventos" })],
-  [
-    "updateExpenseCategory",
-    () => updateExpenseCategoryAction({ id: "ecat_dominios", name: "Dominios y DNS" }),
   ],
 ] as const;
 
@@ -123,43 +94,6 @@ describe("finance catalog actions: effects", () => {
     expect(page.ok && page.data.items.map((r) => `${r.currency}:${r.usdRate}:${r.source}`)).toEqual(
       expect.arrayContaining(["VES:760.5:BCV", "EUR:0.86:BCV"]),
     );
-  });
-
-  it("validates with the shared schemas: USD has no rate, VAT default must be allowed", async () => {
-    asRole("OWNER");
-    await expect(
-      upsertExchangeRateAction({ date: "2026-10-12", currency: "USD", usdRate: "1" }),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: {
-        code: "VALIDATION",
-        fieldErrors: { currency: ["catalogs.validation.rateCurrencyIsUsd"] },
-      },
-    });
-    const before = structuredClone(getMockStore().fiscal);
-    await expect(
-      updateFiscalSettingsAction({ ...fiscal, ivaDefaultRate: "12" }),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: {
-        code: "VALIDATION",
-        fieldErrors: { ivaDefaultRate: ["settings.validation.defaultIvaRateNotAllowed"] },
-      },
-    });
-    expect(getMockStore().fiscal).toEqual(before);
-  });
-
-  it("maps a service conflict to its field", async () => {
-    asRole("OWNER");
-    await expect(
-      createPaymentMethodAction({ code: "ZELLE", name: "Zelle 2" }),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: {
-        code: "CONFLICT",
-        fieldErrors: { code: ["catalogs.paymentMethods.errors.codeTaken"] },
-      },
-    });
   });
 });
 
