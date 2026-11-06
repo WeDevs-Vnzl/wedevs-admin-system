@@ -16,16 +16,27 @@ const req = (pathname: string) => ({ nextUrl: { pathname } }) as never;
 
 describe("proxy public routes", () => {
   it("is exactly the DT-42 set without the obsolete webhooks route", () => {
-    expect(PUBLIC_ROUTE_PATTERNS).toEqual(["/sign-in(.*)", "/s/(.*)", "/api/s/(.*)"]);
+    expect(PUBLIC_ROUTE_PATTERNS).toEqual([
+      "/sign-in(.*)",
+      "/s/([^/]+)",
+      "/api/s/([^/]+)/files/([^/]+)",
+    ]);
   });
 
-  it.each(["/sign-in", "/sign-in/factor-one", "/s/abc123", "/api/s/abc123/download"])(
+  it.each(["/sign-in", "/sign-in/factor-one", "/s/abc123", "/api/s/abc123/files/doc-1"])(
     "%s is public",
     (path) => expect(isPublicRoute(req(path))).toBe(true),
   );
 
   it.each(["/", "/dashboard", "/clients/1", "/api/v1/me", "/api/webhooks/clerk", "/settings"])(
     "%s is protected",
+    (path) => expect(isPublicRoute(req(path))).toBe(false),
+  );
+
+  // Unknown paths under the portal prefixes fall into the shell's catch-all (`(app)/[...missing]`), which needs a
+  // session: they must be protected (sign-in redirect), never public (a 500 from the shell without a user, F5).
+  it.each(["/s/a/b/c", "/s/abc123/extra", "/api/s/x", "/api/s/abc123/download", "/api/s/a/files/b/c"])(
+    "unknown portal path %s is protected",
     (path) => expect(isPublicRoute(req(path))).toBe(false),
   );
 
