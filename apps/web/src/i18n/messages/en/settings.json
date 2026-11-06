@@ -8,6 +8,7 @@
     "company": "Company",
     "users": "Users",
     "preferences": "Preferences",
+    "apiTokens": "API tokens",
     "currencies": "Currencies",
     "rates": "Exchange rates",
     "fiscal": "Tax",

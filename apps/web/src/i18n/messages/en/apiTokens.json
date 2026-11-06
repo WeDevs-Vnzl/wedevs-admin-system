@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "API tokens",
+    "description": "Personal access tokens let tools such as MCP clients act on your behalf. Each token works until it expires or you revoke it."
+  },
+  "actions": {
+    "create": "New token",
+    "copy": "Copy token",
+    "copied": "Copied",
+    "revoke": "Revoke {name}"
+  },
+  "columns": {
+    "name": "Name",
+    "prefix": "Token",
+    "createdAt": "Created",
+    "expiresAt": "Expires",
+    "lastUsedAt": "Last used",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "revoked": "Revoked",
+    "expired": "Expired"
+  },
+  "lastUsed": {
+    "never": "Never"
+  },
+  "limit": "You can have up to {max} active tokens.",
+  "empty": {
+    "title": "No tokens yet",
+    "description": "Create a token to connect an external tool to your account."
+  },
+  "form": {
+    "title": "New API token",
+    "description": "Choose a name that tells you where the token is used and how long it stays valid.",
+    "name": "Name",
+    "namePlaceholder": "e.g. Claude Desktop",
+    "expiresInDays": "Lifetime (days)",
+    "expiresInDaysHint": "Between 1 and 365 days. The default is 90.",
+    "cancel": "Cancel",
+    "submit": "Create token",
+    "submitting": "Creating…"
+  },
+  "secret": {
+    "title": "Copy your token now",
+    "description": "This is the only time the full token is shown. Store it somewhere safe: it cannot be recovered later.",
+    "label": "Token",
+    "done": "I have stored it"
+  },
+  "revoke": {
+    "title": "Revoke this token?",
+    "description": "{name} stops working immediately. This cannot be undone.",
+    "confirm": "Revoke",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "created": "Token created",
+    "revoked": "Token revoked",
+    "copyFailed": "The token could not be copied. Select it and copy it manually."
+  },
+  "errors": {
+    "limitReached": "You already have the maximum number of active tokens. Revoke one to create another.",
+    "outOfRange": "Enter a whole number of days between 1 and 365"
+  }
+}

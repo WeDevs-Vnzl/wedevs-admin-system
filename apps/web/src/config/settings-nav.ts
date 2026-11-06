@@ -6,6 +6,7 @@ import {
   DollarSign,
   FileText,
   FolderTree,
+  KeyRound,
   Percent,
   SlidersHorizontal,
   Tags,
@@ -43,6 +44,8 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     permission: { action: "read", resource: "user" },
   },
   { slug: "preferences", labelKey: "preferences", icon: SlidersHorizontal, permission: null },
+  // Personal access tokens: every signed-in user manages their own (DT-189, DT-195).
+  { slug: "api-tokens", labelKey: "apiTokens", icon: KeyRound, permission: null },
   {
     slug: "currencies",
     labelKey: "currencies",
