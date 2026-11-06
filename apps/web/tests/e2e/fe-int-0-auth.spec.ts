@@ -42,6 +42,7 @@ test.describe("FE-INT-0 auth harness", () => {
     await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
     const menu = page.getByRole("menu");
     await expect(menu.getByText(ownerName)).toBeVisible();
-    await expect(menu.getByText(/^(Propietario|Owner)$/)).toBeVisible();
+    // The menu renders the role as "<label>: <role>" in one element (user-menu.tsx).
+    await expect(menu.getByText(/^(Rol|Role): (Propietario|Owner)$/)).toBeVisible();
   });
 });
