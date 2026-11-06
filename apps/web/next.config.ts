@@ -1,6 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
-import { PORTAL_HEADER_SOURCES, PORTAL_SECURITY_HEADERS } from "./src/server/portal/headers";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -16,13 +15,21 @@ const apiOrigin = (() => {
   }
 })();
 
+// Response headers of the public portal page and its generic 404 (PRD §8.11 "Cabeceras", C22).
+const PORTAL_SECURITY_HEADERS = [
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "Cache-Control", value: "private, no-store" },
+];
+
 const clerkOrigins = "https://*.clerk.accounts.dev https://*.clerk.com";
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${clerkOrigins} https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://img.clerk.com https://res.cloudinary.com",
+  // The portal image preview points at the API file route (302 to the signed Cloudinary URL).
+  `img-src 'self' data: blob: ${apiOrigin} https://img.clerk.com https://res.cloudinary.com`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin} ${clerkOrigins} https://api.cloudinary.com https://res.cloudinary.com`,
   `frame-src ${clerkOrigins} https://challenges.cloudflare.com`,
@@ -47,10 +54,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Public portal (PRD §8.11, C22): never indexed, never cached, no referrer — the generic 404 included.
   async headers() {
-    const headers = Object.entries(PORTAL_SECURITY_HEADERS).map(([key, value]) => ({ key, value }));
     return [
       { source: "/:path*", headers: APP_SECURITY_HEADERS },
-      ...PORTAL_HEADER_SOURCES.map((source) => ({ source, headers })),
+      { source: "/s/:path*", headers: PORTAL_SECURITY_HEADERS },
     ];
   },
 };

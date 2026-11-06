@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PortalRateLimited } from "@/features/portal/components/portal-rate-limited";
 import { PortalView } from "@/features/portal/components/portal-view";
 import { loadPortalPage } from "@/features/portal/queries";
 
@@ -15,10 +16,12 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-/** `/s/[token]`: the portal of a live link; an unknown, revoked or expired token gets the generic 404. */
+/** `/s/[token]`: the portal of a live link; an unknown, revoked or expired token gets the generic 404, a rate-limited probe the
+ * "try again" state (Next cannot set a 429 status from a page). */
 export default async function PortalPage({ params }: PageProps) {
   const { token } = await params;
-  const page = await loadPortalPage(token);
-  if (!page) notFound();
-  return <PortalView token={token} page={page} />;
+  const result = await loadPortalPage(token);
+  if (result.kind === "not-found") notFound();
+  if (result.kind === "rate-limited") return <PortalRateLimited token={token} />;
+  return <PortalView token={token} page={result.page} />;
 }

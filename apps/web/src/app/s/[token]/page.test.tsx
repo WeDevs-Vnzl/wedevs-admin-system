@@ -24,15 +24,25 @@ beforeEach(() => {
 describe("/s/[token]", () => {
   it("renders the portal of a live link", async () => {
     const page = { title: "Entrega", documents: [] };
-    queries.loadPortalPage.mockResolvedValue(page);
+    queries.loadPortalPage.mockResolvedValue({ kind: "ok", page });
     const element = await PortalPage(props(TOKEN));
     expect(element.props).toEqual({ token: TOKEN, page });
     expect(queries.loadPortalPage).toHaveBeenCalledWith(TOKEN);
   });
 
   it("answers the generic 404 when the link is unknown, revoked or expired", async () => {
-    queries.loadPortalPage.mockResolvedValue(null);
+    queries.loadPortalPage.mockResolvedValue({ kind: "not-found" });
     await expect(PortalPage(props(TOKEN))).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("shows the try-again state, with no 404, when the probe is rate limited", async () => {
+    queries.loadPortalPage.mockResolvedValue({ kind: "rate-limited" });
+    render(await PortalPage(props(TOKEN)));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Demasiadas solicitudes" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Too many requests")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Reintentar/ })).toHaveAttribute("href", `/s/${TOKEN}`);
   });
 
   it("asks search engines not to index or follow it", () => {

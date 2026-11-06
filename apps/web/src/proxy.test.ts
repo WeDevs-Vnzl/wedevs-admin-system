@@ -15,17 +15,12 @@ import { PUBLIC_ROUTE_PATTERNS, config, isPublicRoute } from "./proxy";
 const req = (pathname: string) => ({ nextUrl: { pathname } }) as never;
 
 describe("proxy public routes", () => {
-  it("is exactly the DT-42 set without the obsolete webhooks route", () => {
-    expect(PUBLIC_ROUTE_PATTERNS).toEqual([
-      "/sign-in(.*)",
-      "/s/([^/]+)",
-      "/api/s/([^/]+)/files/([^/]+)",
-    ]);
+  it("is exactly sign-in plus the portal page (F5), with no FE file route", () => {
+    expect(PUBLIC_ROUTE_PATTERNS).toEqual(["/sign-in(.*)", "/s/([^/]+)"]);
   });
 
-  it.each(["/sign-in", "/sign-in/factor-one", "/s/abc123", "/api/s/abc123/files/doc-1"])(
-    "%s is public",
-    (path) => expect(isPublicRoute(req(path))).toBe(true),
+  it.each(["/sign-in", "/sign-in/factor-one", "/s/abc123"])("%s is public", (path) =>
+    expect(isPublicRoute(req(path))).toBe(true),
   );
 
   it.each(["/", "/dashboard", "/clients/1", "/api/v1/me", "/api/webhooks/clerk", "/settings"])(
@@ -35,10 +30,16 @@ describe("proxy public routes", () => {
 
   // Unknown paths under the portal prefixes fall into the shell's catch-all (`(app)/[...missing]`), which needs a
   // session: they must be protected (sign-in redirect), never public (a 500 from the shell without a user, F5).
-  it.each(["/s/a/b/c", "/s/abc123/extra", "/api/s/x", "/api/s/abc123/download", "/api/s/a/files/b/c"])(
-    "unknown portal path %s is protected",
-    (path) => expect(isPublicRoute(req(path))).toBe(false),
-  );
+  it.each([
+    "/s/a/b/c",
+    "/s/abc123/extra",
+    "/s/abc123/x",
+    "/api/s/x",
+    "/api/s/abc123/files/doc-1",
+    "/api/s/abc123/download",
+    "/api/s/a/files/b/c",
+    "/some/unknown/path",
+  ])("unknown portal path %s is protected", (path) => expect(isPublicRoute(req(path))).toBe(false));
 
   it("skips static assets and Next internals in the matcher", () => {
     const pages = new RegExp(`^${config.matcher[0]}$`);
@@ -63,8 +64,25 @@ describe("security headers", () => {
     expect(csp).toContain("clerk");
   });
 
-  it("keeps the portal headers on the portal sources", async () => {
+  it("sends the portal headers on the portal page and its 404 only", async () => {
     const rules = await nextConfig.headers!();
-    expect(rules.some((r) => r.source === "/s/:path*")).toBe(true);
+    const portal = rules.filter((r) => r.source !== "/:path*");
+    expect(portal.map((r) => r.source)).toEqual(["/s/:path*"]);
+    expect(Object.fromEntries(portal[0]!.headers.map((h) => [h.key, h.value]))).toEqual({
+      "X-Robots-Tag": "noindex, nofollow",
+      "Referrer-Policy": "no-referrer",
+      "Cache-Control": "private, no-store",
+    });
+  });
+
+  it("lets the browser reach the API origin for portal calls and file links", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.test/");
+    const { CONTENT_SECURITY_POLICY } = await import("../next.config");
+    const directive = (name: string) =>
+      CONTENT_SECURITY_POLICY.split("; ").find((d) => d.startsWith(`${name} `)) ?? "";
+    expect(directive("connect-src")).toContain("https://api.example.test");
+    expect(directive("img-src")).toContain("https://api.example.test");
+    vi.unstubAllEnvs();
   });
 });
