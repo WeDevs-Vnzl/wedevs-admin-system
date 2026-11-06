@@ -55,13 +55,18 @@ export async function assertBackendHealthy(baseUrl: string = apiBaseUrl()): Prom
  *
  * The seed (`apps/api/prisma/seed.ts`) creates catalogs and settings only, never users. The local `User` row is
  * created by the Clerk `user.created` event, delivered as a Svix-signed webhook to `POST /api/v1/webhooks/clerk`
- * (`sync-clerk-user.use-case.ts`). The role comes from the Clerk user's `public_metadata.role` (one of OWNER, ADMIN,
- * MEMBER, VIEWER; VIEWER when absent), so no BE change is needed for the harness:
+ * (`sync-clerk-user.use-case.ts`). The role comes from `public_metadata.role` **of the `user.created` event only**
+ * (one of OWNER, ADMIN, MEMBER, VIEWER, upper case; VIEWER when absent or invalid). `user.updated` never changes the
+ * role (C13), so metadata added after creation, or a replay of the original event, does nothing:
  *
- * 1. Bootstrap the first OWNER: in the Clerk dev instance create the test user for `E2E_OWNER_EMAIL` with
- *    `public_metadata: { "role": "OWNER" }` (set by the user, in the Clerk dashboard).
- * 2. Other roles: an existing OWNER invites the e-mail through `POST /api/v1/users/invitations` with the role; the
- *    invitation carries the role in its public metadata and the webhook applies it on sign-up.
+ * 1. Bootstrap the first OWNER. The Clerk dashboard cannot set metadata when it creates a user, so either create the
+ *    user with the metadata in the same request (Clerk Backend API `POST /v1/users` with
+ *    `public_metadata: { "role": "OWNER" }`, run by the user with their own secret key), or create it in the dashboard
+ *    and then set the role of its local row directly: `UPDATE "User" SET role = 'OWNER' WHERE email = '<e-mail>';`
+ *    (local test database only; skips the activity log).
+ * 2. Other roles: the OWNER invites the e-mail through `POST /api/v1/users/invitations` with the role (the invitation
+ *    carries it in its public metadata and the webhook applies it on sign-up), or changes the role of an existing user
+ *    from the app.
  * 3. Clerk must deliver `user.created` to the local BE. Clerk cannot reach `localhost`, so the user uses a tunnel to
  *    the local BE or replays the event from the Clerk dashboard. The row must exist before `/me` answers 200; a valid
  *    Clerk session without a local row gets `401 UNAUTHENTICATED` and the no-access redirect (Q-BE1-2).

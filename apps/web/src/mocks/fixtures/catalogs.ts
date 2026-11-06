@@ -54,7 +54,8 @@ export interface CatalogFixtures {
 const USER_CREATED_AT = "2026-01-05T14:00:00.000Z";
 
 /**
- * Mock users. The first two ids are the ones `@/mocks/session` signs in (kept in sync by a test); the
+ * Mock users (fixtures only; the session user comes from `GET /api/v1/me`). The first two ids are the
+ * mock service context's actors in `@/mocks/session` (kept in sync by a test); the
  * rest give the "created by" and "uploaded by" references other roles to point at.
  */
 export const MOCK_USER_DETAILS: UserDetailDTO[] = [

@@ -7,8 +7,8 @@ export type SessionLocale = "es" | "en";
 export type SessionTheme = "light" | "dark" | "system";
 
 /**
- * The authenticated user as the application sees it. Hito 1 builds it from `@/mocks/session`; Hito 2 from
- * the local `User` row (the DB role is the source of truth, never Clerk metadata — C13).
+ * The authenticated user as the application sees it, built from `GET /api/v1/me` (FE-INT-0 0.4): the BE's
+ * local `User` row (the DB role is the source of truth, never Clerk metadata — C13).
  */
 export interface SessionUser {
   id: string;
