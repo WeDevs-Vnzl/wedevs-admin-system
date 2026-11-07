@@ -10,13 +10,13 @@ import { DateField } from "@/components/ui/date-field/date-field";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { reconcileAccountAction } from "@/features/accounts/actions";
+import type { ReconciliationResponseDto } from "@/lib/api/types/accounts";
 
-/** What the reconciliation action answers (`ReconciliationPreview` of the service). */
-type ReconciliationPreview = {
-  systemBalance: string;
-  difference: string;
-  suggestedAdjustment: string | null;
-};
+/** The figures shown from the stored reconciliation (`POST /accounts/{id}/reconcile`), as returned. */
+type ReconciliationPreview = Pick<
+  ReconciliationResponseDto,
+  "systemBalance" | "difference" | "suggestedAdjustment"
+>;
 
 type ReconciliationFormProps = {
   accountId: string;
@@ -26,9 +26,9 @@ type ReconciliationFormProps = {
 };
 
 /**
- * Conciliation of one account (HU-15 CA3): the statement balance against the system balance at a date. A
- * difference suggests an `AJUSTE` for that amount; the adjustment is recorded through the movement form, which
- * stays the only writer of movements.
+ * Conciliation of one account (HU-15 CA3, DT-123): the statement balance against the system balance at a date.
+ * The BE stores the reconciliation and answers the figures; a difference suggests an `AJUSTE` for that amount,
+ * recorded separately through the movement form, which stays the only writer of movements.
  */
 export function ReconciliationForm({ accountId, currency, today }: ReconciliationFormProps) {
   const t = useTranslations("accounts");
@@ -47,6 +47,7 @@ export function ReconciliationForm({ accountId, currency, today }: Reconciliatio
       toast.error(tErrors(result.error.code));
       return;
     }
+    toast.success(t("reconcile.recorded"));
     setPreview(result.data);
   }
 

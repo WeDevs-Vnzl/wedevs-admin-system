@@ -21,11 +21,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import type { AccountResponseDto } from "@/lib/api/types/accounts";
 import { createAccountAction, updateAccountAction } from "@/features/accounts/actions";
 import {
   createAccountInputSchema,
   updateAccountInputSchema,
-  type AccountDTO,
   type CreateAccountInput,
 } from "@/lib/validators/accounts";
 import { ACCOUNT_TYPE_VALUES } from "@/lib/validators/enums";
@@ -48,7 +48,7 @@ export type AccountFormCurrency = { code: string; name: string };
 
 type AccountFormProps = {
   /** Present on `/accounts/[id]/edit`; absent on `/accounts/new`. */
-  account?: AccountDTO;
+  account?: AccountResponseDto;
   /** Active currencies of the catalog (Settings). */
   currencies: AccountFormCurrency[];
   /** The currency of an account with movements is fixed (its balance is in that currency). */
