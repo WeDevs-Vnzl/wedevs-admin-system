@@ -1,6 +1,9 @@
 "use server";
 
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
+import { apiAction } from "@/lib/api/action";
+import type { TechnologyListResponseDto } from "@/lib/api/types/taxonomy";
+import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
 import type { ExportSource } from "@/lib/validators/export";
 import {
   createTechnologyInputSchema,
@@ -10,6 +13,7 @@ import {
   technologyFilterSchema,
   updateTechnologyInputSchema,
   type TechnologyFilter,
+  type TechnologyFilterInput,
   type TechnologyListRowDTO,
 } from "@/lib/validators/technologies";
 import { z } from "@/lib/validators/zod";
@@ -17,6 +21,7 @@ import { exportCsv } from "@/mocks/services/export";
 import * as technologies from "@/mocks/services/technologies";
 import { defineAction } from "@/server/actions/define-action";
 import type { ServiceContext } from "@/server/context";
+import { toTechnologyListQuery } from "./api-query";
 import { technologyExportColumns } from "./columns";
 import { resolveTechnologyIcon } from "./icons";
 
@@ -53,15 +58,24 @@ export const deleteTechnologyAction = defineAction({
   handler: (ctx, data) => technologies.deleteTechnology(ctx, data),
 });
 
+const listTechnologies = apiAction<TechnologyFilter, TechnologyListResponseDto>({
+  call: (filter, api) =>
+    api.GET("/api/v1/technologies", { params: { query: toTechnologyListQuery(filter) } }),
+});
+
 /**
  * Reference read (DT-71): the catalog every signed-in role needs to pick technologies. The picker itself
- * reads through `queries.ts`; this is the list the client may refresh.
+ * reads through `queries.ts`; this is the list the client may refresh. The filter is checked for UX only.
  */
-export const listTechnologiesAction = defineAction({
-  permission: "authenticated",
-  input: technologyFilterSchema,
-  handler: (ctx, data) => technologies.listTechnologies(ctx, data),
-});
+export async function listTechnologiesAction(
+  input: TechnologyFilterInput,
+): Promise<ActionResult<TechnologyListResponseDto>> {
+  const parsed = technologyFilterSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: { code: "VALIDATION", message: errorMessageKey("VALIDATION") } };
+  }
+  return listTechnologies(parsed.data);
+}
 
 /**
  * Preview behind the settings form's Simple Icons field: the brand glyph of a slug, or `null`. Only the

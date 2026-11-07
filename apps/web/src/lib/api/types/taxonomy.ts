@@ -18,3 +18,17 @@ export type CreateTagDto = components["schemas"]["CreateTagDto"];
 export type UpdateTagDto = components["schemas"]["UpdateTagDto"];
 export type AssignTagsDto = components["schemas"]["AssignTagsDto"];
 export type UnassignTagDto = components["schemas"]["UnassignTagDto"];
+
+/** Query of `GET /api/v1/technologies`. */
+export type TechnologyListQuery = NonNullable<operations["listTechnologies"]["parameters"]["query"]>;
+/** The `sort` tokens `GET /api/v1/technologies` accepts. */
+export type TechnologyListSort = NonNullable<TechnologyListQuery["sort"]>;
+
+/** One technology with its usage count (the detail and the write responses). */
+export type TechnologyViewDto = components["schemas"]["TechnologyViewDto"];
+/** `GET /api/v1/technologies`: one page of technologies. */
+export type TechnologyListResponseDto = components["schemas"]["TechnologyListResponseDto"];
+export type CreateTechnologyDto = components["schemas"]["CreateTechnologyDto"];
+export type UpdateTechnologyDto = components["schemas"]["UpdateTechnologyDto"];
+export type SetTechnologyActiveDto = components["schemas"]["SetTechnologyActiveDto"];
+export type TechnologyDeletedDto = components["schemas"]["TechnologyDeletedDto"];

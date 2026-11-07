@@ -71,9 +71,28 @@ describe("technology actions: permissions (DT-71)", () => {
   });
 
   it("lets any signed-in role read the reference catalog (authenticated)", async () => {
-    asRole("VIEWER");
-    const result = await listTechnologiesAction({ pageSize: 25 });
-    expect(result.ok).toBe(true);
+    const { api, calls } = mockApi({
+      "GET /api/v1/technologies": {
+        body: { items: [], total: 0, page: 1, pageSize: 25, pageCount: 1 },
+      },
+    });
+    server.getServerApi.mockResolvedValue(api);
+    const result = await listTechnologiesAction({ pageSize: 25, category: ["IA"] });
+    expect(result).toEqual({
+      ok: true,
+      data: { items: [], total: 0, page: 1, pageSize: 25, pageCount: 1 },
+    });
+    expect(calls[0]?.search.getAll("category")).toEqual(["IA"]);
+  });
+
+  it("answers VALIDATION for a sort the table cannot send, without calling the BE", async () => {
+    const { api, calls } = mockApi({});
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTechnologiesAction({ sort: "nope:asc" })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
+    });
+    expect(calls).toHaveLength(0);
   });
 
   it("maps the FORBIDDEN envelope of the CSV export", async () => {
