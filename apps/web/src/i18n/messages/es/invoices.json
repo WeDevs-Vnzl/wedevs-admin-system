@@ -241,5 +241,55 @@
     "issued": "Borrador emitido",
     "archived": "Factura archivada",
     "voided": "Factura anulada"
+  },
+  "paymentLinks": {
+    "title": "Enlaces de pago",
+    "description": "Enlaces de cobro con tarjeta (Stripe) para esta factura.",
+    "capacity": "Disponible para cobrar",
+    "create": "Crear enlace",
+    "empty": "Todavía no hay enlaces de pago.",
+    "columns": {
+      "amount": "Monto",
+      "status": "Estado",
+      "createdAt": "Creado",
+      "link": "Enlace",
+      "payment": "Pago",
+      "reason": "Motivo"
+    },
+    "status": {
+      "PENDING": "Pendiente",
+      "ACTIVE": "Activo",
+      "COMPLETED": "Completado",
+      "SETTLED": "Liquidado",
+      "DEACTIVATED": "Desactivado"
+    },
+    "reasons": {
+      "LINK_EXPIRED": "El enlace venció (más de 24 horas activo)",
+      "generic": "Desactivado por otro motivo"
+    },
+    "open": "Abrir enlace",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "viewPayment": "Ver pago",
+    "deactivate": "Desactivar",
+    "dialog": {
+      "title": "Crear enlace de pago",
+      "description": "Genera un enlace para que el cliente pague esta factura. El monto no puede superar lo disponible.",
+      "amount": "Monto",
+      "submit": "Crear enlace",
+      "submitting": "Creando…",
+      "cancel": "Cancelar"
+    },
+    "deactivateDialog": {
+      "title": "Desactivar el enlace",
+      "description": "El cliente ya no podrá pagar con este enlace. Esta acción no se puede deshacer.",
+      "confirm": "Desactivar enlace",
+      "cancel": "Cancelar"
+    },
+    "toast": {
+      "created": "Enlace de pago creado",
+      "deactivated": "Enlace desactivado",
+      "copied": "Enlace copiado al portapapeles"
+    }
   }
 }

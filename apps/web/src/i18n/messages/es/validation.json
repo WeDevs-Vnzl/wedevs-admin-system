@@ -45,5 +45,8 @@
     "empty": "El archivo está vacío",
     "tooLarge": "El archivo es demasiado grande",
     "tooLargeMax": "El archivo supera el tamaño máximo de {max} MB"
-  }
+  },
+  "paymentLinkExceedsCapacity": "El monto supera lo que queda por cobrar de la factura",
+  "paymentLinkBelowMinimum": "El monto mínimo de un enlace de pago es 0,50",
+  "paymentLinkCurrencyUnsupported": "No se pueden crear enlaces de pago para esta factura: la moneda no es compatible o la integración no está configurada"
 }
