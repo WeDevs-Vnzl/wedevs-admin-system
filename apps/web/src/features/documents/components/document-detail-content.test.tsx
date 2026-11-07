@@ -116,7 +116,7 @@ describe("DocumentDetailContent (S7 'Contenido')", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows a PDF in the viewer through the version file route, and downloads from it", async () => {
+  it("shows a PDF in the viewer through the authenticated file route (DT-206), and downloads from it", async () => {
     const assign = vi.fn();
     vi.stubGlobal("location", { ...window.location, assign });
     renderContent(
@@ -136,10 +136,10 @@ describe("DocumentDetailContent (S7 'Contenido')", () => {
       ),
     );
     expect(pdfViewer).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/documents/doc_1/versions/dver_2/file" }),
+      expect.objectContaining({ url: "/files/fil_1/download" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "pdf viewer" }));
-    expect(assign).toHaveBeenCalledWith("/documents/doc_1/versions/dver_2/file?download=1");
+    expect(assign).toHaveBeenCalledWith("/files/fil_1/download");
     expect(screen.getByTestId("upload")).toHaveTextContent("ARCHIVO:false");
     vi.unstubAllGlobals();
   });
@@ -165,8 +165,13 @@ describe("DocumentDetailContent (S7 'Contenido')", () => {
     expect(screen.getByText("wireframes.png")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Download" })).toHaveAttribute(
       "href",
-      "/documents/doc_1/versions/dver_2/file?download=1",
+      "/files/fil_2/download",
     );
+  });
+
+  it("does not link a stored address that is not http(s)", () => {
+    renderContent(detail(version({ format: "ENLACE", url: "javascript:alert(1)" })));
+    expect(screen.queryByRole("link", { name: "Open link" })).not.toBeInTheDocument();
   });
 
   it("opens a link version in a new tab and offers 'Update link'", () => {

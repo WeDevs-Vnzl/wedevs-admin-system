@@ -39,7 +39,7 @@ type DocumentsTableProps = {
   initialColumns?: ColumnConfig[];
   /** Categories with their types, for the category and type facets. */
   categories: readonly DocumentCategoryDetailDTO[];
-  permissions: { canCreate: boolean; canUpdate: boolean };
+  permissions: { canCreate: boolean; canUpdate: boolean; canRestore?: boolean };
 };
 
 const helper = createDataTableColumnHelper<DocumentListRowDTO>();
@@ -288,7 +288,7 @@ export function DocumentsTable({
       loading={loading}
       facets={facets}
       searchPlaceholder={t("table.search.placeholder")}
-      showArchivedToggle={permissions.canUpdate}
+      showArchivedToggle={permissions.canRestore === true}
       initialColumns={initialColumns}
       onColumnsChange={(config) => {
         const visible = config.filter((column) =>

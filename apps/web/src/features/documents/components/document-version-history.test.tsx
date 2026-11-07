@@ -87,7 +87,7 @@ describe("DocumentVersionHistory (S5 'Historial')", () => {
     );
     expect(screen.getByRole("link", { name: "Download v2" })).toHaveAttribute(
       "href",
-      "/documents/doc_1/versions/dver_2/file?download=1",
+      "/documents/doc_1/versions/dver_2/file",
     );
     expect(
       screen.getByRole("link", { name: "Compare v2 with the current version" }),
@@ -108,6 +108,35 @@ describe("DocumentVersionHistory (S5 'Historial')", () => {
     const download = screen.getByRole("link", { name: "Download v2" });
     expect(download).toHaveAttribute("href", "https://drive.example.com/x");
     expect(download).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("links a file version through the authenticated file route and an unsafe link to nothing (DT-206)", () => {
+    renderHistory({
+      versions: [
+        version(3, {
+          format: "ENLACE",
+          url: "javascript:alert(1)",
+          isCurrent: true,
+        }),
+        version(2, {
+          format: "ARCHIVO",
+          file: {
+            id: "fil_9",
+            originalName: "contrato.pdf",
+            mimeType: "application/pdf",
+            sizeBytes: 10,
+            status: "READY",
+            uploadedById: "usr_1",
+            createdAt: "2026-10-02T15:00:00.000Z",
+          },
+        }),
+      ],
+    });
+    expect(screen.getByRole("link", { name: "Download v2" })).toHaveAttribute(
+      "href",
+      "/files/fil_9/download",
+    );
+    expect(screen.queryByRole("link", { name: "Download v3" })).not.toBeInTheDocument();
   });
 
   it("restores an older version after confirmation and refreshes", async () => {

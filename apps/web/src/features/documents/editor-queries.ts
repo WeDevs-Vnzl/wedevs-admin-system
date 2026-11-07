@@ -1,7 +1,8 @@
 import "server-only";
 import type { DocumentDetailDTO } from "@/lib/validators/documents";
 import { idSchema } from "@/lib/validators/common";
-import { ServiceError } from "@/server/context";
+// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
+import { ServiceError } from "@/server/errors";
 import {
   editorAvailability,
   initialEditorContent,
