@@ -14,7 +14,13 @@ function asRole(role: UserRole) {
   getServiceContext.mockResolvedValue({ user: { id: "usr_test", role } });
 }
 
-const tag = { id: "tag_ur", name: "Urgente", color: "#ff0000", usageCount: 3, createdAt: "2026-01-01T00:00:00.000Z" };
+const tag = {
+  id: "tag_ur",
+  name: "Urgente",
+  color: "#ff0000",
+  usageCount: 3,
+  createdAt: "2026-01-01T00:00:00.000Z",
+};
 
 describe("getTags", () => {
   it("reads the catalogue with usage counts through GET /api/v1/tags", async () => {
