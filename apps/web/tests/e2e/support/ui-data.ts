@@ -198,3 +198,124 @@ export async function addInstallmentViaUi(
   await dialog.getByRole("button", { name: "Crear cuota", exact: true }).click();
   await expect(page.getByText("Cuota creada")).toBeVisible();
 }
+
+/** Adds a contact to a client through the "Nuevo contacto" dialog of its Contactos tab. */
+export async function createContactViaUi(
+  page: Page,
+  clientId: string,
+  name: string,
+  email: string,
+): Promise<void> {
+  await openPage(page, `/clients/${clientId}?tab=contacts`);
+  await page.getByRole("button", { name: "Nuevo contacto", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nuevo contacto", exact: true });
+  await dialog.getByLabel("Nombre completo", { exact: true }).fill(name);
+  await dialog.getByLabel("Email", { exact: true }).fill(email);
+  await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(dialog).toBeHidden();
+}
+
+/**
+ * Registers a confirmed USD payment (Zelle, not allocated) for a client through /payments/new and returns its id.
+ * `accountName` is the name of a USD account created by `createAccountViaUi`; `reference` is required by Zelle.
+ */
+export async function createUsdPaymentViaUi(
+  page: Page,
+  options: { clientName: string; accountName: string; amount: string; reference: string },
+): Promise<string> {
+  await openPage(page, "/payments/new");
+  await page.locator("#payment-client").click();
+  await page.getByRole("option", { name: options.clientName }).click();
+  await page.locator("#payment-account").click();
+  await page.getByRole("option", { name: `${options.accountName} (USD)`, exact: true }).click();
+  await page.locator("#payment-method").click();
+  await page.getByRole("option", { name: "Zelle", exact: true }).click();
+  await page.locator("#payment-amount").fill(options.amount);
+  await page.locator("#payment-reference").fill(options.reference);
+  await page.getByRole("button", { name: "Registrar pago", exact: true }).click();
+  await expect(page.getByText("Pago registrado")).toBeVisible();
+  await expect(page).toHaveURL(recordUrl("payments"));
+  return idFromUrl(page, "/payments/");
+}
+
+/**
+ * Registers a pending USD expense through /expenses/new (first category of the catalog) and returns its id. Pass
+ * `projectName` to impute it to a project created in the same spec.
+ */
+export async function createExpenseViaUi(
+  page: Page,
+  options: { description: string; amount: string; projectName?: string },
+): Promise<string> {
+  await openPage(page, "/expenses/new");
+  await page.locator("#expense-description").fill(options.description);
+  await page.locator("#expense-category").click();
+  await page.getByRole("option").first().click();
+  if (options.projectName) {
+    await page.locator("#expense-project").click();
+    await page.getByRole("option", { name: options.projectName }).click();
+  }
+  await page.locator("#expense-amount").fill(options.amount);
+  await page.locator('button[type="submit"][form="expense-form"]').click();
+  await expect(page.getByText("Gasto registrado")).toBeVisible();
+  await expect(page).toHaveURL(recordUrl("expenses"));
+  return idFromUrl(page, "/expenses/");
+}
+
+/** Creates a monthly recurring expense through /expenses/recurring/new (first category) and returns its id. */
+export async function createRecurringExpenseViaUi(
+  page: Page,
+  options: { name: string; amount: string },
+): Promise<string> {
+  await openPage(page, "/expenses/recurring/new");
+  await page.locator("#recurring-name").fill(options.name);
+  await page.locator("#recurring-category").click();
+  await page.getByRole("option").first().click();
+  await page.locator("#recurring-amount").fill(options.amount);
+  await page.locator('button[type="submit"][form="recurring-expense-form"]').click();
+  await expect(page.getByText("Gasto recurrente creado")).toBeVisible();
+  await expect(page).toHaveURL(/\/expenses\/recurring\/[a-z0-9]{20,}$/);
+  return idFromUrl(page, "/expenses/recurring/");
+}
+
+/** Creates a note linked to a client through /notes/new?entityType=CLIENT and returns its id. */
+export async function createNoteViaUi(
+  page: Page,
+  options: { clientId: string; title: string },
+): Promise<string> {
+  await openPage(page, `/notes/new?entityType=CLIENT&entityId=${options.clientId}`);
+  await page.locator("#note-title").fill(options.title);
+  const editor = page.getByRole("textbox", { name: "Contenido", exact: true });
+  await editor.click();
+  await editor.pressSequentially("Nota E2E");
+  await page.getByRole("button", { name: "Guardar nota", exact: true }).click();
+  await expect(page.getByText("Nota creada")).toBeVisible();
+  await expect(page).toHaveURL(recordUrl("notes"));
+  return idFromUrl(page, "/notes/");
+}
+
+/**
+ * Creates a document through /documents/new and returns its id. `type` is the Spanish name of a seeded document
+ * type ("Propuesta comercial" expires, "PRD" is markdown and opens the editor). `clientId` links it to a client;
+ * `expiresToday` sets the expiry date to today (the type must take one).
+ */
+export async function createDocumentViaUi(
+  page: Page,
+  options: { title: string; type: string; clientId?: string; expiresToday?: boolean },
+): Promise<string> {
+  await openPage(
+    page,
+    options.clientId
+      ? `/documents/new?entityType=CLIENT&entityId=${options.clientId}`
+      : "/documents/new",
+  );
+  await page.locator("#document-title").fill(options.title);
+  await page.locator("#document-type").click();
+  await page.getByRole("option", { name: options.type, exact: true }).click();
+  if (options.expiresToday) {
+    await pickDateViaUi(page, page.locator("#document-expiresAt"), caracasToday());
+  }
+  await page.getByRole("button", { name: "Crear documento", exact: true }).click();
+  await expect(page.getByText("Documento creado")).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/documents/${RECORD_ID}(?:/editor)?(?:[?#].*)?$`));
+  return idFromUrl(page, "/documents/");
+}

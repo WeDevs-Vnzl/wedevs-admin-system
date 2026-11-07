@@ -5,13 +5,16 @@ import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import {
   addInstallmentViaUi,
-  caracasToday,
   createAccountViaUi,
   createClientViaUi,
+  createContactViaUi,
+  createDocumentViaUi,
+  createExpenseViaUi,
   createInvoiceViaUi,
+  createNoteViaUi,
   createProjectViaUi,
+  createUsdPaymentViaUi,
   openPage,
-  pickDateViaUi,
 } from "./support/ui-data";
 
 // FE-INT-R E.3 intelligence E2E: HU-10 CA4 (installment alert), HU-19 CA2 (expiry alert), HU-24 CA1–CA5 (entity
@@ -65,64 +68,6 @@ async function searchCmdK(page: Page, query: string): Promise<Locator> {
   return dialog;
 }
 
-async function addContact(page: Page, clientId: string, name: string, email: string) {
-  await openPage(page, `/clients/${clientId}?tab=contacts`);
-  await page.getByRole("button", { name: "Nuevo contacto", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Nuevo contacto", exact: true });
-  await dialog.getByLabel("Nombre completo", { exact: true }).fill(name);
-  await dialog.getByLabel("Email", { exact: true }).fill(email);
-  await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(dialog).toBeHidden();
-}
-
-/** A USD Zelle payment of 40 for the client, not allocated (the graph only needs the node). */
-async function registerPayment(page: Page, clientName: string, account: string) {
-  await openPage(page, "/payments/new");
-  await page.locator("#payment-client").click();
-  await page.getByRole("option", { name: clientName }).click();
-  await page.locator("#payment-account").click();
-  await page.getByRole("option", { name: `${account} (USD)`, exact: true }).click();
-  await page.locator("#payment-method").click();
-  await page.getByRole("option", { name: "Zelle", exact: true }).click();
-  await page.locator("#payment-amount").fill("40");
-  await page.locator("#payment-reference").fill(`E2E-GRAFO-${RUN}`);
-  await page.getByRole("button", { name: "Registrar pago", exact: true }).click();
-  await expect(page.getByText("Pago registrado")).toBeVisible();
-}
-
-/** A proposal-type document (it expires, no signature) linked to the client, expiring today. */
-async function addExpiringDocument(page: Page, clientId: string, title: string) {
-  await openPage(page, `/documents/new?entityType=CLIENT&entityId=${clientId}`);
-  await page.locator("#document-title").fill(title);
-  await page.locator("#document-type").click();
-  await page.getByRole("option", { name: "Propuesta comercial", exact: true }).click();
-  await pickDateViaUi(page, page.locator("#document-expiresAt"), caracasToday());
-  await page.getByRole("button", { name: "Crear documento", exact: true }).click();
-  await expect(page.getByText("Documento creado")).toBeVisible();
-}
-
-async function addNote(page: Page, clientId: string, title: string) {
-  await openPage(page, `/notes/new?entityType=CLIENT&entityId=${clientId}`);
-  await page.locator("#note-title").fill(title);
-  const editor = page.getByRole("textbox", { name: "Contenido", exact: true });
-  await editor.click();
-  await editor.pressSequentially("Nota E2E del grafo");
-  await page.getByRole("button", { name: "Guardar nota", exact: true }).click();
-  await expect(page.getByText("Nota creada")).toBeVisible();
-}
-
-async function addExpense(page: Page, projectName: string, description: string) {
-  await openPage(page, "/expenses/new");
-  await page.locator("#expense-description").fill(description);
-  await page.locator("#expense-category").click();
-  await page.getByRole("option").first().click();
-  await page.locator("#expense-project").click();
-  await page.getByRole("option", { name: projectName }).click();
-  await page.locator("#expense-amount").fill("20");
-  await page.locator('button[type="submit"][form="expense-form"]').click();
-  await expect(page.getByText("Gasto registrado")).toBeVisible();
-}
-
 async function arrange(browser: Browser): Promise<Fixture> {
   const context = await browser.newContext({ baseURL: appBaseUrl() });
   const page = await context.newPage();
@@ -143,7 +88,7 @@ async function arrange(browser: Browser): Promise<Fixture> {
         { clientName: clientB.name, role: "Usuario final" },
       ],
     });
-    await addContact(page, clientA.id, `Contacto Grafo ${RUN}`, `grafo.${RUN}@example.com`);
+    await createContactViaUi(page, clientA.id, `Contacto Grafo ${RUN}`, `grafo.${RUN}@example.com`);
     await createInvoiceViaUi(page, {
       clientName: clientA.name,
       invoiceNumber: `E2E-GRAFO-${RUN}`,
@@ -151,11 +96,25 @@ async function arrange(browser: Browser): Promise<Fixture> {
     });
     const account = `E2E Cuenta Grafo ${RUN}`;
     await createAccountViaUi(page, { name: account, currency: "USD" });
-    await registerPayment(page, clientA.name, account);
+    await createUsdPaymentViaUi(page, {
+      clientName: clientA.name,
+      accountName: account,
+      amount: "40",
+      reference: `E2E-GRAFO-${RUN}`,
+    });
     const documentTitle = `E2E Propuesta ${RUN}`;
-    await addExpiringDocument(page, clientA.id, documentTitle);
-    await addNote(page, clientA.id, `E2E Nota ${RUN}`);
-    await addExpense(page, project.name, `E2E Gasto ${RUN}`);
+    await createDocumentViaUi(page, {
+      title: documentTitle,
+      type: "Propuesta comercial",
+      clientId: clientA.id,
+      expiresToday: true,
+    });
+    await createNoteViaUi(page, { clientId: clientA.id, title: `E2E Nota ${RUN}` });
+    await createExpenseViaUi(page, {
+      description: `E2E Gasto ${RUN}`,
+      amount: "20",
+      projectName: project.name,
+    });
     const installmentLabel = `E2E Cuota ${RUN}`;
     await addInstallmentViaUi(page, project.id, { label: installmentLabel, amount: "100" });
     return { clientA, clientB, project, installmentLabel, documentTitle };
