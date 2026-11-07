@@ -100,6 +100,7 @@ export type CreateAccountInput = z.infer<typeof createAccountInputSchema>;
 export const updateAccountInputSchema = z.object({ id: idSchema, ...accountFields });
 export type UpdateAccountInput = z.infer<typeof updateAccountInputSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const accountDtoSchema = z.object({
   id: idSchema,
   name: z.string(),
@@ -122,6 +123,7 @@ export const accountDtoSchema = z.object({
 });
 export type AccountDTO = z.infer<typeof accountDtoSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 /** `/accounts` overview: a card per account plus the consolidated USD total of the active ones. */
 export const accountsOverviewDtoSchema = z.object({
   accounts: z.array(accountDtoSchema),
@@ -190,6 +192,7 @@ export const createTransferInputSchema = z.object(transferFields).superRefine((i
 });
 export type CreateTransferInput = z.infer<typeof createTransferInputSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const transferDtoSchema = z.object({
   id: idSchema,
   date: dateOnlySchema,
@@ -251,6 +254,7 @@ export const createMovementInputSchema = z
   });
 export type CreateMovementInput = z.infer<typeof createMovementInputSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const movementDtoSchema = z.object({
   id: idSchema,
   account: entityRefSchema,
@@ -294,6 +298,7 @@ export const accountLedgerQuerySchema = withSortFields(
 );
 export type AccountLedgerQuery = z.infer<typeof accountLedgerQuerySchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const ledgerRowSchema = z.object({
   id: z.string().min(1),
   date: dateOnlySchema,
@@ -315,6 +320,7 @@ export const getAccountBalanceInputSchema = z.object({
 });
 export type GetAccountBalanceInput = z.infer<typeof getAccountBalanceInputSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const accountBalanceDtoSchema = z.object({
   accountId: idSchema,
   currency: currencyCodeSchema,
@@ -335,6 +341,7 @@ export const reconcileAccountInputSchema = z.object({
 });
 export type ReconcileAccountInput = z.infer<typeof reconcileAccountInputSchema>;
 
+// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const reconciliationDtoSchema = z.object({
   id: idSchema,
   accountId: idSchema,
