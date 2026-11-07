@@ -120,6 +120,23 @@ describe("AlertList", () => {
     );
   });
 
+  it("drops a row the caller can no longer see (NOT_FOUND) by reloading the list, with no error toast", async () => {
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole("link", { name: "Overdue invoice" });
+    vi.mocked(dismissAlertAction).mockResolvedValueOnce({
+      ok: false,
+      error: { code: "NOT_FOUND", message: "common.errors.NOT_FOUND" },
+    });
+    vi.mocked(listAlertsAction).mockResolvedValue(summary([rate]));
+
+    await user.click(
+      screen.getByRole("button", { name: "Dismiss: Overdue invoice · A-0001 · Cliente Prueba" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Overdue invoice" })).toBeNull());
+    expect(mocks.toast.error).not.toHaveBeenCalled();
+  });
+
   it("snoozes for 1, 3 or 7 days from the menu", async () => {
     const user = userEvent.setup();
     renderList();
