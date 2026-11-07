@@ -69,18 +69,32 @@ async function createProject(page: Page, clientName: string, name: string): Prom
   return idFromUrl(page.url(), "projects");
 }
 
+/** An account of this run; the opening balance is entered in the account's currency. Returns its id. */
+async function createAccount(page: Page, name: string, currency: string, opening: string): Promise<string> {
+  await page.goto("/accounts/new");
+  await page.getByLabel("Nombre", { exact: true }).fill(name);
+  await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
+  await page.getByRole("option", { name: currency, exact: true }).click();
+  await page.getByLabel("Saldo inicial", { exact: true }).fill(opening);
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(page.getByText("Cuenta creada")).toBeVisible();
+  await expect(page).toHaveURL(/\/accounts\/[^/?#]+$/);
+  return idFromUrl(page.url(), "accounts");
+}
+
 /** A client with one project whose billing plan (10 000 USD, 40/30/30 template) is generated. */
 async function setupInstallmentClient(page: Page) {
   const clientName = uniq("cliente");
+  const projectName = uniq("proyecto");
   const clientId = await createClient(page, clientName);
-  const projectId = await createProject(page, clientName, uniq("proyecto"));
+  const projectId = await createProject(page, clientName, projectName);
   await page.goto(`/projects/${projectId}/billing`);
   await page.locator("#plan-contract").fill("10000");
   await page.getByRole("button", { name: "Crear plan", exact: true }).click();
   await expect(page.getByText("Plan de facturación guardado")).toBeVisible();
   await page.getByRole("button", { name: "Aplicar plantilla", exact: true }).click();
   await expect(page.getByText("Cuotas generadas desde la plantilla")).toBeVisible();
-  return { clientId, projectId };
+  return { clientId, projectId, projectName };
 }
 
 /**
@@ -266,13 +280,7 @@ test.describe("FE-INT-R E.2 finance", () => {
   }) => {
     await signInAs(page, "OWNER");
     const account = uniq("cuenta");
-    await page.goto("/accounts/new");
-    await page.getByLabel("Nombre", { exact: true }).fill(account);
-    await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
-    await page.getByRole("option", { name: "USD", exact: true }).click();
-    await page.getByLabel("Saldo inicial", { exact: true }).fill("0");
-    await page.getByRole("button", { name: "Guardar", exact: true }).click();
-    await expect(page.getByText("Cuenta creada")).toBeVisible();
+    await createAccount(page, account, "USD", "0");
 
     const { clientId } = await setupInstallmentClient(page);
     const invoiceId = await draftInvoiceFromInstallment(page, clientId, uniq("n").replace(/\s/g, "-"));
@@ -324,13 +332,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     await signInAs(page, "OWNER");
     await stubStorage(page);
     const account = uniq("cuenta-comprobante");
-    await page.goto("/accounts/new");
-    await page.getByLabel("Nombre", { exact: true }).fill(account);
-    await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
-    await page.getByRole("option", { name: "USD", exact: true }).click();
-    await page.getByLabel("Saldo inicial", { exact: true }).fill("0");
-    await page.getByRole("button", { name: "Guardar", exact: true }).click();
-    await expect(page.getByText("Cuenta creada")).toBeVisible();
+    await createAccount(page, account, "USD", "0");
 
     // The payment is created only as the receipt's carrier: an allocation to an issued invoice (HU-13 is E.3's).
     const { clientId } = await setupInstallmentClient(page);
@@ -387,6 +389,117 @@ test.describe("FE-INT-R E.2 finance", () => {
       page.getByText("Otra factura activa ya usa este número. Edítala antes de restaurar esta."),
     ).toBeVisible();
     await expect(row.getByRole("link", { name: /^Abrir / }).or(row.getByRole("button", { name: /^Abrir / }))).toBeVisible();
+  });
+
+  // ───────────────────────────── HU-15 · balances, book and reconciliation ─────────────────────────────
+
+  test("@authenticated HU-15 CA1–CA3: a balance is its opening plus its movements; the book shows the running balance; a reconciliation difference suggests an adjustment", async ({
+    page,
+  }) => {
+    await signInAs(page, "OWNER");
+    const account = uniq("cuenta-saldo");
+    const accountId = await createAccount(page, account, "USD", "1000");
+
+    // CA1: opening 1 000 + a contribution of 250 → 1 250.
+    await page.goto("/accounts/movements/new");
+    await page.locator("#movement-account").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
+    await page.locator("#movement-amount").fill("250");
+    await page.getByRole("button", { name: "Registrar movimiento", exact: true }).click();
+    await expect(page.getByText("Movimiento registrado")).toBeVisible();
+
+    await page.goto(`/accounts/${accountId}`);
+    await expect(page.getByText(money("1.250,00")).first()).toBeVisible();
+
+    // CA2: the book lists each movement with the running balance after it.
+    await expect(page.getByText("Libro de movimientos")).toBeVisible();
+    await expect(page.getByRole("table").getByText(money("1.250,00")).first()).toBeVisible();
+
+    // CA3: a statement of 1 200 against a system balance of 1 250 differs by 50 → an adjustment is suggested.
+    await page.getByLabel("Saldo del estado de cuenta", { exact: true }).fill("1200");
+    await page.getByRole("button", { name: "Conciliar", exact: true }).click();
+    await expect(page.getByText("La diferencia sugiere un ajuste por ese importe.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Registrar ajuste", exact: true })).toBeVisible();
+  });
+
+  // ───────────────────────────── HU-16 · transfer between currencies ─────────────────────────────
+
+  test("@authenticated HU-16 CA1/CA2: 100 USD sent from Zelle receives 99 USDT: the origin loses 100 and the target gains 99; a transfer to the same account is refused", async ({
+    page,
+  }) => {
+    await signInAs(page, "OWNER");
+    const origin = uniq("zelle-usd");
+    const target = uniq("binance-usdt");
+    await createAccount(page, origin, "USD", "500");
+    await createAccount(page, target, "USDT", "0");
+
+    await page.goto("/accounts/transfers/new");
+    await page.locator("#transfer-from").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(origin)}`) }).click();
+    await page.locator("#transfer-to").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(target)}`) }).click();
+    await page.locator("#transfer-amount-from").fill("100");
+    await page.locator("#transfer-amount-to").fill("99");
+    await page.locator("#transfer-fee").fill("0");
+    await page.getByRole("button", { name: "Registrar transferencia", exact: true }).click();
+    await expect(page.getByText("Transferencia registrada")).toBeVisible();
+
+    await page.goto("/accounts/list");
+    await expect(page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00"))).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: target }).getByText(money("99,00"))).toBeVisible();
+
+    // CA2: the same account on both sides is refused by the form.
+    await page.goto("/accounts/transfers/new");
+    await page.locator("#transfer-from").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(origin)}`) }).click();
+    await page.locator("#transfer-to").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(origin)}`) }).click();
+    await page.locator("#transfer-amount-from").fill("10");
+    await page.locator("#transfer-amount-to").fill("10");
+    await page.getByRole("button", { name: "Registrar transferencia", exact: true }).click();
+    await expect(
+      page.getByText("La cuenta de origen y la de destino deben ser distintas"),
+    ).toBeVisible();
+  });
+
+  // ───────────────────────────── HU-17 · expenses ─────────────────────────────
+
+  test.fixme("@authenticated HU-17 CA1: an active monthly subscription generates one PENDIENTE expense per period, no duplicates — FE-INT-R E.2: the periods come from the BE daily task (no UI trigger); the batch-close manual check covers the next run", async () => {});
+
+  test("@authenticated HU-17 CA2/CA3: marking a pending expense as paid requires its account, and the paid expense shows in the project's billing summary", async ({
+    page,
+  }) => {
+    await signInAs(page, "OWNER");
+    const account = uniq("cuenta-gasto");
+    await createAccount(page, account, "USD", "1000");
+    const { projectId, projectName } = await setupInstallmentClient(page);
+
+    await page.goto("/expenses/new");
+    await page.locator("#expense-description").fill(uniq("suscripción"));
+    await page.locator("#expense-project").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(projectName)}`) }).click();
+    await page.locator("#expense-status").click();
+    await page.getByRole("option", { name: /^Pendiente$/ }).click();
+    await page.locator("#expense-amount").fill("137");
+    await page.getByRole("button", { name: "Guardar", exact: true }).click();
+    await expect(page.getByText("Gasto registrado")).toBeVisible();
+    await expect(page).toHaveURL(/\/expenses\/[^/]+$/);
+
+    // CA2: "Marcar como pagado" refuses a missing account, then accepts the account and the real debit amount.
+    await page.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
+    await expect(page.getByText("La cuenta de pago es obligatoria para un gasto pagado")).toBeVisible();
+    await dialog.locator("#mark-paid-account").click();
+    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
+    await dialog.locator("#mark-paid-account-amount").fill("137");
+    await dialog.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
+    await expect(page.getByText("Gasto marcado como pagado")).toBeVisible();
+
+    // CA3: a paid expense on a project reduces that project's margin (its paid expenses appear in the summary).
+    await page.goto(`/projects/${projectId}/billing`);
+    await expect(page.getByText("Gastos pagados").first()).toBeVisible();
+    await expect(page.getByText(money("137,00")).first()).toBeVisible();
   });
 
   // ───────────────────────────── Role · Member ─────────────────────────────
