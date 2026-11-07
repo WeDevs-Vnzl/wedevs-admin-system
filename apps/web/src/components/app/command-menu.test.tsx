@@ -65,11 +65,21 @@ const INVOICE_TWELVE = hit({
   title: "Demo invoice",
 });
 
+// A fiscal number the BE matches exactly comes back as the only hit (PRD §7.6).
+const FISCAL_CLIENT = hit({
+  entityId: "cli_fiscal",
+  code: "CLI-0004",
+  title: "Distribuidora Ejemplo",
+  subtitle: "J-30123456-7",
+  status: "PROSPECTO",
+});
+
 const CANNED: Record<string, SearchResultDto[]> = {
   "garcia|false": [GARCIA],
   "garcia|true": [GARCIA, GARCIA_NORTE],
   "invsion|false": [INVERSION],
   "FAC-0012|false": [INVOICE_TWELVE],
+  "J-30123456-7|false": [FISCAL_CLIENT],
   "c: garcia|false": [GARCIA],
   "f: garcia|false": [],
 };
@@ -308,6 +318,18 @@ describe("CommandMenu", () => {
       await user.keyboard("{Enter}");
       expect(push).toHaveBeenCalledWith("/invoices/inv_twelve");
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("a fiscal number the BE matches exactly is selected alone, so Enter opens it", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "J-30123456-7");
+      const option = await screen.findByRole("option", { name: /Distribuidora Ejemplo/ });
+      await waitFor(() => expect(option).toHaveAttribute("aria-selected", "true"));
+      expect(screen.getAllByRole("option", { name: /Distribuidora Ejemplo/ })).toHaveLength(1);
+      await user.keyboard("{Enter}");
+      expect(push).toHaveBeenCalledWith("/clients/cli_fiscal");
     });
 
     it("groups hits by type and shows icon, code, title, subtitle and translated status", async () => {
