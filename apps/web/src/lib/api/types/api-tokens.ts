@@ -8,10 +8,5 @@ export type ApiTokenDto = components["schemas"]["ApiTokenDto"];
 export type IssuedApiTokenDto = components["schemas"]["IssuedApiTokenDto"];
 /** Body of `POST /api/v1/me/api-tokens`. */
 export type IssueApiTokenDto = components["schemas"]["IssueApiTokenDto"];
-/**
- * One row of `GET /api/v1/me/api-tokens`. The BE sends `revokedAt` on every item (`openapi.json`), but the
- * generated list type omits it; it is optional here until the types are regenerated.
- */
-export type ApiTokenListItem = components["schemas"]["ApiTokenListDto"]["items"][number] & {
-  revokedAt?: string | null;
-};
+/** One row of `GET /api/v1/me/api-tokens`. */
+export type ApiTokenListItem = components["schemas"]["ApiTokenListDto"]["items"][number];
