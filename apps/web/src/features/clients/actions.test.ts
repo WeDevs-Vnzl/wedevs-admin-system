@@ -3,12 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { UserRole } from "@/lib/validators/enums";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -252,33 +256,54 @@ describe("exportClientsCsvAction", () => {
     columns: ["code", "tradeName", "status", "totalInvoicedUsd", "tags"],
   };
 
-  it("exports the filtered table with translated headers and money verbatim", async () => {
-    signInAs("VIEWER");
+  /** Routes the server client of the export action to an HTTP double of `POST /exports/CLIENT`. */
+  function exportApi(response?: () => Response) {
+    const mocked = mockApi({
+      "POST /api/v1/exports/CLIENT":
+        response ??
+        (() =>
+          new Response("h\r\n", {
+            status: 200,
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "X-Export-Row-Count": "2",
+              "X-Export-Truncated": "false",
+            },
+          })),
+    });
+    server.getServerApi.mockResolvedValue(mocked.api);
+    return mocked;
+  }
+
+  const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+    const { status, body } = errorEnvelope(code);
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  it("posts the visible columns, their translated labels and the filter to /exports/CLIENT", async () => {
+    const { calls } = exportApi();
     const result = await exportClientsCsvAction(payload);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    const [header, ...rows] = result.data.content.replace(/^﻿/, "").trim().split("\r\n");
-    expect(header).toBe(
-      "clients.columns.code,clients.columns.tradeName,clients.columns.status,clients.columns.totalInvoicedUsd,clients.columns.tags",
-    );
-    const active = getMockStore().clients.filter((c) => !c.archivedAt && c.status === "ACTIVO");
-    expect(rows).toHaveLength(active.length);
-    expect(result.data).toMatchObject({ rowCount: active.length, truncated: false });
-    expect(rows.every((row) => /,ACTIVO,\d+\.\d{2},/.test(row))).toBe(true);
-    // Kairos carries the seeded FAC-0001..0003 (1392.00 + 500.00 + 928.00), exported as stored.
-    expect(rows.find((row) => row.includes(",Kairos Studio,"))).toContain(",ACTIVO,2820.00,");
+    expect(result).toMatchObject({ ok: true, data: { rowCount: 2, truncated: false } });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.body).toEqual({
+      columns: payload.columns.map((id) => ({ id, label: `clients.columns.${id}` })),
+      query: { archived: "exclude", filters: { status: "ACTIVO" } },
+    });
   });
 
-  it("rejects an unknown column with VALIDATION and a missing session with UNAUTHENTICATED", async () => {
-    signInAs("OWNER");
-    expect(await exportClientsCsvAction({ ...payload, columns: ["code", "nope"] })).toMatchObject({
-      ok: false,
-      error: { code: "VALIDATION" },
-    });
-    session.getMockSessionUser.mockResolvedValue(null);
+  it("maps the UNAUTHENTICATED envelope and rejects an empty column list with VALIDATION", async () => {
+    const { calls } = exportApi(errorResponse("UNAUTHENTICATED"));
     expect(await exportClientsCsvAction(payload)).toMatchObject({
       ok: false,
       error: { code: "UNAUTHENTICATED" },
     });
+    expect(await exportClientsCsvAction({ ...payload, columns: [] })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
+    });
+    expect(calls).toHaveLength(1);
   });
 });

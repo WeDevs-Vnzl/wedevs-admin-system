@@ -6,10 +6,14 @@ const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { RichTextDoc } from "@/lib/validators/notes";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -190,6 +194,33 @@ describe("archiveNoteAction (own-records grant, PRD §4.3)", () => {
   });
 });
 
+/** Routes the server client of the export action to an HTTP double of `POST /exports/NOTE`. */
+function exportApi(response?: () => Response) {
+  const mocked = mockApi({
+    "POST /api/v1/exports/NOTE":
+      response ??
+      (() =>
+        new Response("h\r\n", {
+          status: 200,
+          headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "X-Export-Row-Count": "2",
+            "X-Export-Truncated": "false",
+          },
+        })),
+  });
+  server.getServerApi.mockResolvedValue(mocked.api);
+  return mocked;
+}
+
+const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+  const { status, body } = errorEnvelope(code);
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+};
+
 describe("read and export actions", () => {
   it("lists a feed with pinned notes first (read grant: every role) and gets one note", async () => {
     asRole("VIEWER");
@@ -212,30 +243,34 @@ describe("read and export actions", () => {
     });
   });
 
-  it("exports the notes table as CSV with translated headers and the visible columns only", async () => {
-    asRole("OWNER");
+  it("exports the notes table through /exports/NOTE with the visible columns and translated labels", async () => {
+    const { calls } = exportApi();
     const result = await exportNotesCsvAction({
       entity: "NOTE",
       query: { filters: { tagId: "tag_urgente" } },
       columns: ["title", "author", "pinned"],
     });
     expect(intl.getTranslations).toHaveBeenCalledWith("notes");
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.data.rowCount).toBe(2);
-    expect(result.data.content).toContain(
-      "notes:columns.title,notes:columns.author,notes:columns.pinned",
-    );
-    expect(result.data.content).toContain("Retraso del portal Solaris");
+    expect(result).toMatchObject({ ok: true, data: { rowCount: 2 } });
+    expect(calls[0]?.body).toEqual({
+      columns: [
+        { id: "title", label: "notes:columns.title" },
+        { id: "author", label: "notes:columns.author" },
+        { id: "pinned", label: "notes:columns.pinned" },
+      ],
+      query: { archived: "exclude", filters: { tagId: "tag_urgente" } },
+    });
+  });
 
-    expect(
-      await exportNotesCsvAction({ entity: "NOTE", query: {}, columns: ["nope"] }),
-    ).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    asRole("VIEWER");
+  it("maps the FORBIDDEN envelope of the notes export and rejects an empty column list", async () => {
+    const { calls } = exportApi(errorResponse("FORBIDDEN"));
     expect(
       await exportNotesCsvAction({ entity: "NOTE", query: {}, columns: ["title"] }),
-    ).toMatchObject({
-      ok: true,
+    ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    expect(await exportNotesCsvAction({ entity: "NOTE", query: {}, columns: [] })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION" },
     });
+    expect(calls).toHaveLength(1);
   });
 });

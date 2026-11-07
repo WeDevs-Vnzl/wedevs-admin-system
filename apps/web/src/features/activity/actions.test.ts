@@ -14,11 +14,15 @@ const intl = vi.hoisted(() => ({
   ),
 }));
 vi.mock("server-only", () => ({}));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
 import esMessages from "@/i18n/messages/es/activity.json";
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { exportActivityCsvAction, listActivityAction } from "./actions";
 import { ACTIVITY_EXPORT_COLUMNS, activityExportQuery } from "./columns";
@@ -59,43 +63,72 @@ describe("listActivityAction", () => {
 });
 
 describe("exportActivityCsvAction", () => {
-  it("writes the filtered rows with translated headers, no IP column, BOM and CRLF", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
+  const columns = Object.keys(ACTIVITY_EXPORT_COLUMNS);
+
+  /** Routes the server client of the export action to an HTTP double of `POST /exports/ACTIVITY`. */
+  function exportApi(response?: () => Response) {
+    const mocked = mockApi({
+      "POST /api/v1/exports/ACTIVITY":
+        response ??
+        (() =>
+          new Response("h\r\n", {
+            status: 200,
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "X-Export-Row-Count": "2",
+              "X-Export-Truncated": "false",
+            },
+          })),
+    });
+    server.getServerApi.mockResolvedValue(mocked.api);
+    return mocked;
+  }
+
+  it("posts the translated columns and the filtered query to /exports/ACTIVITY", async () => {
+    const { calls } = exportApi();
     const result = await exportActivityCsvAction({
       entity: "ACTIVITY",
-      query: activityExportQuery(activityFilterSchema.parse({ actorType: ["SYSTEM"] })),
-      columns: Object.keys(ACTIVITY_EXPORT_COLUMNS),
+      query: activityExportQuery(
+        activityFilterSchema.parse({ actorType: ["SYSTEM"], from: "2026-10-01", to: "2026-10-09" }),
+      ),
+      columns,
     });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    const [header] = result.data.content.replace(/^﻿/, "").split("\r\n");
-    expect(result.data.content.startsWith("﻿")).toBe(true);
-    expect(header).toBe("Fecha,Usuario,Acción,Tipo de registro,Registro,ID del registro");
-    expect(result.data.content).not.toMatch(/192\.0\.2\./);
-    expect(result.data.rowCount).toBeGreaterThan(0);
-    expect(result.data.filename).toMatch(/^activity-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(result).toMatchObject({ ok: true, data: { rowCount: 2, truncated: false } });
+    expect(calls).toHaveLength(1);
+    const body = calls[0]?.body as { columns: { id: string; label: string }[]; query: object };
+    expect(body.columns.map((c) => c.id)).toEqual(columns);
+    expect(body.columns.map((c) => c.label)).toEqual([
+      "Fecha",
+      "Usuario",
+      "Acción",
+      "Tipo de registro",
+      "Registro",
+      "ID del registro",
+    ]);
+    expect(body.query).toMatchObject({
+      archived: "exclude",
+      filters: { actorType: "SYSTEM", from: "2026-10-01", to: "2026-10-09" },
+    });
   });
 
-  it("applies the date facet as the Caracas range (from / to)", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-    const all = await exportActivityCsvAction({
+  it("keeps the IP and the user agent out of the exported columns (C5)", async () => {
+    const { calls } = exportApi();
+    await exportActivityCsvAction({
       entity: "ACTIVITY",
       query: activityExportQuery(activityFilterSchema.parse({})),
-      columns: ["createdAt"],
+      columns,
     });
-    const none = await exportActivityCsvAction({
-      entity: "ACTIVITY",
-      query: activityExportQuery(
-        activityFilterSchema.parse({ from: "2001-01-01", to: "2001-01-02" }),
-      ),
-      columns: ["createdAt"],
-    });
-    expect(all.ok && none.ok && all.data.rowCount > none.data.rowCount).toBe(true);
-    expect(none.ok && none.data.rowCount).toBe(0);
+    expect(JSON.stringify(calls[0]?.body)).not.toMatch(/"id":"(ip|userAgent)"/);
   });
 
-  it("refuses Member with FORBIDDEN", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+  it("maps the FORBIDDEN envelope of the BE to an error result", async () => {
+    exportApi(
+      () =>
+        new Response(JSON.stringify(errorEnvelope("FORBIDDEN").body), {
+          status: 403,
+          headers: { "content-type": "application/json" },
+        }),
+    );
     expect(
       await exportActivityCsvAction({
         entity: "ACTIVITY",
@@ -106,14 +139,15 @@ describe("exportActivityCsvAction", () => {
   });
 
   it("refuses a column id outside the activity columns with VALIDATION", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
+    const { calls } = exportApi();
     expect(
       await exportActivityCsvAction({
         entity: "ACTIVITY",
         query: activityExportQuery(activityFilterSchema.parse({})),
-        columns: ["ip"],
+        columns: [],
       }),
     ).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
+    expect(calls).toHaveLength(0);
   });
 });
 
