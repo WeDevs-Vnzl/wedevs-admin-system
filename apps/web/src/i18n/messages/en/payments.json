@@ -141,7 +141,10 @@
   },
   "toast": {
     "created": "Payment recorded",
-    "updated": "Payment updated"
+    "updated": "Payment updated",
+    "confirmed": "Payment confirmed",
+    "voided": "Payment voided",
+    "allocated": "Payment allocated"
   },
   "detail": {
     "summary": "Summary",
@@ -181,7 +184,21 @@
     "amountUsd": "Applied (USD)",
     "dataTitle": "Payment details",
     "receiptImageAlt": "Receipt {name}",
-    "receiptDownload": "Download"
+    "receiptDownload": "Download",
+    "actions": {
+      "confirm": "Confirm payment",
+      "void": "Void payment",
+      "allocate": "Allocate",
+      "column": "Actions",
+      "deallocate": "Deallocate"
+    },
+    "voidDescription": "The payment will be voided and its allocations to invoices will be removed. This action cannot be undone from this screen.",
+    "deallocate": {
+      "title": "Remove the allocation?",
+      "description": "The amount allocated to {invoice} goes back to the credit of the payment and the invoice balance is recalculated.",
+      "confirm": "Deallocate invoice",
+      "done": "Allocation removed"
+    }
   },
   "credit": {
     "title": "Credit",
@@ -193,5 +210,11 @@
     "invalidTransition": "That status change is not allowed",
     "clientLocked": "The client and the currency cannot change while the payment has allocations",
     "allocatableBelowAllocated": "The amount cannot be lower than what is already allocated"
+  },
+  "allocate": {
+    "title": "Allocate to invoices",
+    "description": "Choose the client's open invoices to apply this payment's credit to.",
+    "loading": "Loading open invoices…",
+    "submit": "Allocate"
   }
 }

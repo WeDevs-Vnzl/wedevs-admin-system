@@ -5,7 +5,7 @@ import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { MoneyText } from "@/components/patterns/money-text";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
-import { PaymentAllocationsTable } from "@/features/payments/components/payment-allocations-table";
+import { PaymentAllocationsPanel } from "@/features/payments/components/payment-allocations-panel";
 import { PaymentDetailHeader } from "@/features/payments/components/payment-detail-header";
 import { PaymentReceipt } from "@/features/payments/components/payment-receipt";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
@@ -50,6 +50,7 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment={payment.id} label={payment.code} />
       <PaymentDetailHeader
+        canUpdate={permissions.canUpdate}
         payment={{
           id: payment.id,
           code: payment.code,
@@ -122,15 +123,7 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("allocationsTitle")}</CardTitle>
-          <CardDescription>{t("allocationsDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PaymentAllocationsTable rows={payment.allocations} currency={payment.currency} />
-        </CardContent>
-      </Card>
+      <PaymentAllocationsPanel payment={payment} canUpdate={permissions.canUpdate} />
 
       <PaymentReceipt receipt={payment.receipt} />
     </div>
