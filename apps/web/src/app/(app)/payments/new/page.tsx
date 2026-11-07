@@ -37,7 +37,11 @@ export default async function NewPaymentPage({ searchParams }: PaymentNewPagePro
     <PaymentForm
       {...options}
       today={todayInCaracas(new Date())}
-      initialClientId={requestedInvoice?.client.id}
+      initialClient={
+        requestedInvoice
+          ? { id: requestedInvoice.client.id, name: requestedInvoice.client.label }
+          : null
+      }
       initialOpenInvoices={openInvoices}
       initialInvoiceId={requestedInvoice?.invoice.id}
     />

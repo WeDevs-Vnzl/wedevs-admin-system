@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { searchClientsAction } from "@/features/clients/actions";
 import type { PaymentResponseDto } from "@/lib/api/types/payments";
 import { makeOpenInvoice, makePayment } from "../test-fixtures";
 import { toOpenInvoiceOption } from "../open-invoice";
@@ -22,6 +23,7 @@ vi.mock("@/features/payments/actions", () => ({
   detectDuplicatePaymentAction: mocks.detectDuplicatePaymentAction,
   listOpenInvoicesAction: mocks.listOpenInvoicesAction,
 }));
+vi.mock("@/features/clients/actions", () => ({ searchClientsAction: vi.fn() }));
 vi.mock("@/features/catalogs/actions", () => ({ lookupRateAction: mocks.lookupRateAction }));
 vi.mock("@/features/files/upload-adapter", () => ({ uploadAdapter: {} }));
 vi.mock("@/components/ui/uploader", () => ({
@@ -56,7 +58,7 @@ const transfer = {
 };
 
 const props: PaymentFormProps = {
-  clients: [{ id: "cli_kairos", name: "Kairos Studio" }],
+  initialClient: { id: "cli_kairos", name: "Kairos Studio" },
   accounts: [{ id: "acc_zelle", name: "Zelle USD", currency: "USD" }],
   methods: [zelle],
   fiscal: { igtfRate: "3", igtfCurrencies: [] },
@@ -68,7 +70,7 @@ const vesProps: PaymentFormProps = {
   ...props,
   accounts: [{ id: "acc_ves", name: "Banesco VES", currency: "VES" }],
   methods: [transfer],
-  initialClientId: "cli_kairos",
+  initialClient: { id: "cli_kairos", name: "Kairos Studio" },
   initialOpenInvoices: [toOpenInvoiceOption(makeOpenInvoice({ balance: "100.00" }))],
   initialInvoiceId: "inv_1",
 };
@@ -392,7 +394,6 @@ describe("PaymentForm (edit, DT-213)", () => {
     ...props,
     accounts: [{ id: "acc_usd", name: "Zelle USD (MOCK)", currency: "USD", active: true }],
     methods: [{ ...zelle, id: "pm_zelle", active: true }],
-    clients: [{ id: "cli_1", name: "Kairos Studio (MOCK)" }],
   };
 
   function renderEdit(payment: PaymentResponseDto = live, extra: Partial<PaymentFormProps> = {}) {
@@ -410,13 +411,13 @@ describe("PaymentForm (edit, DT-213)", () => {
 
   it("disables the client and the account while the payment has live allocations", () => {
     renderEdit();
-    expect(screen.getByRole("combobox", { name: "Client" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveAttribute("data-disabled");
     expect(screen.getByRole("combobox", { name: "Destination account" })).toBeDisabled();
   });
 
   it("keeps them enabled when nothing is allocated", () => {
     renderEdit(makePayment());
-    expect(screen.getByRole("combobox", { name: "Client" })).toBeEnabled();
+    expect(screen.getByRole("combobox", { name: "Client" })).not.toHaveAttribute("data-disabled");
   });
 
   it("patches through updatePaymentAction with the id and without allocations or status", async () => {
@@ -524,10 +525,35 @@ describe("PaymentForm (edit, DT-213)", () => {
     expect(screen.getByRole("combobox", { name: "Method" })).toHaveTextContent(/inactive/i);
   });
 
-  it("shows a client the picker no longer offers from the payment's own label (rule 23)", () => {
-    renderEdit(makePayment(), { clients: [] });
-    expect(screen.getByRole("combobox", { name: "Client" })).toHaveTextContent(
-      /Kairos Studio \(MOCK\).*inactive/i,
+  it("shows the payment's own client by its stored label, with no client list (rule 23)", () => {
+    renderEdit(makePayment());
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveValue("Kairos Studio (MOCK)");
+  });
+});
+
+describe("PaymentForm client picker", () => {
+  it("names the invoice's client preselected from ?invoiceId= (S2, B4)", () => {
+    renderWithIntl(
+      <PaymentForm {...props} initialClient={{ id: "cli_9", name: "Nimbus Atelier" }} />,
     );
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveValue("Nimbus Atelier");
+  });
+
+  it("searches clients by name and, on pick, loads that client's open invoices (S3)", async () => {
+    vi.mocked(searchClientsAction).mockResolvedValue({
+      ok: true,
+      data: [{ type: "CLIENT", id: "cli_2", code: "CLI-0002", label: "Nimbus Atelier" }],
+    });
+    mocks.listOpenInvoicesAction.mockResolvedValue({ ok: true, data: [] });
+    const user = userEvent.setup();
+    renderWithIntl(<PaymentForm {...props} />);
+
+    await user.type(screen.getByRole("combobox", { name: "Client" }), "Nim");
+    await user.click(await screen.findByRole("option", { name: /Nimbus Atelier/ }));
+
+    await waitFor(() =>
+      expect(mocks.listOpenInvoicesAction).toHaveBeenCalledWith({ clientId: "cli_2" }),
+    );
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveValue("Nimbus Atelier");
   });
 });

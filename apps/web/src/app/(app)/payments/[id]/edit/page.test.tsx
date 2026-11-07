@@ -31,7 +31,6 @@ import PaymentEditPage from "./page";
 
 const render = () => PaymentEditPage({ params: Promise.resolve({ id: "pay_1" }) });
 const options = {
-  clients: [{ id: "cli_1", name: "Kairos Studio" }],
   accounts: [{ id: "acc_usd", name: "Zelle USD", currency: "USD", active: false }],
   methods: [],
   fiscal: { igtfRate: "3", igtfCurrencies: [] },
