@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { parseSearchQuery, type SearchResultsDTO } from "@/lib/validators/search";
-import { searchGlobalAction } from "./actions";
+import { useApiClient } from "@/lib/api/client";
+import type { SearchResultsDto } from "@/lib/api/types/search";
+import { parseSearchQuery } from "@/lib/validators/search";
+import { searchGlobalRecords } from "./search-api";
 
 /** Pause after the last keystroke before searching. */
 export const SEARCH_DEBOUNCE_MS = 150;
@@ -11,18 +13,19 @@ export type GlobalSearchState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "error" }
-  | { status: "ready"; results: SearchResultsDTO };
+  | { status: "ready"; results: SearchResultsDto };
 
 type Settled = { query: string } & (
-  { status: "error" } | { status: "ready"; results: SearchResultsDTO }
+  { status: "error" } | { status: "ready"; results: SearchResultsDto }
 );
 
 /**
- * Debounced `searchGlobal` for what the user typed (prefix included). A query whose text is empty after
- * the prefix (`""`, `c:`) does not search. Only the answer to the current query is shown, so a slow
- * earlier response never replaces a newer one.
+ * Debounced `GET /api/v1/search` for what the user typed (prefix included), through the browser client. A
+ * query whose text is empty after the prefix (`""`, `c:`) does not search. Only the answer to the current
+ * query is shown, so a slow earlier response never replaces a newer one.
  */
 export function useGlobalSearch(query: string): GlobalSearchState {
+  const api = useApiClient();
   const q = query.trim();
   const searchable = parseSearchQuery(q).text !== "";
   const [settled, setSettled] = useState<Settled | null>(null);
@@ -31,7 +34,7 @@ export function useGlobalSearch(query: string): GlobalSearchState {
     if (!searchable) return;
     let cancelled = false;
     const timer = window.setTimeout(async () => {
-      const result = await searchGlobalAction({ q });
+      const result = await searchGlobalRecords(api, { q });
       if (cancelled) return;
       setSettled(
         result.ok
@@ -43,7 +46,7 @@ export function useGlobalSearch(query: string): GlobalSearchState {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [q, searchable]);
+  }, [api, q, searchable]);
 
   if (!searchable) return { status: "idle" };
   if (settled?.query !== q) return { status: "loading" };

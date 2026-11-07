@@ -9,6 +9,7 @@ import { entityTypeSchema } from "./enums";
  */
 
 /** Entities in the search index (data-rules §7). */
+// MOCK — until cleanup
 export const SEARCHABLE_ENTITY_TYPE_VALUES = [
   "CLIENT",
   "CONTACT",
@@ -64,6 +65,7 @@ export const SEARCH_MAX_LIMIT = 50;
  * `parseSearchQuery`); `entityTypes` narrows explicitly (the prefix wins when both are set).
  * Archived rows appear only for Owner/Admin with `includeArchived`.
  */
+// MOCK — until cleanup
 export const searchGlobalInputSchema = z.object({
   q: z.string().trim().min(1).max(200),
   entityTypes: z.array(searchableEntityTypeSchema).min(1).max(9).optional(),
@@ -71,6 +73,7 @@ export const searchGlobalInputSchema = z.object({
   /** Maximum results in total (the UI groups them by type). */
   limit: z.number().int().min(1).max(SEARCH_MAX_LIMIT).default(SEARCH_DEFAULT_LIMIT),
 });
+// MOCK — until cleanup
 export type SearchGlobalInput = z.infer<typeof searchGlobalInputSchema>;
 export type SearchGlobalFormValues = z.input<typeof searchGlobalInputSchema>;
 
@@ -79,11 +82,13 @@ export const reindexEntityInputSchema = z.object({
   entityType: searchableEntityTypeSchema,
   entityId: idSchema,
 });
+// MOCK — until cleanup
 export type ReindexEntityInput = z.infer<typeof reindexEntityInputSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
 /** One hit: icon by type, code, title, subtitle and status (PRD §7.6). */
+// MOCK — until cleanup
 export const searchResultSchema = z.object({
   entityType: searchableEntityTypeSchema,
   entityId: idSchema,
@@ -94,17 +99,21 @@ export const searchResultSchema = z.object({
   status: z.string().nullable(),
   archived: z.boolean(),
 });
+// MOCK — until cleanup
 export type SearchResultDTO = z.infer<typeof searchResultSchema>;
 
+// MOCK — until cleanup
 export const searchGroupSchema = z.object({
   entityType: searchableEntityTypeSchema,
   /** Matches of this type before the cap. */
   total: z.number().int().nonnegative(),
   items: z.array(searchResultSchema),
 });
+// MOCK — until cleanup
 export type SearchGroupDTO = z.infer<typeof searchGroupSchema>;
 
 /** Output of `searchGlobal`: groups in a stable type order, empty groups omitted. */
+// MOCK — until cleanup
 export const searchResultsSchema = z.object({
   /** The text actually searched (prefix removed). */
   query: z.string(),
@@ -112,6 +121,7 @@ export const searchResultsSchema = z.object({
   entityType: searchableEntityTypeSchema.nullable(),
   groups: z.array(searchGroupSchema),
 });
+// MOCK — until cleanup
 export type SearchResultsDTO = z.infer<typeof searchResultsSchema>;
 
 /** Output of `reindexEntity`. */
@@ -121,6 +131,7 @@ export const reindexEntityResultSchema = z.object({
   /** `false` when the entity no longer exists or is not indexable. */
   indexed: z.boolean(),
 });
+// MOCK — until cleanup
 export type ReindexEntityResultDTO = z.infer<typeof reindexEntityResultSchema>;
 
 // ───────────────────────────── Services (PRD §12 `search`) ─────────────────────────────
@@ -129,6 +140,7 @@ export type ReindexEntityResultDTO = z.infer<typeof reindexEntityResultSchema>;
  * `search` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `searchGlobal` is also
  * a read action and follows the action sequence (C10); `reindexEntity` is internal.
  */
+// MOCK — until cleanup
 export type SearchService<Ctx = unknown> = {
   searchGlobal: (ctx: Ctx, input: SearchGlobalInput) => Promise<SearchResultsDTO>;
   reindexEntity: (ctx: Ctx, input: ReindexEntityInput) => Promise<ReindexEntityResultDTO>;

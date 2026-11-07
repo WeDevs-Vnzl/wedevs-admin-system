@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { CommandGroup, CommandItem } from "@/components/ui/command";
-import type { SearchResultDTO, SearchResultsDTO } from "@/lib/validators/search";
+import type { SearchResultDto, SearchResultsDto } from "@/lib/api/types/search";
 import type { RecentRecord } from "../recent-records";
 import { SEARCH_ENTITY_ICONS, SEARCH_STATUS_ENUMS, searchHitHref } from "../search-entities";
 
@@ -16,13 +16,13 @@ export function SearchResultGroups({
   results,
   onOpen,
 }: {
-  results: SearchResultsDTO;
-  onOpen: (hit: SearchResultDTO, href: string) => void;
+  results: SearchResultsDto;
+  onOpen: (hit: SearchResultDto, href: string) => void;
 }) {
   const t = useTranslations("search");
   const tEnums = useTranslations("enums");
 
-  const statusLabel = (hit: SearchResultDTO) => {
+  const statusLabel = (hit: SearchResultDto) => {
     const enumName = SEARCH_STATUS_ENUMS[hit.entityType];
     if (!hit.status) return null;
     const key = `${enumName}.${hit.status}`;

@@ -33,7 +33,7 @@ import {
 import { readRecentRecords, rememberRecentRecord } from "@/features/search/recent-records";
 import { recordOfPath } from "@/features/search/search-entities";
 import { useGlobalSearch } from "@/features/search/use-global-search";
-import type { SearchResultDTO } from "@/lib/validators/search";
+import type { SearchResultDto } from "@/lib/api/types/search";
 import type { SessionUser } from "@/server/auth/types";
 import { useBreadcrumbLabels } from "./breadcrumb-label";
 
@@ -104,7 +104,7 @@ export function CommandMenu({ user }: { user: SessionUser }) {
     router.push(href);
   }
 
-  function openHit(hit: SearchResultDTO, href: string) {
+  function openHit(hit: SearchResultDto, href: string) {
     rememberRecentRecord(user.id, {
       entityType: hit.entityType,
       entityId: hit.entityId,
