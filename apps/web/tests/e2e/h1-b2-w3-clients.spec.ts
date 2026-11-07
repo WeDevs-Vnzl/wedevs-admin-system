@@ -67,14 +67,14 @@ async function fillClientForm(
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
 }
 
-/** Creates a Persona client in Colombia and returns its path (`/clients/cli_…`). */
+/** Creates a Persona client in Colombia and returns its path (`/clients/<id>`). */
 async function createClient(page: Page, tradeName: string, taxId = uniqueTaxId()): Promise<string> {
   await fillClientForm(page, { tradeName, taxId, country: "Colombia" });
-  await expect(page).toHaveURL(/\/clients\/cli_/);
+  await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 
-/** Creates a project linked to one client by its trade name and returns its path (`/projects/pry_…`). */
+/** Creates a project linked to one client by its trade name and returns its path (`/projects/<id>`). */
 async function createProject(page: Page, name: string, clientName: string): Promise<string> {
   await open(page, "/projects/new");
   await page.getByLabel("Nombre", { exact: true }).fill(name);
@@ -83,7 +83,7 @@ async function createProject(page: Page, name: string, clientName: string): Prom
   await page.getByRole("option", { name: new RegExp(escapeRegExp(clientName)) }).first().click();
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 
@@ -161,7 +161,7 @@ test.describe("HU-03 create client (mutates clients)", () => {
       country: "Colombia",
     });
     await expect(page.getByText("Cliente creado", { exact: true })).toBeVisible();
-    await expect(page).toHaveURL(/\/clients\/cli_/);
+    await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   });
 
   test("CA2: a new client takes the next CLI-#### after the previous one", async ({ page }) => {

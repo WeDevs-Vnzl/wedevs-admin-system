@@ -45,7 +45,7 @@ async function createBilledProject(
   await page.getByRole("option", { name: clientName, exact: true }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   const projectId = idFromUrl(page.url(), "projects");
 
   await page.goto(`/projects/${projectId}/billing`);
@@ -108,7 +108,7 @@ test("@authenticated HU-11 CA1/CA2/CA5 + HU-09 CA3: billing a pending installmen
   await page.locator("#invoice-number").fill(uniq("factura").replace(/\s/g, "-"));
   await page.locator('button[type="submit"][form="invoice-form"]').last().click();
   await expect(page.getByText("Factura registrada")).toBeVisible();
-  await expect(page).toHaveURL(/\/invoices\/inv_/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/invoices\/[a-z0-9]{20,}/, { timeout: 30_000 });
 
   // CA5: the installment is FACTURADA and no longer offered.
   await open(page, `/invoices/new?clientId=${clientId}`);

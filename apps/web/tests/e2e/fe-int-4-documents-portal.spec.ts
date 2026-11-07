@@ -82,7 +82,7 @@ async function createClientAndProject(page: Page) {
   await page.getByRole("option", { name: clientName, exact: true }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   const projectId = idFromUrl(page.url(), "projects");
   return { clientName, clientId, projectName, projectId };
 }

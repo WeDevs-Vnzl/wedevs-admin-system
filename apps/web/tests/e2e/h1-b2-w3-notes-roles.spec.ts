@@ -27,7 +27,7 @@ async function open(page: Page, path: string) {
   await page.waitForLoadState("networkidle");
 }
 
-/** Creates a Persona client in Colombia and returns its path (`/clients/cli_…`). */
+/** Creates a Persona client in Colombia and returns its path (`/clients/<id>`). */
 async function createClient(page: Page, tradeName: string): Promise<string> {
   await open(page, "/clients/new");
   await page.getByLabel("Nombre comercial", { exact: true }).fill(tradeName);
@@ -37,11 +37,11 @@ async function createClient(page: Page, tradeName: string): Promise<string> {
   await page.getByLabel("Dirección", { exact: true }).fill("Calle E2E 1");
   await page.locator("#client-phone").fill("+57 300 123 4567");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/clients\/cli_/);
+  await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 
-/** Creates a project linked to one client by its trade name and returns its path (`/projects/pry_…`). */
+/** Creates a project linked to one client by its trade name and returns its path (`/projects/<id>`). */
 async function createProject(page: Page, name: string, clientName: string): Promise<string> {
   await open(page, "/projects/new");
   await page.getByLabel("Nombre", { exact: true }).fill(name);
@@ -53,7 +53,7 @@ async function createProject(page: Page, name: string, clientName: string): Prom
     .click();
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 

@@ -34,7 +34,7 @@ const uniq = (label: string) => `E2E finance ${label} ${Date.now()}`;
 /** A RIF-like tax id, unique enough for one run. */
 const taxId = () => `J-${Math.floor(10_000_000 + Math.random() * 89_999_999)}-1`;
 
-/** The record id of a route segment, read from the URL after a save redirect (`/projects/pry_…`). */
+/** The record id of a route segment, read from the URL after a save redirect (`/projects/<id>`). */
 function idFromUrl(url: string, segment: string): string {
   const id = new RegExp(`/${segment}/([^/?#]+)`).exec(url)?.[1];
   if (!id) throw new Error(`No /${segment}/ id in ${url}`);
@@ -65,7 +65,7 @@ async function createProject(page: Page, clientName: string, name: string): Prom
   await page.getByRole("option", { name: clientName, exact: true }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   return idFromUrl(page.url(), "projects");
 }
 
@@ -113,7 +113,7 @@ async function draftInvoiceFromInstallment(
   await page.locator("#invoice-number").fill(number);
   await page.locator('button[type="submit"][form="invoice-form"]').last().click();
   await expect(page.getByText("Factura registrada")).toBeVisible();
-  await expect(page).toHaveURL(/\/invoices\/inv_/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/invoices\/[a-z0-9]{20,}/, { timeout: 30_000 });
   return idFromUrl(page.url(), "invoices");
 }
 
@@ -226,7 +226,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.locator("#invoice-number").fill(uniq("factura").replace(/\s/g, "-"));
     await page.locator('button[type="submit"][form="invoice-form"]').last().click();
     await expect(page.getByText("Factura registrada")).toBeVisible();
-    await expect(page).toHaveURL(/\/invoices\/inv_/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/invoices\/[a-z0-9]{20,}/, { timeout: 30_000 });
 
     // CA5: the installment is FACTURADA and no longer offered.
     await page.goto(`/invoices/new?clientId=${clientId}`);
@@ -354,7 +354,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     });
     await page.getByRole("button", { name: "Registrar pago", exact: true }).click();
     await expect(page.getByText("Pago registrado")).toBeVisible();
-    await expect(page).toHaveURL(/\/payments\/pag_/);
+    await expect(page).toHaveURL(/\/payments\/[a-z0-9]{20,}/);
 
     // CA2: the receipt is visible on the detail without a download.
     await expect(page.getByText("Comprobante", { exact: true }).first()).toBeVisible();

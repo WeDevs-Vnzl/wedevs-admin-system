@@ -67,10 +67,10 @@ async function fillClientForm(
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
 }
 
-/** Creates a Persona client in Colombia and returns its path (`/clients/cli_…`). */
+/** Creates a Persona client in Colombia and returns its path (`/clients/<id>`). */
 async function createClient(page: Page, tradeName: string, taxId = uniqueTaxId()): Promise<string> {
   await fillClientForm(page, { tradeName, taxId, country: "Colombia" });
-  await expect(page).toHaveURL(/\/clients\/cli_/);
+  await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 
@@ -92,7 +92,7 @@ async function addContact(
 
 /**
  * Creates a project linked to one client by its trade name and, when given, one technology of the catalogue, and
- * returns its path (`/projects/pry_…`).
+ * returns its path (`/projects/<id>`).
  */
 async function createProject(
   page: Page,
@@ -112,7 +112,7 @@ async function createProject(
   }
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
-  await expect(page).toHaveURL(/\/projects\/pry_/);
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   return new URL(page.url()).pathname;
 }
 
@@ -154,7 +154,7 @@ test.describe("HU-03 create client (mutates clients)", () => {
 
     await fillClientForm(page, { tradeName: uniqueName("E2E Persona"), taxId: uniqueTaxId(), country: "Colombia" });
     await expect(page.getByText("Cliente creado", { exact: true })).toBeVisible();
-    await expect(page).toHaveURL(/\/clients\/cli_/);
+    await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   });
 
   test("@authenticated HU-03 CA2: each new client takes the next CLI-#### after the previous one", async ({
@@ -266,7 +266,7 @@ test.describe("HU-05 create project (mutates projects)", () => {
 
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
     await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
-    await expect(page).toHaveURL(/\/projects\/pry_/);
+    await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
   });
 
   test("@authenticated HU-05 CA3: the project is listed in the Proyectos tab of each linked client", async ({
