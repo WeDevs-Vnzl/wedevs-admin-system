@@ -11,6 +11,7 @@ vi.mock("@/lib/api/server", () => server);
 vi.mock("next-intl/server", () => intl);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
+import { CSV_BOM } from "@/lib/csv";
 import { listQuerySchema } from "@/lib/validators/common";
 import type { ExportSource } from "@/lib/validators/export";
 import { defineCsvExportAction } from "./define-csv-export-action";
@@ -89,11 +90,25 @@ describe("defineCsvExportAction", () => {
       ok: true,
       data: {
         filename: "clients-2026-11-06.csv",
-        content: "Name\r\nAcme\r\n",
+        content: `${CSV_BOM}Name\r\nAcme\r\n`,
         rowCount: 10000,
         truncated: true,
       },
     });
+  });
+
+  it("keeps the UTF-8 BOM the BE writes: the returned CSV starts with CSV_BOM", async () => {
+    // `Response.text()` decodes UTF-8 and drops a leading BOM, as it does on the real BE response.
+    setup({
+      "POST /api/v1/exports/CLIENT": () =>
+        new Response(`${CSV_BOM}Name\r\nAcme\r\n`, {
+          status: 200,
+          headers: { "content-type": "text/csv; charset=utf-8", "X-Export-Row-Count": "1" },
+        }),
+    });
+    const result = (await build()(payload)) as { data: { content: string } };
+    expect(result.data.content.startsWith(CSV_BOM)).toBe(true);
+    expect(result.data.content).toBe(`${CSV_BOM}Name\r\nAcme\r\n`);
   });
 
   it("falls back to <entity>-<date>.csv when Content-Disposition is missing", async () => {

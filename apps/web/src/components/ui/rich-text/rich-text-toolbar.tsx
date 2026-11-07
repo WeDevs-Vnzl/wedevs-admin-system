@@ -178,7 +178,6 @@ export function RichTextToolbar({
   onPickImage?: () => void;
 }) {
   const t = useTranslations("forms.richText.toolbar");
-  const tUploader = useTranslations("forms.uploader");
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -236,7 +235,7 @@ export function RichTextToolbar({
         <ButtonGroup>
           <LinkControl editor={editor} disabled={disabled} />
           {onPickImage ? (
-            <ActionButton label={tUploader("browse")} icon={ImageIcon} disabled={disabled} onClick={onPickImage} />
+            <ActionButton label={t("image")} icon={ImageIcon} disabled={disabled} onClick={onPickImage} />
           ) : null}
           <ActionButton label={t("unlink")} icon={UnlinkIcon} disabled={disabled || !state.link} onClick={() => run().unsetLink().run()} />
         </ButtonGroup>

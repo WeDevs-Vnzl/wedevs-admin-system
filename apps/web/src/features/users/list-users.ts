@@ -73,7 +73,9 @@ export async function listUsersWithInvitations(
 
   const { page, pageSize } = filter;
   const activeRows = users?.data?.items.map(toActiveRow) ?? [];
-  const total = (users?.data?.total ?? 0) + pending.length;
+  // Pending invitations ride on page 1 only: counting them would add an empty extra page. Only an
+  // invitations-only filter pages over them.
+  const total = wantUsers ? (users?.data?.total ?? 0) : pending.length;
   const items = wantUsers
     ? [...(page === 1 ? pending : []), ...activeRows]
     : pending.slice((page - 1) * pageSize, page * pageSize);

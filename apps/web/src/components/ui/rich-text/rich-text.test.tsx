@@ -247,7 +247,7 @@ describe("RichTextEditor images", () => {
 
   it("shows the image toolbar button when an upload adapter is given", async () => {
     wrap(<RichTextEditor uploadAdapter={adapter()} />);
-    expect(await screen.findByRole("button", { name: "Elegir archivos" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Insertar imagen" })).toBeInTheDocument();
   });
 
   it("with images disabled there is no toolbar button and a pasted image is rejected without upload", async () => {
@@ -255,7 +255,7 @@ describe("RichTextEditor images", () => {
     const onChange = vi.fn();
     wrap(<RichTextEditor uploadAdapter={uploads} allowImages={false} onChange={onChange} />);
     await readyEditor();
-    expect(screen.queryByRole("button", { name: "Elegir archivos" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Insertar imagen" })).toBeNull();
     const dom = document.querySelector(".ProseMirror") as HTMLElement;
     let event!: Event;
     await act(async () => {
@@ -269,7 +269,7 @@ describe("RichTextEditor images", () => {
   it("without an adapter there is no toolbar button either", async () => {
     wrap(<RichTextEditor />);
     await readyEditor();
-    expect(screen.queryByRole("button", { name: "Elegir archivos" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Insertar imagen" })).toBeNull();
   });
 
   it("picking a file in the toolbar uploads it through the adapter", async () => {

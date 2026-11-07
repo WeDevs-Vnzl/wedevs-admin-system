@@ -145,13 +145,14 @@ test.describe("FE-INT-1 identity", () => {
   test("@authenticated HU-27 CA1: a table column layout persists across a new session", async ({ browser }) => {
     const first = await openSession(browser);
     const second = await openSession(browser);
-    const moveTradeNameDown = oneOf("Move Trade name down", "Mover Nombre comercial hacia abajo");
+    // `tradeName` is pinned to the left edge and has no move control: move the (unpinned) code column instead.
+    const moveCodeDown = oneOf("Move Code down", "Mover Código hacia abajo");
     try {
       await signInAs(first.page, "OWNER");
       await first.page.goto("/clients/list");
       await first.page.getByRole("button", { name: oneOf("Columns", "Columnas") }).click();
       const defaultOrder = await columnOrder(first.page);
-      await first.page.getByRole("button", { name: moveTradeNameDown }).click();
+      await first.page.getByRole("button", { name: moveCodeDown }).click();
       const layout = await columnOrder(first.page);
       expect(layout).not.toEqual(defaultOrder);
       await first.page.keyboard.press("Escape");
@@ -177,6 +178,9 @@ test.describe("FE-INT-1 identity", () => {
     );
     await signInAs(page, "OWNER");
     await page.goto("/settings/company");
+    // Arrange a filled company profile first: the name is required, so the save fails on a fresh database.
+    const companyName = page.locator("#company-name");
+    if (!(await companyName.inputValue())) await companyName.fill("WeDevs E2E");
     await page.locator('input[type="file"]').first().setInputFiles({
       name: "logo.png",
       mimeType: "image/png",
