@@ -1,26 +1,26 @@
 "use server";
 
-import { z } from "@/lib/validators/zod";
+import { apiAction } from "@/lib/api/action";
 import {
-  KPI_ID_VALUES,
   getKpiInputSchema,
   getReportInputSchema,
-  reportFilterSchema,
+  type ReportFilter,
 } from "@/lib/validators/reports";
 import * as reports from "@/mocks/services/reports";
 import { defineAction } from "@/server/actions/define-action";
+import { toReportQuery } from "./report-query";
 
-// Reads behind the `/reports` range filter (HU-31 CA2): a new range reloads every KPI card, or the open report or
-// KPI. Owner/Admin only (`read report`, PRD §11).
+// Reads behind the `/reports` range filter (HU-31 CA2): a new range reloads every KPI card through the BE. Owner
+// and Admin only: the BE answers `FORBIDDEN` for the others (`report`, PRD §11).
 
-const READ_REPORT = { action: "read", resource: "report" } as const;
-
-export const getKpisAction = defineAction({
-  permission: READ_REPORT,
-  input: z.object({ filter: reportFilterSchema }),
-  handler: (ctx, { filter }) =>
-    Promise.all(KPI_ID_VALUES.map((id) => reports.getKpi(ctx, { id, filter }))),
+/** Reloads the eighteen KPIs of a range: the BE response, the same shape the page reads. */
+export const getKpisAction = apiAction({
+  call: ({ filter }: { filter: ReportFilter }, api) =>
+    api.GET("/api/v1/reports/kpis", { params: { query: toReportQuery(filter) } }),
 });
+
+// MOCK — until cleanup: the report detail still reads the mock service (see `getReportPageData`).
+const READ_REPORT = { action: "read", resource: "report" } as const;
 
 export const getReportAction = defineAction({
   permission: READ_REPORT,

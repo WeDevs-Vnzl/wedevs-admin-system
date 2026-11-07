@@ -6,7 +6,9 @@ import { useTranslations } from "next-intl";
 import { KpiCard } from "@/components/patterns/kpi-card";
 import { Card } from "@/components/ui/card";
 import { toDecimal } from "@/lib/money";
-import { REPORT_ID_VALUES, type KpiResultDTO, type ReportFilter } from "@/lib/validators/reports";
+import type { KpiResultDto } from "@/lib/api/types/intel";
+import { actionOk, type ActionResult } from "@/lib/validators/common";
+import { REPORT_ID_VALUES, type ReportFilter } from "@/lib/validators/reports";
 import { getKpisAction } from "../actions";
 import { reportHref } from "../report-catalog";
 import { KpiSparkline } from "./kpi-sparkline";
@@ -14,10 +16,14 @@ import { ReportRangeFilter } from "./report-range-filter";
 import { useReportFormat } from "./use-report-format";
 import { useReportRange } from "./use-report-range";
 
-const loadKpis = (filter: ReportFilter) => getKpisAction({ filter });
+/** The range reload: the BE returns the eighteen KPIs of the range; the overview keeps the list. */
+async function loadKpis(filter: ReportFilter): Promise<ActionResult<KpiResultDto[]>> {
+  const result = await getKpisAction({ filter });
+  return result.ok ? actionOk(result.data.kpis) : result;
+}
 
 export interface ReportsOverviewProps {
-  initialKpis: KpiResultDTO[];
+  initialKpis: KpiResultDto[];
   initialFilter: ReportFilter;
 }
 
@@ -25,7 +31,7 @@ export interface ReportsOverviewProps {
 export function useKpiVariation() {
   const t = useTranslations("reports");
   const fmt = useReportFormat();
-  return (kpi: KpiResultDTO) => {
+  return (kpi: KpiResultDto) => {
     if (kpi.changePercent === null) {
       return { label: t("kpi.noPrevious"), direction: "flat" as const };
     }
