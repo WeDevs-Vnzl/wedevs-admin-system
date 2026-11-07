@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { tableUrlParsers, urlStateToListQuery } from "@/components/ui/data-table";
 import { SharesTable } from "@/features/shares/components/shares-table";
 import { shareFilterOf } from "@/features/shares/components/shares-table-query";
+import { orNotFound } from "@/features/shares/load-share";
 import { getSharePermissions, listShareLinks } from "@/features/shares/queries";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
@@ -27,7 +28,7 @@ export default async function SharesPage({ searchParams }: SharesPageProps) {
   if (!permissions.canRead) notFound();
   const query = urlStateToListQuery(loadTableState(await searchParams));
   const [page, t] = await Promise.all([
-    listShareLinks(shareFilterOf(query)),
+    orNotFound(listShareLinks(shareFilterOf(query))),
     getTranslations("shares.page"),
   ]);
 
