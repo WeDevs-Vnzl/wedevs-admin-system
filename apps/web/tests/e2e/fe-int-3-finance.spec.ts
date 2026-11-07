@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import { namePrefix } from "./support/accessible-names";
-import { pickDateViaUi } from "./support/ui-data";
+import { createAccountViaUi, pickDateViaUi } from "./support/ui-data";
 
 // FE-INT-R E.2 finance E2E (old 3.8 without HU-13; HU-13 is E.3's `fe-int-3-payments.spec.ts`). HU-09 CA1–CA3,
 // HU-10 CA1–CA3, HU-11 CA1–CA5, HU-12 CA1–CA3 and CA5, HU-14, HU-15 CA1–CA3, HU-16 CA1–CA2, HU-17 CA1–CA3, HU-28 for
@@ -71,18 +71,12 @@ async function createProject(page: Page, clientName: string, name: string): Prom
   return idFromUrl(page.url(), "projects");
 }
 
-/** An account of this run; the opening balance is entered in the account's currency. Returns its id. */
+/**
+ * An account of this run; the opening balance is entered in the account's currency. Returns its id. The shared helper
+ * also fills the required opening date (`#account-opening-date`), which this spec did not, so the save was refused.
+ */
 async function createAccount(page: Page, name: string, currency: string, opening: string): Promise<string> {
-  await page.goto("/accounts/new");
-  await page.getByLabel("Nombre", { exact: true }).fill(name);
-  await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
-  await page.getByRole("option", { name: namePrefix(`${currency} ·`) }).click();
-  // The label also names the balance card group: target the input (the card group has the same accessible name).
-  await page.getByRole("textbox", { name: "Saldo inicial", exact: true }).fill(opening);
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page.getByText("Cuenta creada")).toBeVisible();
-  await expect(page).toHaveURL(/\/accounts\/[^/?#]+$/);
-  return idFromUrl(page.url(), "accounts");
+  return createAccountViaUi(page, { name, currency, openingBalance: opening });
 }
 
 /** A client with one project whose billing plan (10 000 USD, 40/30/30 template) is generated. */
