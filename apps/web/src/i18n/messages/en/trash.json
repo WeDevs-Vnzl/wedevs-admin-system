@@ -29,6 +29,9 @@
   "toast": {
     "restored": "{label} restored"
   },
+  "conflict": {
+    "open": "Open {label}"
+  },
   "errors": {
     "taxIdTaken": "Another active client already uses this tax ID. Archive or edit it before restoring this one.",
     "clientArchived": "Its client is archived. Restore the client first.",

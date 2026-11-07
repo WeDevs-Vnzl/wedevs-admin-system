@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArchiveRestoreIcon } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { DateText } from "@/components/patterns/date-text";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DataTable,
@@ -13,7 +15,8 @@ import {
   type DataTableColumnDef,
   type FacetConfig,
 } from "@/components/ui/data-table";
-import type { ListQuery } from "@/lib/validators/common";
+import { entityHref } from "@/lib/entity-routes";
+import type { EntityRef, ListQuery } from "@/lib/validators/common";
 import { RESTORABLE_ENTITY_TYPE_VALUES, type TrashRowDTO } from "@/lib/validators/trash";
 import { listTrashAction, restoreFromTrashAction } from "../actions";
 import { trashFilterOf } from "./trash-table-query";
@@ -41,6 +44,8 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState<string | null>(null);
+  // A CONFLICT names the record that blocks the restore; it stays on screen with a link to that record.
+  const [conflict, setConflict] = useState<{ message: string; entity: EntityRef } | null>(null);
 
   // The first render already shows the server page for this URL; later query changes read through the action.
   const queryKey = JSON.stringify(query);
@@ -75,10 +80,15 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
       });
       setRestoring(null);
       if (!result.ok) {
+        if (result.error.code === "CONFLICT" && result.error.entity) {
+          setConflict({ message: result.error.message, entity: result.error.entity });
+          return;
+        }
         // `message` is an i18n key: `trash.errors.*` for a collision, `common.errors.<CODE>` otherwise.
         toast.error(tRoot(result.error.message as never));
         return;
       }
+      setConflict(null);
       setRows((current) => current.filter((item) => rowId(item) !== id));
       setTotal((current) => Math.max(0, current - 1));
       toast.success(t("toast.restored", { label: row.entity.label }));
@@ -173,19 +183,33 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
     [t, tTypes],
   );
 
+  const conflictHref = conflict ? entityHref(conflict.entity) : null;
+
   return (
-    <DataTable<TrashRowDTO>
-      data={rows}
-      columns={columns}
-      getRowId={rowId}
-      total={total}
-      query={query}
-      onQueryChange={setQuery}
-      loading={loading}
-      facets={facets}
-      searchPlaceholder={t("search.placeholder")}
-      selectable={false}
-      emptyState={{ title: t("empty.title"), description: t("empty.description") }}
-    />
+    <>
+      {conflict && conflictHref ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            {tRoot(conflict.message as never)}{" "}
+            <Link href={conflictHref} className="font-medium underline underline-offset-4">
+              {t("conflict.open", { label: conflict.entity.label })}
+            </Link>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <DataTable<TrashRowDTO>
+        data={rows}
+        columns={columns}
+        getRowId={rowId}
+        total={total}
+        query={query}
+        onQueryChange={setQuery}
+        loading={loading}
+        facets={facets}
+        searchPlaceholder={t("search.placeholder")}
+        selectable={false}
+        emptyState={{ title: t("empty.title"), description: t("empty.description") }}
+      />
+    </>
   );
 }
