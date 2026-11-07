@@ -27,7 +27,8 @@ import { setPreferenceAction } from "@/features/preferences/actions";
 import { tableColumnsKey } from "@/lib/validators/preferences";
 import { CLIENT_KIND_VALUES, CLIENT_STATUS_VALUES } from "@/lib/validators/enums";
 import type { ListQuery } from "@/lib/validators/common";
-import type { ClientListRowDTO } from "@/lib/validators/clients";
+import { isInvalidSortError } from "@/lib/api/errors";
+import type { ClientListItemDto } from "@/lib/api/types/clients";
 import { exportClientsCsvAction, listClientsAction } from "../actions";
 import { CLIENT_COLUMN_IDS } from "../columns";
 import { ClientArchiveDialog } from "./client-archive-dialog";
@@ -37,7 +38,7 @@ import type { ClientScreenPermissions } from "./client-permissions";
 
 type ClientsTableProps = {
   /** First page, read on the server for the query in the URL. */
-  initialRows: ClientListRowDTO[];
+  initialRows: ClientListItemDto[];
   initialTotal: number;
   /** Saved column layout (`table:clients:columns`). */
   initialColumns: ColumnConfig[];
@@ -49,8 +50,13 @@ type ClientsTableProps = {
 
 type BulkDialog = "tag" | "archive" | null;
 
-const helper = createDataTableColumnHelper<ClientListRowDTO>();
+const helper = createDataTableColumnHelper<ClientListItemDto>();
 const OPTION_LIMIT = 50;
+
+/** A money cell: the USD amount, or an em dash when the BE sent `null` (no financial grant). */
+function MoneyAmount({ amount }: { amount: string | null }) {
+  return amount === null ? <span>—</span> : <MoneyText amount={amount} currency="USD" />;
+}
 
 /**
  * The `/clients/list` table (PRD §7.3, §8.2). The first render shows the server rows for the URL query; later
@@ -83,13 +89,15 @@ export function ClientsTable({
       const result = await listClientsAction(clientFilterOf(next));
       setLoading(false);
       if (!result.ok) {
-        toast.error(tErrors(result.error.code));
+        // A money sort without the financial grant (a stale URL): drop it and the table reloads unsorted.
+        if (isInvalidSortError(result.error)) setQuery({ sort: undefined });
+        else toast.error(tErrors(result.error.code));
         return;
       }
       setRows(result.data.items);
       setTotal(result.data.total);
     },
-    [tErrors],
+    [tErrors, setQuery],
   );
 
   useEffect(() => {
@@ -97,7 +105,7 @@ export function ClientsTable({
     void load(query);
   }, [query, queryKey, load]);
 
-  const columns = useMemo<DataTableColumnDef<ClientListRowDTO>[]>(() => {
+  const columns = useMemo<DataTableColumnDef<ClientListItemDto>[]>(() => {
     const base = [
       helper.accessor("code", {
         header: t("columns.code"),
@@ -146,13 +154,13 @@ export function ClientsTable({
             header: t("columns.totalInvoicedUsd"),
             size: 240,
             meta: { label: t("columns.totalInvoicedUsd"), sortable: true, align: "end" },
-            cell: ({ row }) => <MoneyText amount={row.original.totalInvoicedUsd} currency="USD" />,
+            cell: ({ row }) => <MoneyAmount amount={row.original.totalInvoicedUsd} />,
           }),
           helper.accessor("receivableUsd", {
             header: t("columns.receivableUsd"),
             size: 240,
             meta: { label: t("columns.receivableUsd"), sortable: true, align: "end" },
-            cell: ({ row }) => <MoneyText amount={row.original.receivableUsd} currency="USD" />,
+            cell: ({ row }) => <MoneyAmount amount={row.original.receivableUsd} />,
           }),
         ]
       : [];
@@ -175,7 +183,7 @@ export function ClientsTable({
           ),
       }),
     ];
-    return [...base, ...money, ...tail] as DataTableColumnDef<ClientListRowDTO>[];
+    return [...base, ...money, ...tail] as DataTableColumnDef<ClientListItemDto>[];
   }, [t, permissions.canSeeFinancials]);
 
   const facets = useMemo<FacetConfig[]>(
@@ -242,7 +250,7 @@ export function ClientsTable({
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable<ClientListRowDTO>
+      <DataTable<ClientListItemDto>
         data={rows}
         columns={columns}
         getRowId={(row) => row.id}

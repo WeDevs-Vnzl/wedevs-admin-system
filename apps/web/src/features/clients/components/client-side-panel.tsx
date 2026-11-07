@@ -3,24 +3,23 @@ import { FinancialSummaryCard } from "@/components/patterns/financial-summary-ca
 import { DateText } from "@/components/patterns/date-text";
 import { MoneyText } from "@/components/patterns/money-text";
 import { SidePanelCard } from "@/components/patterns/side-panel-card";
-import { getClientFinancials } from "@/features/clients/queries";
 import { isZeroMoney } from "@/lib/money";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
+import type { ClientDetailDto, ClientSummaryResponseDto } from "@/lib/api/types/clients";
 
 type ClientSidePanelProps = {
-  client: ClientDetailDTO;
-  canSeeFinancials: boolean;
+  client: ClientDetailDto;
+  /** The summary the page read for finance roles; `null` hides the financial card. */
+  financials: ClientSummaryResponseDto | null;
 };
 
 /**
  * Side panel of the client detail: the key data, and the financial card for finance roles (the same snapshot
- * sums as the "Resumen" metrics, C16). `getClientFinancials` is read only when `canSeeFinancials`.
+ * sums as the "Resumen" metrics, C16). The page reads the summary once, for finance roles only.
  */
-export async function ClientSidePanel({ client, canSeeFinancials }: ClientSidePanelProps) {
+export async function ClientSidePanel({ client, financials }: ClientSidePanelProps) {
   const t = await getTranslations("clients.detail");
   const tEnums = await getTranslations("enums");
   const none = t("keyData.none");
-  const financials = canSeeFinancials ? await getClientFinancials(client.id) : null;
   const rows: [string, string | null][] = [
     [t("keyData.kind"), tEnums(`ClientKind.${client.kind}`)],
     [t("keyData.legalName"), client.kind === "EMPRESA" ? client.legalName : null],

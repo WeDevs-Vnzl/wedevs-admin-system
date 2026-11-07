@@ -3,18 +3,21 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { SectionCard } from "@/components/patterns/section-card";
 import { StatGrid } from "@/components/patterns/stat-grid";
 import { Badge } from "@/components/ui/badge";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
+import type { ClientDetailDto, ClientSummaryResponseDto } from "@/lib/api/types/clients";
 
 type ClientSummaryProps = {
-  client: Pick<ClientDetailDTO, "contacts" | "financials">;
-  canSeeFinancials: boolean;
+  client: Pick<ClientDetailDto, "contacts">;
+  /** `GET /clients/{id}/summary`; `null` for roles without the financial grant (the page never reads it). */
+  financials: ClientSummaryResponseDto | null;
+  /** Live projects of the client, for every role. */
+  projectCount: number;
 };
 
 /**
  * "Resumen" tab (PRD §8.2): highlighted contacts (primary first) and the metrics. The USD metrics come from the
  * stored snapshots (PD-4, C16) and are rendered only for finance roles; everyone gets the project count.
  */
-export async function ClientSummary({ client, canSeeFinancials }: ClientSummaryProps) {
+export async function ClientSummary({ client, financials, projectCount }: ClientSummaryProps) {
   const t = await getTranslations("clients.detail");
   const highlighted = client.contacts.filter((contact) => contact.archivedAt === null).slice(0, 5);
 
@@ -48,31 +51,29 @@ export async function ClientSummary({ client, canSeeFinancials }: ClientSummaryP
       <SectionCard heading title={t("summary.metrics")}>
         <StatGrid
           items={[
-            ...(canSeeFinancials
+            ...(financials
               ? [
                   {
                     label: t("metrics.totalInvoiced"),
-                    value: <MoneyText amount={client.financials.totalInvoicedUsd} currency="USD" />,
+                    value: <MoneyText amount={financials.totalInvoicedUsd} currency="USD" />,
                   },
                   {
                     label: t("metrics.totalCollected"),
-                    value: (
-                      <MoneyText amount={client.financials.totalCollectedUsd} currency="USD" />
-                    ),
+                    value: <MoneyText amount={financials.totalCollectedUsd} currency="USD" />,
                   },
                   {
                     label: t("metrics.receivable"),
-                    value: <MoneyText amount={client.financials.receivableUsd} currency="USD" />,
+                    value: <MoneyText amount={financials.receivableUsd} currency="USD" />,
                   },
                   {
                     label: t("metrics.creditBalance"),
-                    value: <MoneyText amount={client.financials.creditBalanceUsd} currency="USD" />,
+                    value: <MoneyText amount={financials.creditBalanceUsd} currency="USD" />,
                   },
                 ]
               : []),
             {
               label: t("metrics.projects"),
-              value: client.financials.projectCount,
+              value: projectCount,
               hint: t("summary.projectsHint"),
             },
           ]}

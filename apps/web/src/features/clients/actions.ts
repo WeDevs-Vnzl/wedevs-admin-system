@@ -1,87 +1,160 @@
 "use server";
 
+import { apiAction } from "@/lib/api/action";
+import type {
+  ClientArchiveResultDto,
+  ClientDetailDto,
+  ClientListResponseDto,
+  ClientsArchiveResultDto,
+  EntityRefDto,
+} from "@/lib/api/types/clients";
 import {
   archiveClientInputSchema,
   archiveClientsInputSchema,
   clientFilterSchema,
-  createClientInputSchema,
-  restoreClientInputSchema,
-  setClientStatusInputSchema,
-  updateClientInputSchema,
+  type ClientFilterInput,
+  type CreateClientFormValues,
+  type RestoreClientInput,
+  type SetClientStatusInput,
+  type UpdateClientFormValues,
+  // MOCK — until cleanup: the export source below types its rows with the mock DTO.
   type ClientListRowDTO,
   type ClientFilter,
 } from "@/lib/validators/clients";
-import { listQuerySchema } from "@/lib/validators/common";
+import {
+  entityRefSchema,
+  errorMessageKey,
+  listQuerySchema,
+  type ActionResult,
+  type EntityRef,
+} from "@/lib/validators/common";
+import type { z } from "@/lib/validators/zod";
+// MOCK — until cleanup: the export source only (`list` and `exportCsv` are ignored by the helper; the BE builds the CSV).
 import type { ExportSource } from "@/lib/validators/export";
 import * as clients from "@/mocks/services/clients";
 import { exportCsv } from "@/mocks/services/export";
-import { defineAction } from "@/server/actions/define-action";
 import type { ServiceContext } from "@/server/context";
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
+import { toClientListQuery } from "./api-query";
 import { CLIENT_EXPORT_COLUMNS, CLIENT_FACETS } from "./columns";
 
-// Mutations revalidate the whole `/clients` subtree: overview, table and every detail page (DT-71: each
-// action declares a real `can()` grant).
+// Thin API proxies (C10): token → one BE call → error mapping → revalidate. The BE decides every grant; the
+// FE never checks `can()` here. Mutations revalidate the whole `/clients` subtree: overview, table and every
+// detail page.
 const REVALIDATE = [{ path: "/clients", type: "layout" }] as const;
 
-export const createClientAction = defineAction({
-  permission: { action: "create", resource: "client" },
-  input: createClientInputSchema,
+/** Creates a client; the BE allocates the `CLI-` code and answers `CONFLICT` with the holder on a duplicate tax id. */
+/** The editable fields only: the edit form also carries `id`, which never goes in the body. */
+function clientBody(input: Omit<UpdateClientFormValues, "id">) {
+  return {
+    kind: input.kind,
+    tradeName: input.tradeName,
+    legalName: input.legalName,
+    taxId: input.taxId,
+    country: input.country,
+    address: input.address,
+    phone: input.phone,
+    email: input.email,
+    website: input.website,
+    tagIds: input.tagIds ?? [],
+  };
+}
+
+export const createClientAction = apiAction<CreateClientFormValues, ClientDetailDto>({
+  call: (input, api) =>
+    api.POST("/api/v1/clients", {
+      body: { ...clientBody(input), status: input.status ?? "PROSPECTO" },
+    }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.createClient(ctx, data),
 });
 
-export const updateClientAction = defineAction({
-  permission: { action: "update", resource: "client" },
-  input: updateClientInputSchema,
+export const updateClientAction = apiAction<UpdateClientFormValues, ClientDetailDto>({
+  call: (input, api) =>
+    api.PATCH("/api/v1/clients/{id}", {
+      params: { path: { id: input.id } },
+      body: clientBody(input),
+    }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.updateClient(ctx, data),
 });
 
-export const setClientStatusAction = defineAction({
-  permission: { action: "update", resource: "client" },
-  input: setClientStatusInputSchema,
+export const setClientStatusAction = apiAction<SetClientStatusInput, ClientDetailDto>({
+  call: ({ id, status }, api) =>
+    api.POST("/api/v1/clients/{id}/status", { params: { path: { id } }, body: { status } }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.setClientStatus(ctx, data),
 });
 
-/** Archive; a client with active projects or open invoices needs `confirm: true` (INTEGRITY_LOCK otherwise). */
-export const archiveClientAction = defineAction({
-  permission: { action: "delete", resource: "client" },
-  input: archiveClientInputSchema,
+/** Archive; a client with active projects or open invoices needs `confirm: true` (`INTEGRITY_LOCK` otherwise). */
+export const archiveClientAction = apiAction<
+  z.input<typeof archiveClientInputSchema>,
+  ClientArchiveResultDto
+>({
+  call: ({ id, confirm }, api) =>
+    api.POST("/api/v1/clients/{id}/archive", {
+      params: { path: { id } },
+      body: { confirm: confirm ?? false },
+    }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.archiveClient(ctx, data),
 });
 
-export const archiveClientsAction = defineAction({
-  permission: { action: "delete", resource: "client" },
-  input: archiveClientsInputSchema,
+export const archiveClientsAction = apiAction<
+  z.input<typeof archiveClientsInputSchema>,
+  ClientsArchiveResultDto
+>({
+  call: ({ ids, confirm }, api) =>
+    api.POST("/api/v1/clients/archive", { body: { ids, confirm: confirm ?? false } }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.archiveClients(ctx, data),
 });
 
-/** Restore is governed by the trash grant (Owner and Admin, C19). */
-export const restoreClientAction = defineAction({
-  permission: { action: "restore", resource: "trash" },
-  input: restoreClientInputSchema,
+/** Restore (trash grant; `CONFLICT` with `entity` when a live client holds the same tax id). */
+export const restoreClientAction = apiAction<RestoreClientInput, ClientDetailDto>({
+  call: ({ id }, api) => api.POST("/api/v1/clients/{id}/restore", { params: { path: { id } } }),
   revalidate: REVALIDATE,
-  handler: (ctx, data) => clients.restoreClient(ctx, data),
 });
 
-/** Typeahead for the client pickers (project form, note links): up to 20 live clients as `EntityRef`s. */
-export const searchClientsAction = defineAction({
-  permission: { action: "read", resource: "client" },
-  input: listQuerySchema.pick({ q: true }),
-  handler: (ctx, data) => clients.searchClients(ctx, { q: data.q, limit: 20 }),
+const searchInputSchema = listQuerySchema.pick({ q: true });
+
+const searchClients = apiAction<{ q?: string }, EntityRefDto[]>({
+  call: ({ q }, api) =>
+    api.GET("/api/v1/clients/search", { params: { query: { ...(q ? { q } : {}), limit: 20 } } }),
 });
 
-/** The clients table reloads its rows through this read when the URL query changes (same grant as the table). */
-export const listClientsAction = defineAction({
-  permission: { action: "read", resource: "client" },
-  input: clientFilterSchema,
-  handler: (ctx, data) => clients.listClients(ctx, data),
+/**
+ * Typeahead for every client combobox: up to 20 live clients as `EntityRef`s. The wire `code: null` is parsed to
+ * `undefined` (`entityRefSchema`), so consumers keep the `EntityRef` they always read.
+ */
+export async function searchClientsAction(
+  input: z.input<typeof searchInputSchema>,
+): Promise<ActionResult<EntityRef[]>> {
+  const parsed = searchInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: { code: "VALIDATION", message: errorMessageKey("VALIDATION") } };
+  }
+  const result = await searchClients(parsed.data);
+  return result.ok
+    ? { ok: true, data: result.data.map((ref) => entityRefSchema.parse(ref)) }
+    : result;
+}
+
+const listClients = apiAction<ClientFilter, ClientListResponseDto>({
+  call: (filter, api) =>
+    api.GET("/api/v1/clients", { params: { query: toClientListQuery(filter) } }),
 });
 
+/**
+ * The clients table reloads its rows through this read when the URL query changes. The filter is checked for UX
+ * only; the BE re-validates (a money sort without the grant answers `VALIDATION` on `sort`).
+ */
+export async function listClientsAction(
+  input: ClientFilterInput,
+): Promise<ActionResult<ClientListResponseDto>> {
+  const parsed = clientFilterSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: { code: "VALIDATION", message: errorMessageKey("VALIDATION") } };
+  }
+  return listClients(parsed.data);
+}
+
+// MOCK — until cleanup: `list` is ignored by the export helper; the columns and facets drive the CSV.
 const exportSource: ExportSource<ClientListRowDTO, ClientFilter, ServiceContext> = {
   entity: "CLIENT",
   facets: CLIENT_FACETS,
@@ -90,7 +163,7 @@ const exportSource: ExportSource<ClientListRowDTO, ClientFilter, ServiceContext>
   columns: CLIENT_EXPORT_COLUMNS,
 };
 
-/** CSV of the clients table: same list service, filter schema and columns as the table (PD-2). */
+/** CSV of the clients table: same filter schema and columns as the table (PD-2); the BE builds the file. */
 export const exportClientsCsvAction = defineCsvExportAction({
   entity: "CLIENT",
   permission: { action: "read", resource: "client" },

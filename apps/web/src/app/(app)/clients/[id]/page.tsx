@@ -11,25 +11,27 @@ import { canCreateTagsInline } from "@/features/tags/queries";
 import { ClientProjectsTab } from "@/features/clients/components/client-projects-tab";
 import { ClientSidePanel } from "@/features/clients/components/client-side-panel";
 import { ClientSummary } from "@/features/clients/components/client-summary";
-import { getClient } from "@/features/clients/queries";
+import { getClient, getClientFinancials } from "@/features/clients/queries";
 import { ContactsTable } from "@/features/contacts/components/contacts-table";
 import { listContacts } from "@/features/contacts/queries";
+import { listProjects } from "@/features/projects/queries";
 import { EntityDocumentsTab } from "@/features/documents/components/entity-documents-tab";
 import { RelatedInvoicesTab } from "@/features/invoices/components/related-invoices-tab";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
 import { ClientPaymentsTab } from "@/features/payments/components/client-payments-tab";
 import { requireSessionUser } from "@/server/auth/session";
 import { can } from "@/server/auth/permissions";
+// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
 import { ServiceError } from "@/server/errors";
 import type { EntityRef } from "@/lib/validators/common";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
+import type { ClientDetailDto } from "@/lib/api/types/clients";
 
 type ClientDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
 /** The client, or `null` when it does not exist (or is archived for a role that may not open the trash). */
-async function readClient(id: string): Promise<ClientDetailDTO | null> {
+async function readClient(id: string): Promise<ClientDetailDto | null> {
   try {
     return await getClient(id);
   } catch (error) {
@@ -60,7 +62,12 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     canSeeFinancials: permissions.canSeeFinancials,
     canReadActivity: permissions.canReadActivity,
   });
-  const contacts = await listContacts({ clientId: client.id, pageSize: 100 });
+  // The summary (money) is read for finance roles only; the BE refuses the others. Every role gets the count.
+  const [contacts, financials, projects] = await Promise.all([
+    listContacts({ clientId: client.id, pageSize: 100 }),
+    permissions.canSeeFinancials ? getClientFinancials(client.id) : null,
+    listProjects({ clientId: client.id }),
+  ]);
   const ref: EntityRef = {
     type: "CLIENT",
     id: client.id,
@@ -72,7 +79,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     summary: {
       value: "summary",
       label: t("summary"),
-      content: <ClientSummary client={client} canSeeFinancials={permissions.canSeeFinancials} />,
+      content: (
+        <ClientSummary client={client} financials={financials} projectCount={projects.total} />
+      ),
     },
     contacts: {
       value: "contacts",
@@ -90,7 +99,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     projects: {
       value: "projects",
       label: t("projects"),
-      count: client.financials.projectCount,
+      count: projects.total,
       content: (
         <ClientProjectsTab clientId={client.id} canCreate={can(user, "create", "project")} />
       ),
@@ -152,7 +161,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         <div className="min-w-0">
           <DetailTabs tabs={tabs.map((tab) => available[tab])} defaultTab="summary" />
         </div>
-        <ClientSidePanel client={client} canSeeFinancials={permissions.canSeeFinancials} />
+        <ClientSidePanel client={client} financials={financials} />
       </div>
     </div>
   );

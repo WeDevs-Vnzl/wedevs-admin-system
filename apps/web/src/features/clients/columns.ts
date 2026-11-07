@@ -1,4 +1,5 @@
 import type { TableFacetDescriptor } from "@/lib/table-query";
+// MOCK — until cleanup: the CSV export source types its rows with the mock DTO (the helper ignores `list`).
 import type { ClientListRowDTO } from "@/lib/validators/clients";
 import type { ExportColumnSpec } from "@/lib/validators/export";
 

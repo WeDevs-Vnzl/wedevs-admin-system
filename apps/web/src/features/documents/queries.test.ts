@@ -15,6 +15,12 @@ vi.mock("@/mocks/services/documents", async (importOriginal) => ({
   ...service,
 }));
 
+// The commercial reads are stubbed at the module boundary (their own swaps own their HTTP tests).
+const commercial = vi.hoisted(() => ({ getClient: vi.fn(), getProject: vi.fn() }));
+vi.mock("@/features/clients/queries", () => ({ getClient: commercial.getClient }));
+vi.mock("@/features/projects/queries", () => ({ getProject: commercial.getProject }));
+
+import { ServiceError } from "@/server/errors";
 import { mockApi } from "@/lib/api/testing";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -164,36 +170,46 @@ describe("getDocument", () => {
 
 describe("documentLinkPrefill", () => {
   beforeEach(() => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    commercial.getClient.mockReset();
+    commercial.getProject.mockReset();
+    commercial.getClient.mockImplementation(async (id: string) => {
+      if (id === "cli_kairos") {
+        return { id, code: "CLI-0001", tradeName: "Kairos Studio", archivedAt: null };
+      }
+      if (id === "cli_archived") {
+        return { id, code: "CLI-0002", tradeName: "Archivada", archivedAt: "2026-10-01T00:00:00Z" };
+      }
+      throw new ServiceError("NOT_FOUND");
+    });
+    commercial.getProject.mockImplementation(async (id: string) => {
+      if (id === "prj_portal") {
+        return { id, code: "PRJ-0001", name: "Portal web", archivedAt: null };
+      }
+      throw new ServiceError("NOT_FOUND");
+    });
   });
 
   it("prefills the client a document is created from, labelled with its trade name", async () => {
-    const client = getMockStore().clients.find((row) => row.archivedAt === null)!;
-    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([
-      { type: "CLIENT", id: client.id, code: client.code, label: client.tradeName },
+    expect(await documentLinkPrefill("CLIENT", "cli_kairos")).toEqual([
+      { type: "CLIENT", id: "cli_kairos", code: "CLI-0001", label: "Kairos Studio" },
     ]);
   });
 
   it("prefills the project a document is created from, labelled with its name", async () => {
-    const project = getMockStore().projects.find((row) => row.archivedAt === null)!;
-    expect(await documentLinkPrefill("PROJECT", project.id)).toEqual([
-      { type: "PROJECT", id: project.id, code: project.code, label: project.name },
+    expect(await documentLinkPrefill("PROJECT", "prj_portal")).toEqual([
+      { type: "PROJECT", id: "prj_portal", code: "PRJ-0001", label: "Portal web" },
     ]);
   });
 
   it("prefills nothing for a missing, unknown or unsupported record", async () => {
-    const client = getMockStore().clients[0]!;
     expect(await documentLinkPrefill(undefined, undefined)).toEqual([]);
     expect(await documentLinkPrefill("CLIENT", "")).toEqual([]);
     expect(await documentLinkPrefill("CLIENT", "cli_missing")).toEqual([]);
-    expect(await documentLinkPrefill("PROJECT", client.id)).toEqual([]);
-    expect(await documentLinkPrefill("INVOICE", client.id)).toEqual([]);
+    expect(await documentLinkPrefill("PROJECT", "cli_kairos")).toEqual([]);
+    expect(await documentLinkPrefill("INVOICE", "cli_kairos")).toEqual([]);
   });
 
   it("prefills nothing for an archived client", async () => {
-    const store = getMockStore();
-    const client = store.clients.find((row) => row.archivedAt === null)!;
-    client.archivedAt = new Date().toISOString();
-    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([]);
+    expect(await documentLinkPrefill("CLIENT", "cli_archived")).toEqual([]);
   });
 });
