@@ -33,7 +33,8 @@ describe("enums (PRD §10.2 + data-rules §3a Δ2)", () => {
     ]);
     expect(ENUM_REGISTRY.ProjectStatus).toContain("EN_CURSO");
     expect(ENUM_REGISTRY.RateSource).toEqual(["MANUAL", "BCV", "OTRA"]);
-    expect(ENTITY_TYPE_VALUES).toHaveLength(20);
+    expect(ENTITY_TYPE_VALUES).toHaveLength(22);
+    expect(ENTITY_TYPE_VALUES).toEqual(expect.arrayContaining(["PAYMENT_LINK", "API_TOKEN"]));
     expect(ACTIVITY_ACTION_VALUES).toHaveLength(18);
   });
 
