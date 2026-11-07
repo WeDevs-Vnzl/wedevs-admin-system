@@ -261,6 +261,7 @@ export type ListOpenInvoicesInput = z.infer<typeof listOpenInvoicesInputSchema>;
  * invoice. `amount` bills part of an installment (partial billing); `ivaRate` defaults to the fiscal
  * default when omitted, and `null` means exempt.
  */
+// MOCK — until cleanup: "Invoice installments" wizard input: only the mock service reads it.
 export const invoiceInstallmentsWizardInputSchema = z
   .object({
     clientId: idSchema,
@@ -288,6 +289,7 @@ export const invoiceInstallmentsWizardInputSchema = z
   });
 export type InvoiceInstallmentsWizardInput = z.infer<typeof invoiceInstallmentsWizardInputSchema>;
 
+// MOCK — until cleanup: wizard draft: only the mock service reads it.
 export const invoiceInstallmentsDraftSchema = z.object({
   clientId: idSchema,
   /** Currency of the installments (an invoice has a single currency). */
@@ -312,6 +314,7 @@ export type BillableInstallmentRow = z.infer<typeof billableInstallmentRowSchema
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
+// MOCK — until cleanup: the invoice line DTO: the screens read the generated `InvoiceResponseDto` (`lib/api/types/invoices`).
 export const invoiceLineDtoSchema = z.object({
   id: idSchema,
   order: z.number().int(),
@@ -331,6 +334,7 @@ export const invoiceLineDtoSchema = z.object({
 export type InvoiceLineDTO = z.infer<typeof invoiceLineDtoSchema>;
 
 /** IVA of one rate: base, amount and the manual adjustment that produced it. */
+// MOCK — until cleanup: the tax line DTO: only mocks use it.
 export const invoiceTaxLineDtoSchema = z.object({
   ivaRate: percentSchema,
   taxBase: amountNonNegative,
@@ -342,6 +346,7 @@ export const invoiceTaxLineDtoSchema = z.object({
 export type InvoiceTaxLineDTO = z.infer<typeof invoiceTaxLineDtoSchema>;
 
 /** Header totals (all derived from the lines and tax lines, C17) plus USD snapshots (C16). */
+// MOCK — until cleanup: the totals DTO: only mocks use it.
 export const invoiceTotalsDtoSchema = z.object({
   subtotal: amountNonNegative,
   discount: amountNonNegative,
@@ -366,6 +371,7 @@ export const invoiceTotalsDtoSchema = z.object({
 export type InvoiceTotalsDTO = z.infer<typeof invoiceTotalsDtoSchema>;
 
 /** Allocation as seen from the invoice ("Pagos" tab). */
+// MOCK — until cleanup: the allocation row DTO: only mocks use it.
 export const invoiceAllocationRowSchema = z.object({
   id: idSchema,
   payment: entityRefSchema,
@@ -378,6 +384,7 @@ export const invoiceAllocationRowSchema = z.object({
 export type InvoiceAllocationRow = z.infer<typeof invoiceAllocationRowSchema>;
 
 /** Table row (PRD §8.5 columns). */
+// MOCK — until cleanup: the table row DTO: the screens read the generated `InvoiceListItemDto`.
 export const invoiceListRowSchema = z.object({
   id: idSchema,
   code: z.string(),
@@ -399,6 +406,7 @@ export const invoiceListRowSchema = z.object({
 });
 export type InvoiceListRow = z.infer<typeof invoiceListRowSchema>;
 
+// MOCK — until cleanup: the detail DTO: the screens read the generated `InvoiceResponseDto`.
 export const invoiceDetailDtoSchema = z.object({
   id: idSchema,
   code: z.string(),
@@ -431,6 +439,7 @@ export const invoiceDetailDtoSchema = z.object({
 export type InvoiceDetailDTO = z.infer<typeof invoiceDetailDtoSchema>;
 
 /** Open invoice of a client, as the payment form's "Apply to invoices" list needs it. */
+// MOCK — until cleanup: open invoices are the payments module's (W4); only mocks use this row.
 export const openInvoiceRowSchema = z.object({
   id: idSchema,
   code: z.string(),
@@ -475,6 +484,7 @@ export const invoiceFiltersSchema = withSortFields(
 );
 export type InvoiceFilters = z.infer<typeof invoiceFiltersSchema>;
 
+// MOCK — until cleanup: the overview DTO: the screen reads the generated `InvoicesOverviewDto`.
 export const invoicesOverviewDtoSchema = z.object({
   /** Last 6 months, series ids `billed` and `collected` (USD). */
   billedVsCollected: multiSeriesSchema,
