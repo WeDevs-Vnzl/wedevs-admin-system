@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/api/server", () => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
-vi.mock("@/mocks/session", () => ({ getMockSessionUser: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: vi.fn() }));
 
 import type { DocumentSharesTab } from "./components/document-shares-tab";
 import type { CreateShareDialog } from "./components/create-share-dialog";

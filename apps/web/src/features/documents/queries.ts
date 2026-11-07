@@ -16,7 +16,7 @@ import {
   type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
 import { can } from "@/lib/auth/permissions";
-import { getServiceContext } from "@/server/context";
+import { requireSessionUser } from "@/lib/auth/session";
 // MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
 import { ServiceError } from "@/lib/service-error";
 import { toDocumentListQuery } from "./api-query";
@@ -97,7 +97,7 @@ export async function listDocumentCategories() {
  * cosmetic; the BE checks the same grants again (C13).
  */
 export async function getDocumentPermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canCreate: can(user, "create", "document"),
     canUpdate: can(user, "update", "document"),
@@ -214,7 +214,7 @@ export async function readDocumentVersion(
  * Member) and read the *Actividad* tab (`activity` READ). Hiding a control is cosmetic; the BE checks again (C13).
  */
 export async function getDocumentDetailPermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canUpdate: can(user, "update", "document"),
     canReadActivity: can(user, "read", "activity"),

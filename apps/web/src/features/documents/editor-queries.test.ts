@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const server = vi.hoisted(() => ({ api: null as unknown }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
@@ -21,11 +21,11 @@ const markdown = (content = "# Texto") =>
   wireVersion({ format: "MARKDOWN", file: null, content, url: null });
 
 function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
+  session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
 }
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
+  session.requireSessionUser.mockReset();
   asRole("MEMBER");
 });
 

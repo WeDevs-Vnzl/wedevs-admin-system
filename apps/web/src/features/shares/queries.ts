@@ -10,9 +10,8 @@ import {
   type ShareAccessLogFilterInput,
   type ShareFilterInput,
 } from "@/lib/validators/shares";
-// MOCK — until cleanup: `getServiceContext` and `can` feed only the cosmetic permissions read below (C13).
 import { can } from "@/lib/auth/permissions";
-import { getServiceContext } from "@/server/context";
+import { requireSessionUser } from "@/lib/auth/session";
 // MOCK — until cleanup: the pages and the loader catch `ServiceError`; CLEAN replaces `@/lib/service-error` and them.
 import { ServiceError } from "@/lib/service-error";
 import { toAccessLogQuery, toShareListQuery } from "./api-query";
@@ -78,7 +77,7 @@ export async function listShareAccessLog(filter: ShareAccessLogFilterInput) {
  * `ENVIADO` needs `document` update. Hiding a control is cosmetic; the BE checks the same grants again (C13).
  */
 export async function getSharePermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canRead: can(user, "read", "share"),
     canCreate: can(user, "create", "share"),

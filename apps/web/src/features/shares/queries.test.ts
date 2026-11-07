@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 vi.mock("@/lib/api/server", () => server);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
@@ -35,7 +35,7 @@ function useApi(routes: RouteTable) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
+  session.requireSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
 });
 
 describe("getSharePermissions", () => {
@@ -46,7 +46,7 @@ describe("getSharePermissions", () => {
       canUpdate: true,
       canUpdateDocuments: true,
     });
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    session.requireSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
     expect(await getSharePermissions()).toEqual({
       canRead: false,
       canCreate: false,

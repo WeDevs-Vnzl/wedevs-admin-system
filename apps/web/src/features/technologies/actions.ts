@@ -7,7 +7,14 @@ import type {
   TechnologyListResponseDto,
   TechnologyViewDto,
 } from "@/lib/api/types/taxonomy";
-import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
+import { requireSessionUser, UnauthenticatedError } from "@/lib/auth/session";
+import {
+  actionError,
+  actionOk,
+  errorMessageKey,
+  zodFieldErrors,
+  type ActionResult,
+} from "@/lib/validators/common";
 import type { ExportSource } from "@/lib/validators/export";
 import {
   createTechnologyInputSchema,
@@ -21,10 +28,9 @@ import {
   type TechnologyListRowDTO,
 } from "@/lib/validators/technologies";
 import { z } from "@/lib/validators/zod";
-import { defineAction } from "@/server/actions/define-action";
 import { toTechnologyListQuery } from "./api-query";
 import { technologyExportColumns } from "./columns";
-import { resolveTechnologyIcon } from "./icons";
+import { resolveTechnologyIcon, type ResolvedIcon } from "./icons";
 
 const SETTINGS_PATH = "/settings/technologies";
 
@@ -88,15 +94,23 @@ export async function listTechnologiesAction(
 }
 
 /**
- * Preview behind the settings form's Simple Icons field: the brand glyph of a slug, or `null`. Only the
- * roles that open Settings → Tecnologías need it (`read` on `settings`). The resolver is server only, so
- * the dialog gets plain data and never imports `simple-icons`.
+ * Preview behind the settings form's Simple Icons field: the brand glyph of a slug, or `null`. A local lookup
+ * (the resolver is server only, so the dialog gets plain data and never imports `simple-icons`); it calls no BE
+ * endpoint and decides no permission (C10): it only requires a signed-in user.
  */
-export const resolveTechnologyIconAction = defineAction({
-  permission: { action: "read", resource: "settings" },
-  input: z.object({ slug: iconSlugSchema.nullable() }),
-  handler: async (_ctx, data) => resolveTechnologyIcon(data.slug),
-});
+export async function resolveTechnologyIconAction(input: {
+  slug: string | null;
+}): Promise<ActionResult<ResolvedIcon | null>> {
+  try {
+    await requireSessionUser();
+  } catch (error) {
+    if (error instanceof UnauthenticatedError) return actionError("UNAUTHENTICATED");
+    throw error;
+  }
+  const parsed = z.object({ slug: iconSlugSchema.nullable() }).safeParse(input);
+  if (!parsed.success) return actionError("VALIDATION", undefined, zodFieldErrors(parsed.error));
+  return actionOk(resolveTechnologyIcon(parsed.data.slug));
+}
 
 // Export source (PD-2): the same filter schema and columns the table uses, so the file matches the rows.
 const technologyExportSource = {

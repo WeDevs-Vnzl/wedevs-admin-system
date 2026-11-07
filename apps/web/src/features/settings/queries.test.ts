@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const context = vi.hoisted(() => ({ getServiceContext: vi.fn() }));
+const context = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const holder = vi.hoisted(() => ({ api: undefined as unknown }));
 const nav = vi.hoisted(() => ({
   notFound: vi.fn(() => {
@@ -11,7 +11,7 @@ const nav = vi.hoisted(() => ({
   }),
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/server/context", () => context);
+vi.mock("@/lib/auth/session", () => context);
 vi.mock("next/navigation", () => nav);
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => holder.api }));
 
@@ -25,11 +25,11 @@ import {
 } from "./queries";
 
 const signIn = (role: UserRole) =>
-  context.getServiceContext.mockResolvedValue({ user: makeSessionUser(role) });
+  context.requireSessionUser.mockResolvedValue(makeSessionUser(role));
 
 const slugs = async () => (await getVisibleSettingsSections()).map((section) => section.slug);
 
-beforeEach(() => context.getServiceContext.mockReset());
+beforeEach(() => context.requireSessionUser.mockReset());
 
 describe("HU-02 CA1: only the Owner sees /settings/users", () => {
   it("shows the users entry to the Owner and lets them open it", async () => {

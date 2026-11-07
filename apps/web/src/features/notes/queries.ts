@@ -6,7 +6,7 @@ import {
   type NoteFilterInput,
   type NoteIdInput,
 } from "@/lib/validators/notes";
-import { getServiceContext } from "@/server/context";
+import { requireSessionUser } from "@/lib/auth/session";
 // MOCK — until cleanup: `app/(app)/notes/[id]/page.tsx` catches `ServiceError` for the not-found page.
 import { ServiceError } from "@/lib/service-error";
 import { toNoteListQuery } from "./api-query";
@@ -35,6 +35,6 @@ export async function getNote(input: NoteIdInput) {
 
 /** The signed-in user's id and role, for the `can()` checks that decide which note actions are shown (cosmetic, C13). */
 export async function getNotesViewer() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return { id: user.id, role: user.role };
 }
