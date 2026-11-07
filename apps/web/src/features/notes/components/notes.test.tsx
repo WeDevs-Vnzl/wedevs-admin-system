@@ -198,11 +198,12 @@ describe("NoteCard", () => {
     const user = userEvent.setup();
     wrap(<NoteCard note={older} viewer={owner} />);
     await user.click(screen.getByRole("button", { name: "Ver más" }));
-    expect(await screen.findByText("Imagen adjunta: plano.png")).toBeInTheDocument();
+    // The rich-text kit renders image nodes as <img> from their fileId (FE-INT-R 2.7).
+    expect(await screen.findByAltText("plano.png")).toBeInTheDocument();
     expect(screen.getByText("plano.pdf")).toBeInTheDocument();
     expect(actions.getNoteAction).toHaveBeenCalledWith({ id: "n_old" });
     await user.click(screen.getByRole("button", { name: "Ver menos" }));
-    expect(screen.queryByText("Imagen adjunta: plano.png")).toBeNull();
+    expect(screen.queryByAltText("plano.png")).toBeNull();
   });
 
   it("filters the actions with can(): a Viewer has none, a Member archives only their own", async () => {
