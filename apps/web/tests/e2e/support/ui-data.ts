@@ -167,3 +167,34 @@ export async function createInvoiceViaUi(
   await expect(page).toHaveURL(recordUrl("invoices"), { timeout: 30_000 });
   return { id: idFromUrl(page, "/invoices/"), invoiceNumber: options.invoiceNumber };
 }
+
+/**
+ * Gives a project a fixed-price billing plan (when it has none) and adds one pending installment to it through
+ * `/projects/[id]/billing`. `dueDate` must be in the current month of the Caracas calendar (the calendar popover opens
+ * on it); the default is today, which also puts the installment inside the "Cuota por facturar" alert window.
+ */
+export async function addInstallmentViaUi(
+  page: Page,
+  projectId: string,
+  options: { label: string; amount: string; dueDate?: string },
+): Promise<void> {
+  await openPage(page, `/projects/${projectId}/billing`);
+  const createPlan = page.getByRole("button", { name: "Crear plan", exact: true });
+  if (await createPlan.isVisible()) {
+    await page.locator("#plan-contract").fill(options.amount);
+    await createPlan.click();
+    await expect(page.getByText("Plan de facturación guardado")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+  }
+  await page.getByRole("button", { name: "Nueva cuota", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nueva cuota", exact: true });
+  await dialog.getByLabel("Nombre", { exact: true }).fill(options.label);
+  await dialog.getByLabel("Monto", { exact: true }).fill(options.amount);
+  await pickDateViaUi(
+    page,
+    dialog.getByLabel("Fecha de facturación", { exact: true }),
+    options.dueDate ?? caracasToday(),
+  );
+  await dialog.getByRole("button", { name: "Crear cuota", exact: true }).click();
+  await expect(page.getByText("Cuota creada")).toBeVisible();
+}

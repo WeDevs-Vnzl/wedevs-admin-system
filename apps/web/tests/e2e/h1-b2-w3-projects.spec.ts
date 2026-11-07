@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import {
+  addInstallmentViaUi,
   caracasToday,
   createClientViaUi,
   createProjectViaUi,
@@ -340,7 +341,7 @@ test.describe("archive a project", () => {
 
   // DT-220: the project gets an open installment through the UI, so the first archive request answers
   // INTEGRITY_LOCK and the dialog asks again before archiving. The dialog's "Fecha de facturación" is a calendar
-  // popover (DateField), so the day is picked in it; the labels come from billing.json.
+  // popover (DateField), so `addInstallmentViaUi` picks the day in it; the labels come from billing.json.
   test("a project with an open installment asks for the INTEGRITY_LOCK confirmation first (HU-08 CA3, DT-220)", async ({
     page,
   }) => {
@@ -351,17 +352,7 @@ test.describe("archive a project", () => {
       name: `Proyecto E2E bloqueo ${run}`,
       clients: [{ clientName: client, role: "Contratante" }],
     });
-    await openPage(page, `/projects/${projectId}/billing`);
-    await page.getByRole("button", { name: "Nueva cuota", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Nueva cuota", exact: true });
-    await dialog.getByLabel("Nombre", { exact: true }).fill("Cuota E2E");
-    await dialog.getByLabel("Monto", { exact: true }).fill("100");
-    await pickDateViaUi(
-      page,
-      dialog.getByLabel("Fecha de facturación", { exact: true }),
-      caracasToday(),
-    );
-    await dialog.getByRole("button", { name: "Crear cuota", exact: true }).click();
+    await addInstallmentViaUi(page, projectId, { label: "Cuota E2E", amount: "100" });
 
     await openPage(page, `/projects/${projectId}`);
     await page.getByRole("button", { name: "Más acciones", exact: true }).click();
