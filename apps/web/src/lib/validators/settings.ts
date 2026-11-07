@@ -52,6 +52,7 @@ export type CompanySettings = z.infer<typeof companySettingsSchema>;
 export const updateCompanySettingsInputSchema = companySettingsSchema;
 export type UpdateCompanySettingsInput = CompanySettings;
 
+// MOCK — until cleanup: the service interface only `src/mocks/services/company-settings.ts` implements.
 /**
  * Company settings services (A1; PRD §8.15 "Empresa"). Every service is `fn(ctx, input) → Promise<DTO>`
  * (C9, C11); the read takes no input, like the fiscal one.

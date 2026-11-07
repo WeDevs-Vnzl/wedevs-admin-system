@@ -53,6 +53,7 @@ export type UserFilterInput = z.input<typeof userFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
+// MOCK — until cleanup: also imported by `src/mocks/services/{documents,trash}.ts`.
 /** Who did something (author, uploader, actor): enough for an avatar and a name. */
 export const userRefSchema = z.object({
   id: idSchema,
@@ -89,6 +90,7 @@ export type UserDetailDTO = z.infer<typeof userDetailSchema>;
 
 // ───────────────────────────── Services ─────────────────────────────
 
+// MOCK — until cleanup: the service interface only `src/mocks/services/users.ts` (and its tests) implement.
 /**
  * Users services (PRD §4.3 "Usuarios y roles", Owner only; PRD §12 does not list them). Every service is
  * `fn(ctx, input) → Promise<DTO>` (C9, C11).

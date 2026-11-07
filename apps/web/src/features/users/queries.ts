@@ -1,9 +1,15 @@
 import "server-only";
-import { userFilterSchema, type UserFilterInput } from "@/lib/validators/users";
-import * as users from "@/mocks/services/users";
-import { getServiceContext } from "@/server/context";
+import { unwrapOrBoundary } from "@/features/settings/query-boundary";
+import { toActionResult } from "@/lib/api/errors";
+import { getServerApi } from "@/lib/api/server";
+import type { UserFilterInput } from "@/lib/validators/users";
+import { listUsersWithInvitations } from "./list-users";
 
-/** First page of Settings → Usuarios (users and pending invitations) for the query in the URL. */
+/**
+ * First page of Settings → Usuarios (users with the pending invitations on top) for the query in the URL.
+ * `FORBIDDEN` (not an Owner) is the in-shell not-found page.
+ */
 export async function getUsers(filter: UserFilterInput = {}) {
-  return users.listUsers(await getServiceContext(), userFilterSchema.parse(filter));
+  const api = await getServerApi();
+  return unwrapOrBoundary(toActionResult(await listUsersWithInvitations(api, filter)));
 }
