@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
-import { createClientViaUi, createProjectViaUi, openPage } from "./support/ui-data";
+import {
+  caracasToday,
+  createClientViaUi,
+  createProjectViaUi,
+  openPage,
+  pickDateViaUi,
+} from "./support/ui-data";
 
 // Wave 3 E2E, projects (H1-B2, docs/TASK.md "Tester scope"), FE-INT-R E.3. Runs against PLAYWRIGHT_BASE_URL with the
 // local BE (safeguards.md rule 1); nothing here starts a server. Every test signs in as the Owner (DT-204) and creates
@@ -248,7 +254,7 @@ test.describe("HU-08 project status", () => {
     });
     await openPage(page, `/projects/${projectId}`);
     const dialog = await chooseTarget(page, "En curso");
-    await dialog.getByLabel("Fecha de inicio", { exact: true }).fill("2026-11-01");
+    await pickDateViaUi(page, dialog.getByLabel("Fecha de inicio", { exact: true }), caracasToday());
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
     await expect(dialog).toBeHidden();
     return projectId;
@@ -333,8 +339,8 @@ test.describe("archive a project", () => {
   });
 
   // DT-220: the project gets an open installment through the UI, so the first archive request answers
-  // INTEGRITY_LOCK and the dialog asks again before archiving. The billing selectors (Nueva cuota, Fecha de
-  // facturación, Crear cuota) come from billing.json and are unverified until the batch-close run against the stack.
+  // INTEGRITY_LOCK and the dialog asks again before archiving. The dialog's "Fecha de facturación" is a calendar
+  // popover (DateField), so the day is picked in it; the labels come from billing.json.
   test("a project with an open installment asks for the INTEGRITY_LOCK confirmation first (HU-08 CA3, DT-220)", async ({
     page,
   }) => {
@@ -350,7 +356,11 @@ test.describe("archive a project", () => {
     const dialog = page.getByRole("dialog", { name: "Nueva cuota", exact: true });
     await dialog.getByLabel("Nombre", { exact: true }).fill("Cuota E2E");
     await dialog.getByLabel("Monto", { exact: true }).fill("100");
-    await dialog.getByLabel("Fecha de facturación", { exact: true }).fill("2026-12-31");
+    await pickDateViaUi(
+      page,
+      dialog.getByLabel("Fecha de facturación", { exact: true }),
+      caracasToday(),
+    );
     await dialog.getByRole("button", { name: "Crear cuota", exact: true }).click();
 
     await openPage(page, `/projects/${projectId}`);

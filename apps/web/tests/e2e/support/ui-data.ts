@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 // FE-INT-R E.3. Data for the E2E specs is created through the UI with unique names (W5 rule 29): the BE seed holds
 // catalogs and settings only, so no spec relies on a client or project that another spec created. These helpers
@@ -90,6 +90,16 @@ export async function createProjectViaUi(
 /** The Caracas calendar day (YYYY-MM-DD), the day the BE and the forms treat as "today". */
 export function caracasToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Caracas" }).format(now);
+}
+
+/**
+ * Picks a day in a `DateField` (a button that opens a calendar popover, not a text input, so `fill` does not work).
+ * The calendar opens on the month of the selected day, or of today, so `isoDate` must be in that month. Every
+ * calendar cell carries its day as `data-day="YYYY-MM-DD"`.
+ */
+export async function pickDateViaUi(page: Page, trigger: Locator, isoDate: string): Promise<void> {
+  await trigger.click();
+  await page.locator(`[role="gridcell"][data-day="${isoDate}"] button`).click();
 }
 
 /**
