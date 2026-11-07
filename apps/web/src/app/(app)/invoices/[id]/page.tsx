@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { InvoiceDetail } from "@/features/invoices/components/invoice-detail";
+import { PaymentLinksPanel } from "@/features/invoices/components/payment-links-panel";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
 import { orNullWhenMissing } from "@/features/invoices/refusal";
+import { can } from "@/server/auth/permissions";
 import { requireSessionUser } from "@/server/auth/session";
 
 type InvoiceDetailPageProps = {
@@ -35,7 +38,22 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
   return (
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment={invoice.id} label={invoice.invoiceNumber} />
-      <InvoiceDetail invoice={invoice} canUpdate={permissions.canUpdate} />
+      <InvoiceDetail
+        invoice={invoice}
+        canUpdate={permissions.canUpdate}
+        paymentLinks={
+          // Cosmetic gate (DT-195): the BE decides. The panel hides itself when Stripe is off or its read fails.
+          can(user, "read", "payment") ? (
+            <Suspense fallback={null}>
+              <PaymentLinksPanel
+                invoiceId={invoice.id}
+                currency={invoice.currency}
+                canCreate={can(user, "create", "payment")}
+              />
+            </Suspense>
+          ) : undefined
+        }
+      />
     </div>
   );
 }
