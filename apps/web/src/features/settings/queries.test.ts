@@ -49,7 +49,9 @@ describe("HU-02 CA1: only the Owner sees /settings/users", () => {
 
   it("keeps the other sections as before: Admin sees company and trash, Members only preferences and API tokens", async () => {
     signIn("ADMIN");
-    expect(await slugs()).toEqual(expect.arrayContaining(["company", "preferences", "trash"]));
+    expect(await slugs()).toEqual(
+      expect.arrayContaining(["company", "preferences", "trash", "integrations"]),
+    );
     signIn("MEMBER");
     expect(await slugs()).toEqual(["preferences", "api-tokens"]);
     expect(await getOpenableSettingsSection("unknown")).toBeNull();

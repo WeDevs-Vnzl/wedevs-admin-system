@@ -8,6 +8,7 @@ import {
   FolderTree,
   KeyRound,
   Percent,
+  Plug,
   SlidersHorizontal,
   Tags,
   Trash2,
@@ -68,6 +69,12 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     slug: "payment-methods",
     labelKey: "paymentMethods",
     icon: CreditCard,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "integrations",
+    labelKey: "integrations",
+    icon: Plug,
     permission: { action: "read", resource: "settings" },
   },
   {
