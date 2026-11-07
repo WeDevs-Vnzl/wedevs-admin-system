@@ -22,10 +22,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { lookupRateAction } from "@/features/catalogs/actions";
-import { createExpenseAction } from "@/features/expenses/actions";
+import { createExpenseAction, updateExpenseAction } from "@/features/expenses/actions";
 import type { ExpenseAccountOption, ExpenseFormOptions } from "@/features/expenses/form-options";
 import { applyFieldErrors, asSchemaValue } from "@/features/expenses/components/form-utils";
-import { createExpenseInputSchema, EXPENSE_CREATE_STATUS_VALUES } from "@/lib/validators/expenses";
+import type { ExpenseResponseDto } from "@/lib/api/types/expenses";
+import {
+  createExpenseInputSchema,
+  EXPENSE_CREATE_STATUS_VALUES,
+  updateExpenseInputSchema,
+} from "@/lib/validators/expenses";
 
 const FORM_ID = "expense-form";
 const NONE = "__none__";
@@ -62,6 +67,7 @@ type FormValues = {
 };
 
 type ExpenseInput = Parameters<typeof createExpenseAction>[0];
+type ExpenseUpdate = Parameters<typeof updateExpenseAction>[0];
 
 /**
  * The payload the action takes from the form values. The USD rate of a USD expense is `1`, and the debit in the
@@ -89,25 +95,57 @@ function toExpenseInput(values: FormValues, accounts: ExpenseAccountOption[]): E
   };
 }
 
+/**
+ * The payload of an edit (Q-FEINT-11 (A)): only a pending expense is edited, so the status, the payment date and
+ * the debit amount never travel (`UpdateExpenseDto` does not carry them); the BE refuses a paid one.
+ */
+function toUpdateInput(
+  values: FormValues,
+  accounts: ExpenseAccountOption[],
+  id: string,
+): ExpenseUpdate {
+  const input = toExpenseInput({ ...values, status: "PENDIENTE" }, accounts);
+  return {
+    id,
+    date: input.date,
+    dueDate: input.dueDate,
+    description: input.description,
+    vendor: input.vendor,
+    categoryId: input.categoryId,
+    accountId: input.accountId,
+    projectId: input.projectId,
+    currency: input.currency,
+    amount: input.amount,
+    usdRate: input.usdRate,
+  };
+}
+
 /** Validates what the form would send, with blank optional fields absent (see `asSchemaValue`). */
-function expenseResolver(accounts: ExpenseAccountOption[]): Resolver<FormValues> {
-  const resolve = zodResolver(createExpenseInputSchema) as unknown as Resolver<FormValues>;
-  return (values, context, options) =>
-    resolve(toExpenseInput(values, accounts) as unknown as FormValues, context, options);
+function expenseResolver(accounts: ExpenseAccountOption[], id?: string): Resolver<FormValues> {
+  const resolve = zodResolver(
+    id ? updateExpenseInputSchema : createExpenseInputSchema,
+  ) as unknown as Resolver<FormValues>;
+  return (values, context, options) => {
+    const input = toExpenseInput(id ? { ...values, status: "PENDIENTE" } : values, accounts);
+    return resolve((id ? { id, ...input } : input) as unknown as FormValues, context, options);
+  };
 }
 
 type ExpenseFormProps = {
   options: ExpenseFormOptions;
   /** Business "today" (America/Caracas), computed on the server. */
   today: string;
+  /** Present on `/expenses/[id]/edit`; absent on `/expenses/new`. */
+  expense?: ExpenseResponseDto;
 };
 
 /**
  * `/expenses/new` (PRD §8.8): a pending expense, or one already paid from an account. A paid expense in another
  * currency than its account asks for the amount debited in the account currency (§9.7). The schema of the action
- * resolves the form, so a field error shows before the call.
+ * resolves the form, so a field error shows before the call. On `/expenses/[id]/edit` the same form changes a
+ * pending expense; the status and the payment fields are not edited there (paying is "Marcar como pagado").
  */
-export function ExpenseForm({ options, today }: ExpenseFormProps) {
+export function ExpenseForm({ options, today, expense }: ExpenseFormProps) {
   const t = useTranslations("expenses");
   const tRoot = useTranslations();
   const tEnums = useTranslations("enums");
@@ -117,22 +155,38 @@ export function ExpenseForm({ options, today }: ExpenseFormProps) {
   const [saving, setSaving] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: expenseResolver(options.accounts),
-    defaultValues: {
-      date: today,
-      dueDate: "",
-      description: "",
-      vendor: "",
-      categoryId: "",
-      status: "PENDIENTE",
-      accountId: NONE,
-      projectId: NONE,
-      currency: "USD",
-      amount: "",
-      usdRate: "1",
-      paidAt: today,
-      accountAmount: "",
-    },
+    resolver: expenseResolver(options.accounts, expense?.id),
+    defaultValues: expense
+      ? {
+          date: expense.date,
+          dueDate: expense.dueDate ?? "",
+          description: expense.description,
+          vendor: expense.vendor ?? "",
+          categoryId: expense.category.id,
+          status: "PENDIENTE",
+          accountId: expense.account?.id ?? NONE,
+          projectId: expense.project?.id ?? NONE,
+          currency: expense.currency,
+          amount: expense.amount,
+          usdRate: expense.usdRate,
+          paidAt: today,
+          accountAmount: "",
+        }
+      : {
+          date: today,
+          dueDate: "",
+          description: "",
+          vendor: "",
+          categoryId: "",
+          status: "PENDIENTE",
+          accountId: NONE,
+          projectId: NONE,
+          currency: "USD",
+          amount: "",
+          usdRate: "1",
+          paidAt: today,
+          accountAmount: "",
+        },
   });
 
   const errors = form.formState.errors;
@@ -143,9 +197,11 @@ export function ExpenseForm({ options, today }: ExpenseFormProps) {
   const accountId = useWatch({ control: form.control, name: "accountId" });
   const date = useWatch({ control: form.control, name: "date" });
   const account = options.accounts.find((item) => item.id === accountId);
-  const isPaid = status === "PAGADO";
+  const editing = expense !== undefined;
+  const isPaid = !editing && status === "PAGADO";
   const needsDebit = isPaid && account !== undefined && account.currency !== currency;
   const needsRate = currency !== "USD";
+  const backHref = expense ? `/expenses/${expense.id}` : "/expenses/list";
 
   async function lookupRate(
     lookupDate: string,
@@ -157,7 +213,10 @@ export function ExpenseForm({ options, today }: ExpenseFormProps) {
 
   async function onSubmit() {
     setSaving(true);
-    const result = await createExpenseAction(toExpenseInput(form.getValues(), options.accounts));
+    const values = form.getValues();
+    const result = expense
+      ? await updateExpenseAction(toUpdateInput(values, options.accounts, expense.id))
+      : await createExpenseAction(toExpenseInput(values, options.accounts));
     setSaving(false);
 
     if (!result.ok) {
@@ -168,21 +227,21 @@ export function ExpenseForm({ options, today }: ExpenseFormProps) {
       return;
     }
 
-    toast.success(t("toast.created"));
+    toast.success(t(editing ? "toast.updated" : "toast.created"));
     router.push(`/expenses/${result.data.id}`);
   }
 
   return (
     <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)}>
       <FormPage
-        title={t("form.createTitle")}
-        description={t("form.description")}
-        backHref="/expenses/list"
+        title={t(editing ? "form.editTitle" : "form.createTitle")}
+        description={t(editing ? "form.editDescription" : "form.description")}
+        backHref={backHref}
         dirty={form.formState.isDirty}
         footer={
           <>
             <Button variant="outline" asChild>
-              <Link href="/expenses/list">{tActions("cancel")}</Link>
+              <Link href={backHref}>{tActions("cancel")}</Link>
             </Button>
             <Button type="submit" form={FORM_ID} disabled={saving}>
               {tActions("save")}
@@ -300,28 +359,30 @@ export function ExpenseForm({ options, today }: ExpenseFormProps) {
           description={t("form.sections.payment.description")}
         >
           <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
-            <Field data-invalid={errors.status ? true : undefined}>
-              <FieldLabel htmlFor="expense-status">{t("form.fields.status")}</FieldLabel>
-              <Controller
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="expense-status" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXPENSE_CREATE_STATUS_VALUES.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {tEnums(`ExpenseStatus.${value}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError>{fieldMessage(errors.status?.message)}</FieldError>
-            </Field>
+            {editing ? null : (
+              <Field data-invalid={errors.status ? true : undefined}>
+                <FieldLabel htmlFor="expense-status">{t("form.fields.status")}</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="expense-status" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EXPENSE_CREATE_STATUS_VALUES.map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {tEnums(`ExpenseStatus.${value}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldError>{fieldMessage(errors.status?.message)}</FieldError>
+              </Field>
+            )}
             <Field data-invalid={errors.accountId ? true : undefined}>
               <FieldLabel htmlFor="expense-account">{t("form.fields.account")}</FieldLabel>
               <Controller

@@ -156,6 +156,7 @@ export function markExpensePaidInputSchemaFor(options: ExpenseSchemaOptions = {}
 export const markExpensePaidInputSchema = markExpensePaidInputSchemaFor();
 export type MarkExpensePaidInput = z.infer<typeof markExpensePaidInputSchema>;
 
+// MOCK — until cleanup: only the mock service parses `voidExpenseInputSchema` now; the void dialog sends `reason`.
 export const voidExpenseInputSchema = z.object({ id: idSchema, reason: optionalText(500) });
 export type VoidExpenseInput = z.infer<typeof voidExpenseInputSchema>;
 
@@ -198,6 +199,7 @@ export const updateRecurringExpenseInputSchema = z
   .superRefine(checkRecurringDates);
 export type UpdateRecurringExpenseInput = z.infer<typeof updateRecurringExpenseInputSchema>;
 
+// MOCK — until cleanup: only the mock service parses `setRecurringExpenseStatusInputSchema` now.
 export const setRecurringExpenseStatusInputSchema = z.object({
   id: idSchema,
   status: recurringStatusSchema,
@@ -205,6 +207,10 @@ export const setRecurringExpenseStatusInputSchema = z.object({
 export type SetRecurringExpenseStatusInput = z.infer<typeof setRecurringExpenseStatusInputSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
+
+// MOCK — until cleanup: the DTO schemas and types below stay only because `src/mocks/**` imports them
+// (`mocks/store.ts`, `mocks/services/{expenses,reports,alerts}`, `mocks/fixtures/expenses.ts`). The screens read the
+// generated DTOs (`@/lib/api/types/expenses`). CLEAN deletes them.
 
 /** Category with its parent, so a row can show "Infraestructura → Hosting". */
 export const expenseCategoryRefSchema = z.object({
@@ -323,6 +329,11 @@ export const recurringExpenseFiltersSchema = withSortFields(
   RECURRING_EXPENSE_SORT_FIELDS,
 );
 export type RecurringExpenseFilters = z.infer<typeof recurringExpenseFiltersSchema>;
+export type RecurringExpenseFiltersInput = z.input<typeof recurringExpenseFiltersSchema>;
+
+/** Input of the expense typeahead (`searchExpensesAction`): the free text the user typed. */
+export const searchExpensesInputSchema = z.object({ q: z.string().trim().max(200).default("") });
+export type SearchExpensesInput = z.input<typeof searchExpensesInputSchema>;
 
 export const expensesOverviewDtoSchema = z.object({
   /** Paid spend per month (USD), stacked by root category (series id = category id). */

@@ -12,30 +12,27 @@ import { RecurringStatusActions } from "@/features/expenses/components/recurring
 import { getExpenseFormOptions } from "@/features/expenses/form-options";
 import { getRecurringExpense } from "@/features/expenses/queries";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
+import {
+  notFoundWhenRefused,
+  orNullWhenMissing,
+  orNullWhenUnavailable,
+} from "@/features/expenses/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import type { RecurringExpenseDTO } from "@/lib/validators/expenses";
 import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
 
 type RecurringExpenseDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readRecurring(id: string): Promise<RecurringExpenseDTO | null> {
-  try {
-    return await getRecurringExpense(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// An unknown id is `null`; a `FORBIDDEN` from the BE is the same not-found page (C13).
+const readRecurring = (id: string) => orNullWhenMissing(() => getRecurringExpense(id));
 
 export async function generateMetadata({
   params,
 }: RecurringExpenseDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const t = await getTranslations("expenses.page");
-  const recurring = await readRecurring(id);
+  const recurring = await orNullWhenUnavailable(() => getRecurringExpense(id));
   return { title: recurring ? recurring.name : t("recurringTitle") };
 }
 
@@ -48,8 +45,7 @@ export default async function RecurringExpenseDetailPage({
   const user = await requireSessionUser();
   const permissions = expenseScreenPermissions(user);
   if (!permissions.canRead) notFound();
-  const recurring = await readRecurring(id);
-  if (!recurring) notFound();
+  const recurring = await notFoundWhenRefused(async () => (await readRecurring(id)) ?? notFound());
   const [options, t, tEnums] = await Promise.all([
     getExpenseFormOptions(),
     getTranslations("expenses"),

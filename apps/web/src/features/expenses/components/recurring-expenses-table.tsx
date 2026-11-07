@@ -10,20 +10,20 @@ import {
   createDataTableColumnHelper,
   type DataTableColumnDef,
 } from "@/components/ui/data-table";
-import type { RecurringExpenseDTO } from "@/lib/validators/expenses";
+import type { RecurringExpenseResponseDto } from "@/lib/api/types/expenses";
 
 type RecurringExpensesTableProps = {
-  rows: RecurringExpenseDTO[];
+  rows: RecurringExpenseResponseDto[];
 };
 
-const helper = createDataTableColumnHelper<RecurringExpenseDTO>();
+const helper = createDataTableColumnHelper<RecurringExpenseResponseDto>();
 
 /** Recurring expenses (PRD §8.8): the schedule of each one, with the next period still to generate. */
 export function RecurringExpensesTable({ rows }: RecurringExpensesTableProps) {
   const t = useTranslations("expenses");
   const locale = useLocale();
 
-  const columns: DataTableColumnDef<RecurringExpenseDTO>[] = [
+  const columns: DataTableColumnDef<RecurringExpenseResponseDto>[] = [
     helper.accessor("name", {
       header: t("recurring.table.columns.name"),
       cell: ({ row }) => (
