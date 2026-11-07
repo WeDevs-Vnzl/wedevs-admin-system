@@ -46,7 +46,7 @@ export async function getPaymentFormOptions(
         suggestsIgtf,
         active,
       })),
-    // IGTF is proposed from the method flag or `igtfCurrencies`; the BE has no `igtfMethodCodes` (DT-70).
+    // IGTF is proposed from the method flag or the fiscal currency list, never from a per-method code list (DT-70).
     fiscal: { igtfRate: fiscal.igtfRate, igtfCurrencies: fiscal.igtfCurrencies },
   };
 }

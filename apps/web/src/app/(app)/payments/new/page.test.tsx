@@ -58,12 +58,12 @@ beforeEach(() => {
   mocks.getFiscalSettings.mockResolvedValue({
     igtfRate: "3",
     igtfCurrencies: ["USD"],
-    igtfMethodCodes: [],
+    ivaRates: ["16"],
   });
 });
 
 describe("/payments/new (HU-13)", () => {
-  it("offers the active accounts and the fiscal IGTF sources, without igtfMethodCodes", async () => {
+  it("offers the active accounts and only the fiscal IGTF sources the BE has (rate and currencies)", async () => {
     mocks.getServerApi.mockResolvedValue(mockApi({}).api);
     const element = await render();
     expect(element.props).toMatchObject({
@@ -71,7 +71,7 @@ describe("/payments/new (HU-13)", () => {
       fiscal: { igtfRate: "3", igtfCurrencies: ["USD"] },
       initialOpenInvoices: [],
     });
-    expect(element.props.fiscal).not.toHaveProperty("igtfMethodCodes");
+    expect(Object.keys(element.props.fiscal).sort()).toEqual(["igtfCurrencies", "igtfRate"]);
     expect(element.props.initialClientId).toBeUndefined();
   });
 
