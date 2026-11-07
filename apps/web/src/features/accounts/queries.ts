@@ -65,3 +65,16 @@ export async function listAccountPartners() {
   const api = await getServerApi();
   return unwrap(await api.GET("/api/v1/accounts/partners"));
 }
+
+/**
+ * The Binance snapshot of a wallet account (`GET /api/v1/accounts/{id}/exchange-snapshot`, 6.4). `snapshot` is
+ * `null` while the integration is off (DT-193); amounts are returned as strings and never computed here.
+ */
+export async function getAccountExchangeSnapshot(id: string) {
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/accounts/{id}/exchange-snapshot", {
+      params: { path: { id: idSchema.parse(id) } },
+    }),
+  );
+}
