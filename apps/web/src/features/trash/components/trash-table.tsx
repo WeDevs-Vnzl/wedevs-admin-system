@@ -44,8 +44,8 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState<string | null>(null);
-  // A CONFLICT names the record that blocks the restore; it stays on screen with a link to that record.
-  const [conflict, setConflict] = useState<{ message: string; entity: EntityRef } | null>(null);
+  // A CONFLICT explains why the restore was refused; it stays on screen, with a link when the blocking record has a route.
+  const [conflict, setConflict] = useState<{ message: string; entity: EntityRef | null } | null>(null);
 
   // The first render already shows the server page for this URL; later query changes read through the action.
   const queryKey = JSON.stringify(query);
@@ -80,8 +80,8 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
       });
       setRestoring(null);
       if (!result.ok) {
-        if (result.error.code === "CONFLICT" && result.error.entity) {
-          setConflict({ message: result.error.message, entity: result.error.entity });
+        if (result.error.code === "CONFLICT") {
+          setConflict({ message: result.error.message, entity: result.error.entity ?? null });
           return;
         }
         // `message` is an i18n key: `trash.errors.*` for a collision, `common.errors.<CODE>` otherwise.
@@ -183,17 +183,23 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
     [t, tTypes],
   );
 
-  const conflictHref = conflict ? entityHref(conflict.entity) : null;
+  const conflictEntity = conflict?.entity ?? null;
+  const conflictHref = conflictEntity ? entityHref(conflictEntity) : null;
 
   return (
     <>
-      {conflict && conflictHref ? (
+      {conflict ? (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>
-            {tRoot(conflict.message as never)}{" "}
-            <Link href={conflictHref} className="font-medium underline underline-offset-4">
-              {t("conflict.open", { label: conflict.entity.label })}
-            </Link>
+            {tRoot(conflict.message as never)}
+            {conflictEntity && conflictHref ? (
+              <>
+                {" "}
+                <Link href={conflictHref} className="font-medium underline underline-offset-4">
+                  {t("conflict.open", { label: conflictEntity.label })}
+                </Link>
+              </>
+            ) : null}
           </AlertDescription>
         </Alert>
       ) : null}

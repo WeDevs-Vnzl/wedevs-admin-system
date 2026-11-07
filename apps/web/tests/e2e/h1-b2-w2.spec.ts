@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import { addInstallmentViaUi, createClientViaUi, createProjectViaUi } from "./support/ui-data";
 
 // Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"), kept by FE-INT-R E.1. This file starts nothing: it runs against
 // the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). Every case creates its own data through the UI
@@ -94,7 +95,8 @@ test.describe("tags (mutates tags)", () => {
     await expect(page.getByRole("heading", { name: "Etiquetas", exact: true })).toBeVisible();
 
     // Create: the dialog is labelled by its title and the swatch is a radio of the preset group.
-    await page.getByRole("button", { name: "Nueva etiqueta", exact: true }).click();
+    // With no tags the empty state shows a second "Nueva etiqueta"; the toolbar button above the table comes first.
+    await page.getByRole("button", { name: "Nueva etiqueta", exact: true }).first().click();
     let dialog = page.getByRole("dialog", { name: "Nueva etiqueta", exact: true });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel("Nombre", { exact: true }).fill(name);
@@ -206,7 +208,7 @@ test.describe("technologies (mutates the catalogue)", () => {
   });
 
   test.fixme(
-    "FE-INT-R E.1: delete of an in-use technology is refused and deactivation is offered; needs a project that uses the technology, and the BE seed holds no projects (rule 29)",
+    "FE-INT-R E.1: delete of an in-use technology is refused and deactivation is offered; covered by fe-int-2-commercial:317 (HU-06 CA3)",
     async ({ page }) => {
       await page.goto("/settings/technologies?q=next-js");
       await page.waitForLoadState("networkidle");
@@ -311,7 +313,7 @@ test.describe("activity", () => {
   });
 
   test.fixme(
-    "FE-INT-R E.1: load more appends the next page of entries; needs more than one page of activity, and the BE seed holds no activity (rule 29)",
+    "FE-INT-R E.1: load more appends the next page of entries; needs more than one page of activity (batch-close manual check)",
     async ({ page }) => {
       await page.goto("/activity");
       await page.waitForLoadState("networkidle");
@@ -357,16 +359,29 @@ test.describe("activity access (view as role)", () => {
 });
 
 // ───────────────────────────── Alerts bell ─────────────────────────────
-// Every alert case needs active alerts. The BE raises alerts from finance and document data, and the BE seed holds
-// none, so each case is `test.fixme` until a case creates the data it needs (rule 29). The bodies stay as the spec.
+// Every alert case creates its own installment due today through the UI (rule 29): the "Cuota por facturar" alert then
+// shows in the bell of the Owner.
+
+/** Creates a client, a project and one installment due today, which raises the alert the bell counts. */
+async function createAlertData(page: Page) {
+  const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+  const client = `E2E Alerta ${run}`;
+  await createClientViaUi(page, client, `E2E-${run}-A`);
+  const projectId = await createProjectViaUi(page, {
+    name: `Proyecto E2E alerta ${run}`,
+    clients: [{ clientName: client, role: "Contratante" }],
+  });
+  await addInstallmentViaUi(page, projectId, { label: `Cuota E2E ${run}`, amount: "100" });
+}
 
 test.describe("alerts bell (read only)", () => {
   test.beforeEach(async ({ page }) => {
     await signInAs(page, "OWNER");
   });
-  test.fixme(
-    "FE-INT-R E.1: the counter equals the panel items, and the panel is labelled; needs active alerts, which the BE seed does not hold (rule 29)",
+  test(
+    "the counter equals the panel items, and the panel is labelled",
     async ({ page }) => {
+      await createAlertData(page);
       await page.goto("/dashboard");
       await page.waitForLoadState("networkidle");
       const counter = await badgeValue(page);
@@ -380,9 +395,10 @@ test.describe("alerts bell (read only)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: dismiss and snooze buttons carry the alert subject in their accessible name; needs active alerts, which the BE seed does not hold (rule 29)",
+  test(
+    "dismiss and snooze buttons carry the alert subject in their accessible name",
     async ({ page }) => {
+      await createAlertData(page);
       await openAlerts(page);
       const list = alertsList(page);
       const dismissNames = await list
@@ -403,9 +419,10 @@ test.describe("alerts bell (read only)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: Escape closes the panel and returns focus to the bell; needs active alerts, which the BE seed does not hold (rule 29)",
+  test(
+    "Escape closes the panel and returns focus to the bell",
     async ({ page }) => {
+      await createAlertData(page);
       await openAlerts(page);
       // The panel takes focus on its own container when it opens (no inner control is focused).
       await expect(alertsPanel(page)).toBeFocused();
@@ -416,9 +433,10 @@ test.describe("alerts bell (read only)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: the counter badge meets WCAG AA in light and dark mode; needs a visible counter, which needs active alerts the BE seed does not hold (rule 29)",
+  test(
+    "the counter badge meets WCAG AA in light and dark mode",
     async ({ page }) => {
+      await createAlertData(page);
       // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
       await page.goto("/dashboard");
       await page.evaluate(() => localStorage.setItem("theme", "light"));
@@ -444,9 +462,10 @@ test.describe("alerts bell (mutates alert state)", () => {
   });
   test.describe.configure({ mode: "serial" });
 
-  test.fixme(
-    "FE-INT-R E.1: dismiss lowers the counter and the panel; needs active alerts, which the BE seed does not hold (rule 29)",
+  test(
+    "dismiss lowers the counter and the panel",
     async ({ page }) => {
+      await createAlertData(page);
       await openAlerts(page);
       const before = await badgeValue(page);
       expect(before).toBeGreaterThan(0);
@@ -461,9 +480,10 @@ test.describe("alerts bell (mutates alert state)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: snooze for one day lowers the counter and the panel; needs active alerts, which the BE seed does not hold (rule 29)",
+  test(
+    "snooze for one day lowers the counter and the panel",
     async ({ page }) => {
+      await createAlertData(page);
       await openAlerts(page);
       const before = await badgeValue(page);
       expect(before).toBeGreaterThan(0);

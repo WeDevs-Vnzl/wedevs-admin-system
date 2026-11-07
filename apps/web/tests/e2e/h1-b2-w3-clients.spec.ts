@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { appBaseUrl } from "./support/app";
 import { signInAs } from "./support/auth";
+import { createDocumentViaUi } from "./support/ui-data";
 
 // Wave 3 E2E, clients (H1-B2, docs/TASK.md "Tester scope"), kept by FE-INT-R E.1. This file starts nothing: it runs
 // against the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). Every case creates the clients, contacts
@@ -16,11 +17,6 @@ const notFoundText = (page: Page) => page.getByText("Página no encontrada", { e
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/**
- * The search term of the document a `fixme` case below would attach. This file does not create that document (its
- * form needs an intercepted upload, rule 30), so the case stays `fixme` until a document with this title exists.
- */
-const ATTACHABLE_DOCUMENT_SEARCH = "E2E documento";
 
 /** A name no other case uses (rule 29). */
 const uniqueName = (label: string) => `${label} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -411,51 +407,48 @@ test.describe("client Documentos tab (mutates document links)", () => {
   test.beforeEach(async ({ page }) => {
     await signInAs(page, "OWNER");
   });
-  test.fixme(
-    "FE-INT-R E.1: attach an existing document, then unlink it; needs a document of this case's own, created through the document form with an intercepted upload (rule 30), not in this file",
-    async ({ page }) => {
-      const path = await createClient(page, uniqueName("E2E Documentos"));
-      await open(page, `${path}?tab=documents`);
-      await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
-      const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
-      await expect(sheet).toBeVisible();
-      await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
+  test("attaches an existing document to a client, then unlinks it", async ({ page }) => {
+    // The document is created unlinked, so the "Vincular existente" tab offers it.
+    const documentTitle = uniqueName("E2E documento vinculable");
+    await createDocumentViaUi(page, { title: documentTitle, type: "PRD" });
+    const path = await createClient(page, uniqueName("E2E Documentos"));
+    await open(page, `${path}?tab=documents`);
+    await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
 
-      await sheet.getByPlaceholder("Busca por código o título").fill(ATTACHABLE_DOCUMENT_SEARCH);
-      await expect(page.getByRole("option").first()).toBeVisible();
-      await page.keyboard.press("ArrowDown");
-      await page.keyboard.press("Enter");
-      await sheet.getByRole("button", { name: "Vincular documento", exact: true }).click();
-      await expect(page.getByText("Documento vinculado", { exact: true })).toBeVisible();
+    await sheet.getByPlaceholder("Busca por código o título").fill(documentTitle);
+    await expect(page.getByRole("option").first()).toBeVisible();
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await sheet.getByRole("button", { name: "Vincular documento", exact: true }).click();
+    await expect(page.getByText("Documento vinculado", { exact: true })).toBeVisible();
 
-      // The row control is named "Desvincular: <document title>", so only the prefix is matched.
-      const linkedRows = page.getByRole("button", { name: /^Desvincular:/ });
-      await expect(linkedRows.first()).toBeVisible();
-      const before = await linkedRows.count();
+    // The row control is named "Desvincular: <document title>", so only the prefix is matched.
+    const linkedRows = page.getByRole("button", { name: /^Desvincular:/ });
+    await expect(linkedRows.first()).toBeVisible();
+    const before = await linkedRows.count();
 
-      await linkedRows.first().click();
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: "Desvincular", exact: true })
-        .click();
-      await expect(page.getByText("Documento desvinculado", { exact: true })).toBeVisible();
-      await expect(linkedRows).toHaveCount(before - 1);
-    },
-  );
+    await linkedRows.first().click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Desvincular", exact: true }).click();
+    await expect(page.getByText("Documento desvinculado", { exact: true })).toBeVisible();
+    await expect(linkedRows).toHaveCount(before - 1);
+  });
 
-  test.fixme(
-    "FE-INT-R E.1: a search result of the Vincular existente tab takes a pointer click; needs a document of this case's own, not in this file",
-    async ({ page }) => {
-      const path = await createClient(page, uniqueName("E2E Documentos clic"));
-      await open(page, `${path}?tab=documents`);
-      await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
-      const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
-      await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
-      await sheet.getByPlaceholder("Busca por código o título").fill(ATTACHABLE_DOCUMENT_SEARCH);
-      // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
-      await page.getByRole("option").first().click({ timeout: 5000 });
-    },
-  );
+  test("a search result of the Vincular existente tab takes a pointer click", async ({ page }) => {
+    const documentTitle = uniqueName("E2E documento clic");
+    await createDocumentViaUi(page, { title: documentTitle, type: "PRD" });
+    const path = await createClient(page, uniqueName("E2E Documentos clic"));
+    await open(page, `${path}?tab=documents`);
+    await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
+    await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
+    await sheet.getByPlaceholder("Busca por código o título").fill(documentTitle);
+    // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
+    await page.getByRole("option").first().click({ timeout: 5000 });
+    await expect(sheet.getByRole("button", { name: "Vincular documento", exact: true })).toBeEnabled();
+  });
 });
 
 // ───────────────────────────── Shape checks that need no mutation ─────────────────────────────
