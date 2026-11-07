@@ -165,13 +165,14 @@
     "receiptTitle": "Receipt",
     "receiptDescription": "Viewable here without downloading.",
     "receiptEmpty": "This payment has no receipt.",
-    "receiptPreviewUnavailable": "The receipt preview is available once the file is stored (Hito 2). The mock only shows its details.",
     "receiptFile": "File",
     "receiptMime": "Type",
     "receiptSize": "Size",
     "receiptSizeValue": "{kb} KB",
     "amountUsd": "Applied (USD)",
-    "dataTitle": "Payment details"
+    "dataTitle": "Payment details",
+    "receiptImageAlt": "Receipt {name}",
+    "receiptDownload": "Download"
   },
   "credit": {
     "title": "Credit",

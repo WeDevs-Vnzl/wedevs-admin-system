@@ -165,13 +165,14 @@
     "receiptTitle": "Comprobante",
     "receiptDescription": "Se ve aquí sin descargarlo.",
     "receiptEmpty": "Este pago no tiene comprobante.",
-    "receiptPreviewUnavailable": "La vista previa del comprobante estará disponible cuando el archivo esté almacenado (Hito 2). En la maqueta solo se muestran sus datos.",
     "receiptFile": "Archivo",
     "receiptMime": "Tipo",
     "receiptSize": "Tamaño",
     "receiptSizeValue": "{kb} KB",
     "amountUsd": "Aplicado (USD)",
-    "dataTitle": "Datos del pago"
+    "dataTitle": "Datos del pago",
+    "receiptImageAlt": "Comprobante {name}",
+    "receiptDownload": "Descargar"
   },
   "credit": {
     "title": "Saldo a favor",
