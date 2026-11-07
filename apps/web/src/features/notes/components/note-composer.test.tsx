@@ -67,6 +67,17 @@ vi.mock("@/components/ui/rich-text", () => ({
       <button type="button" onClick={() => onInvalid?.()}>
         refuse content
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          onChange?.({
+            type: "doc",
+            content: [{ type: "image", attrs: { fileId: "fil_pasted", alt: "captura.png" } }],
+          })
+        }
+      >
+        paste image
+      </button>
     </div>
   ),
 }));
@@ -164,6 +175,24 @@ describe("NoteComposerPage", () => {
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/notes/not_new"));
   });
 
+  it("attaches the pasted image to the new note: fileId node plus attachmentFileIds", async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "paste image" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save note" }));
+
+    await waitFor(() =>
+      expect(actions.createNoteAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: {
+            type: "doc",
+            content: [{ type: "image", attrs: { fileId: "fil_pasted", alt: "captura.png" } }],
+          },
+          attachmentFileIds: ["fil_pasted"],
+        }),
+      ),
+    );
+  });
+
   it("blocks the save while the editor refuses its content, with an error the field points to", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "write valid" }));
@@ -230,6 +259,33 @@ describe("NoteComposerPage edit", () => {
       }),
     );
     expect(toast.success).toHaveBeenCalledTimes(1);
+  });
+
+  it("attaches a pasted image to the existing note before saving its content", async () => {
+    const order: string[] = [];
+    actions.attachFileAction.mockImplementation(async () => {
+      order.push("attach");
+      return { ok: true, data: kickoff };
+    });
+    actions.updateNoteAction.mockImplementation(async () => {
+      order.push("update");
+      return { ok: true, data: kickoff };
+    });
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <NoteComposerPage note={kickoff} canCreateTags />
+      </NextIntlClientProvider>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "paste image" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save note" }));
+
+    await waitFor(() =>
+      expect(actions.attachFileAction).toHaveBeenCalledWith({
+        noteId: "not_kickoff",
+        fileId: "fil_pasted",
+      }),
+    );
+    await waitFor(() => expect(order).toEqual(["attach", "update"]));
   });
 
   it("shows the error and no success toast when the pin fails (nit)", async () => {

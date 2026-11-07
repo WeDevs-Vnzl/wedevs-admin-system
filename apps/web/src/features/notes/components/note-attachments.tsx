@@ -3,6 +3,7 @@
 import { PaperclipIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { fileDownloadPath } from "@/lib/api/file-url";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FileDTO } from "@/lib/validators/files";
 
@@ -26,7 +27,8 @@ function formatBytes(bytes: number, locale: string): string {
 
 /**
  * Attachment chips of a note: a composition of the installed `badge` and `tooltip` (the registry `attachment`
- * item is not installed, W2 decision). Hito 1 has no download URL, so a chip is a label, not a link.
+ * item is not installed, W2 decision). A chip downloads through `fileDownloadPath` (the FE route that proxies the
+ * BE's signed redirect, C23); the BE answers 404 for a file that is not confirmed.
  */
 export function NoteAttachments({ files }: { files: readonly FileDTO[] }) {
   const t = useTranslations("notes.attachments");
@@ -39,9 +41,11 @@ export function NoteAttachments({ files }: { files: readonly FileDTO[] }) {
           <li key={file.id}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" tabIndex={0} className="max-w-56 gap-1.5 font-normal">
-                  <PaperclipIcon aria-hidden className="size-3 shrink-0" />
-                  <span className="truncate">{file.originalName}</span>
+                <Badge asChild variant="outline" className="max-w-56 gap-1.5 font-normal">
+                  <a href={fileDownloadPath(file.id)}>
+                    <PaperclipIcon aria-hidden className="size-3 shrink-0" />
+                    <span className="truncate">{file.originalName}</span>
+                  </a>
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
