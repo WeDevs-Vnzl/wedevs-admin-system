@@ -25,7 +25,12 @@ export default async function PaymentsOverviewPage() {
   const [overview, withCredit] = await notFoundWhenRefused(() =>
     Promise.all([
       getPaymentsOverview(),
-      listPayments({ status: ["CONFIRMADO"], hasUnallocated: true, sort: "date:desc", pageSize: 25 }),
+      listPayments({
+        status: ["CONFIRMADO"],
+        hasUnallocated: true,
+        sort: "date:desc",
+        pageSize: 25,
+      }),
     ]),
   );
 

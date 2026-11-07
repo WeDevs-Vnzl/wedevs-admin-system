@@ -10,7 +10,11 @@ import { PaymentDetailHeader } from "@/features/payments/components/payment-deta
 import { PaymentReceipt } from "@/features/payments/components/payment-receipt";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getPayment } from "@/features/payments/queries";
-import { notFoundWhenRefused, orNullWhenMissing, orNullWhenUnavailable } from "@/features/payments/refusal";
+import {
+  notFoundWhenRefused,
+  orNullWhenMissing,
+  orNullWhenUnavailable,
+} from "@/features/payments/refusal";
 import { requireSessionUser } from "@/server/auth/session";
 
 type PaymentDetailPageProps = {

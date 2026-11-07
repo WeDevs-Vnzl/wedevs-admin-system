@@ -25,7 +25,8 @@
     "description": "Money received from clients, how it is applied to invoices, and its receipt.",
     "newAction": "Record payment",
     "listAction": "View list",
-    "overviewAction": "View overview"
+    "overviewAction": "View overview",
+    "editTitle": "Edit payment"
   },
   "overview": {
     "collectedTitle": "Collected per month (USD)",

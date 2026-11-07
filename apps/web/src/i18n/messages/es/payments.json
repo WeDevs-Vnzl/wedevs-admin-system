@@ -25,7 +25,8 @@
     "description": "Cobros recibidos de los clientes, su asignación a facturas y su comprobante.",
     "newAction": "Registrar pago",
     "listAction": "Ver lista",
-    "overviewAction": "Ver resumen"
+    "overviewAction": "Ver resumen",
+    "editTitle": "Editar pago"
   },
   "overview": {
     "collectedTitle": "Cobrado por mes (USD)",
