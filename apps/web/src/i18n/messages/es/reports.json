@@ -199,6 +199,7 @@
     "rate": "IVA {rate} %"
   },
   "errors": {
-    "load": "No se pudieron cargar los datos del reporte"
+    "load": "No se pudieron cargar los datos del reporte",
+    "forbidden": "No tienes permiso para ver los reportes"
   }
 }

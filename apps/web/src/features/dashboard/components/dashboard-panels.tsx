@@ -6,13 +6,19 @@ import type { ReactNode } from "react";
 import { DateText } from "@/components/patterns/date-text";
 import { MoneyText } from "@/components/patterns/money-text";
 import { entityHref } from "@/lib/entity-routes";
-import type { EntityRef } from "@/lib/validators/common";
-import type { DashboardDTO } from "@/lib/validators/dashboard";
+import { entityTypeSchema } from "@/lib/validators/enums";
+import type { DashboardResponseDto, EntityRefDto } from "@/lib/api/types/intel";
 import { DashboardPanel, PanelList } from "./dashboard-panel";
 
+/** The entity route, or none for a type the FE has no detail page for (the BE may send types newer than the FE list). */
+function hrefOf(entity: EntityRefDto): string | null {
+  const type = entityTypeSchema.safeParse(entity.type);
+  return type.success ? entityHref({ type: type.data, id: entity.id }) : null;
+}
+
 /** An entity's code (mono, muted) and name, linked to its detail when it has a route of its own. */
-function EntityLink({ entity, showLabel = true }: { entity: EntityRef; showLabel?: boolean }) {
-  const href = entityHref(entity);
+function EntityLink({ entity, showLabel = true }: { entity: EntityRefDto; showLabel?: boolean }) {
+  const href = hrefOf(entity);
   const content: ReactNode = (
     <>
       {entity.code ? (
@@ -31,7 +37,7 @@ function EntityLink({ entity, showLabel = true }: { entity: EntityRef; showLabel
   );
 }
 
-export function InvoicesDuePanel({ rows }: { rows: DashboardDTO["invoicesDue"] }) {
+export function InvoicesDuePanel({ rows }: { rows: DashboardResponseDto["invoicesDue"] }) {
   const t = useTranslations("dashboard.panels.invoicesDue");
   return (
     <DashboardPanel title={t("title")}>
@@ -59,7 +65,11 @@ export function InvoicesDuePanel({ rows }: { rows: DashboardDTO["invoicesDue"] }
   );
 }
 
-export function InstallmentsPanel({ rows }: { rows: DashboardDTO["installmentsToInvoice"] }) {
+export function InstallmentsPanel({
+  rows,
+}: {
+  rows: DashboardResponseDto["installmentsToInvoice"];
+}) {
   const t = useTranslations("dashboard.panels.installments");
   return (
     <DashboardPanel title={t("title")}>
@@ -81,7 +91,11 @@ export function InstallmentsPanel({ rows }: { rows: DashboardDTO["installmentsTo
   );
 }
 
-export function DocumentsExpiringPanel({ rows }: { rows: DashboardDTO["documentsExpiring"] }) {
+export function DocumentsExpiringPanel({
+  rows,
+}: {
+  rows: DashboardResponseDto["documentsExpiring"];
+}) {
   const t = useTranslations("dashboard.panels.documents");
   return (
     <DashboardPanel title={t("title")}>
@@ -101,7 +115,7 @@ export function DocumentsExpiringPanel({ rows }: { rows: DashboardDTO["documents
 export function RecurringExpensesPanel({
   rows,
 }: {
-  rows: DashboardDTO["upcomingRecurringExpenses"];
+  rows: DashboardResponseDto["upcomingRecurringExpenses"];
 }) {
   const t = useTranslations("dashboard.panels.recurring");
   return (
@@ -119,7 +133,7 @@ export function RecurringExpensesPanel({
   );
 }
 
-export function RecentActivityPanel({ rows }: { rows: DashboardDTO["recentActivity"] }) {
+export function RecentActivityPanel({ rows }: { rows: DashboardResponseDto["recentActivity"] }) {
   const t = useTranslations("dashboard.panels.activity");
   const tAction = useTranslations("enums.ActivityAction");
   return (

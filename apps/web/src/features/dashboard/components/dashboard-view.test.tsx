@@ -7,7 +7,9 @@ import esCommon from "@/i18n/messages/es/common.json";
 import esDashboard from "@/i18n/messages/es/dashboard.json";
 import esEnums from "@/i18n/messages/es/enums.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
-import { DASHBOARD_KPI_ID_VALUES, type DashboardDTO } from "@/lib/validators/dashboard";
+import type { DashboardResponseDto } from "@/lib/api/types/intel";
+import { formatDate } from "@/lib/dates";
+import { DASHBOARD_KPI_ID_VALUES } from "@/lib/validators/dashboard";
 
 const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -28,7 +30,7 @@ const ref = (type: string, id: string, label: string, code?: string) =>
     id,
     label,
     ...(code ? { code } : {}),
-  }) as DashboardDTO["invoicesDue"][number]["invoice"];
+  }) as DashboardResponseDto["invoicesDue"][number]["invoice"];
 
 const KPI_VALUES: Record<(typeof DASHBOARD_KPI_ID_VALUES)[number], [string, string | null]> = {
   COLLECTED_MONTH: ["12480.00", "10576.27"],
@@ -41,7 +43,7 @@ const KPI_VALUES: Record<(typeof DASHBOARD_KPI_ID_VALUES)[number], [string, stri
   ACTIVE_PROJECTS: ["7", null],
 };
 
-function makeDashboard(): DashboardDTO {
+function makeDashboard(): DashboardResponseDto {
   const kpis = DASHBOARD_KPI_ID_VALUES.map((id) => {
     const [value, previousValue] = KPI_VALUES[id];
     return {
@@ -60,6 +62,9 @@ function makeDashboard(): DashboardDTO {
   });
   return {
     month: "2026-10",
+    period: "month",
+    periodStart: "2026-10-01",
+    periodEnd: "2026-10-31",
     currency: "USD",
     kpis,
     incomeVsExpenses: {
@@ -114,14 +119,13 @@ function makeDashboard(): DashboardDTO {
         createdAt: "2026-10-08T15:00:00.000Z",
       },
     ],
-  } as DashboardDTO;
+  } as DashboardResponseDto;
 }
 
 function renderView(overrides: Partial<DashboardViewProps> = {}) {
   const dashboard = makeDashboard();
   const props: DashboardViewProps = {
     dashboard,
-    kpis: dashboard.kpis,
     period: "month",
     showFinancials: true,
     userName: "Andrés",
@@ -307,6 +311,32 @@ describe("DashboardView", () => {
     expect(cards.getByText("+18 % vs. trimestre anterior")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Mes" }));
     expect(router.replace).toHaveBeenLastCalledWith("/dashboard", { scroll: false });
+  });
+
+  it("labels the period with the range the BE returns and names the CSV after it", async () => {
+    const user = userEvent.setup();
+    const dashboard = {
+      ...makeDashboard(),
+      period: "year" as const,
+      periodStart: "2026-01-01",
+      periodEnd: "2026-10-31",
+    };
+    const names: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      names.push(this.download);
+    });
+    Object.assign(URL, { createObjectURL: vi.fn(() => "blob:csv"), revokeObjectURL: vi.fn() });
+    renderView({ dashboard, period: "year" });
+
+    expect(
+      screen.getByText(
+        `Del ${formatDate("2026-01-01", "es")} al ${formatDate("2026-10-31", "es")}`,
+      ),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Exportar" }));
+    expect(names).toEqual(["dashboard-year-2026-01-01.csv"]);
   });
 
   it("renders the shared AlertList", () => {

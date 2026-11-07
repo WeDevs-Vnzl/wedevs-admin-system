@@ -1,4 +1,4 @@
-import type { KpiResultDTO, ReportResult } from "@/lib/validators/reports";
+import type { KpiResultDto, ReportResponseDto } from "@/lib/api/types/intel";
 
 // Turns a report or KPI result into the sections the detail page draws: each section is one chart plus the data
 // table and CSV behind it (PRD §8.13 "Cada gráfico tiene una tabla de datos desplegable y exportación a CSV").
@@ -58,7 +58,7 @@ function single(
 }
 
 /** Sections of one of the ten financial reports. */
-export function reportSections(result: ReportResult): ReportSection[] {
+export function reportSections(result: ReportResponseDto): ReportSection[] {
   const title = `items.reports.${result.reportId}.title`;
   switch (result.reportId) {
     case "COLLECTED_BY_MONTH":
@@ -215,7 +215,7 @@ export function reportSections(result: ReportResult): ReportSection[] {
 }
 
 /** Sections of a KPI: its 12-month series and, when the KPI has one, its breakdown. */
-export function kpiSections(result: KpiResultDTO): ReportSection[] {
+export function kpiSections(result: KpiResultDto): ReportSection[] {
   const numeric: ColumnKind =
     result.unit === "USD" ? "money" : result.unit === "PERCENT" ? "percent" : "number";
   const sections: ReportSection[] = [
