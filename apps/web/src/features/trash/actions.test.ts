@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getServerApi: vi.fn(), revalidatePath: vi.fn(), updateTag: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  getServerApi: vi.fn(),
+  revalidatePath: vi.fn(),
+  updateTag: vi.fn(),
+}));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath, updateTag: mocks.updateTag }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
@@ -12,7 +16,12 @@ import { listTrashAction, restoreFromTrashAction } from "./actions";
 const page = {
   items: [
     {
-      entity: { id: "pry_veredas_landing", code: "PRY-0007", label: "Landing Veredas", type: "PROJECT" },
+      entity: {
+        id: "pry_veredas_landing",
+        code: "PRY-0007",
+        label: "Landing Veredas",
+        type: "PROJECT",
+      },
       context: "Veredas Digital",
       deletedAt: "2026-10-01T12:00:00.000Z",
       deletedBy: { id: "usr_camila_torres", name: "Camila Torres", imageUrl: null },

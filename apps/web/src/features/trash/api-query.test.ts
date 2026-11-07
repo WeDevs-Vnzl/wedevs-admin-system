@@ -3,9 +3,12 @@ import { toTrashListQuery } from "./api-query";
 
 describe("toTrashListQuery (api-contract §3)", () => {
   it("maps the page, the size, the sort and the search as flat query keys", () => {
-    expect(
-      toTrashListQuery({ page: 2, pageSize: 50, sort: "label:asc", q: "veredas" }),
-    ).toEqual({ page: 2, pageSize: 50, sort: "label:asc", q: "veredas" });
+    expect(toTrashListQuery({ page: 2, pageSize: 50, sort: "label:asc", q: "veredas" })).toEqual({
+      page: 2,
+      pageSize: 50,
+      sort: "label:asc",
+      q: "veredas",
+    });
   });
 
   it("sends the type and the archive date facets with the names the BE reads", () => {
