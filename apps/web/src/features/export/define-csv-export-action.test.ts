@@ -16,26 +16,20 @@ import type { ExportSource } from "@/lib/validators/export";
 import { defineCsvExportAction } from "./define-csv-export-action";
 
 type Row = { name: string };
-const source: ExportSource<Row, never, never> = {
+const source: ExportSource<Row, never> = {
   entity: "CLIENT",
   facets: [],
   filterSchema: listQuerySchema.omit({ filters: true }) as never,
-  list: async () => {
-    throw new Error("MOCK list must not be called");
-  },
   columns: {
     name: { labelKey: "name", value: (r) => r.name },
     email: { labelKey: "email", value: () => "" },
   },
 };
-const exportCsv = vi.fn();
 
 function build(entity: string = "CLIENT") {
   return defineCsvExportAction({
     entity: entity as "CLIENT",
-    permission: { action: "read", resource: "client" },
     source: { ...source, entity } as never,
-    exportCsv: exportCsv as never,
     namespace: "clients.table.columns",
   }) as (input: unknown) => Promise<unknown>;
 }
@@ -65,7 +59,6 @@ const payload = {
 
 beforeEach(() => {
   server.getServerApi.mockReset();
-  exportCsv.mockReset();
 });
 
 describe("defineCsvExportAction", () => {
@@ -81,7 +74,6 @@ describe("defineCsvExportAction", () => {
       ],
       query: { archived: "exclude", q: "ac", sort: "name:desc", filters: { status: "ACTIVE" } },
     });
-    expect(exportCsv).not.toHaveBeenCalled();
   });
 
   it("returns the CSV text with row count, truncated flag and the file name from the headers", async () => {
@@ -124,9 +116,7 @@ describe("defineCsvExportAction", () => {
     expect(() =>
       defineCsvExportAction({
         entity: "PROJECT",
-        permission: { action: "read", resource: "project" },
         source: source as never,
-        exportCsv: exportCsv as never,
         namespace: "x",
       }),
     ).toThrow(/CLIENT/);

@@ -12,8 +12,6 @@ import {
   type ExportEntity,
   type ExportSource,
 } from "@/lib/validators/export";
-import type { ActionPermission } from "@/server/actions/define-action";
-import type { ServiceContext } from "@/server/context";
 
 /** Entities the BE exports (`exportCsv` path enum); the record keeps this list exhaustive. */
 const API_EXPORT_ENTITIES: Record<ExportApiEntity, true> = {
@@ -57,22 +55,12 @@ const FILTER_RESERVED = new Set(["page", "pageSize", "sort", "q", "archived"]);
  * response headers `X-Export-Row-Count`, `X-Export-Truncated` and `Content-Disposition` become the
  * `ExportCsvResultDTO` the table hook expects.
  *
- * The config keeps its shape for the six callers (activity, clients, notes, projects, tags,
- * technologies): `source.list`, `source.columns[].value` and `exportCsv` are ignored, and `permission` is
- * cosmetic (the BE decides). The source still provides `columns[].labelKey` and `facets`.
+ * The source provides `columns[].labelKey` and `facets`; `source.columns[].value` is not read (the BE decides
+ * the permission and builds the file).
  */
 export function defineCsvExportAction<Row, Filter>(config: {
   entity: ExportEntity;
-  /** Cosmetic since the swap: the BE `can()` is the rule. */
-  permission: ActionPermission;
-  // MOCK — until cleanup: `source.list` is ignored; only `columns[].labelKey` and `facets` are read.
-  source: ExportSource<Row, Filter, ServiceContext>;
-  // MOCK — until cleanup: ignored; the BE builds the file.
-  exportCsv: (
-    ctx: ServiceContext,
-    input: ExportCsvInput,
-    source: ExportSource<Row, Filter, ServiceContext>,
-  ) => Promise<ExportCsvResultDTO>;
+  source: ExportSource<Row, Filter>;
   /** next-intl namespace the column `labelKey`s live in (`"clients.table.columns"`). */
   namespace: string;
 }): (input: ExportCsvInputRaw) => Promise<ActionResult<ExportCsvResultDTO>> {

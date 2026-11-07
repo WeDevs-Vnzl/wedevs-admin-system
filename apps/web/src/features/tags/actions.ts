@@ -15,9 +15,6 @@ import {
   type UnassignTagInput,
   type UpdateTagInput,
 } from "@/lib/validators/tags";
-// MOCK — until cleanup: the export source only (`list` is ignored by the helper; the BE builds the CSV).
-import { exportCsv } from "@/mocks/services/export";
-import * as tags from "@/mocks/services/tags";
 import { toTagListQuery } from "./api-query";
 import { TAG_EXPORT_COLUMNS } from "./columns";
 
@@ -90,19 +87,16 @@ export async function listTagsAction(
 }
 
 /**
- * CSV of the Settings table, filtered as the table is (PRD §7.3). The export source keeps the mock list for
- * its column and facet metadata only; the helper calls `POST /exports/TAG`.
+ * CSV of the Settings table, filtered as the table is (PRD §7.3). The export source supplies the column and
+ * facet metadata only; the helper calls `POST /exports/TAG`.
  */
 export const exportTagsCsvAction = defineCsvExportAction({
   entity: "TAG",
-  permission: { action: "read", resource: "settings" },
   source: {
     entity: "TAG",
     facets: [],
     filterSchema: tagFilterSchema,
-    list: tags.listTags,
     columns: TAG_EXPORT_COLUMNS,
   },
-  exportCsv,
   namespace: "tags",
 });

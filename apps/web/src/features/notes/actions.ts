@@ -35,10 +35,6 @@ import {
 } from "@/lib/validators/notes";
 import type { ArchivedRecordDTO } from "@/lib/validators/trash";
 import type { z } from "@/lib/validators/zod";
-// MOCK — until cleanup: the export source only (`list` and `exportCsv` are ignored by the helper; the BE builds the CSV).
-import { exportCsv } from "@/mocks/services/export";
-// MOCK — until cleanup: same export source (`source.list`).
-import * as notes from "@/mocks/services/notes";
 import { toNoteListQuery } from "./api-query";
 import { NOTE_EXPORT_COLUMNS } from "./columns";
 import { toNoteDetail, toNotePage } from "./mappers";
@@ -200,7 +196,6 @@ export async function listNotesAction(
 
 export const exportNotesCsvAction = defineCsvExportAction<NoteListRowDTO, NoteFilter>({
   entity: "NOTE",
-  permission: { action: "read", resource: "note" },
   source: {
     entity: "NOTE",
     facets: [
@@ -210,9 +205,7 @@ export const exportNotesCsvAction = defineCsvExportAction<NoteListRowDTO, NoteFi
       { id: "createdAt", kind: "dateRange", fromKey: "createdFrom", toKey: "createdTo" },
     ],
     filterSchema: noteFilterSchema,
-    list: notes.listNotes,
     columns: NOTE_EXPORT_COLUMNS,
   },
-  exportCsv,
   namespace: "notes",
 });

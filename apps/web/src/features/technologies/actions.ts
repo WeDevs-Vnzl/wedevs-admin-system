@@ -21,11 +21,7 @@ import {
   type TechnologyListRowDTO,
 } from "@/lib/validators/technologies";
 import { z } from "@/lib/validators/zod";
-// MOCK — until cleanup: the export source only (`list` is ignored by the helper; the BE builds the CSV).
-import { exportCsv } from "@/mocks/services/export";
-import * as technologies from "@/mocks/services/technologies";
 import { defineAction } from "@/server/actions/define-action";
-import type { ServiceContext } from "@/server/context";
 import { toTechnologyListQuery } from "./api-query";
 import { technologyExportColumns } from "./columns";
 import { resolveTechnologyIcon } from "./icons";
@@ -102,7 +98,7 @@ export const resolveTechnologyIconAction = defineAction({
   handler: async (_ctx, data) => resolveTechnologyIcon(data.slug),
 });
 
-// Export source (PD-2): the same list service and filter schema the table uses, so the file matches the rows.
+// Export source (PD-2): the same filter schema and columns the table uses, so the file matches the rows.
 const technologyExportSource = {
   entity: "TECHNOLOGY",
   facets: [
@@ -110,15 +106,11 @@ const technologyExportSource = {
     { id: "active", kind: "options" },
   ],
   filterSchema: technologyFilterSchema,
-  list: (ctx: ServiceContext, filter: TechnologyFilter) =>
-    technologies.listTechnologies(ctx, filter),
   columns: technologyExportColumns,
-} satisfies ExportSource<TechnologyListRowDTO, TechnologyFilter, ServiceContext>;
+} satisfies ExportSource<TechnologyListRowDTO, TechnologyFilter>;
 
 export const exportTechnologiesCsvAction = defineCsvExportAction({
   entity: "TECHNOLOGY",
-  permission: { action: "read", resource: "settings" },
   source: technologyExportSource,
-  exportCsv,
   namespace: "catalogs",
 });
