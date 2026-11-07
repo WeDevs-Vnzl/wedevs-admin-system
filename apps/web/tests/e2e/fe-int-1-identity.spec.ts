@@ -21,8 +21,10 @@ const PNG_1X1 = Buffer.from(
 const API_TOKEN_COPY = {
   nav: /^(Tokens de API|API tokens)$/,
   create: /^(Crear token|Create token|Nuevo token|New token)$/,
-  submit: /^(Crear|Create|Generar|Generate)$/,
-  done: /^(Listo|Done|Cerrar|Close)$/,
+  // Labels from apiTokens.json (es/en): form submit, secret dialog close, row action "Revocar {name}", confirm.
+  submit: /^(Crear token|Create token)$/,
+  done: /^(Ya lo guardé|I have stored it)$/,
+  revokeRow: /^(Revocar|Revoke) /,
   revoke: /^(Revocar|Revoke)$/,
 } as const;
 
@@ -104,14 +106,14 @@ test.describe("FE-INT-1 identity", () => {
     });
   });
 
-  test("@authenticated HU-02 CA2: a Member opening /settings/users gets the no-permission state and changes nothing", async ({
+  // HU-02 CA1: only the Owner sees the section; the page answers the in-shell not-found (FORBIDDEN → notFound()).
+  // CA2 (a direct financial action answering FORBIDDEN) is covered over the API by E.1 in W5.
+  test("@authenticated HU-02 CA1: a Member opening /settings/users gets the not-found page and no invite action", async ({
     page,
   }) => {
     await signInAs(page, "MEMBER");
     await page.goto("/settings/users");
-    await expect(
-      page.getByText(oneOf("You don't have permission to do this", "No tienes permiso para realizar esta acción")),
-    ).toBeVisible();
+    await expect(page.getByText(oneOf("Página no encontrada", "Page not found"))).toBeVisible();
     await expect(page.getByRole("button", { name: oneOf("Invitar usuario", "Invite user") })).toHaveCount(0);
   });
 
@@ -211,7 +213,7 @@ test.describe("FE-INT-1 identity", () => {
     expect(page.url()).not.toContain(secret);
 
     const row = page.getByRole("row").filter({ hasText: tokenName });
-    await row.getByRole("button", { name: API_TOKEN_COPY.revoke }).click();
+    await row.getByRole("button", { name: API_TOKEN_COPY.revokeRow }).click();
     const confirmation = page.getByRole("alertdialog");
     if ((await confirmation.count()) > 0) {
       await confirmation.getByRole("button", { name: API_TOKEN_COPY.revoke }).click();
