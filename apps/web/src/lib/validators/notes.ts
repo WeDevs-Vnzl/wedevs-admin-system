@@ -292,6 +292,7 @@ export const noteDetailSchema = z.object({
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type NoteDetailDTO = z.infer<typeof noteDetailSchema>;
 
 /** Row of the notes table and card of an entity's feed (PRD §8.10). */
@@ -309,10 +310,12 @@ export const noteListRowSchema = z.object({
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type NoteListRowDTO = z.infer<typeof noteListRowSchema>;
 
 // ───────────────────────────── Services (PRD §12 `notes`) ─────────────────────────────
 
+// MOCK — until cleanup: only `src/mocks/services/notes.ts` implements this interface (the BE is the service now).
 /**
  * `notes` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `listNotes` / `getNote`
  * are the read counterparts that PRD §12 leaves implicit.
