@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ArrowLeftRight, Pencil, Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AccountLedgerTable } from "@/features/accounts/components/account-ledger-table";
+import { ExchangeSnapshot } from "@/features/accounts/components/exchange-snapshot";
 import { ReconciliationForm } from "@/features/accounts/components/reconciliation-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
@@ -106,6 +108,9 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
                 className="text-sm text-muted-foreground"
               />
             )}
+            <Suspense fallback={null}>
+              <ExchangeSnapshot accountId={account.id} accountType={account.type} />
+            </Suspense>
           </CardContent>
         </Card>
         <Card className="@lg:col-span-2">

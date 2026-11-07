@@ -108,6 +108,17 @@
       "notes": "Notes"
     }
   },
+  "snapshot": {
+    "title": "Binance snapshot",
+    "description": "Balances at the exchange as of the last sync. Read-only.",
+    "columns": {
+      "asset": "Asset",
+      "free": "Available",
+      "locked": "Locked"
+    },
+    "syncedAt": "Synced at",
+    "empty": "No balances at the exchange."
+  },
   "ledger": {
     "title": "Ledger",
     "description": "Every movement that changes the balance, with the running balance after it.",
