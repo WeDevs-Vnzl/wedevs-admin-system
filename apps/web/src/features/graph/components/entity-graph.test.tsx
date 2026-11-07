@@ -98,7 +98,9 @@ describe("EntityGraph", { timeout: 30000 }, () => {
     const user = userEvent.setup();
 
     await user.click(within(nodeList()).getByLabelText("Expandir Sitio web Kairos Studio"));
-    await waitFor(() => expect(neighbourCalls()).toContainEqual({ nodeId: KAIROS_WEB, cursor: undefined }));
+    await waitFor(() =>
+      expect(neighbourCalls()).toContainEqual({ nodeId: KAIROS_WEB, cursor: undefined }),
+    );
     const web = neighboursPage(KAIROS_WEB);
     const webTypes = new Set(web.nodes.map((node) => node.type));
     for (const type of ["DOCUMENT", "INVOICE", "EXPENSE"] as const)

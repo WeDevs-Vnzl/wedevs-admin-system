@@ -32,7 +32,11 @@ function edge(source: string, relation: string, target: string): GraphEdgeDto {
 }
 
 /** A response whose node degrees count the edges of this response (the test double has no full relation list). */
-function graph(nodes: GraphNodeDto[], edges: GraphEdgeDto[], truncated: Graph["truncated"] = []): Graph {
+function graph(
+  nodes: GraphNodeDto[],
+  edges: GraphEdgeDto[],
+  truncated: Graph["truncated"] = [],
+): Graph {
   const degree = (id: string) => edges.filter((e) => e.source === id || e.target === id).length;
   return { nodes: nodes.map((n) => ({ ...n, degree: degree(n.id) })), edges, truncated };
 }
@@ -73,12 +77,12 @@ export const CLIENT_ROOT_GRAPH: Graph = graph(
 export const CLIENT_ROOT_WITH_ARCHIVED: Graph = graph(
   [
     ...CLIENT_ROOT_GRAPH.nodes,
-    node("PROJECT", "pry_kairos_old", "Proyecto archivado Kairos", { code: "PRY-0003", archived: true }),
+    node("PROJECT", "pry_kairos_old", "Proyecto archivado Kairos", {
+      code: "PRY-0003",
+      archived: true,
+    }),
   ],
-  [
-    ...CLIENT_ROOT_GRAPH.edges,
-    edge(KAIROS_OLD, "participa", KAIROS),
-  ],
+  [...CLIENT_ROOT_GRAPH.edges, edge(KAIROS_OLD, "participa", KAIROS)],
   CLIENT_ROOT_GRAPH.truncated,
 );
 
@@ -107,7 +111,11 @@ const CONTACTS_PAGE = graph(
     return node("CONTACT", `con_bulk_${number}`, `Contacto ${number}`);
   }),
   Array.from({ length: 10 }, (_, index) =>
-    edge(KAIROS, "contacto", graphNodeId("CONTACT", `con_bulk_${String(50 + index).padStart(3, "0")}`)),
+    edge(
+      KAIROS,
+      "contacto",
+      graphNodeId("CONTACT", `con_bulk_${String(50 + index).padStart(3, "0")}`),
+    ),
   ),
 );
 
@@ -129,7 +137,10 @@ export function entityGraphRoutes(): RouteTable {
   return {
     "GET /api/v1/graph/{type}/{id}": (call: RecordedCall) => ({
       status: 200,
-      body: call.search.get("includeArchived") === "true" ? CLIENT_ROOT_WITH_ARCHIVED : CLIENT_ROOT_GRAPH,
+      body:
+        call.search.get("includeArchived") === "true"
+          ? CLIENT_ROOT_WITH_ARCHIVED
+          : CLIENT_ROOT_GRAPH,
     }),
     "GET /api/v1/graph/nodes/{nodeId}/neighbours": (call: RecordedCall) => ({
       status: 200,

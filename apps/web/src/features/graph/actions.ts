@@ -21,8 +21,7 @@ export const expandNodeAction = apiAction<ExpandNodeRequest, GraphResponse>({
 });
 
 export const getEntityGraphAction = apiAction<EntityGraphRequest, GraphResponse>({
-  call: (input, api) =>
-    api.GET("/api/v1/graph/{type}/{id}", { params: entityGraphParams(input) }),
+  call: (input, api) => api.GET("/api/v1/graph/{type}/{id}", { params: entityGraphParams(input) }),
 });
 
 export const getGlobalGraphAction = apiAction<GlobalGraphRequest, GraphResponse>({
