@@ -4,15 +4,16 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { FinancialSummaryCard } from "@/components/patterns/financial-summary-card";
 import { SidePanelCard } from "@/components/patterns/side-panel-card";
 import { TechStackIcons } from "@/features/technologies/components/tech-stack-icons";
+import { stackChips } from "../stack-chips";
 import { formatDate } from "@/lib/dates";
 import { entityHref } from "@/lib/entity-routes";
-import type { ProjectDetailDTO } from "@/lib/validators/projects";
+import type { ProjectDetailDto } from "@/lib/api/types/projects";
 
 // Server components only: the stack icons resolve on the server (`TechStackIcons`). Shared by the side panel
 // and the *Resumen* tab (PRD §8.3), so the same key data reads the same in both places.
 
 /** Clients with their roles, linked to their records. */
-export async function ProjectClientsCard({ project }: { project: ProjectDetailDTO }) {
+export async function ProjectClientsCard({ project }: { project: ProjectDetailDto }) {
   const t = await getTranslations("projects.detail");
   return (
     <SidePanelCard title={t("clientsTitle")}>
@@ -42,7 +43,7 @@ export async function ProjectClientsCard({ project }: { project: ProjectDetailDT
 }
 
 /** Start, estimated and actual delivery dates. */
-export async function ProjectDatesCard({ project }: { project: ProjectDetailDTO }) {
+export async function ProjectDatesCard({ project }: { project: ProjectDetailDto }) {
   const t = await getTranslations("projects.detail");
   const locale = await getLocale();
   const row = (label: string, value: string | null) => (
@@ -61,7 +62,7 @@ export async function ProjectDatesCard({ project }: { project: ProjectDetailDTO 
 }
 
 /** The stack as icons, names in tooltips. */
-export async function ProjectStackCard({ project }: { project: ProjectDetailDTO }) {
+export async function ProjectStackCard({ project }: { project: ProjectDetailDto }) {
   const t = await getTranslations("projects.detail");
   const locale = await getLocale();
   return (
@@ -69,35 +70,41 @@ export async function ProjectStackCard({ project }: { project: ProjectDetailDTO 
       {project.stack.length === 0 ? (
         <p className="text-muted-foreground">{t("noStack")}</p>
       ) : (
-        <TechStackIcons technologies={project.stack} locale={locale === "en" ? "en" : "es"} />
+        <TechStackIcons
+          technologies={stackChips(project.stack)}
+          locale={locale === "en" ? "en" : "es"}
+        />
       )}
     </SidePanelCard>
   );
 }
 
 /** Dark financial headline (finance roles only, PRD §11). USD decimal strings, never recomputed here (C15). */
-export async function ProjectFinancialCard({ project }: { project: ProjectDetailDTO }) {
+export async function ProjectFinancialCard({ project }: { project: ProjectDetailDto }) {
   const t = await getTranslations("projects.detail");
+  // `null` = no finance grant (C13): "—" instead of an amount.
+  const usd = (amount: string | null) =>
+    amount === null ? "—" : <MoneyText amount={amount} currency="USD" />;
   return (
     <FinancialSummaryCard
       title={t("financialTitle")}
       rows={[
         {
           label: t("financeContracted"),
-          value: <MoneyText amount={project.contractedValueUsd} currency="USD" />,
+          value: usd(project.contractedValueUsd),
         },
         {
           label: t("financeInvoiced"),
-          value: <MoneyText amount={project.invoicedUsd} currency="USD" />,
+          value: usd(project.invoicedUsd),
         },
         {
           label: t("financeCollected"),
-          value: <MoneyText amount={project.collectedUsd} currency="USD" />,
+          value: usd(project.collectedUsd),
         },
       ]}
       total={{
         label: t("financeToInvoice"),
-        value: <MoneyText amount={project.toInvoiceUsd} currency="USD" />,
+        value: usd(project.toInvoiceUsd),
       }}
     />
   );

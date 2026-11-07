@@ -25,6 +25,7 @@ import {
 import { requireSessionUser } from "@/server/auth/session";
 import { can, canSeeFinancials } from "@/server/auth/permissions";
 import type { EntityRef } from "@/lib/validators/common";
+import { richTextDocSchema } from "@/lib/validators/notes";
 
 type ProjectPageProps = {
   params: Promise<{ id: string }>;
@@ -55,6 +56,9 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const tDetail = await getTranslations("projects.detail");
   const tTabs = await getTranslations("projects.detail.tabs");
 
+  // The BE stores a sanitized document; the renderer still checks it against the allowlist (C4).
+  const description = richTextDocSchema.safeParse(project.description).data ?? null;
+
   const ref: EntityRef = {
     type: "PROJECT",
     id: project.id,
@@ -69,8 +73,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       content: (
         <SectionCard heading title={tDetail("descriptionTitle")}>
           <p className="text-sm">{project.summary}</p>
-          {project.description ? (
-            <RichTextView content={project.description} />
+          {description ? (
+            <RichTextView content={description} />
           ) : (
             <p className="text-sm text-muted-foreground">{tDetail("noDescription")}</p>
           )}

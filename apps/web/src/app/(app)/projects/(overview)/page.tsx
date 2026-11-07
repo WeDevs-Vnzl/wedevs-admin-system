@@ -17,7 +17,7 @@ import { technologyLabel } from "@/features/technologies/label";
 import { formatDate } from "@/lib/dates";
 import { isLocale, type Locale } from "@/i18n/config";
 import { PROJECT_STATUS_VALUES } from "@/lib/validators/enums";
-import type { ProjectListRowDTO } from "@/lib/validators/projects";
+import type { ProjectListRowDto } from "@/lib/api/types/projects";
 import { requireSessionUser } from "@/server/auth/session";
 import { can, canSeeFinancials } from "@/server/auth/permissions";
 
@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** One row of a project list: code and name linked to the detail. */
-function ProjectLink({ row }: { row: ProjectListRowDTO }) {
+function ProjectLink({ row }: { row: Pick<ProjectListRowDto, "id" | "code" | "name"> }) {
   return <ListCode href={`/projects/${row.id}`} code={row.code} name={row.name} />;
 }
 
@@ -141,7 +141,16 @@ export default async function ProjectsOverviewPage() {
               rows={overview.highestToInvoice.map((row) => ({
                 id: row.id,
                 label: <ProjectLink row={row} />,
-                values: [{ node: <MoneyText amount={row.toInvoiceUsd} currency="USD" /> }],
+                values: [
+                  {
+                    node:
+                      row.toInvoiceUsd === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <MoneyText amount={row.toInvoiceUsd} currency="USD" />
+                      ),
+                  },
+                ],
               }))}
             />
           ) : null}

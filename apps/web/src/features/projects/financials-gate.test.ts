@@ -1,29 +1,50 @@
-// T10 phase B regression test (S14): the finance summaries are read only by finance roles (`canSeeFinancials`).
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// The finance summary is the BE's rule (C13): a role without the finance grant gets a 403, which the read
+// turns into `ServiceError("FORBIDDEN")` (the billing tab and the other modules catch that class until CLEAN).
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 
-import { makeSessionUser } from "@/mocks/test-helpers";
 import { getProjectFinancials } from "@/features/projects/queries";
 
-const PROJECT = "pry_kairos_web";
+const summary = {
+  projectId: "pry_kairos_web",
+  currency: "USD",
+  contractedValue: "5000.00",
+  invoiced: "2000.00",
+  collected: "1000.00",
+  toInvoice: "3000.00",
+  receivable: "1000.00",
+  monthlyRecurring: "0.00",
+  allocatedExpenses: "0.00",
+  margin: "1000.00",
+  marginPercent: "20.00",
+};
 
-beforeEach(() => session.getMockSessionUser.mockReset());
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
+beforeEach(() => {
+  server.getServerApi.mockReset();
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("getProjectFinancials gate", () => {
-  it.each(["MEMBER", "VIEWER"] as const)("%s is FORBIDDEN", async (role) => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
-    await expect(getProjectFinancials(PROJECT)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  it.each(["MEMBER", "VIEWER"] as const)("%s is FORBIDDEN (the BE answers 403)", async () => {
+    server.getServerApi.mockResolvedValue(
+      mockApi({ "GET /api/v1/projects/{id}/summary": errorEnvelope("FORBIDDEN") }).api,
+    );
+    await expect(getProjectFinancials("pry_kairos_web")).rejects.toMatchObject({
+      name: "ServiceError",
+      code: "FORBIDDEN",
+    });
   });
-  it.each(["OWNER", "ADMIN"] as const)("%s reads the summary", async (role) => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
-    const s = await getProjectFinancials(PROJECT);
-    expect(s.projectId).toBe(PROJECT);
+
+  it.each(["OWNER", "ADMIN"] as const)("%s reads the summary", async () => {
+    server.getServerApi.mockResolvedValue(
+      mockApi({ "GET /api/v1/projects/{id}/summary": { body: summary } }).api,
+    );
+    const s = await getProjectFinancials("pry_kairos_web");
+    expect(s.projectId).toBe("pry_kairos_web");
     expect(s.currency).toBe("USD");
   });
 });

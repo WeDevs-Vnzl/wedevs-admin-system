@@ -1,6 +1,6 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { PROJECT_LINK_GROUP_VALUES, type ProjectLinkGroup } from "@/lib/validators/enums";
-import type { ProjectLinkDTO } from "@/lib/validators/projects";
+import type { ProjectLinkDto } from "@/lib/api/types/projects";
 
 /**
  * One link as the editor holds it. `key` is stable for React and drag and sort (the id of a saved link, a
@@ -18,7 +18,7 @@ export interface ProjectLinkRow {
 export const LINK_GROUPS: readonly ProjectLinkGroup[] = PROJECT_LINK_GROUP_VALUES;
 
 /** Rows of a saved project, in group order then link order. */
-export function linkRowsFromDto(links: readonly ProjectLinkDTO[]): ProjectLinkRow[] {
+export function linkRowsFromDto(links: readonly ProjectLinkDto[]): ProjectLinkRow[] {
   return links.map((link) => ({
     key: link.id,
     id: link.id,

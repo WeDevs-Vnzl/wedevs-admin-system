@@ -26,7 +26,6 @@ import { RichTextEditor } from "@/components/ui/rich-text";
 import { Textarea } from "@/components/ui/textarea";
 import { TagPicker } from "@/features/tags/components/tag-picker";
 import { TechnologyPicker } from "@/features/technologies/components/technology-picker";
-import { uploadAdapter } from "@/features/files/upload-adapter";
 import { searchClientsAction } from "@/features/clients/actions";
 import {
   createProjectAction,
@@ -34,8 +33,9 @@ import {
   upsertProjectLinksAction,
   removeProjectLinkAction,
 } from "@/features/projects/actions";
+import type { ProjectDetailDto } from "@/lib/api/types/projects";
 import type { ActionError, EntityRef } from "@/lib/validators/common";
-import type { RichTextDoc } from "@/lib/validators/notes";
+import { richTextDocSchema, type RichTextDoc } from "@/lib/validators/notes";
 import type { TechnologyListRowDTO, TechnologyChipDTO } from "@/lib/validators/technologies";
 import type { TagChipDTO } from "@/lib/validators/tags";
 import {
@@ -44,9 +44,9 @@ import {
   projectLinkInputSchema,
   updateProjectInputSchema,
   type CreateProjectInput,
-  type ProjectDetailDTO,
   type UpdateProjectInput,
 } from "@/lib/validators/projects";
+import { stackChips } from "../stack-chips";
 import { linkRowsFromDto, type ProjectLinkRow } from "../link-rows";
 import { ProjectLinksEditor } from "./project-links-editor";
 
@@ -73,7 +73,7 @@ interface ProjectFormValues {
 export interface ProjectFormProps {
   mode: "create" | "edit";
   /** The project being edited; absent when creating. */
-  project?: ProjectDetailDTO;
+  project?: ProjectDetailDto;
   /** Client prefilled from `/projects/new?clientId=` (HU-05 CA3). */
   initialClient?: EntityRef | null;
   technologies: readonly TechnologyListRowDTO[];
@@ -155,7 +155,7 @@ export function ProjectForm({
   const initialLinks = project ? linkRowsFromDto(project.links) : [];
   const [links, setLinks] = useState<ProjectLinkRow[]>(initialLinks);
   const [tagChips, setTagChips] = useState<TagChipDTO[]>(project?.tags ?? []);
-  const [stackRows] = useState<readonly TechnologyChipDTO[]>(project?.stack ?? []);
+  const [stackRows] = useState<readonly TechnologyChipDTO[]>(stackChips(project?.stack ?? []));
 
   const defaults: ProjectFormValues = project
     ? {
@@ -167,7 +167,7 @@ export function ProjectForm({
           role: client.role ?? "",
         })),
         summary: project.summary,
-        description: project.description,
+        description: richTextDocSchema.safeParse(project.description).data ?? null,
         startDate: project.startDate ?? "",
         targetEndDate: project.targetEndDate ?? "",
         endDate: project.endDate ?? "",
@@ -227,17 +227,19 @@ export function ProjectForm({
       }).success,
   );
 
+  /** Server field errors land on their fields; whatever has no field (a link row, an unknown key) is a toast. */
   function applyError(error: ActionError) {
-    if (error.fieldErrors) {
-      for (const [key, messages] of Object.entries(error.fieldErrors)) {
-        const field = fieldOf(key);
-        const message = messages[0];
-        if (field && message)
-          form.setError(field, { message: tRoot(message as never) as unknown as string });
+    let placed = false;
+    for (const [key, messages] of Object.entries(error.fieldErrors ?? {})) {
+      const field = fieldOf(key);
+      const message = messages[0];
+      if (field && message) {
+        form.setError(field, { message: tRoot(message as never) as unknown as string });
+        placed = true;
       }
-      return;
     }
-    toast.error(tRoot(`common.errors.${error.code}` as never));
+    // A CONFLICT without an entity (DT-177) and any other code take the generic message; the form stays as it is.
+    if (!placed) toast.error(tRoot(`common.errors.${error.code}` as never));
   }
 
   async function saveLinks(projectId: string) {
@@ -430,7 +432,8 @@ export function ProjectForm({
                 <RichTextEditor
                   id="project-description"
                   value={field.value}
-                  uploadAdapter={uploadAdapter}
+                  // The BE rejects image nodes in a project description (C4): no upload adapter, no image button.
+                  allowImages={false}
                   aria-label={t("form.description")}
                   aria-invalid={fieldState.error ? true : undefined}
                   aria-describedby={fieldState.error ? "project-description-error" : undefined}
@@ -544,8 +547,8 @@ export function ProjectForm({
           <Controller
             control={form.control}
             name="technologyIds"
-            render={({ field }) => (
-              <Field>
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.error ? true : undefined}>
                 <FieldLabel htmlFor="project-stack">
                   {t("form.stack")} <OptionalMark />
                 </FieldLabel>
@@ -557,6 +560,11 @@ export function ProjectForm({
                   selected={stackRows}
                 />
                 <FieldDescription>{t("form.stackHelp")}</FieldDescription>
+                {fieldState.error ? (
+                  <FieldError id="project-stack-error">
+                    {tRoot(fieldState.error.message as never)}
+                  </FieldError>
+                ) : null}
               </Field>
             )}
           />

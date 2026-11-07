@@ -6,13 +6,13 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/patterns/section-card";
 import { reorderProjectLinksAction } from "@/features/projects/actions";
-import type { ProjectLinkDTO } from "@/lib/validators/projects";
+import type { ProjectLinkDto } from "@/lib/api/types/projects";
 import { LINK_GROUPS, linkRowsFromDto, orderedIdsOf, type ProjectLinkRow } from "../link-rows";
 import { ProjectLinksEditor } from "./project-links-editor";
 
 export interface ProjectLinksPanelProps {
   projectId: string;
-  links: readonly ProjectLinkDTO[];
+  links: readonly ProjectLinkDto[];
   /** Owner, Admin and Member may reorder; Viewer reads only. */
   canReorder: boolean;
 }
