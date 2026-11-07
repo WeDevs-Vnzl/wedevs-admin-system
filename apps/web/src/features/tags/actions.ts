@@ -15,6 +15,7 @@ import {
   type UnassignTagInput,
   type UpdateTagInput,
 } from "@/lib/validators/tags";
+// MOCK — until cleanup: the export source only (`list` is ignored by the helper; the BE builds the CSV).
 import { exportCsv } from "@/mocks/services/export";
 import * as tags from "@/mocks/services/tags";
 import { toTagListQuery } from "./api-query";

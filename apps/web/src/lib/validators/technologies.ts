@@ -13,6 +13,7 @@ import { facetOf, hexColorSchema, optionalText, requiredText, withSortFields } f
  * it lands, and whenever `nameEn` is empty, English display falls back to `name`.
  */
 
+// MOCK — until cleanup: the mock technologies service imports this pattern.
 /** `next-js`, `react-native`… */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -85,6 +86,7 @@ export const technologyChipSchema = z.object({
   iconSlug: z.string().nullable(),
   color: z.string().nullable(),
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type TechnologyChipDTO = z.infer<typeof technologyChipSchema>;
 
 /** Row of Settings → Tecnologías (also the detail DTO). */
@@ -93,17 +95,20 @@ export const technologyListRowSchema = technologyChipSchema.extend({
   /** Non-archived projects using it. */
   usageCount: z.number().int().nonnegative(),
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type TechnologyListRowDTO = z.infer<typeof technologyListRowSchema>;
 
 export const technologyDetailSchema = technologyListRowSchema;
+// MOCK — until cleanup: the mock technologies service imports this DTO.
 export type TechnologyDetailDTO = z.infer<typeof technologyDetailSchema>;
 
 // ───────────────────────────── Services ─────────────────────────────
 
 /**
- * Technology catalog services (PRD §12 `settings`: "CRUD de catálogos"). Every service is
- * `fn(ctx, input) → Promise<DTO>` (C9, C11).
+ * Technology catalog services as the mock layer shaped them (PRD §12 `settings`: "CRUD de catálogos"). The API
+ * serves every technology call now; the interface stays for the mock services' type checks.
  */
+// MOCK — until cleanup: mocks/services/technologies.test.ts checks the mock service against this interface.
 export type TechnologiesService<Ctx = unknown> = {
   createTechnology: (ctx: Ctx, input: CreateTechnologyInput) => Promise<TechnologyDetailDTO>;
   updateTechnology: (ctx: Ctx, input: UpdateTechnologyInput) => Promise<TechnologyDetailDTO>;

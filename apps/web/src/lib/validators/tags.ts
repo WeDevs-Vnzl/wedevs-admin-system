@@ -59,6 +59,7 @@ export function isHttpUrl(value: string): boolean {
   }
 }
 
+// MOCK — until cleanup: the mock projects and documents services import this helper.
 export const httpUrlSchema = z
   .string()
   .trim()
@@ -165,6 +166,7 @@ export const tagChipSchema = z.object({
   name: z.string(),
   color: hexColorSchema,
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type TagChipDTO = z.infer<typeof tagChipSchema>;
 
 /** Row of the Settings → Etiquetas table. */
@@ -173,19 +175,20 @@ export const tagListRowSchema = tagChipSchema.extend({
   usageCount: z.number().int().nonnegative(),
   createdAt: timestampSchema,
 });
+// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type TagListRowDTO = z.infer<typeof tagListRowSchema>;
 
 export const tagDetailSchema = tagListRowSchema;
+// MOCK — until cleanup: the mock tags service imports this DTO.
 export type TagDetailDTO = z.infer<typeof tagDetailSchema>;
 
 // ───────────────────────────── Services (PRD §12 `tags`) ─────────────────────────────
 
 /**
- * `tags` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11); `Ctx` is the service
- * context `{ db, user, now }` built by `server/context.ts`. Failures (CONFLICT, NOT_FOUND…) are reported
- * to the action adapter, never returned as DTOs. `listTags` / `getTag` are the read counterparts that
- * PRD §12 ("servicios principales") leaves implicit.
+ * `tags` services as the mock layer shaped them (C9, C11). The API serves every tag call now (`api-contract.md`):
+ * the BE owns the rules and the FE only maps its envelopes. The interface stays for the mock services' type checks.
  */
+// MOCK — until cleanup: mocks/services/tags.test.ts checks the mock service against this interface.
 export type TagsService<Ctx = unknown> = {
   createTag: (ctx: Ctx, input: CreateTagInput) => Promise<TagDetailDTO>;
   updateTag: (ctx: Ctx, input: UpdateTagInput) => Promise<TagDetailDTO>;

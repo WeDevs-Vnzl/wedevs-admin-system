@@ -21,6 +21,7 @@ import {
   type TechnologyListRowDTO,
 } from "@/lib/validators/technologies";
 import { z } from "@/lib/validators/zod";
+// MOCK — until cleanup: the export source only (`list` is ignored by the helper; the BE builds the CSV).
 import { exportCsv } from "@/mocks/services/export";
 import * as technologies from "@/mocks/services/technologies";
 import { defineAction } from "@/server/actions/define-action";
