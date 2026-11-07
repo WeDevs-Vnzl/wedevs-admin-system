@@ -17,3 +17,16 @@ export type KpiResultDto = KpisResponseDto["kpis"][number];
 
 /** An entity reference as the BE sends it (`code` is `null` when the entity has none). */
 export type EntityRefDto = components["schemas"]["EntityRefDto"];
+
+/** `GET /api/v1/reports/{slug}`: one of the ten financial reports, discriminated by its wire `reportId`. */
+export type ReportResponseDto =
+  | components["schemas"]["CollectedByMonthReportDto"]
+  | components["schemas"]["BilledVsCollectedReportDto"]
+  | components["schemas"]["RevenueByClientReportDto"]
+  | components["schemas"]["RevenueByProjectReportDto"]
+  | components["schemas"]["ReceivablesAgingReportDto"]
+  | components["schemas"]["ExpensesByMonthCategoryReportDto"]
+  | components["schemas"]["NetResultMonthlyReportDto"]
+  | components["schemas"]["AccountFlowReportDto"]
+  | components["schemas"]["CollectionsByMethodReportDto"]
+  | components["schemas"]["TaxesRegisteredReportDto"];

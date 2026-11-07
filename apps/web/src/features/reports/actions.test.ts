@@ -6,8 +6,8 @@ vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import { reportFilterSchema } from "@/lib/validators/reports";
-import { getKpisAction } from "./actions";
-import { makeKpisResponse } from "./test-fixtures";
+import { getKpiAction, getKpisAction, getReportAction } from "./actions";
+import { makeKpisResponse, makeReportResponse } from "./test-fixtures";
 
 function serve(routes: RouteTable) {
   const mock = mockApi(routes);
@@ -41,5 +41,31 @@ describe("getKpisAction", () => {
     const result = await getKpisAction({ filter: reportFilterSchema.parse({}) });
 
     expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
+  });
+});
+
+describe("getReportAction", () => {
+  it("reloads one report of the range through the BE, by its slug", async () => {
+    const body = makeReportResponse("BILLED_VS_COLLECTED");
+    const calls = serve({ "GET /api/v1/reports/{slug}": { body } });
+
+    const result = await getReportAction({
+      id: "BILLED_VS_COLLECTED",
+      filter: reportFilterSchema.parse({ preset: "QUARTER" }),
+    });
+
+    expect(result).toEqual({ ok: true, data: body });
+    expect(calls[0]!.path).toBe("/api/v1/reports/billed-vs-collected");
+    expect(calls[0]!.search.get("preset")).toBe("QUARTER");
+  });
+});
+
+describe("getKpiAction", () => {
+  it("returns the one KPI of the range the BE computed, not the whole list", async () => {
+    serve({ "GET /api/v1/reports/kpis": { body: makeKpisResponse() } });
+
+    const result = await getKpiAction({ id: "RUNWAY", filter: reportFilterSchema.parse({}) });
+
+    expect(result).toMatchObject({ ok: true, data: { id: "RUNWAY", unit: "MONTHS" } });
   });
 });
