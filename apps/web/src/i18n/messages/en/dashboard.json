@@ -3,6 +3,7 @@
     "title": "Home",
     "greeting": "{part, select, morning {Good morning} afternoon {Good afternoon} other {Good evening}}, {name}",
     "summary": "Studio summary",
+    "periodRange": "From {from} to {to}",
     "currencyNote": "Every figure is in USD from the snapshots stored on each record.",
     "export": "Export",
     "exportFilename": "dashboard-{period}.csv"

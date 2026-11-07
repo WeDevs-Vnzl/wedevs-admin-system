@@ -28,18 +28,19 @@ function dayPart(now: Date): DayPart {
   return hour < 19 ? "afternoon" : "evening";
 }
 
-// `/dashboard` (PRD §8.1, wireframe 4.2): every figure in USD from stored snapshots. Member and Viewer get the
-// version without financial data (§11): the service zeroes it and the view hides it (`canSeeFinancials`).
+// `/dashboard` (PRD §8.1, wireframe 4.2): every figure in USD from stored snapshots, computed by the BE for the
+// period in the URL. Member and Viewer get the version without financial data (§11): the BE zeroes it and the view
+// hides it (`canSeeFinancials`, cosmetic only).
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const user = await requireSessionUser();
   const period = parseDashboardPeriod((await searchParams).period);
-  const { dashboard, kpis } = await getDashboardForPeriod(period);
+  const result = await getDashboardForPeriod(period);
+  if (!result.ok) throw new Error(result.error.code);
   const now = new Date();
 
   return (
     <DashboardView
-      dashboard={dashboard}
-      kpis={kpis}
+      dashboard={result.data}
       period={period}
       showFinancials={canSeeFinancials(user)}
       userName={user.name.split(" ")[0] ?? user.name}

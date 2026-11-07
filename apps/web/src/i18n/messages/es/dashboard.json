@@ -3,6 +3,7 @@
     "title": "Inicio",
     "greeting": "{part, select, morning {Buenos días} afternoon {Buenas tardes} other {Buenas noches}}, {name}",
     "summary": "Resumen del estudio",
+    "periodRange": "Del {from} al {to}",
     "currencyNote": "Todas las cifras se expresan en USD a partir de los snapshots guardados en cada registro.",
     "export": "Exportar",
     "exportFilename": "dashboard-{period}.csv"
