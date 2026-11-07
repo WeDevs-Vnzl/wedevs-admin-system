@@ -6,21 +6,15 @@ import { InvoiceForm } from "@/features/invoices/components/invoice-form";
 import { loadInvoiceFormOptions } from "@/features/invoices/form-options";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
+import { orNullWhenMissing } from "@/features/invoices/refusal";
 import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
 
 type EditInvoicePageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readInvoice(id: string) {
-  try {
-    return await getInvoice(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// A missing, hidden or refused (`FORBIDDEN`) invoice answers `null`: the page is the same not-found for all of them.
+const readInvoice = (id: string) => orNullWhenMissing(() => getInvoice(id));
 
 export async function generateMetadata({ params }: EditInvoicePageProps): Promise<Metadata> {
   const { id } = await params;

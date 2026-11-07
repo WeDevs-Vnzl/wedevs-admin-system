@@ -2,39 +2,47 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/patterns/section-card";
+import { Button } from "@/components/ui/button";
 import { Uploader } from "@/components/ui/uploader/uploader";
 import { attachInvoiceFileAction } from "@/features/invoices/actions";
 import { uploadAdapter } from "@/features/files/upload-adapter";
-import type { FileDTO } from "@/lib/validators/files";
+import { fileDownloadPath } from "@/lib/api/file-url";
+import type { InvoiceResponseDto } from "@/lib/api/types/invoices";
+import { fileDtoSchema, type FileDTO } from "@/lib/validators/files";
 
 type InvoiceFilePanelProps = {
   invoiceId: string;
-  file: FileDTO | null;
+  file: InvoiceResponseDto["file"];
   canUpdate: boolean;
 };
 
 /**
- * The "Archivo" tab (HU-11 CA4, HU-14 CA1): attaches the PDF of the real invoice through the mock upload adapter and
- * shows what is attached. The mock has no bytes to preview, so the preview itself waits for the real storage (H2).
+ * The "Archivo" tab (HU-11 CA4, HU-14 CA1): attaches the PDF of the real invoice through the upload adapter
+ * (the BE-issued signed params, C23) and links it through `fileDownloadPath`, the FE route that relays the BE's
+ * signed redirect. `PUT /invoices/{id}/file` takes the confirmed `fileId`.
  */
 export function InvoiceFilePanel({ invoiceId, file, canUpdate }: InvoiceFilePanelProps) {
   const t = useTranslations("invoices.file");
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  // The kit's `FileDTO` has an enumerated status; a row it cannot read is left out of the uploader.
+  const current = file ? fileDtoSchema.safeParse(file) : null;
+  const uploaded: FileDTO[] = current?.success ? [current.data] : [];
 
   async function onChange(files: FileDTO[]) {
     setSaving(true);
-    const current = files[0] ?? null;
-    const result = await attachInvoiceFileAction({ id: invoiceId, fileId: current?.id ?? null });
+    const next = files[0] ?? null;
+    const result = await attachInvoiceFileAction({ id: invoiceId, fileId: next?.id ?? null });
     setSaving(false);
     if (!result.ok) {
       toast.error(t("errors.attach"));
       return;
     }
-    toast.success(current ? t("toast.attached") : t("toast.detached"));
+    toast.success(next ? t("toast.attached") : t("toast.detached"));
     router.refresh();
   }
 
@@ -53,7 +61,14 @@ export function InvoiceFilePanel({ invoiceId, file, canUpdate }: InvoiceFilePane
                 <dd>{formatSize(file.sizeBytes)}</dd>
               </div>
             </dl>
-            <p className="text-xs text-muted-foreground">{t("previewUnavailable")}</p>
+            <div>
+              <Button variant="outline" size="sm" asChild>
+                <a href={fileDownloadPath(file.id)} target="_blank" rel="noreferrer">
+                  <ExternalLink aria-hidden />
+                  {t("open")}
+                </a>
+              </Button>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">{t("empty")}</p>
@@ -63,7 +78,7 @@ export function InvoiceFilePanel({ invoiceId, file, canUpdate }: InvoiceFilePane
             adapter={uploadAdapter}
             context="general"
             multiple={false}
-            defaultFiles={file ? [file] : []}
+            defaultFiles={uploaded}
             onChange={(files) => void onChange(files)}
             disabled={saving}
             aria-label={t("uploadLabel")}

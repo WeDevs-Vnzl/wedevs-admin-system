@@ -5,6 +5,8 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { RelatedMiniTable } from "@/components/patterns/related-mini-table";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { listInvoices } from "@/features/invoices/queries";
+// MOCK — until cleanup: `listInvoices` still signals a refusal with `ServiceError` (see `queries.ts`).
+import { ServiceError } from "@/server/errors";
 
 type RelatedInvoicesTabProps = {
   /** The client or the project whose invoices the tab lists. */
@@ -15,11 +17,18 @@ type RelatedInvoicesTabProps = {
 
 /**
  * "Facturas" tab of the client and project detail (PRD §8.2, §8.3): the record's non-archived invoices, newest
- * first, read through the invoices query so the rows match `/invoices/list`.
+ * first, read through the invoices query so the rows match `/invoices/list`. `filter` goes to the BE as the
+ * `clientId` / `projectId` list facet.
  */
 export async function RelatedInvoicesTab({ filter, newHref }: RelatedInvoicesTabProps) {
   const t = await getTranslations("invoices");
-  const page = await listInvoices({ ...filter, pageSize: 100, sort: "issueDate:desc" });
+  // The tab is mounted for finance roles; a role the BE refuses still gets an empty table, never the data.
+  const page = await listInvoices({ ...filter, pageSize: 100, sort: "issueDate:desc" }).catch(
+    (error: unknown) => {
+      if (error instanceof ServiceError && error.code === "FORBIDDEN") return { items: [] };
+      throw error;
+    },
+  );
 
   return (
     <RelatedMiniTable
