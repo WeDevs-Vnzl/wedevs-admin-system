@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Send, Archive } from "lucide-react";
@@ -28,6 +29,8 @@ import { useActionErrorMessage } from "./use-action-error";
 type InvoiceDetailProps = {
   invoice: InvoiceResponseDto;
   canUpdate: boolean;
+  /** The async payment-links panel the page renders on the server (6.1); shown at the foot of the Pagos tab. */
+  paymentLinks?: ReactNode;
 };
 
 const allocationHelper = createDataTableColumnHelper<InvoiceAllocationDto>();
@@ -37,7 +40,7 @@ const allocationHelper = createDataTableColumnHelper<InvoiceAllocationDto>();
  * totals, the payments that allocate to the invoice, and the "Archivo" with the PDF of the real invoice (CA4).
  * The "Detalle | Grafo" toggle opens `/invoices/[id]/graph` (A4).
  */
-export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, canUpdate, paymentLinks }: InvoiceDetailProps) {
   const t = useTranslations("invoices");
   const errorMessage = useActionErrorMessage();
   const router = useRouter();
@@ -130,16 +133,19 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
       value: "payments",
       label: t("detail.tabs.payments"),
       content: (
-        <DataTable
-          variant="compact"
-          data={invoice.allocations}
-          columns={allocationColumns}
-          getRowId={(row) => row.id}
-          emptyState={{
-            title: t("payments.empty.title"),
-            description: t("payments.empty.description"),
-          }}
-        />
+        <div className="flex flex-col gap-6">
+          <DataTable
+            variant="compact"
+            data={invoice.allocations}
+            columns={allocationColumns}
+            getRowId={(row) => row.id}
+            emptyState={{
+              title: t("payments.empty.title"),
+              description: t("payments.empty.description"),
+            }}
+          />
+          {paymentLinks}
+        </div>
       ),
     },
     {

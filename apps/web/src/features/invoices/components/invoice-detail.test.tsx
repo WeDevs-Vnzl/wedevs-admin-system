@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import esCommon from "@/i18n/messages/es/common.json";
 import esEnums from "@/i18n/messages/es/enums.json";
 import esInvoices from "@/i18n/messages/es/invoices.json";
@@ -61,7 +62,7 @@ function seededInvoice(): InvoiceResponseDto {
   return multiRateInvoice();
 }
 
-function renderDetail(invoice: InvoiceResponseDto, canUpdate = true) {
+function renderDetail(invoice: InvoiceResponseDto, canUpdate = true, paymentLinks?: ReactNode) {
   return render(
     <NextIntlClientProvider
       locale="es"
@@ -76,7 +77,7 @@ function renderDetail(invoice: InvoiceResponseDto, canUpdate = true) {
       }}
     >
       <NuqsTestingAdapter>
-        <InvoiceDetail invoice={invoice} canUpdate={canUpdate} />
+        <InvoiceDetail invoice={invoice} canUpdate={canUpdate} paymentLinks={paymentLinks} />
       </NuqsTestingAdapter>
     </NextIntlClientProvider>,
   );
@@ -164,5 +165,27 @@ describe("InvoiceDetail", () => {
     renderDetail(seededInvoice(), false);
     expect(screen.queryByRole("button", { name: "Emitir" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Editar" })).not.toBeInTheDocument();
+  });
+
+  it("renders the paymentLinks node at the foot of the Pagos tab only", async () => {
+    renderDetail(seededInvoice(), true, <p>panel-de-enlaces</p>);
+    expect(screen.queryByText("panel-de-enlaces")).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Pagos" }));
+    expect(await screen.findByText("panel-de-enlaces")).toBeInTheDocument();
+  });
+
+  it("renders the Pagos tab as before without paymentLinks", async () => {
+    renderDetail(seededInvoice());
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Pagos" }));
+    expect(await screen.findByText(esInvoices.payments.empty.title)).toBeInTheDocument();
+    expect(screen.queryByText("panel-de-enlaces")).not.toBeInTheDocument();
+  });
+
+  it("keeps the 3.4 props and adds only the optional paymentLinks one (frozen export)", () => {
+    expectTypeOf(InvoiceDetail).parameter(0).toEqualTypeOf<{
+      invoice: InvoiceResponseDto;
+      canUpdate: boolean;
+      paymentLinks?: ReactNode;
+    }>();
   });
 });

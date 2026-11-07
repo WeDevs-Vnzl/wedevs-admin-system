@@ -38,6 +38,9 @@ export const VALIDATION_MESSAGES = {
   fileTooLarge: "validation.file.tooLarge",
   /** `checkUpload` path (uploader): interpolates `{max}` in MB. */
   fileTooLargeMax: "validation.file.tooLargeMax",
+  paymentLinkExceedsCapacity: "validation.paymentLinkExceedsCapacity",
+  paymentLinkBelowMinimum: "validation.paymentLinkBelowMinimum",
+  paymentLinkCurrencyUnsupported: "validation.paymentLinkCurrencyUnsupported",
 } as const;
 
 export type ValidationMessageKey = (typeof VALIDATION_MESSAGES)[keyof typeof VALIDATION_MESSAGES];

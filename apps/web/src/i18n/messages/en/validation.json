@@ -45,5 +45,8 @@
     "empty": "The file is empty",
     "tooLarge": "The file is too large",
     "tooLargeMax": "The file exceeds the maximum size of {max} MB"
-  }
+  },
+  "paymentLinkExceedsCapacity": "The amount is above what is left to collect on the invoice",
+  "paymentLinkBelowMinimum": "The minimum amount of a payment link is 0.50",
+  "paymentLinkCurrencyUnsupported": "Payment links cannot be created for this invoice: the currency is unsupported or the integration is not set up"
 }
