@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("server-only", () => ({}));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
-vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
@@ -65,7 +63,6 @@ function useApi(routes: RouteTable) {
 }
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
   cache.revalidatePath.mockClear();
 });
 

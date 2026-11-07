@@ -1,13 +1,9 @@
-import type { SearchService } from "./search";
 import { describe, expect, it } from "vitest";
 import {
   SEARCHABLE_ENTITY_TYPE_VALUES,
   SEARCH_PREFIXES,
   parseSearchQuery,
   reindexEntityInputSchema,
-  searchGlobalInputSchema,
-  searchResultSchema,
-  searchResultsSchema,
 } from "./search";
 
 describe("search prefixes (PRD §7.6)", () => {
@@ -32,25 +28,6 @@ describe("search prefixes (PRD §7.6)", () => {
 });
 
 describe("searchGlobal", () => {
-  it("accepts a query and applies defaults", () => {
-    const parsed = searchGlobalInputSchema.parse({ q: "  kairos " });
-    expect(parsed.q).toBe("kairos");
-    expect(parsed.includeArchived).toBe(false);
-    expect(parsed.limit).toBe(20);
-  });
-
-  it("rejects empty or oversized queries and bad limits/types", () => {
-    expect(searchGlobalInputSchema.safeParse({ q: "   " }).success).toBe(false);
-    expect(searchGlobalInputSchema.safeParse({ q: "x".repeat(201) }).success).toBe(false);
-    expect(searchGlobalInputSchema.safeParse({ q: "a", limit: 0 }).success).toBe(false);
-    expect(searchGlobalInputSchema.safeParse({ q: "a", limit: 51 }).success).toBe(false);
-    expect(searchGlobalInputSchema.safeParse({ q: "a", entityTypes: ["TAG"] }).success).toBe(false);
-    expect(searchGlobalInputSchema.safeParse({ q: "a", entityTypes: [] }).success).toBe(false);
-    expect(
-      searchGlobalInputSchema.safeParse({ q: "a", entityTypes: ["CLIENT", "NOTE"] }).success,
-    ).toBe(true);
-  });
-
   it("reindexEntity targets an indexable entity", () => {
     expect(
       reindexEntityInputSchema.safeParse({ entityType: "DOCUMENT", entityId: "doc_1" }).success,
@@ -59,39 +36,5 @@ describe("searchGlobal", () => {
       false,
     );
     expect(SEARCHABLE_ENTITY_TYPE_VALUES).toHaveLength(9);
-  });
-});
-
-describe("search DTOs", () => {
-  const hit = {
-    entityType: "CLIENT",
-    entityId: "cli_1",
-    code: "CLI-0001",
-    title: "Kairos Studio",
-    subtitle: "Caracas, VE",
-    status: "ACTIVO",
-    archived: false,
-  };
-
-  it("hit and grouped results", () => {
-    expect(searchResultSchema.safeParse(hit).success).toBe(true);
-    expect(searchResultSchema.safeParse({ ...hit, archived: undefined }).success).toBe(false);
-    expect(
-      searchResultsSchema.safeParse({
-        query: "kairos",
-        entityType: null,
-        groups: [{ entityType: "CLIENT", total: 1, items: [hit] }],
-      }).success,
-    ).toBe(true);
-  });
-});
-
-describe("SearchService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "searchGlobal",
-      "reindexEntity",
-    ] as const satisfies readonly (keyof SearchService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

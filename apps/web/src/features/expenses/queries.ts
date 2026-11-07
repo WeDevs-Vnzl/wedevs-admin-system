@@ -18,7 +18,6 @@ import { toExpenseListQuery, toRecurringExpenseListQuery } from "./api-query";
 function unwrap<T>(response: ApiResponseLike<T>): T {
   const result = toActionResult(response);
   if (result.ok) return result.data;
-  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/lib/service-error`.
   throw new ServiceError(result.error.code, {
     message: result.error.message,
     ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),

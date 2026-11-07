@@ -17,7 +17,6 @@ import {
 } from "@/lib/validators/documents";
 import { can } from "@/lib/auth/permissions";
 import { requireSessionUser } from "@/lib/auth/session";
-// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
 import { ServiceError } from "@/lib/service-error";
 import { toDocumentListQuery } from "./api-query";
 import { toDocumentDetail, toDocumentPage, toDocumentsOverview } from "./mappers";
@@ -34,7 +33,6 @@ function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the cross-module readers catch.
     throw new ServiceError(code, { message, ...(fieldErrors ? { fieldErrors } : {}) });
   }
   throw new Error(`${what} failed with ${result.response.status}`);
@@ -118,7 +116,6 @@ export async function getDocumentsOverview(): Promise<DocumentsOverviewDTO> {
  * `ServiceError`; a malformed id answers like an unknown one, without calling the BE.
  */
 export async function getDocument(id: string): Promise<DocumentDetailDTO> {
-  // MOCK — until cleanup: a malformed id is the same `NOT_FOUND` as an unknown one.
   if (!idSchema.safeParse(id).success) throw new ServiceError("NOT_FOUND");
   const api = await getServerApi();
   return toDocumentDetail(

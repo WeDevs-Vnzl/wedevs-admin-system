@@ -7,7 +7,6 @@ import {
   type NoteIdInput,
 } from "@/lib/validators/notes";
 import { requireSessionUser } from "@/lib/auth/session";
-// MOCK — until cleanup: `app/(app)/notes/[id]/page.tsx` catches `ServiceError` for the not-found page.
 import { ServiceError } from "@/lib/service-error";
 import { toNoteListQuery } from "./api-query";
 import { toNoteDetail, toNotePage } from "./mappers";
@@ -28,7 +27,6 @@ export async function getNote(input: NoteIdInput) {
   const api = await getServerApi();
   const { data, response } = await api.GET("/api/v1/notes/{id}", { params: { path: { id } } });
   if (data) return toNoteDetail(data);
-  // MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and its consumers.
   if (response.status === 404) throw new ServiceError("NOT_FOUND");
   throw new Error(`GET /api/v1/notes/${id} failed with ${response.status}`);
 }

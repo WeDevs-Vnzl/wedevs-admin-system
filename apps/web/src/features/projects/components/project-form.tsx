@@ -46,7 +46,6 @@ import {
   type CreateProjectInput,
   type UpdateProjectInput,
 } from "@/lib/validators/projects";
-import { stackChips } from "../stack-chips";
 import { linkRowsFromDto, type ProjectLinkRow } from "../link-rows";
 import { ProjectLinksEditor } from "./project-links-editor";
 
@@ -155,7 +154,7 @@ export function ProjectForm({
   const initialLinks = project ? linkRowsFromDto(project.links) : [];
   const [links, setLinks] = useState<ProjectLinkRow[]>(initialLinks);
   const [tagChips, setTagChips] = useState<TagChipDTO[]>(project?.tags ?? []);
-  const [stackRows] = useState<readonly TechnologyChipDTO[]>(stackChips(project?.stack ?? []));
+  const [stackRows] = useState<readonly TechnologyChipDTO[]>(project?.stack ?? []);
 
   const defaults: ProjectFormValues = project
     ? {

@@ -16,7 +16,6 @@ import {
   getSharePermissions,
   listShareAccessLog,
   listShareLinks,
-  shareableDocumentOf,
 } from "./queries";
 import {
   page,
@@ -169,19 +168,5 @@ describe("getShareableDocuments", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await expect(getShareableDocuments(["doc_a"])).rejects.toThrow();
-  });
-});
-
-describe("shareableDocumentOf", () => {
-  it("returns null for an archived document and throws NOT_FOUND for an unknown one", async () => {
-    useApi({
-      "GET /api/v1/documents/{id}": (call) =>
-        call.path.endsWith("doc_gone")
-          ? errorEnvelope("NOT_FOUND")
-          : { body: wireDocument("doc_old", { archivedAt: "2026-10-01T00:00:00.000Z" }) },
-    });
-
-    expect(await shareableDocumentOf("doc_old")).toBeNull();
-    await expect(shareableDocumentOf("doc_gone")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

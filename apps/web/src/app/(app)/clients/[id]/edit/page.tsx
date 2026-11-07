@@ -7,7 +7,6 @@ import { clientScreenPermissions } from "@/features/clients/components/client-pe
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { getClient } from "@/features/clients/queries";
 import { requireSessionUser } from "@/lib/auth/session";
-// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
 import { ServiceError } from "@/lib/service-error";
 import type { ClientDetailDto } from "@/lib/api/types/clients";
 

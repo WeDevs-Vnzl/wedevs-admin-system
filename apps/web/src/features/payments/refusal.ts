@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-// MOCK — until cleanup: reads still signal refusals with `ServiceError` (see `queries.ts`).
 import { ServiceError } from "@/lib/service-error";
 
 /**

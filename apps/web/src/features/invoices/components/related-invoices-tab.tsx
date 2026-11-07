@@ -5,7 +5,6 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { RelatedMiniTable } from "@/components/patterns/related-mini-table";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { listInvoices } from "@/features/invoices/queries";
-// MOCK — until cleanup: `listInvoices` still signals a refusal with `ServiceError` (see `queries.ts`).
 import { ServiceError } from "@/lib/service-error";
 
 type RelatedInvoicesTabProps = {

@@ -1,4 +1,3 @@
-import type { PortalSharesService, SharesService } from "./shares";
 import { describe, expect, it } from "vitest";
 import * as sharesModule from "./shares";
 import { z } from "./zod";
@@ -675,29 +674,6 @@ describe("portal DTOs expose only what the visitor may see", () => {
         .success,
     ).toBe(false);
     expect(issues(portalDownloadSchema.safeParse({ kind: "zip" })).length).toBeGreaterThan(0);
-  });
-});
-
-describe("SharesService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createShareLink",
-      "updateShareLink",
-      "revokeShareLink",
-      "setShareDocumentAccessKey",
-    ] as const satisfies readonly (keyof SharesService)[];
-    expect(new Set(names).size).toBe(names.length);
-  });
-});
-
-describe("PortalSharesService (PRD §12 public + DT-45 portal additions)", () => {
-  it("declares the public services with their exact names", () => {
-    const names = [
-      "resolveShareToken",
-      "recordShareAccess",
-      "unlockSharedDocument",
-    ] as const satisfies readonly (keyof PortalSharesService)[];
-    expect(names).toHaveLength(3);
   });
 });
 

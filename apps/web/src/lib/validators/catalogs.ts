@@ -116,7 +116,6 @@ export const exchangeRateDtoSchema = z.object({
 export type ExchangeRateDTO = z.infer<typeof exchangeRateDtoSchema>;
 
 /** `upsertExchangeRate`: unique per date + currency + source, so the same key updates the rate. */
-// MOCK — until cleanup: only src/mocks/** reads this export now.
 export const upsertExchangeRateInputSchema = z.object({
   date: dateOnlySchema,
   currency: rateCurrencySchema,
@@ -126,7 +125,6 @@ export const upsertExchangeRateInputSchema = z.object({
 export type UpsertExchangeRateInput = z.infer<typeof upsertExchangeRateInputSchema>;
 
 /** Quick daily load: several currencies for one date and one source (PRD §8.15). */
-// MOCK — until cleanup: only src/mocks/** reads this export now.
 export const quickRateLoadInputSchema = z
   .object({
     date: dateOnlySchema,
@@ -164,7 +162,6 @@ export const rateCsvRowSchema = z.object({
 });
 export type RateCsvRow = z.infer<typeof rateCsvRowSchema>;
 
-// MOCK — until cleanup: only src/mocks/** reads this export now.
 export const importRatesCsvInputSchema = z.object({
   rows: z.array(rateCsvRowSchema).min(1, VALIDATION_MESSAGES.required).max(MAX_RATE_CSV_ROWS),
   /** Replace the rate of an existing date + currency + source; otherwise the row is skipped. */
@@ -327,16 +324,10 @@ const catalogListShape = {
 };
 
 export const currencyListInputSchema = z.object(catalogListShape);
-// MOCK — until cleanup: only src/mocks/** reads this export now.
-export type CurrencyListInput = z.infer<typeof currencyListInputSchema>;
 export type CurrencyListInputRaw = z.input<typeof currencyListInputSchema>;
 
 export const paymentMethodListInputSchema = z.object(catalogListShape);
-// MOCK — until cleanup: only src/mocks/** reads this export now.
-export type PaymentMethodListInput = z.infer<typeof paymentMethodListInputSchema>;
 export type PaymentMethodListInputRaw = z.input<typeof paymentMethodListInputSchema>;
 
 export const expenseCategoryListInputSchema = z.object(catalogListShape);
-// MOCK — until cleanup: only src/mocks/** reads this export now.
-export type ExpenseCategoryListInput = z.infer<typeof expenseCategoryListInputSchema>;
 export type ExpenseCategoryListInputRaw = z.input<typeof expenseCategoryListInputSchema>;

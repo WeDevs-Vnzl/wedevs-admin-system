@@ -15,7 +15,6 @@ import {
   parseAlertKey,
   restoreAlertInputSchema,
   snoozeAlertInputSchema,
-  type AlertsService,
 } from "./alerts";
 
 describe("alert types (PRD §7.9)", () => {
@@ -132,15 +131,16 @@ describe("DTOs", () => {
   });
 
   it("an alert entity carries its code as the contract types it: a string or null (api-contract §2)", () => {
-    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: null } }).success).toBe(
-      true,
-    );
-    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: undefined } }).success).toBe(
-      true,
-    );
-    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, type: "PAYMENT_LINK" } }).success).toBe(
-      true,
-    );
+    expect(
+      alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: null } }).success,
+    ).toBe(true);
+    expect(
+      alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: undefined } }).success,
+    ).toBe(true);
+    expect(
+      alertSchema.safeParse({ ...alert, entity: { ...alert.entity, type: "PAYMENT_LINK" } })
+        .success,
+    ).toBe(true);
   });
 
   it("summary and dismissal", () => {
@@ -188,16 +188,5 @@ describe("mark as read (A2)", () => {
     expect(
       alertsReadResultSchema.safeParse({ alertKeys: ["MISSING_RATE:VES:2026-10-09"] }).success,
     ).toBe(true);
-  });
-
-  it("AlertsService keeps its four services and adds markAlertsRead", () => {
-    const names = [
-      "listAlerts",
-      "dismissAlert",
-      "snoozeAlert",
-      "restoreAlert",
-      "markAlertsRead",
-    ] as const satisfies readonly (keyof AlertsService)[];
-    expect(new Set(names).size).toBe(5);
   });
 });

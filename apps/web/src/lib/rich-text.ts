@@ -1,7 +1,6 @@
 /**
- * Pure helpers over Tiptap JSON (PRD §8.10). Canonical copies for `src/` (lib never imports `@/mocks`):
- * `richTextToPlainText` and `noteDisplayTitle` keep the semantics of `src/mocks/entity-refs.ts`, so a
- * note's card title and its `EntityRef` label agree.
+ * Pure helpers over Tiptap JSON (PRD §8.10). `richTextToPlainText` and `noteDisplayTitle` keep a
+ * note's card title and its `EntityRef` label in agreement.
  */
 
 export interface RichTextLike {

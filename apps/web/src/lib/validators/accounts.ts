@@ -9,7 +9,7 @@ import {
 } from "./common";
 import { accountMovementTypeSchema, accountTypeSchema } from "./enums";
 import { currencyCodeSchema, moneyAmountSchema, rateSchema } from "./money";
-import { facetSchema, optionalText, requiredText, timestampSchema } from "./catalogs";
+import { facetSchema, optionalText, requiredText } from "./catalogs";
 import { isDecimalString, isZeroMoney } from "../money";
 
 /**
@@ -100,37 +100,6 @@ export type CreateAccountInput = z.infer<typeof createAccountInputSchema>;
 export const updateAccountInputSchema = z.object({ id: idSchema, ...accountFields });
 export type UpdateAccountInput = z.infer<typeof updateAccountInputSchema>;
 
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-export const accountDtoSchema = z.object({
-  id: idSchema,
-  name: z.string(),
-  type: accountTypeSchema,
-  institution: z.string().nullable(),
-  currency: currencyCodeSchema,
-  /** Always masked; the full identifier is never stored or returned. */
-  identifierMasked: z.string().nullable(),
-  holderName: z.string().nullable(),
-  openingBalance: amountAny,
-  openingDate: dateOnlySchema,
-  active: z.boolean(),
-  notes: z.string().nullable(),
-  /** Current balance in the account currency. */
-  balance: amountAny,
-  /** Balance in USD with the latest rate; `null` while the currency has no rate. */
-  balanceUsd: amountAny.nullable(),
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-});
-export type AccountDTO = z.infer<typeof accountDtoSchema>;
-
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-/** `/accounts` overview: a card per account plus the consolidated USD total of the active ones. */
-export const accountsOverviewDtoSchema = z.object({
-  accounts: z.array(accountDtoSchema),
-  totalBalanceUsd: amountAny,
-});
-export type AccountsOverviewDTO = z.infer<typeof accountsOverviewDtoSchema>;
-
 /** Status facet of `/accounts/list`: accounts are deactivated, not archived. */
 export const ACCOUNT_STATUS_FILTER_VALUES = ["active", "inactive"] as const;
 export type AccountStatusFilter = (typeof ACCOUNT_STATUS_FILTER_VALUES)[number];
@@ -192,23 +161,6 @@ export const createTransferInputSchema = z.object(transferFields).superRefine((i
 });
 export type CreateTransferInput = z.infer<typeof createTransferInputSchema>;
 
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-export const transferDtoSchema = z.object({
-  id: idSchema,
-  date: dateOnlySchema,
-  fromAccount: entityRefSchema,
-  toAccount: entityRefSchema,
-  amountFrom: amountPositive,
-  amountTo: amountPositive,
-  feeAmount: amountNonNegative,
-  rate: rateSchema.nullable(),
-  amountUsd: amountNonNegative,
-  reference: z.string().nullable(),
-  notes: z.string().nullable(),
-  createdAt: timestampSchema,
-});
-export type TransferDTO = z.infer<typeof transferDtoSchema>;
-
 // ───────────────────────────── Manual movements ─────────────────────────────
 
 /**
@@ -254,21 +206,6 @@ export const createMovementInputSchema = z
   });
 export type CreateMovementInput = z.infer<typeof createMovementInputSchema>;
 
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-export const movementDtoSchema = z.object({
-  id: idSchema,
-  account: entityRefSchema,
-  type: accountMovementTypeSchema,
-  date: dateOnlySchema,
-  /** Positive magnitude for contributions and withdrawals (the type gives the sign); signed for `AJUSTE`. */
-  amount: amountAny,
-  amountUsd: amountAny,
-  partner: entityRefSchema.nullable(),
-  description: z.string(),
-  createdAt: timestampSchema,
-});
-export type MovementDTO = z.infer<typeof movementDtoSchema>;
-
 // ───────────────────────────── Ledger and balance ─────────────────────────────
 
 export const LEDGER_ENTRY_KIND_VALUES = [
@@ -298,7 +235,6 @@ export const accountLedgerQuerySchema = withSortFields(
 );
 export type AccountLedgerQuery = z.infer<typeof accountLedgerQuerySchema>;
 
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
 export const ledgerRowSchema = z.object({
   id: z.string().min(1),
   date: dateOnlySchema,
@@ -320,16 +256,6 @@ export const getAccountBalanceInputSchema = z.object({
 });
 export type GetAccountBalanceInput = z.infer<typeof getAccountBalanceInputSchema>;
 
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-export const accountBalanceDtoSchema = z.object({
-  accountId: idSchema,
-  currency: currencyCodeSchema,
-  at: dateOnlySchema,
-  balance: amountAny,
-  balanceUsd: amountAny.nullable(),
-});
-export type AccountBalanceDTO = z.infer<typeof accountBalanceDtoSchema>;
-
 // ───────────────────────────── Reconciliation ─────────────────────────────
 
 /** "Conciliar": records the real balance at a date; a difference suggests an `AJUSTE`. */
@@ -340,19 +266,3 @@ export const reconcileAccountInputSchema = z.object({
   notes: optionalText(500),
 });
 export type ReconcileAccountInput = z.infer<typeof reconcileAccountInputSchema>;
-
-// MOCK — until cleanup: kept only because `src/mocks/**` imports it; the screens use the generated DTOs.
-export const reconciliationDtoSchema = z.object({
-  id: idSchema,
-  accountId: idSchema,
-  date: dateOnlySchema,
-  statementBalance: amountAny,
-  systemBalance: amountAny,
-  /** `statementBalance − systemBalance`. */
-  difference: amountAny,
-  /** Signed `AJUSTE` amount that would close the difference; `null` when it is zero. */
-  suggestedAdjustment: amountAny.nullable(),
-  notes: z.string().nullable(),
-  createdAt: timestampSchema,
-});
-export type ReconciliationDTO = z.infer<typeof reconciliationDtoSchema>;

@@ -1,4 +1,3 @@
-import type { NotesService } from "./notes";
 import { describe, expect, it } from "vitest";
 import {
   RICH_TEXT_MAX_BYTES,
@@ -266,20 +265,5 @@ describe("note filters and DTOs", () => {
         attachments: [],
       }).success,
     ).toBe(true);
-  });
-});
-
-describe("NotesService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createNote",
-      "updateNote",
-      "pinNote",
-      "linkNote",
-      "unlinkNote",
-      "attachFile",
-      "archiveNote",
-    ] as const satisfies readonly (keyof NotesService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

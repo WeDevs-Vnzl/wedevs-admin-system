@@ -1,6 +1,5 @@
 import type { TableFacetDescriptor } from "@/lib/table-query";
 import type { ExportColumnSpec } from "@/lib/validators/export";
-// MOCK — until cleanup: the export source still lists the mock rows (`ProjectListRowDTO`); the BE builds the CSV.
 import type { ProjectListRowDTO } from "@/lib/validators/projects";
 
 /**

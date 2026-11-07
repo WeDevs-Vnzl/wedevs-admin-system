@@ -21,7 +21,6 @@ import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
 import { ClientPaymentsTab } from "@/features/payments/components/client-payments-tab";
 import { requireSessionUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
-// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
 import { ServiceError } from "@/lib/service-error";
 import type { EntityRef } from "@/lib/validators/common";
 import type { ClientDetailDto } from "@/lib/api/types/clients";

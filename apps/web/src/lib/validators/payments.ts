@@ -7,16 +7,10 @@ import {
   withSortFields,
 } from "./common";
 import { paymentStatusSchema } from "./enums";
-import { fileDtoSchema } from "./files";
+
 import { currencyCodeSchema, moneyAmountSchema, rateSchema } from "./money";
-import {
-  addUsdRateIssue,
-  facetSchema,
-  optionalText,
-  requiredText,
-  timestampSchema,
-} from "./catalogs";
-import { breakdownItemSchema, nonNegativeDecimalSchema, seriesPointSchema } from "./dashboard";
+import { addUsdRateIssue, facetSchema, optionalText } from "./catalogs";
+
 import { compareMoney, isDecimalString, subMoney, sumMoney } from "../money";
 
 /**
@@ -26,8 +20,6 @@ import { compareMoney, isDecimalString, subMoney, sumMoney } from "../money";
  * `lib/finance` (C17) and only appear in DTOs.
  */
 
-// MOCK — until cleanup: only the mock service (`mocks/services/payments.ts`, `mocks/store.ts`) reads
-// `PAYMENT_MESSAGES`; the screens show the BE's own message keys.
 export const PAYMENT_MESSAGES = {
   referenceRequired: "payments.validation.referenceRequired",
   igtfExceedsAmount: "payments.validation.igtfExceedsAmount",
@@ -60,12 +52,6 @@ export const allocationInputSchema = z.object({
   amountInvoiceCurrency: amountPositive,
 });
 export type AllocationInput = z.infer<typeof allocationInputSchema>;
-
-// MOCK — until cleanup: `AllocatePaymentInput` and `DeallocatePaymentInput` are imported only by
-// `mocks/services/payments.ts`; the allocation commands take the generated BE bodies.
-/** `allocatePayment`: applies (part of) an existing payment to an invoice. */
-export const allocatePaymentInputSchema = allocationInputSchema.extend({ paymentId: idSchema });
-export type AllocatePaymentInput = z.infer<typeof allocatePaymentInputSchema>;
 
 export const deallocatePaymentInputSchema = z.object({ allocationId: idSchema });
 export type DeallocatePaymentInput = z.infer<typeof deallocatePaymentInputSchema>;
@@ -164,8 +150,6 @@ function checkPayment(input: PaymentChecked, options: PaymentSchemaOptions, ctx:
  * the amount, allocations (optional, to apply at creation) one per invoice and not above
  * `amount − igtf`, USD rate 1 for USD.
  */
-// MOCK — until cleanup: `createPaymentInputSchemaFor` and the `CreatePaymentInput` type below are imported only by
-// `mocks/services/payments.ts`; the form validates with `createPaymentInputSchema`.
 export function createPaymentInputSchemaFor(options: PaymentSchemaOptions = {}) {
   return z
     .object({ ...paymentFields, allocations: z.array(allocationInputSchema).max(50).default([]) })
@@ -194,17 +178,6 @@ export type SetPaymentStatusInput = z.infer<typeof setPaymentStatusInputSchema>;
 
 // ───────────────────────────── Duplicate detection (PRD §8.6) ─────────────────────────────
 
-// MOCK — until cleanup: `DetectDuplicatePaymentInput` is imported only by `mocks/services/payments.ts`.
-/** Same reference + method + account is a possible duplicate. */
-export const detectDuplicatePaymentInputSchema = z.object({
-  methodId: idSchema,
-  accountId: idSchema,
-  reference: requiredText(80),
-  /** The payment being edited, so it does not match itself. */
-  excludePaymentId: optionalId,
-});
-export type DetectDuplicatePaymentInput = z.infer<typeof detectDuplicatePaymentInputSchema>;
-
 export const duplicatePaymentMatchSchema = z.object({
   payment: entityRefSchema,
   date: dateOnlySchema,
@@ -222,69 +195,6 @@ export const duplicatePaymentWarningDtoSchema = z.object({
 export type DuplicatePaymentWarningDTO = z.infer<typeof duplicatePaymentWarningDtoSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
-
-// MOCK — until cleanup: the DTO schemas and types below (`DuplicatePaymentWarningDTO`, `PaymentAllocationDTO`,
-// `PaymentListRow`, `PaymentDetailDTO`, `PaymentsOverviewDTO`) stay only because `src/mocks/**` imports them
-// (`mocks/store.ts`, `mocks/services/{payments,reports}.ts`, `mocks/fixtures/payments.ts`). The screens read the
-// generated DTOs (`@/lib/api/types/payments`). CLEAN deletes them.
-
-/** Method as shown in tables (catalog row, not an entity type). */
-export const paymentMethodRefSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  name: z.string(),
-  nameEn: z.string().nullable(),
-});
-export type PaymentMethodRef = z.infer<typeof paymentMethodRefSchema>;
-
-/** Allocation as seen from the payment ("Asignaciones" tab). */
-export const paymentAllocationDtoSchema = z.object({
-  id: idSchema,
-  paymentId: idSchema,
-  invoice: entityRefSchema,
-  invoiceCurrency: currencyCodeSchema,
-  amountPaymentCurrency: amountPositive,
-  amountInvoiceCurrency: amountPositive,
-  amountUsd: amountNonNegative,
-  createdAt: timestampSchema,
-});
-export type PaymentAllocationDTO = z.infer<typeof paymentAllocationDtoSchema>;
-
-/** Table row (PRD §8.6 columns). */
-export const paymentListRowSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  date: dateOnlySchema,
-  client: entityRefSchema,
-  method: paymentMethodRefSchema,
-  account: entityRefSchema,
-  currency: currencyCodeSchema,
-  amount: amountPositive,
-  amountUsd: amountNonNegative,
-  /** Σ allocations in the payment currency. */
-  allocated: amountNonNegative,
-  unallocated: amountNonNegative,
-  reference: z.string().nullable(),
-  status: paymentStatusSchema,
-});
-export type PaymentListRow = z.infer<typeof paymentListRowSchema>;
-
-export const paymentDetailDtoSchema = paymentListRowSchema.extend({
-  igtfAmount: amountNonNegative,
-  feeAmount: amountNonNegative,
-  /** `amount − fee`: what enters the account. */
-  netCredited: amountNonNegative,
-  /** `amount − igtf`: what can be applied to invoices. */
-  allocatable: amountNonNegative,
-  usdRate: rateSchema,
-  receiptFileId: idSchema.nullable(),
-  receipt: fileDtoSchema.nullable(),
-  allocations: z.array(paymentAllocationDtoSchema),
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-  createdById: idSchema.nullable(),
-});
-export type PaymentDetailDTO = z.infer<typeof paymentDetailDtoSchema>;
 
 export const PAYMENT_SORT_FIELDS = [
   "code",
@@ -316,14 +226,3 @@ export type PaymentFilters = z.infer<typeof paymentFiltersSchema>;
 /** Input of the payment typeahead (`searchPaymentsAction`): the free text the user typed. */
 export const searchPaymentsInputSchema = z.object({ q: z.string().trim().max(200).default("") });
 export type SearchPaymentsInput = z.input<typeof searchPaymentsInputSchema>;
-
-export const paymentsOverviewDtoSchema = z.object({
-  /** Collected per month, last 12 months (USD). */
-  collectedByMonth: z.array(seriesPointSchema),
-  byMethod: z.array(breakdownItemSchema),
-  byAccount: z.array(breakdownItemSchema),
-  pendingVerificationCount: z.number().int().nonnegative(),
-  unallocatedCount: z.number().int().nonnegative(),
-  unallocatedTotalUsd: nonNegativeDecimalSchema,
-});
-export type PaymentsOverviewDTO = z.infer<typeof paymentsOverviewDtoSchema>;

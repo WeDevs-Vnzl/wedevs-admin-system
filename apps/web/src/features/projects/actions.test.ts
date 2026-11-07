@@ -1,21 +1,17 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock("server-only", () => ({}));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
-vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) => `${namespace}:${key}`,
 }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { ActionResult, EntityRef } from "@/lib/validators/common";
-import type { UserRole } from "@/lib/validators/enums";
-import { makeSessionUser } from "@/lib/auth/testing";
 import {
   archiveProjectAction,
   archiveProjectsAction,
@@ -32,8 +28,6 @@ import {
   upsertProjectLinksAction,
 } from "./actions";
 
-// Only the CSV export source still reads the mock session (the export helper, until CLEAN).
-const as = (role: UserRole) => session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
 
 function use(routes: RouteTable) {
   const mocked = mockApi(routes);
@@ -88,7 +82,6 @@ const edit = {
 };
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
   cache.revalidatePath.mockReset();
   server.getServerApi.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -435,7 +428,6 @@ describe("exportProjectsCsvAction", () => {
   });
 
   it("posts the technology facet and the translated columns to /exports/PROJECT", async () => {
-    as("MEMBER");
     const { calls } = exportApi();
     const result = await exportProjectsCsvAction(
       payload({ filters: { technologyId: ["tec_next_js"] } }),
@@ -452,7 +444,6 @@ describe("exportProjectsCsvAction", () => {
   });
 
   it("splits the delivery window into deliveryFrom / deliveryTo and maps the BE error", async () => {
-    as("OWNER");
     const { calls } = exportApi();
     await exportProjectsCsvAction(
       payload({ filters: { delivery: ["2026-10-01", "2026-10-31"] } }, ["code", "targetEndDate"]),

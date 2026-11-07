@@ -4,7 +4,6 @@ export const namespaces = [
   "common",
   "validation",
   "enums",
-  "mock",
   "nav",
   "shell",
   "auth",

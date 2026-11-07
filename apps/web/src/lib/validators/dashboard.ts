@@ -192,14 +192,3 @@ export const dashboardDtoSchema = z.object({
   recentActivity: z.array(dashboardActivityRowSchema).max(15),
 });
 export type DashboardDTO = z.infer<typeof dashboardDtoSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Dashboard service (A1; PRD §8.1, §12 does not list it). Every service is `fn(ctx, input) → Promise<DTO>`
- * (C9, C11).
- */
-// MOCK — until cleanup: only src/mocks imports it since FE-INT-R INTEL.
-export type DashboardService<Ctx = unknown> = {
-  getDashboard: (ctx: Ctx, input: DashboardQuery) => Promise<DashboardDTO>;
-};

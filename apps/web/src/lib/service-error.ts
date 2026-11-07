@@ -1,5 +1,5 @@
-// Framework-free on purpose (C9, DT-37): no `server-only`, no `next/*`, no mocks. Hito 1 mock services and
-// Hito 2 Prisma services throw the same class, and it survives the deletion of `src/mocks/` (C9).
+// Framework-free on purpose (C9, DT-37): no `server-only`, no `next/*`, no mocks. It is the read-failure contract the
+// feature readers throw and their callers catch.
 import {
   errorMessageKey,
   type EntityRef,

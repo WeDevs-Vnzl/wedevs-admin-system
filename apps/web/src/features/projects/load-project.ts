@@ -1,7 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { getProject } from "./queries";
-// MOCK — until cleanup: the class the BE reads throw (see `queries.ts`).
 import { ServiceError } from "@/lib/service-error";
 import type { ProjectDetailDto } from "@/lib/api/types/projects";
 

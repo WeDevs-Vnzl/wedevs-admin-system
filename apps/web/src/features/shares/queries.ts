@@ -12,7 +12,6 @@ import {
 } from "@/lib/validators/shares";
 import { can } from "@/lib/auth/permissions";
 import { requireSessionUser } from "@/lib/auth/session";
-// MOCK — until cleanup: the pages and the loader catch `ServiceError`; CLEAN replaces `@/lib/service-error` and them.
 import { ServiceError } from "@/lib/service-error";
 import { toAccessLogQuery, toShareListQuery } from "./api-query";
 import { toAccessLogPage, toShareDetail, toSharePage } from "./mappers";
@@ -27,7 +26,6 @@ function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the pages and loader catch.
     throw new ServiceError(code, { message, ...(fieldErrors ? { fieldErrors } : {}) });
   }
   throw new Error(`${what} failed with ${result.response.status}`);
@@ -138,20 +136,4 @@ export async function getShareableDocuments(ids: readonly string[]): Promise<Sha
     }),
   );
   return found.filter((doc): doc is ShareableDocument => doc !== null);
-}
-
-/**
- * One document as the share form lists it. Throws `ServiceError` for what the BE refuses (`NOT_FOUND` for an unknown
- * id); an archived document is `null`.
- */
-export async function shareableDocumentOf(id: string): Promise<ShareableDocument | null> {
-  const api = await getServerApi();
-  const result = await readShareableDocument(api, idSchema.parse(id));
-  if (result.ok) return result.data;
-  const { code, message } = result.error;
-  if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError`.
-    throw new ServiceError(code, { message });
-  }
-  throw new Error(`reading document ${id} failed with ${code}`);
 }

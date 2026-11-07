@@ -9,7 +9,6 @@ import {
   listDocumentCategories,
 } from "@/features/documents/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
-// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
 import { ServiceError } from "@/lib/service-error";
 
 type EditDocumentPageProps = {

@@ -1,5 +1,5 @@
 import { z } from "./zod";
-import { idSchema, listQuerySchema, type Paginated } from "./common";
+import { idSchema, listQuerySchema } from "./common";
 import { documentFormatSchema } from "./enums";
 import { facetOf, hexColorSchema, optionalText, requiredText, withSortFields } from "./tags";
 
@@ -108,9 +108,6 @@ export const documentCategoryRefSchema = z.object({
   nameEn: z.string().nullable(),
   color: z.string().nullable(),
 });
-// MOCK — until cleanup: the mock services and fixtures import this DTO.
-export type DocumentCategoryRefDTO = z.infer<typeof documentCategoryRefSchema>;
-
 /** Type as shown inside a document row or a picker; carries the capabilities the form needs. */
 export const documentTypeRefSchema = documentTypeCapabilitiesSchema.extend({
   id: idSchema,
@@ -118,21 +115,16 @@ export const documentTypeRefSchema = documentTypeCapabilitiesSchema.extend({
   nameEn: z.string().nullable(),
   defaultFormat: documentFormatSchema,
 });
-// MOCK — until cleanup: the mock services and fixtures import this DTO.
-export type DocumentTypeRefDTO = z.infer<typeof documentTypeRefSchema>;
-
 export const documentTypeDetailSchema = documentTypeRefSchema.extend({
   category: documentCategoryRefSchema,
   active: z.boolean(),
   /** Non-archived documents of this type. */
   documentCount: z.number().int().nonnegative(),
 });
-// MOCK — until cleanup: the mock document-types service imports this DTO.
 export type DocumentTypeDetailDTO = z.infer<typeof documentTypeDetailSchema>;
 
 /** Row of the types table. */
 export const documentTypeListRowSchema = documentTypeDetailSchema;
-// MOCK — until cleanup: the mock document-types service imports this DTO.
 export type DocumentTypeListRowDTO = z.infer<typeof documentTypeListRowSchema>;
 
 /** Category with its types, for the Settings tree and the grouped type picker. */
@@ -140,47 +132,4 @@ export const documentCategoryDetailSchema = documentCategoryRefSchema.extend({
   order: z.number().int().nonnegative(),
   types: z.array(documentTypeDetailSchema.omit({ category: true })),
 });
-// MOCK — until cleanup: the mock document-types service imports this DTO.
 export type DocumentCategoryDetailDTO = z.infer<typeof documentCategoryDetailSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Document classification services as the mock layer shaped them (PRD §12 `settings`: "CRUD de catálogos"). The
- * API serves every category and type call now; the interface stays for the mock services' type checks.
- */
-// MOCK — until cleanup: mocks/services/document-types.test.ts checks the mock service against this interface.
-export type DocumentTypesService<Ctx = unknown> = {
-  createDocumentCategory: (
-    ctx: Ctx,
-    input: CreateDocumentCategoryInput,
-  ) => Promise<DocumentCategoryDetailDTO>;
-  updateDocumentCategory: (
-    ctx: Ctx,
-    input: UpdateDocumentCategoryInput,
-  ) => Promise<DocumentCategoryDetailDTO>;
-  reorderDocumentCategories: (
-    ctx: Ctx,
-    input: ReorderDocumentCategoriesInput,
-  ) => Promise<DocumentCategoryDetailDTO[]>;
-  deleteDocumentCategory: (
-    ctx: Ctx,
-    input: DeleteDocumentCategoryInput,
-  ) => Promise<DeleteDocumentCategoryInput>;
-  listDocumentCategories: (ctx: Ctx) => Promise<DocumentCategoryDetailDTO[]>;
-  createDocumentType: (ctx: Ctx, input: CreateDocumentTypeInput) => Promise<DocumentTypeDetailDTO>;
-  updateDocumentType: (ctx: Ctx, input: UpdateDocumentTypeInput) => Promise<DocumentTypeDetailDTO>;
-  setDocumentTypeActive: (
-    ctx: Ctx,
-    input: SetDocumentTypeActiveInput,
-  ) => Promise<DocumentTypeDetailDTO>;
-  deleteDocumentType: (
-    ctx: Ctx,
-    input: DeleteDocumentTypeInput,
-  ) => Promise<DeleteDocumentTypeInput>;
-  listDocumentTypes: (
-    ctx: Ctx,
-    input: DocumentTypeFilter,
-  ) => Promise<Paginated<DocumentTypeListRowDTO>>;
-  getDocumentType: (ctx: Ctx, input: DocumentTypeIdInput) => Promise<DocumentTypeDetailDTO>;
-};

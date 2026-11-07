@@ -4,7 +4,6 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { FinancialSummaryCard } from "@/components/patterns/financial-summary-card";
 import { SidePanelCard } from "@/components/patterns/side-panel-card";
 import { TechStackIcons } from "@/features/technologies/components/tech-stack-icons";
-import { stackChips } from "../stack-chips";
 import { formatDate } from "@/lib/dates";
 import { entityHref } from "@/lib/entity-routes";
 import type { ProjectDetailDto } from "@/lib/api/types/projects";
@@ -71,7 +70,7 @@ export async function ProjectStackCard({ project }: { project: ProjectDetailDto 
         <p className="text-muted-foreground">{t("noStack")}</p>
       ) : (
         <TechStackIcons
-          technologies={stackChips(project.stack)}
+          technologies={project.stack}
           locale={locale === "en" ? "en" : "es"}
         />
       )}

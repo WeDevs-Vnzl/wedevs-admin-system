@@ -1,4 +1,3 @@
-import type { GraphService } from "./graph";
 import { describe, expect, it } from "vitest";
 import type { GlobalGraphResponseDto, GraphResponseDto } from "@/lib/api/types/graph";
 import {
@@ -175,16 +174,5 @@ describe("service inputs", () => {
     expect(
       getGlobalGraphInputSchema.safeParse({ filters: { dateFrom: "2026-02-30" } }).success,
     ).toBe(false);
-  });
-});
-
-describe("GraphService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "getEntityGraph",
-      "expandNode",
-      "getGlobalGraph",
-    ] as const satisfies readonly (keyof GraphService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });
