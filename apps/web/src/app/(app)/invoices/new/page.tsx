@@ -42,13 +42,12 @@ export default async function NewInvoicePage({ searchParams }: NewInvoicePagePro
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment="new" label={t("page.newTitle")} />
       <InvoiceForm
-        clients={options.clients}
         currencies={options.currencies}
         ivaRates={options.ivaRates}
         defaultIvaRate={options.defaultIvaRate}
         today={options.today}
         defaultDueDays={options.defaultDueDays}
-        initialClientId={clientParam}
+        initialClient={options.initialClient}
         billable={options.billable}
         preselected={preselected}
       />
