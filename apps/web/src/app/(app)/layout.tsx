@@ -22,7 +22,10 @@ const MAIN_CONTENT_ID = "main-content";
 // Cmd+K trigger, rate chip, alerts, locale and theme, user menu, and the footer. From 768 to 1023 px the sidebar
 // still takes 16rem, so the topbar controls shrink (icon-only Cmd+K, rate without label) instead of overflowing.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [shell, preferences] = await Promise.all([getShellData(), getPreferences()]);
+  // Sequential on purpose: a user the BE does not know gets 401 everywhere, and only the session seam's redirect
+  // (`/sign-in?reason=no-access`) must win; `getPreferences` maps 401 to a plain `/sign-in`.
+  const shell = await getShellData();
+  const preferences = await getPreferences();
 
   return (
     <BreadcrumbLabelProvider>
