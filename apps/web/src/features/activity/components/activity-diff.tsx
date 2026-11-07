@@ -7,9 +7,12 @@ import {
   type ActivityDiffValue,
 } from "@/lib/validators/activity";
 import type { EntityType, EnumName } from "@/lib/validators/enums";
+import { knownEntityType } from "../entity-type";
 
 /** The enum that labels a field of a record type; fields not listed here are shown as typed. */
-export function enumNameFor(entityType: EntityType, field: string): EnumName | null {
+export function enumNameFor(rawEntityType: string, field: string): EnumName | null {
+  const entityType = knownEntityType(rawEntityType);
+  if (!entityType) return null;
   if (field === "kind" && entityType === "CLIENT") return "ClientKind";
   if (field === "format" && entityType === "DOCUMENT") return "DocumentFormat";
   if (field === "category" && entityType === "SETTING") return "TechCategory";
@@ -36,7 +39,8 @@ export function ActivityDiff({
   entityType,
   changes,
 }: {
-  entityType: EntityType;
+  /** The raw entity type of the entry; an unknown one labels no enum (the diff still shows the values). */
+  entityType: string;
   changes: ActivityChanges;
 }) {
   const t = useTranslations("activity");

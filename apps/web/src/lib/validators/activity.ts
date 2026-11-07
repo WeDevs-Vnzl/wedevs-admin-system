@@ -153,6 +153,8 @@ export type ActivityListRowDTO = z.infer<typeof activityListRowSchema>;
  * or rolls back with it; it takes no service context and returns nothing the UI uses. There is no
  * update or delete (C20). CSV export of the log goes through the `export` module (`exportCsv`).
  */
+// MOCK — until cleanup: the mock services type-check against this contract (`mocks/services/activity.ts`); the
+// FE reads the log through `GET /api/v1/activity` (2.2). CLEAN deletes it with the mocks.
 export type ActivityService<Ctx = unknown, Tx = unknown> = {
   logActivity: (tx: Tx, input: LogActivityInput) => Promise<ActivityEntryDTO>;
   listActivity: (ctx: Ctx, input: ActivityFilter) => Promise<Paginated<ActivityListRowDTO>>;

@@ -1,22 +1,45 @@
 "use server";
 
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
-import { activityFilterSchema } from "@/lib/validators/activity";
-import * as activity from "@/mocks/services/activity";
-import { exportCsv } from "@/mocks/services/export";
-import { defineAction } from "@/server/actions/define-action";
+import { apiAction } from "@/lib/api/action";
+import type { ActivityListResponseDto } from "@/lib/api/types/activity";
+import {
+  activityFilterSchema,
+  type ActivityFilter,
+  type ActivityFilterInput,
+} from "@/lib/validators/activity";
+import { errorMessageKey, zodFieldErrors, type ActionResult } from "@/lib/validators/common";
+import * as activity from "@/mocks/services/activity"; // MOCK — until cleanup: export source only (5.6)
+import { exportCsv } from "@/mocks/services/export"; // MOCK — until cleanup: ignored by the export helper (5.6)
+import { requestActivityPage } from "./api";
 import { ACTIVITY_EXPORT_COLUMNS } from "./columns";
+import { activityListQuery } from "./query-params";
 
 // The activity log is read-only (C20): the only actions are reads and the export of the same rows.
-// Owner and Admin read it (PRD §4.3, DT-66); Member and Viewer get no access.
+// Owner and Admin read it (PRD §4.3, DT-66); the BE decides (`can()`), Member and Viewer get FORBIDDEN.
 const READ_ACTIVITY = { action: "read", resource: "activity" } as const;
 
-/** "Cargar más" of the timeline: one page of the same filter, newest first. */
-export const listActivityAction = defineAction({
-  permission: READ_ACTIVITY,
-  input: activityFilterSchema,
-  handler: (ctx, data) => activity.listActivity(ctx, data),
+const listActivity = apiAction<ActivityFilter, ActivityListResponseDto>({
+  call: (data, api) => requestActivityPage(api, activityListQuery(data)),
 });
+
+/** "Cargar más" of the timeline: one page of the same filter, newest first. */
+export async function listActivityAction(
+  raw: ActivityFilterInput,
+): Promise<ActionResult<ActivityListResponseDto>> {
+  const parsed = activityFilterSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: {
+        code: "VALIDATION",
+        message: errorMessageKey("VALIDATION"),
+        fieldErrors: zodFieldErrors(parsed.error),
+      },
+    };
+  }
+  return listActivity(parsed.data);
+}
 
 /** "Exportar CSV" of `/activity` and of an entity's timeline: the filtered set, capped at 10,000 rows. */
 export const exportActivityCsvAction = defineCsvExportAction({
