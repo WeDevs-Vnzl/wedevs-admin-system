@@ -37,9 +37,16 @@ import {
   updateInvoiceInputSchema,
   type BillableInstallmentRow,
   type CreateInvoiceInput,
-  type InvoiceDetailDTO,
 } from "@/lib/validators/invoices";
+import type { InvoiceResponseDto } from "@/lib/api/types/invoices";
+import type { EntityRef } from "@/lib/validators/common";
 import { InvoiceTotalsPanel } from "./invoice-totals-panel";
+import { useActionErrorMessage } from "./use-action-error";
+
+/** `"0"`, `"0.00"`, `"-0"`: a decimal string with no value (a half-typed one is left for the BE to judge). */
+function isZeroAmount(value: string): boolean {
+  return isDecimalString(value.trim()) && isZeroMoney(value.trim());
+}
 
 // The select value that stands for an exempt line (`ivaRate: null`).
 const EXEMPT = "exempt";
@@ -64,7 +71,7 @@ type ClientOption = { id: string; name: string };
 
 export type InvoiceFormProps = {
   /** Present on `/invoices/[id]/edit`; absent on `/invoices/new`. */
-  invoice?: InvoiceDetailDTO;
+  invoice?: InvoiceResponseDto;
   clients: ClientOption[];
   currencies: Option[];
   /** Allowed VAT rates of the fiscal settings, and the default one for a new line. */
@@ -139,9 +146,11 @@ function previewTotals(
 
 /**
  * Create and edit form of an invoice (PRD §8.5, HU-11, DT-44). A line grid where each line has its own VAT rate
- * (or exempt) and an optional discount; the per-rate totals are computed live through `lib/finance`. The IVA
- * adjustment is ±0.01 per rate. "Facturar cuotas" adds one line per selected installment of the client.
- * The schemas of the actions resolve the form, so a field error shows before the call.
+ * (or exempt) and an optional discount; the totals panel is a labelled **preview** computed live through
+ * `lib/finance` (display only): the saved figures come from the BE response (C17, DT-87). The IVA adjustment is
+ * ±0.01 per rate. "Facturar cuotas" adds one line per selected installment of the client. The Zod schemas
+ * validate for UX; the BE re-validates and its `fieldErrors` land on the fields they name (including the
+ * adjustments by rate and the number-taken `CONFLICT` with its "open it" link).
  */
 export function InvoiceForm({
   invoice,
@@ -157,11 +166,14 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
   const tRoot = useTranslations();
-  const tErrors = useTranslations("common.errors");
+  const errorMessage = useActionErrorMessage();
   const tActions = useTranslations("common.actions");
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [billable, setBillable] = useState(initialBillable);
+  // BE errors of the adjustments (by rate, they are not form fields) and the invoice that holds a taken number.
+  const [adjustmentErrors, setAdjustmentErrors] = useState<Record<string, string>>({});
+  const [takenBy, setTakenBy] = useState<EntityRef | undefined>();
   const nonZeroRates = ivaRates.filter((rate) => !isZeroMoney(rate));
   const [adjustments, setAdjustments] = useState<Record<string, string>>(() =>
     Object.fromEntries((invoice?.taxLines ?? []).map((line) => [line.ivaRate, line.adjustment])),
@@ -184,6 +196,8 @@ export function InvoiceForm({
     resolver: zodResolver(invoice ? updateInvoiceInputSchema : createInvoiceInputSchema) as never,
     defaultValues: invoice
       ? {
+          // The resolver validates `updateInvoiceInputSchema`, which carries the id (not a create-form value).
+          ...{ id: invoice.id },
           clientId: invoice.client.id,
           invoiceNumber: invoice.invoiceNumber,
           controlNumber: invoice.controlNumber ?? "",
@@ -248,7 +262,7 @@ export function InvoiceForm({
       if (lines.fields[index]?.installmentId) lines.remove(index);
     }
     const result = await listBillableInstallmentsAction({ clientId });
-    setBillable(result.ok ? (result.data as BillableInstallmentRow[]) : []);
+    setBillable(result.ok ? result.data : []);
   }
 
   function toggleInstallment(row: BillableInstallmentRow, checked: boolean) {
@@ -262,13 +276,18 @@ export function InvoiceForm({
 
   async function onSubmit(values: CreateInvoiceInput) {
     setSaving(true);
+    setAdjustmentErrors({});
+    setTakenBy(undefined);
     const payload = {
       ...values,
       controlNumber: values.controlNumber || undefined,
       bcvRate: values.bcvRate || undefined,
       otherWithheldNote: values.otherWithheldNote || undefined,
       taxAdjustments: Object.entries(adjustments)
-        .filter(([rate, value]) => usedRates.has(rate) && value.trim() !== "")
+        // A zero adjustment is "no adjustment" (and the BE refuses one on a 0 % rate): it is not sent.
+        .filter(
+          ([rate, value]) => usedRates.has(rate) && value.trim() !== "" && !isZeroAmount(value),
+        )
         .map(([ivaRate, adjustment]) => ({ ivaRate, adjustment: adjustment.trim() })),
     };
     const result = invoice
@@ -278,16 +297,23 @@ export function InvoiceForm({
 
     if (!result.ok) {
       const { error } = result;
-      if (error.fieldErrors) {
-        for (const [field, messages] of Object.entries(error.fieldErrors)) {
-          const message = messages[0];
-          if (!message) continue;
-          if (field.startsWith("lines.") || (FIELD_NAMES as readonly string[]).includes(field)) {
-            form.setError(field as never, { message: tRoot(message as never) });
-          }
+      for (const [field, messages] of Object.entries(error.fieldErrors ?? {})) {
+        const message = messages[0];
+        if (!message) continue;
+        const adjustment = /^taxAdjustments\.(\d+)\./.exec(field);
+        if (adjustment) {
+          const rate = payload.taxAdjustments[Number(adjustment[1])]?.ivaRate;
+          if (rate) setAdjustmentErrors((current) => ({ ...current, [rate]: message }));
+        } else if (
+          field.startsWith("lines.") ||
+          (FIELD_NAMES as readonly string[]).includes(field)
+        ) {
+          form.setError(field as never, { message });
         }
       }
-      toast.error(tErrors(error.code));
+      // Choice 2: the number is taken by a live invoice; the field error says so and the link opens it.
+      if (error.code === "CONFLICT" && error.entity) setTakenBy(error.entity);
+      toast.error(errorMessage(error));
       return;
     }
 
@@ -359,6 +385,14 @@ export function InvoiceForm({
                 {...form.register("invoiceNumber")}
               />
               <FieldError>{fieldMessage(errors.invoiceNumber?.message)}</FieldError>
+              {takenBy ? (
+                <Link
+                  href={`/invoices/${takenBy.id}`}
+                  className="text-sm underline underline-offset-4"
+                >
+                  {t("form.openExisting", { code: takenBy.code ?? takenBy.label })}
+                </Link>
+              ) : null}
             </Field>
             <Field>
               <FieldLabel htmlFor="invoice-control">{t("form.fields.controlNumber")}</FieldLabel>
@@ -572,7 +606,7 @@ export function InvoiceForm({
             {nonZeroRates
               .filter((rate) => usedRates.has(rate))
               .map((rate) => (
-                <Field key={rate}>
+                <Field key={rate} data-invalid={adjustmentErrors[rate] ? true : undefined}>
                   <FieldLabel htmlFor={`adjustment-${rate}`}>
                     {t("form.fields.adjustment", { rate })}
                   </FieldLabel>
@@ -583,7 +617,9 @@ export function InvoiceForm({
                     onChange={(event) =>
                       setAdjustments((current) => ({ ...current, [rate]: event.target.value }))
                     }
+                    aria-invalid={adjustmentErrors[rate] ? true : undefined}
                   />
+                  <FieldError>{fieldMessage(adjustmentErrors[rate])}</FieldError>
                 </Field>
               ))}
           </div>

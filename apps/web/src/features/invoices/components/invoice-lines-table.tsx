@@ -7,20 +7,20 @@ import {
   createDataTableColumnHelper,
   type DataTableColumnDef,
 } from "@/components/ui/data-table";
-import type { InvoiceLineDTO } from "@/lib/validators/invoices";
+import type { InvoiceLineDto } from "@/lib/api/types/invoices";
 
 type InvoiceLinesTableProps = {
-  lines: InvoiceLineDTO[];
+  lines: InvoiceLineDto[];
   currency: string;
 };
 
-const helper = createDataTableColumnHelper<InvoiceLineDTO>();
+const helper = createDataTableColumnHelper<InvoiceLineDto>();
 
 /** Lines of an invoice with their own VAT rate (DT-44); an exempt line shows the exempt label. */
 export function InvoiceLinesTable({ lines, currency }: InvoiceLinesTableProps) {
   const t = useTranslations("invoices");
 
-  const columns: DataTableColumnDef<InvoiceLineDTO>[] = [
+  const columns: DataTableColumnDef<InvoiceLineDto>[] = [
     helper.accessor("description", {
       header: t("lines.columns.description"),
       meta: { label: t("lines.columns.description"), pinned: true },

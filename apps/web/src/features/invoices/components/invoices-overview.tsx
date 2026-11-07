@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertList } from "@/features/alerts/components/alert-list";
 import { formatMoney } from "@/lib/money";
 import type { AlertType } from "@/lib/validators/alerts";
-import type { InvoicesOverviewDTO } from "@/lib/validators/invoices";
+import type { InvoicesOverviewDto } from "@/lib/api/types/invoices";
 
 /** The invoice alerts shown beside the overview (PRD §7.9). */
 const INVOICE_ALERT_TYPES: readonly AlertType[] = ["INVOICE_OVERDUE", "INVOICE_DUE_SOON"];
@@ -20,7 +20,7 @@ const INVOICE_ALERT_TYPES: readonly AlertType[] = ["INVOICE_OVERDUE", "INVOICE_D
 const AGING_KEYS = ["d0_30", "d31_60", "d61_90", "d90plus"] as const;
 
 type InvoicesOverviewProps = {
-  overview: InvoicesOverviewDTO;
+  overview: InvoicesOverviewDto;
   canCreate: boolean;
 };
 

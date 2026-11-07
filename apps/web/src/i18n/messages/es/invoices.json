@@ -124,6 +124,7 @@
     "createTitle": "Nueva factura",
     "editTitle": "Editar factura",
     "description": "Divide la factura en líneas; cada línea tiene su alícuota de IVA y un descuento opcional.",
+    "openExisting": "Abrir la factura {code}",
     "totalsInvalid": "Revisa las líneas: hay un descuento, ajuste o retención que no cuadra.",
     "fields": {
       "client": "Cliente",
@@ -163,8 +164,8 @@
         "description": "Retenciones que el cliente aplica sobre esta factura."
       },
       "totals": {
-        "title": "Totales",
-        "description": "Se calculan en vivo a partir de las líneas."
+        "title": "Totales (vista previa)",
+        "description": "Estimación en vivo a partir de las líneas; las cifras guardadas las calcula el servidor."
       }
     },
     "installments": {
@@ -211,9 +212,9 @@
   },
   "file": {
     "title": "PDF de la factura",
-    "description": "El PDF de la factura real, para verlo sin descargarlo.",
+    "description": "El PDF de la factura real.",
     "empty": "Todavía no hay un PDF adjunto.",
-    "previewUnavailable": "La vista previa se activa con el almacenamiento real; por ahora se muestra el archivo registrado.",
+    "open": "Abrir PDF",
     "uploadLabel": "Subir el PDF de la factura",
     "fields": {
       "name": "Nombre",

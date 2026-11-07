@@ -124,6 +124,7 @@
     "createTitle": "New invoice",
     "editTitle": "Edit invoice",
     "description": "Split the invoice into lines; each line has its own VAT rate and an optional discount.",
+    "openExisting": "Open invoice {code}",
     "totalsInvalid": "Check the lines: a discount, adjustment or withholding does not add up.",
     "fields": {
       "client": "Client",
@@ -163,8 +164,8 @@
         "description": "Withholdings the client applies to this invoice."
       },
       "totals": {
-        "title": "Totals",
-        "description": "Calculated live from the lines."
+        "title": "Totals (preview)",
+        "description": "Live estimate from the lines; the saved figures are calculated by the server."
       }
     },
     "installments": {
@@ -211,9 +212,9 @@
   },
   "file": {
     "title": "Invoice PDF",
-    "description": "The PDF of the real invoice, to view it without downloading.",
+    "description": "The PDF of the real invoice.",
     "empty": "No PDF is attached yet.",
-    "previewUnavailable": "The preview turns on with the real storage; for now the registered file is shown.",
+    "open": "Open PDF",
     "uploadLabel": "Upload the invoice PDF",
     "fields": {
       "name": "Name",

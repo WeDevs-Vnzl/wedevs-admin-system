@@ -22,14 +22,15 @@ import { InvoiceLinesTable } from "@/features/invoices/components/invoice-lines-
 import { InvoiceTotalsPanel } from "@/features/invoices/components/invoice-totals-panel";
 import { VoidInvoiceDialog } from "@/features/invoices/components/void-invoice-dialog";
 import { sumMoney } from "@/lib/money";
-import type { InvoiceAllocationRow, InvoiceDetailDTO } from "@/lib/validators/invoices";
+import type { InvoiceAllocationDto, InvoiceResponseDto } from "@/lib/api/types/invoices";
+import { useActionErrorMessage } from "./use-action-error";
 
 type InvoiceDetailProps = {
-  invoice: InvoiceDetailDTO;
+  invoice: InvoiceResponseDto;
   canUpdate: boolean;
 };
 
-const allocationHelper = createDataTableColumnHelper<InvoiceAllocationRow>();
+const allocationHelper = createDataTableColumnHelper<InvoiceAllocationDto>();
 
 /**
  * `/invoices/[id]` (PRD §8.5): the header with its status and actions, then three tabs: the lines with the per-rate
@@ -38,7 +39,7 @@ const allocationHelper = createDataTableColumnHelper<InvoiceAllocationRow>();
  */
 export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   const t = useTranslations("invoices");
-  const tErrors = useTranslations("common.errors");
+  const errorMessage = useActionErrorMessage();
   const router = useRouter();
   const isVoided = invoice.voidedAt !== null;
   const editable = canUpdate && !isVoided;
@@ -46,7 +47,7 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   async function onIssue() {
     const result = await issueDraftAction({ id: invoice.id });
     if (!result.ok) {
-      toast.error(tErrors(result.error.code));
+      toast.error(errorMessage(result.error));
       return;
     }
     toast.success(t("toast.issued"));
@@ -56,14 +57,14 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   async function onArchive() {
     const result = await archiveInvoiceAction({ id: invoice.id });
     if (!result.ok) {
-      toast.error(tErrors(result.error.code));
+      toast.error(errorMessage(result.error));
       return;
     }
     toast.success(t("toast.archived"));
     router.push("/invoices/list");
   }
 
-  const allocationColumns: DataTableColumnDef<InvoiceAllocationRow>[] = [
+  const allocationColumns: DataTableColumnDef<InvoiceAllocationDto>[] = [
     allocationHelper.display({
       id: "payment",
       header: t("payments.columns.payment"),
@@ -202,7 +203,7 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
 }
 
 /** The withholdings stored on the invoice, summed with `Decimal` (PRD §9). */
-function sumWithholdings(invoice: InvoiceDetailDTO): string {
+function sumWithholdings(invoice: InvoiceResponseDto): string {
   return sumMoney([
     invoice.totals.ivaWithheld,
     invoice.totals.islrWithheld,

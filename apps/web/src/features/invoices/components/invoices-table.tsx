@@ -20,17 +20,18 @@ import {
 } from "@/components/ui/data-table";
 import { searchClientsAction } from "@/features/clients/actions";
 import { setPreferenceAction } from "@/features/preferences/actions";
+import type { InvoiceListItemDto } from "@/lib/api/types/invoices";
 import type { ListQuery } from "@/lib/validators/common";
 import { INVOICE_STATUS_VALUES } from "@/lib/validators/enums";
-import type { InvoiceListRow } from "@/lib/validators/invoices";
 import { tableColumnsKey } from "@/lib/validators/preferences";
 import { listInvoicesAction } from "../actions";
 import { INVOICE_COLUMN_IDS } from "../columns";
 import { invoiceFilterOf } from "./invoice-table-query";
+import { useActionErrorMessage } from "./use-action-error";
 
 type InvoicesTableProps = {
   /** First page, read on the server for the query in the URL. */
-  initialRows: InvoiceListRow[];
+  initialRows: InvoiceListItemDto[];
   initialTotal: number;
   /** Saved column layout (`table:invoices:columns`). */
   initialColumns?: ColumnConfig[];
@@ -39,7 +40,7 @@ type InvoicesTableProps = {
   permissions: { canCreate: boolean; canUpdate: boolean };
 };
 
-const helper = createDataTableColumnHelper<InvoiceListRow>();
+const helper = createDataTableColumnHelper<InvoiceListItemDto>();
 
 /**
  * `/invoices/list` (PRD §8.5, DT-25): the invoices of the company with facets, search, header sort and
@@ -56,7 +57,7 @@ export function InvoicesTable({
 }: InvoicesTableProps) {
   const t = useTranslations("invoices");
   const tEnums = useTranslations("enums");
-  const tErrors = useTranslations("common.errors");
+  const errorMessage = useActionErrorMessage();
   const { query, setQuery } = useTableUrlState();
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
@@ -71,13 +72,13 @@ export function InvoicesTable({
       const result = await listInvoicesAction(invoiceFilterOf(next));
       setLoading(false);
       if (!result.ok) {
-        toast.error(tErrors(result.error.code));
+        toast.error(errorMessage(result.error));
         return;
       }
       setRows(result.data.items);
       setTotal(result.data.total);
     },
-    [tErrors],
+    [errorMessage],
   );
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function InvoicesTable({
     void load(query);
   }, [query, queryKey, load]);
 
-  const columns = useMemo<DataTableColumnDef<InvoiceListRow>[]>(
+  const columns = useMemo<DataTableColumnDef<InvoiceListItemDto>[]>(
     () =>
       [
         helper.accessor("invoiceNumber", {
@@ -154,7 +155,7 @@ export function InvoicesTable({
             </span>
           ),
         }),
-      ] as DataTableColumnDef<InvoiceListRow>[],
+      ] as DataTableColumnDef<InvoiceListItemDto>[],
     [t],
   );
 
@@ -196,7 +197,7 @@ export function InvoicesTable({
   );
 
   return (
-    <DataTable<InvoiceListRow>
+    <DataTable<InvoiceListItemDto>
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}
