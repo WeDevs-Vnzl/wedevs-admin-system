@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/data-table";
 import type { ListQuery } from "@/lib/validators/common";
 import { EXPENSE_STATUS_VALUES } from "@/lib/validators/enums";
-import type { ExpenseListRow } from "@/lib/validators/expenses";
+import type { ExpenseListRowDto } from "@/lib/api/types/expenses";
 import { listExpensesAction } from "../actions";
 import type { ExpenseAccountOption, ExpenseOption } from "../form-options";
 import { expenseFilterOf } from "./expense-table-query";
@@ -31,12 +31,12 @@ export type ExpenseFacetOptions = {
 
 type ExpensesTableProps = {
   /** First page, read on the server for the query in the URL. */
-  initialRows: ExpenseListRow[];
+  initialRows: ExpenseListRowDto[];
   initialTotal: number;
   facetOptions: ExpenseFacetOptions;
 };
 
-const helper = createDataTableColumnHelper<ExpenseListRow>();
+const helper = createDataTableColumnHelper<ExpenseListRowDto>();
 
 /**
  * The `/expenses/list` table (PRD §8.8, DT-25 table view): facets, search, header sort and pagination live in the
@@ -77,7 +77,7 @@ export function ExpensesTable({ initialRows, initialTotal, facetOptions }: Expen
     void load(query);
   }, [query, queryKey, load]);
 
-  const columns = useMemo<DataTableColumnDef<ExpenseListRow>[]>(
+  const columns = useMemo<DataTableColumnDef<ExpenseListRowDto>[]>(
     () => [
       helper.accessor("code", {
         header: t("table.columns.code"),
@@ -205,7 +205,7 @@ export function ExpensesTable({ initialRows, initialTotal, facetOptions }: Expen
   );
 
   return (
-    <DataTable<ExpenseListRow>
+    <DataTable<ExpenseListRowDto>
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

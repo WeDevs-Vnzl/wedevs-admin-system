@@ -30,7 +30,8 @@ import { lookupRateAction } from "@/features/catalogs/actions";
 import { markExpensePaidAction } from "@/features/expenses/actions";
 import type { ExpenseAccountOption } from "@/features/expenses/form-options";
 import { applyFieldErrors, asSchemaValue } from "@/features/expenses/components/form-utils";
-import { markExpensePaidInputSchema, type ExpenseDetailDTO } from "@/lib/validators/expenses";
+import type { ExpenseResponseDto } from "@/lib/api/types/expenses";
+import { markExpensePaidInputSchema } from "@/lib/validators/expenses";
 
 const FORM_ID = "mark-paid-form";
 const NONE = "__none__";
@@ -69,7 +70,7 @@ function toMarkPaidInput(
 }
 
 type MarkPaidDialogProps = {
-  expense: ExpenseDetailDTO;
+  expense: ExpenseResponseDto;
   accounts: ExpenseAccountOption[];
   /** Business "today" (America/Caracas), computed on the server. */
   today: string;

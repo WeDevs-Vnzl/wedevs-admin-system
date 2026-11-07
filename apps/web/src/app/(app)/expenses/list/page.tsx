@@ -13,6 +13,7 @@ import { expenseFilterOf } from "@/features/expenses/components/expense-table-qu
 import { getExpenseFormOptions } from "@/features/expenses/form-options";
 import { listExpenses } from "@/features/expenses/queries";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
+import { notFoundWhenRefused } from "@/features/expenses/refusal";
 import { requireSessionUser } from "@/server/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
@@ -35,7 +36,7 @@ export default async function ExpensesListPage({ searchParams }: ExpensesListPag
   if (!permissions.canRead) notFound();
   const query = urlStateToListQuery(loadTableState(await searchParams));
   const [page, options, t] = await Promise.all([
-    listExpenses(expenseFilterOf(query)),
+    notFoundWhenRefused(() => listExpenses(expenseFilterOf(query))),
     getExpenseFormOptions(),
     getTranslations("expenses"),
   ]);

@@ -30,8 +30,8 @@ import {
   createRecurringExpenseInputSchema,
   updateRecurringExpenseInputSchema,
   DEFAULT_RECURRING_EXPENSE_LEAD_DAYS,
-  type RecurringExpenseDTO,
 } from "@/lib/validators/expenses";
+import type { RecurringExpenseResponseDto } from "@/lib/api/types/expenses";
 import { FREQUENCY_VALUES } from "@/lib/validators/enums";
 
 const FORM_ID = "recurring-expense-form";
@@ -71,7 +71,7 @@ type RecurringExpenseFormProps = {
   /** Business "today" (America/Caracas), computed on the server; the default start of a new schedule. */
   today: string;
   /** Present on `/expenses/recurring/[id]`; absent on `/expenses/recurring/new`. */
-  recurring?: RecurringExpenseDTO;
+  recurring?: RecurringExpenseResponseDto;
 };
 
 /** The payload of the schedule: blank optional fields absent, the day and the lead days as whole numbers. */

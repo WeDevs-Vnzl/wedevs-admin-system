@@ -18,10 +18,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { voidExpenseAction } from "@/features/expenses/actions";
 import type { ExpenseAccountOption } from "@/features/expenses/form-options";
 import { MarkPaidDialog } from "@/features/expenses/components/mark-paid-dialog";
-import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
+import type { ExpenseResponseDto } from "@/lib/api/types/expenses";
 
 type ExpenseDetailProps = {
-  expense: ExpenseDetailDTO;
+  expense: ExpenseResponseDto;
   accounts: ExpenseAccountOption[];
   /** Business "today" (America/Caracas), computed on the server. */
   today: string;

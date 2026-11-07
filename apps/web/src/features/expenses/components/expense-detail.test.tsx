@@ -7,8 +7,8 @@ import esExpenses from "@/i18n/messages/es/expenses.json";
 import esForms from "@/i18n/messages/es/forms.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
 import esValidation from "@/i18n/messages/es/validation.json";
-import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
-import { makeTestContext } from "@/mocks/test-helpers";
+import type { ExpenseResponseDto } from "@/lib/api/types/expenses";
+import { makeExpense } from "../test-fixtures";
 import { ExpenseDetail } from "./expense-detail";
 
 vi.mock("next/navigation", () => ({
@@ -28,13 +28,7 @@ beforeAll(() => {
   };
 });
 
-function seededExpense(): ExpenseDetailDTO {
-  const expense = makeTestContext().db.expenses.find((row) => row.status === "PENDIENTE");
-  if (!expense) throw new Error("pending expense fixture missing");
-  return expense;
-}
-
-function renderDetail(expense: ExpenseDetailDTO) {
+function renderDetail(expense: ExpenseResponseDto) {
   return render(
     <NextIntlClientProvider
       locale="es"
@@ -55,7 +49,7 @@ function renderDetail(expense: ExpenseDetailDTO) {
 
 describe("ExpenseDetail", () => {
   it("keeps the header: description, code and the pending actions", () => {
-    const expense = seededExpense();
+    const expense = makeExpense();
     renderDetail(expense);
 
     expect(
@@ -66,7 +60,7 @@ describe("ExpenseDetail", () => {
   });
 
   it('offers the shared "Detalle | Grafo" toggle (A4)', () => {
-    const expense = seededExpense();
+    const expense = makeExpense();
     renderDetail(expense);
 
     expect(screen.getByRole("radiogroup", { name: "Vista" })).toBeInTheDocument();
@@ -75,5 +69,10 @@ describe("ExpenseDetail", () => {
       "href",
       `/expenses/${expense.id}/graph`,
     );
+  });
+
+  it("shows the account debit exactly as the BE returned it", () => {
+    renderDetail(makeExpense({ status: "PAGADO", accountAmount: "4380.00" }));
+    expect(screen.getByText(/4380\.00/)).toBeInTheDocument();
   });
 });
