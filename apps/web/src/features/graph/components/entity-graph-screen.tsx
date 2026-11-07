@@ -6,24 +6,16 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { graphNodeId, type GraphNodeType, type GraphResponse } from "@/lib/validators/graph";
 import { can } from "@/server/auth/permissions";
 import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
 import { nodeDetailHref } from "../graph-model";
 import { getEntityGraph } from "../queries";
 import { EntityGraph } from "./entity-graph";
 
 /** The entity graph, or `null` when the record does not exist or the role may not read it. */
 async function readGraph(type: GraphNodeType, id: string): Promise<GraphResponse | null> {
-  try {
-    return await getEntityGraph(type, id);
-  } catch (error) {
-    if (
-      error instanceof ServiceError &&
-      (error.code === "NOT_FOUND" || error.code === "FORBIDDEN")
-    ) {
-      return null;
-    }
-    throw error;
-  }
+  const result = await getEntityGraph(type, id);
+  if (result.ok) return result.data;
+  if (result.error.code === "NOT_FOUND" || result.error.code === "FORBIDDEN") return null;
+  throw new Error(`GET /api/v1/graph/${type}/${id} failed: ${result.error.code}`);
 }
 
 /**
