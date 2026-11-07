@@ -65,7 +65,7 @@ test.describe("HU-05 create project", () => {
         { clientName: playa, role: "Usuario final" },
       ],
     });
-    expect(projectId).toMatch(/^pry_/);
+    expect(projectId).toMatch(/^[a-z0-9]{20,}$/);
 
     // CA2: the roles were saved per client (the Clientes tab of the project shows each role).
     await openPage(page, `/projects/${projectId}`);
