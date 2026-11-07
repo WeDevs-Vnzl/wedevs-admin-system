@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/sheet";
 import { formatDateTime } from "@/lib/dates";
 import { entityHref } from "@/lib/entity-routes";
-import type { ActivityListRowDTO } from "@/lib/validators/activity";
+import type { ActivityRow } from "@/lib/api/types/activity";
+import { knownEntityType } from "../entity-type";
 import { ActivityDiff } from "./activity-diff";
 
 /**
@@ -52,7 +53,7 @@ export function ActivityDetailSheet({
   onOpenChange,
   onCloseAutoFocus,
 }: {
-  entry: ActivityListRowDTO | null;
+  entry: ActivityRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Where focus goes when the sheet closes; the opener is not a Radix trigger, so the parent restores it. */
@@ -68,7 +69,8 @@ export function ActivityDetailSheet({
   const entry = entryProp ?? lastEntry;
   if (!entry) return null;
 
-  const href = entityHref({ type: entry.entityType, id: entry.entityId });
+  const entityType = knownEntityType(entry.entityType);
+  const href = entityType ? entityHref({ type: entityType, id: entry.entityId }) : null;
   const browser = browserKey(entry.userAgent);
   const ip = maskIp(entry.ip);
 

@@ -6,6 +6,9 @@ import type { components, operations } from "../schema";
 /** `GET /api/v1/activity`: one page of the log, newest first, with the IP as the BE returns it. */
 export type ActivityListResponseDto = components["schemas"]["ActivityListResponseDto"];
 
+/** One entry of the log as the BE sends it (the row of the table, the timeline and the detail sheet). */
+export type ActivityRow = ActivityListResponseDto["items"][number];
+
 /** `GET /api/v1/activity/overview`: the stat figures under the table filter. */
 export type ActivityOverviewDto = components["schemas"]["ActivityOverviewDto"];
 

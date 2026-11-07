@@ -87,6 +87,18 @@ describe("ActivityDetailSheet", () => {
     expect(screen.queryByText(/192\.0\.2/)).toBeNull();
   });
 
+  it("shows an entity type the FE does not know yet with no link and no enum labels", () => {
+    wrap(
+      <ActivityDetailSheet
+        entry={{ ...row, entityType: "PAYMENT_LINK", entityLabel: "LP-0007", changes: null }}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByRole("heading", { name: /LP-0007/ })).toBeInTheDocument();
+  });
+
   it("renders in EN", () => {
     wrap(<ActivityDetailSheet entry={row} open onOpenChange={vi.fn()} />, "en");
     expect(

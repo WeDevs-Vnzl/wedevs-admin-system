@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/item";
 import { BUSINESS_TIME_ZONE } from "@/lib/dates";
 import { entityHref } from "@/lib/entity-routes";
-import type { ActivityListRowDTO } from "@/lib/validators/activity";
+import type { ActivityRow } from "@/lib/api/types/activity";
+import { knownEntityType } from "../entity-type";
 
 /** Clock time of an instant in the business zone (Caracas), `HH:mm` in the locale's style. */
 export function formatActivityTime(iso: string, locale: string): string {
@@ -42,13 +43,14 @@ export function ActivityItem({
   entry,
   onOpen,
 }: {
-  entry: ActivityListRowDTO;
-  onOpen: (entry: ActivityListRowDTO, trigger: HTMLElement) => void;
+  entry: ActivityRow;
+  onOpen: (entry: ActivityRow, trigger: HTMLElement) => void;
 }) {
   const locale = useLocale();
   const t = useTranslations("activity");
   const tEnums = useTranslations("enums");
-  const href = entityHref({ type: entry.entityType, id: entry.entityId });
+  const entityType = knownEntityType(entry.entityType);
+  const href = entityType ? entityHref({ type: entityType, id: entry.entityId }) : null;
   const actionLabel = tEnums(`ActivityAction.${entry.action}`);
   const { actor } = entry;
 
