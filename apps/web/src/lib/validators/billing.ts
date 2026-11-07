@@ -188,6 +188,7 @@ export type UpdateInstallmentInput = z.infer<typeof updateInstallmentInputSchema
 export const cancelInstallmentInputSchema = z.object({ id: idSchema });
 export type CancelInstallmentInput = z.infer<typeof cancelInstallmentInputSchema>;
 
+// MOCK — until cleanup: only `mocks/services/billing.ts` reads this schema and type.
 export const recomputeInstallmentStatusInputSchema = z.object({ id: idSchema });
 export type RecomputeInstallmentStatusInput = z.infer<typeof recomputeInstallmentStatusInputSchema>;
 
@@ -317,6 +318,7 @@ export const generateMissingPeriodsInputSchema = z.object({
 });
 export type GenerateMissingPeriodsInput = z.infer<typeof generateMissingPeriodsInputSchema>;
 
+// MOCK — until cleanup: only the mock service returns this shape; the API answer is the generated DTO.
 export const generateMissingPeriodsResultSchema = z.object({
   created: z.number().int().nonnegative(),
   periodStarts: z.array(dateOnlySchema),
@@ -347,7 +349,10 @@ export type RecurringChargeDTO = z.infer<typeof recurringChargeDtoSchema>;
 
 // ───────────────────────────── Project financial summary (PRD §8.4.4) ─────────────────────────────
 
-/** Every figure is USD from the stored snapshots (C16). */
+/**
+ * Every figure is USD from the stored snapshots (C16).
+ * MOCK — until cleanup: kept (frozen export) because `mocks/services/projects.ts` returns it; the tab reads the API DTO.
+ */
 export const projectFinancialSummarySchema = z.object({
   projectId: idSchema,
   currency: z.literal("USD"),

@@ -49,6 +49,7 @@
   "templates": {
     "label": "Plantilla rápida",
     "description": "Reemplaza las cuotas pendientes por el reparto del contrato. Las cuotas facturadas no se tocan.",
+    "estimate": "Estimación con el monto escrito (los montos guardados los calcula el servidor)",
     "apply": "Aplicar plantilla",
     "applied": "Cuotas generadas desde la plantilla",
     "options": {
@@ -131,7 +132,8 @@
       "paused": "Cobro pausado: no genera cuotas",
       "resumed": "Cobro reanudado",
       "finished": "Cobro finalizado",
-      "generated": "Periodos generados"
+      "generated": "{count, plural, one {# periodo generado} other {# periodos generados}}",
+      "nothingToGenerate": "No había periodos pendientes por generar"
     }
   },
   "recurringForm": {

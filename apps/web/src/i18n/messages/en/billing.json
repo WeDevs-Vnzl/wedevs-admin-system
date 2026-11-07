@@ -49,6 +49,7 @@
   "templates": {
     "label": "Quick template",
     "description": "Replaces the pending installments with the split of the contract. Billed installments are not touched.",
+    "estimate": "Estimate from the amount typed (the saved amounts come from the server)",
     "apply": "Apply template",
     "applied": "Installments generated from the template",
     "options": {
@@ -131,7 +132,8 @@
       "paused": "Charge paused: it generates no installments",
       "resumed": "Charge resumed",
       "finished": "Charge finished",
-      "generated": "Periods generated"
+      "generated": "{count, plural, one {# period generated} other {# periods generated}}",
+      "nothingToGenerate": "There were no pending periods to generate"
     }
   },
   "recurringForm": {
