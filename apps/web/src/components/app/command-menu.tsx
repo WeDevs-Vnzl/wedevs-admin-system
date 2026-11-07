@@ -4,7 +4,7 @@ import { defaultFilter } from "cmdk";
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { visibleNavItems, visibleQuickActions } from "@/config/nav";
 import {
   RecentRecordsGroup,
@@ -33,7 +35,7 @@ import {
 import { readRecentRecords, rememberRecentRecord } from "@/features/search/recent-records";
 import { recordOfPath } from "@/features/search/search-entities";
 import { useGlobalSearch } from "@/features/search/use-global-search";
-import type { SearchResultDTO } from "@/lib/validators/search";
+import type { SearchResultDto } from "@/lib/api/types/search";
 import type { SessionUser } from "@/server/auth/types";
 import { useBreadcrumbLabels } from "./breadcrumb-label";
 
@@ -57,7 +59,10 @@ export function CommandMenu({ user }: { user: SessionUser }) {
   const labels = useBreadcrumbLabels();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const search = useGlobalSearch(open ? query : "");
+  // Archived records appear only when the user asks for them, and each opening asks again (HU-28 CA1).
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const archivedId = useId();
+  const search = useGlobalSearch(open ? query : "", includeArchived);
 
   // A detail page registers its breadcrumb label; that label names the visit in the recents.
   const visitedLabel = useMemo(() => {
@@ -96,7 +101,10 @@ export function CommandMenu({ user }: { user: SessionUser }) {
 
   function changeOpen(next: boolean) {
     setOpen(next);
-    if (!next) setQuery("");
+    if (!next) {
+      setQuery("");
+      setIncludeArchived(false);
+    }
   }
 
   function go(href: string) {
@@ -104,7 +112,7 @@ export function CommandMenu({ user }: { user: SessionUser }) {
     router.push(href);
   }
 
-  function openHit(hit: SearchResultDTO, href: string) {
+  function openHit(hit: SearchResultDto, href: string) {
     rememberRecentRecord(user.id, {
       entityType: hit.entityType,
       entityId: hit.entityId,
@@ -195,12 +203,24 @@ export function CommandMenu({ user }: { user: SessionUser }) {
               </>
             ) : null}
           </CommandList>
-          {/* Outside the listbox so it holds only options and groups (R9). */}
-          <CommandSeparator />
-          <p role="status" className="px-2 py-3 text-center text-xs text-muted-foreground">
+        </Command>
+        {/* Outside the command root: its Enter key would select the highlighted hit, and the listbox holds
+            only options and groups (R9). */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2">
+          <p role="status" className="text-xs text-muted-foreground">
             {footer}
           </p>
-        </Command>
+          <div className="flex items-center gap-2">
+            <Switch
+              id={archivedId}
+              checked={includeArchived}
+              onCheckedChange={setIncludeArchived}
+            />
+            <Label htmlFor={archivedId} className="font-normal">
+              {t("includeArchived")}
+            </Label>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

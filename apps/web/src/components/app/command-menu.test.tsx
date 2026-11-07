@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import enEnums from "@/i18n/messages/en/enums.json";
 import enNav from "@/i18n/messages/en/nav.json";
 import enSearch from "@/i18n/messages/en/search.json";
@@ -9,10 +9,8 @@ import esEnums from "@/i18n/messages/es/enums.json";
 import esNav from "@/i18n/messages/es/nav.json";
 import esSearch from "@/i18n/messages/es/search.json";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { searchGlobalAction } from "@/features/search/actions";
-import { searchGlobalInputSchema } from "@/lib/validators/search";
-import { searchGlobal } from "@/mocks/services/search";
-import { makeTestContext } from "@/mocks/test-helpers";
+import type { SearchGroupDto, SearchResultDto, SearchResultsDto } from "@/lib/api/types/search";
+import { mockApi, type RecordedCall } from "@/lib/api/testing";
 import type { SessionUser } from "@/server/auth/types";
 import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
 import { CommandMenu } from "./command-menu";
@@ -24,32 +22,90 @@ vi.mock("next/navigation", () => ({
   usePathname: () => nav.pathname,
   useRouter: () => ({ push, refresh: vi.fn() }),
 }));
-vi.mock("@/features/search/actions", () => ({ searchGlobalAction: vi.fn() }));
+vi.mock("@clerk/nextjs", () => ({ useAuth: () => ({ getToken: async () => "test-token" }) }));
 
-// The real mock search over a fixture store with the HU-26 records added: "Talleres García",
-// "Grupo Inversión" and an invoice coded FAC-0012.
-function seedSearch() {
-  const { ctx, db } = makeTestContext("OWNER");
-  const base = db.clients.find((row) => !row.archivedAt)!;
-  for (const [id, name] of [
-    ["cli_garcia", "Talleres García"],
-    ["cli_inversion", "Grupo Inversión"],
-  ] as const) {
-    db.clients.push({
-      ...structuredClone(base),
-      id,
-      code: `CLI-9${db.clients.length}`,
-      tradeName: name,
-      legalName: `${name} C.A.`,
-    });
-  }
-  const invoice = db.invoices.find((row) => row.code === "FAC-0003")!;
-  db.invoices.push({ ...structuredClone(invoice), id: "inv_twelve", code: "FAC-0012" });
-  vi.mocked(searchGlobalAction).mockImplementation((async (input: unknown) => ({
-    ok: true,
-    data: await searchGlobal(ctx, searchGlobalInputSchema.parse(input)),
-  })) as never);
-  return { db, invoice };
+// MOCK — HTTP fixtures: canned `GET /api/v1/search` answers keyed by the query and the archived flag, as the BE
+// would send them. Fictional names only; no domain rule runs in the menu under test.
+function hit(overrides: Partial<SearchResultDto> & Pick<SearchResultDto, "entityId">): SearchResultDto {
+  return {
+    entityType: "CLIENT",
+    code: null,
+    title: "",
+    subtitle: null,
+    status: null,
+    archived: false,
+    ...overrides,
+  };
+}
+
+const GARCIA = hit({
+  entityId: "cli_garcia",
+  code: "CLI-0001",
+  title: "Talleres García",
+  subtitle: "Talleres García C.A.",
+  status: "ACTIVO",
+});
+const GARCIA_NORTE = hit({
+  entityId: "cli_garcia_norte",
+  code: "CLI-0003",
+  title: "Talleres García Norte",
+  status: "INACTIVO",
+  archived: true,
+});
+const INVERSION = hit({
+  entityId: "cli_inversion",
+  code: "CLI-0002",
+  title: "Inversión Digital",
+  status: "ACTIVO",
+});
+const INVOICE_TWELVE = hit({
+  entityId: "inv_twelve",
+  entityType: "INVOICE",
+  code: "FAC-0012",
+  title: "Demo invoice",
+});
+
+// A fiscal number the BE matches exactly comes back as the only hit (PRD §7.6).
+const FISCAL_CLIENT = hit({
+  entityId: "cli_fiscal",
+  code: "CLI-0004",
+  title: "Distribuidora Ejemplo",
+  subtitle: "J-30123456-7",
+  status: "PROSPECTO",
+});
+
+const CANNED: Record<string, SearchResultDto[]> = {
+  "garcia|false": [GARCIA],
+  "garcia|true": [GARCIA, GARCIA_NORTE],
+  "invsion|false": [INVERSION],
+  "FAC-0012|false": [INVOICE_TWELVE],
+  "J-30123456-7|false": [FISCAL_CLIENT],
+  "c: garcia|false": [GARCIA],
+  "f: garcia|false": [],
+};
+
+function groupByType(hits: SearchResultDto[]): SearchGroupDto[] {
+  const types = [...new Set(hits.map((row) => row.entityType))];
+  return types.map((entityType) => {
+    const items = hits.filter((row) => row.entityType === entityType);
+    return { entityType, total: items.length, items };
+  });
+}
+
+function answer(call: RecordedCall): SearchResultsDto {
+  const q = call.search.get("q") ?? "";
+  const archived = call.search.get("includeArchived") === "true";
+  return {
+    query: q,
+    entityType: null,
+    groups: groupByType(CANNED[`${q}|${archived}`] ?? []),
+  };
+}
+
+let http: ReturnType<typeof mockApi>;
+
+function searchCalls(): RecordedCall[] {
+  return http.calls.filter((call) => call.path === "/api/v1/search");
 }
 
 function userWithRole(role: SessionUser["role"]): SessionUser {
@@ -105,7 +161,14 @@ describe("CommandMenu", () => {
     push.mockClear();
     nav.pathname = "/dashboard";
     window.localStorage.clear();
-    seedSearch();
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://api.test");
+    http = mockApi({ "GET /api/v1/search": (call) => ({ body: answer(call) }) });
+    vi.stubGlobal("fetch", http.fetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("opens with Ctrl+K and Cmd+K and closes on a second Ctrl+K", async () => {
@@ -235,12 +298,14 @@ describe("CommandMenu", () => {
       expect(await screen.findByRole("option", { name: /Talleres García/ })).toBeInTheDocument();
     });
 
-    it('CA2: "invsion" finds "Inversión" (trigram similarity)', async () => {
+    it('CA2: "invsion" finds "Inversión Digital" (the BE fuzzy match is shown as returned)', async () => {
       const user = userEvent.setup();
       renderMenu("OWNER");
       openWithShortcut();
       await user.type(await screen.findByRole("combobox"), "invsion");
-      expect(await screen.findByRole("option", { name: /Grupo Inversión/ })).toBeInTheDocument();
+      expect(
+        await screen.findByRole("option", { name: /Inversión Digital/ }),
+      ).toBeInTheDocument();
     });
 
     it("CA3: the code FAC-0012 goes straight to that invoice on Enter", async () => {
@@ -255,6 +320,18 @@ describe("CommandMenu", () => {
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
 
+    it("a fiscal number the BE matches exactly is selected alone, so Enter opens it", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "J-30123456-7");
+      const option = await screen.findByRole("option", { name: /Distribuidora Ejemplo/ });
+      await waitFor(() => expect(option).toHaveAttribute("aria-selected", "true"));
+      expect(screen.getAllByRole("option", { name: /Distribuidora Ejemplo/ })).toHaveLength(1);
+      await user.keyboard("{Enter}");
+      expect(push).toHaveBeenCalledWith("/clients/cli_fiscal");
+    });
+
     it("groups hits by type and shows icon, code, title, subtitle and translated status", async () => {
       const user = userEvent.setup();
       renderMenu("OWNER");
@@ -264,30 +341,57 @@ describe("CommandMenu", () => {
       const group = option.closest("[cmdk-group]") as HTMLElement;
       expect(within(group).getByText(enSearch.types.CLIENT)).toBeInTheDocument();
       expect(option.querySelector('[data-entity-icon="CLIENT"]')).not.toBeNull();
-      expect(option).toHaveTextContent(/CLI-9\d+/);
+      expect(option).toHaveTextContent("CLI-0001");
       expect(option).toHaveTextContent("Talleres García C.A.");
       expect(option).toHaveTextContent(enEnums.ClientStatus.ACTIVO);
       await user.click(option);
       expect(push).toHaveBeenCalledWith("/clients/cli_garcia");
     });
 
-    it("the `c:` prefix narrows to clients and `f:` to invoices", async () => {
+    it("the `c:` prefix goes to the API as typed and narrows the results", async () => {
       const user = userEvent.setup();
       renderMenu("OWNER");
       openWithShortcut();
       const input = await screen.findByRole("combobox");
       await user.type(input, "c: garcia");
       expect(await screen.findByRole("option", { name: /Talleres García/ })).toBeInTheDocument();
-      expect(vi.mocked(searchGlobalAction)).toHaveBeenLastCalledWith({ q: "c: garcia" });
+      expect(searchCalls().at(-1)?.search.get("q")).toBe("c: garcia");
 
       await user.clear(input);
       await user.type(input, "f: garcia");
-      await waitFor(() =>
-        expect(vi.mocked(searchGlobalAction)).toHaveBeenLastCalledWith({ q: "f: garcia" }),
-      );
+      await waitFor(() => expect(searchCalls().at(-1)?.search.get("q")).toBe("f: garcia"));
       await waitFor(() =>
         expect(screen.queryByRole("option", { name: /Talleres García/ })).not.toBeInTheDocument(),
       );
+    });
+
+    it("keeps archived records out until the user shows them (HU-28 CA1)", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "garcia");
+      await screen.findByRole("option", { name: /Talleres García/ });
+      expect(screen.queryByRole("option", { name: /Talleres García Norte/ })).not.toBeInTheDocument();
+      expect(searchCalls().at(-1)?.search.has("includeArchived")).toBe(false);
+
+      await user.click(screen.getByRole("switch", { name: enSearch.includeArchived }));
+
+      expect(await screen.findByRole("option", { name: /Talleres García Norte/ })).toBeInTheDocument();
+      expect(searchCalls().at(-1)?.search.get("includeArchived")).toBe("true");
+    });
+
+    it("hides archived records again when the menu opens next time", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.click(await screen.findByRole("switch", { name: enSearch.includeArchived }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      openWithShortcut();
+      expect(
+        await screen.findByRole("switch", { name: enSearch.includeArchived }),
+      ).not.toBeChecked();
     });
 
     it("does not search while the query is empty or only a prefix", async () => {
@@ -296,7 +400,7 @@ describe("CommandMenu", () => {
       openWithShortcut();
       await user.type(await screen.findByRole("combobox"), "c:");
       await new Promise((resolve) => setTimeout(resolve, 300));
-      expect(searchGlobalAction).not.toHaveBeenCalled();
+      expect(searchCalls()).toHaveLength(0);
     });
   });
 
