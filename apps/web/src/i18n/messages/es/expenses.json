@@ -27,7 +27,8 @@
     "newRecurringAction": "Nuevo recurrente",
     "recurringAction": "Recurrentes",
     "markPaidAction": "Marcar como pagado",
-    "voidAction": "Anular"
+    "voidAction": "Anular",
+    "editTitle": "Editar gasto"
   },
   "status": {
     "overdue": "Vencido",
@@ -111,7 +112,9 @@
     "placeholders": {
       "category": "Elige una categoría"
     },
-    "none": "Ninguno"
+    "none": "Ninguno",
+    "editTitle": "Editar gasto",
+    "editDescription": "Solo un gasto pendiente se puede editar; uno pagado ya movió su cuenta."
   },
   "markPaid": {
     "title": "Marcar como pagado",
@@ -159,7 +162,8 @@
     "voided": "Gasto anulado",
     "recurringCreated": "Gasto recurrente creado",
     "recurringUpdated": "Gasto recurrente actualizado",
-    "recurringStatusChanged": "Estado del recurrente actualizado"
+    "recurringStatusChanged": "Estado del recurrente actualizado",
+    "updated": "Gasto actualizado"
   },
   "recurring": {
     "table": {

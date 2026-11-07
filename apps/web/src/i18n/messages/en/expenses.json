@@ -27,7 +27,8 @@
     "newRecurringAction": "New recurring",
     "recurringAction": "Recurring",
     "markPaidAction": "Mark as paid",
-    "voidAction": "Void"
+    "voidAction": "Void",
+    "editTitle": "Edit expense"
   },
   "status": {
     "overdue": "Overdue",
@@ -111,7 +112,9 @@
     "placeholders": {
       "category": "Choose a category"
     },
-    "none": "None"
+    "none": "None",
+    "editTitle": "Edit expense",
+    "editDescription": "Only a pending expense can be edited; a paid one has already moved its account."
   },
   "markPaid": {
     "title": "Mark as paid",
@@ -159,7 +162,8 @@
     "voided": "Expense voided",
     "recurringCreated": "Recurring expense created",
     "recurringUpdated": "Recurring expense updated",
-    "recurringStatusChanged": "Recurring expense status updated"
+    "recurringStatusChanged": "Recurring expense status updated",
+    "updated": "Expense updated"
   },
   "recurring": {
     "table": {

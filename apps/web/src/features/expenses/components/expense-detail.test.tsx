@@ -71,6 +71,19 @@ describe("ExpenseDetail", () => {
     );
   });
 
+  it('offers "Editar" for a pending expense only (cosmetic, Q-FEINT-11 (A))', () => {
+    const pending = makeExpense();
+    const { unmount } = renderDetail(pending);
+    expect(screen.getByRole("link", { name: "Editar" })).toHaveAttribute(
+      "href",
+      `/expenses/${pending.id}/edit`,
+    );
+    unmount();
+
+    renderDetail(makeExpense({ status: "PAGADO", paidAt: "2026-10-09" }));
+    expect(screen.queryByRole("link", { name: "Editar" })).not.toBeInTheDocument();
+  });
+
   it("shows the account debit exactly as the BE returned it", () => {
     renderDetail(makeExpense({ status: "PAGADO", accountAmount: "4380.00" }));
     expect(screen.getByText(/4380\.00/)).toBeInTheDocument();
