@@ -9,7 +9,10 @@
     "allocationExceedsBalance": "El monto supera el saldo de la factura",
     "allocationInvoiceNotOpen": "La factura no está abierta para este cliente",
     "allocationSameCurrency": "En la misma moneda, el monto de la factura debe ser igual al del pago",
-    "paymentNotConfirmed": "Solo se puede asignar un pago confirmado"
+    "paymentNotConfirmed": "Solo se puede asignar un pago confirmado",
+    "allocationAmountRequired": "Indica el monto a aplicar en ambas monedas",
+    "receiptUnavailable": "Ese comprobante ya pertenece a otro pago",
+    "providerInvoiceClientMismatch": "La factura es de otro cliente"
   },
   "warnings": {
     "duplicate": "Posible pago duplicado: existe otro con la misma referencia, método y cuenta"
@@ -129,10 +132,15 @@
       "total": "Total en USD"
     },
     "receiptHint": "PDF, PNG, JPG o WEBP de hasta 10 MB.",
-    "ariaReceipt": "Subir comprobante"
+    "ariaReceipt": "Subir comprobante",
+    "editTitle": "Editar pago",
+    "editDescription": "Corrige los datos del pago. Las facturas a las que se aplica se cambian desde el detalle.",
+    "save": "Guardar",
+    "inactiveHint": "inactivo"
   },
   "toast": {
-    "created": "Pago registrado"
+    "created": "Pago registrado",
+    "updated": "Pago actualizado"
   },
   "detail": {
     "summary": "Resumen",
@@ -178,5 +186,11 @@
     "title": "Saldo a favor",
     "description": "Pagos confirmados del cliente con monto sin asignar.",
     "empty": "No hay saldo a favor."
+  },
+  "errors": {
+    "voided": "Un pago anulado no se puede modificar",
+    "invalidTransition": "Ese cambio de estado no está permitido",
+    "clientLocked": "El cliente y la moneda no se pueden cambiar mientras el pago tenga asignaciones",
+    "allocatableBelowAllocated": "El monto no puede ser menor que lo ya asignado"
   }
 }

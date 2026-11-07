@@ -9,7 +9,10 @@
     "allocationExceedsBalance": "The amount exceeds the invoice balance",
     "allocationInvoiceNotOpen": "The invoice is not open for this client",
     "allocationSameCurrency": "In the same currency, the invoice amount must equal the payment amount",
-    "paymentNotConfirmed": "Only a confirmed payment can be allocated"
+    "paymentNotConfirmed": "Only a confirmed payment can be allocated",
+    "allocationAmountRequired": "Enter the amount to apply in both currencies",
+    "receiptUnavailable": "That receipt already belongs to another payment",
+    "providerInvoiceClientMismatch": "The invoice belongs to another client"
   },
   "warnings": {
     "duplicate": "Possible duplicate payment: another one has the same reference, method and account"
@@ -129,10 +132,15 @@
       "total": "Total in USD"
     },
     "receiptHint": "PDF, PNG, JPG or WEBP up to 10 MB.",
-    "ariaReceipt": "Upload receipt"
+    "ariaReceipt": "Upload receipt",
+    "editTitle": "Edit payment",
+    "editDescription": "Fix the payment data. The invoices it is applied to are changed from the detail.",
+    "save": "Save",
+    "inactiveHint": "inactive"
   },
   "toast": {
-    "created": "Payment recorded"
+    "created": "Payment recorded",
+    "updated": "Payment updated"
   },
   "detail": {
     "summary": "Summary",
@@ -178,5 +186,11 @@
     "title": "Credit",
     "description": "Confirmed payments of the client with an amount not yet applied.",
     "empty": "There is no credit."
+  },
+  "errors": {
+    "voided": "A voided payment cannot be changed",
+    "invalidTransition": "That status change is not allowed",
+    "clientLocked": "The client and the currency cannot change while the payment has allocations",
+    "allocatableBelowAllocated": "The amount cannot be lower than what is already allocated"
   }
 }
