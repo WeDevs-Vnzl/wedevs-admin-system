@@ -1,43 +1,38 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { actionOk } from "@/lib/validators/common";
-import {
-  GLOBAL_GRAPH_DEFAULT_TYPES,
-  getGlobalGraphInputSchema,
-  graphNodeId,
-  type GetGlobalGraphInput,
-} from "@/lib/validators/graph";
-import type { MockServiceContext } from "@/mocks/ctx";
-import { getGlobalGraph } from "@/mocks/services/graph";
-import { makeTestContext } from "@/mocks/test-helpers";
+import { mockApi, type MockApi } from "@/lib/api/testing";
+import { GLOBAL_GRAPH_DEFAULT_TYPES, graphNodeId } from "@/lib/validators/graph";
+import { GLOBAL_GRAPH, globalGraphRoutes } from "../testing/graph-http-fixtures";
 import { GlobalGraph } from "./global-graph";
 import { installReactFlowMocks, renderWithIntl } from "./test-utils";
 
-// HU-25 CA1–CA2 over the mock graph service. CA3 (≥ 50 fps with 500 nodes) is checked by hand (A3).
+// HU-25 CA1–CA2 over the HTTP test double (the real Server Actions and client run). CA3 (≥ 50 fps with 500 nodes)
+// is checked by hand (A3).
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-let ctx: MockServiceContext;
-const globalSpy = vi.fn();
-vi.mock("@/features/graph/actions", () => ({
-  expandNodeAction: vi.fn(),
-  getEntityGraphAction: vi.fn(),
-  getGlobalGraphAction: async (input: GetGlobalGraphInput) => {
-    globalSpy(input);
-    return actionOk(await getGlobalGraph(ctx, getGlobalGraphInputSchema.parse(input)));
-  },
-}));
+const mocks = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
+
+let api: MockApi;
 
 const KAIROS = graphNodeId("CLIENT", "cli_kairos");
 
 beforeAll(installReactFlowMocks);
 beforeEach(() => {
-  ctx = makeTestContext("OWNER").ctx;
-  globalSpy.mockReset();
+  api = mockApi(globalGraphRoutes());
+  mocks.getServerApi.mockResolvedValue(api.api);
 });
+
+/** The global graph requests the page sent, in order. */
+function globalCalls() {
+  return api.calls.filter((call) => call.path === "/api/v1/graph");
+}
 
 function nodeList(): HTMLElement {
   const list = screen.getByText("Lista de nodos").closest("section")?.querySelector("ul");
@@ -55,17 +50,16 @@ async function openFilters() {
 }
 
 async function renderGlobal() {
-  const initial = await getGlobalGraph(ctx, getGlobalGraphInputSchema.parse({}));
   const view = renderWithIntl(
     <GlobalGraph
-      initial={initial}
+      initial={GLOBAL_GRAPH}
       canSeeArchived
       tags={[{ id: "tag_prioritario", name: "Prioritario" }]}
       technologies={[{ id: "tec_react", name: "React" }]}
     />,
   );
   await screen.findByTestId(`graph-node-${KAIROS}`, {}, { timeout: 8000 });
-  return { initial, ...view };
+  return { initial: GLOBAL_GRAPH, ...view };
 }
 
 describe("GlobalGraph", { timeout: 30000 }, () => {
@@ -90,7 +84,7 @@ describe("GlobalGraph", { timeout: 30000 }, () => {
     }
     expect(filters.getByRole("checkbox", { name: /^Facturas \(0\)$/ })).not.toBeChecked();
     expect(filters.getByRole("switch", { name: "Solo activos" })).not.toBeChecked();
-    expect(globalSpy).not.toHaveBeenCalled();
+    expect(api.calls).toHaveLength(0);
   });
 
   it("CA2: searching a name centers and highlights that node", async () => {
@@ -122,17 +116,11 @@ describe("GlobalGraph", { timeout: 30000 }, () => {
 
     const filters = await openFilters();
     await user.click(filters.getByRole("switch", { name: "Solo activos" }));
-    await waitFor(() =>
-      expect(globalSpy).toHaveBeenLastCalledWith(
-        expect.objectContaining({ filters: expect.objectContaining({ onlyActive: true }) }),
-      ),
-    );
+    await waitFor(() => expect(globalCalls().at(-1)?.search.get("onlyActive")).toBe("true"));
     await user.click(filters.getByRole("checkbox", { name: /^Facturas \(\d+\)$/ }));
     await waitFor(() =>
-      expect(globalSpy).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          include: expect.arrayContaining(["INVOICE", ...GLOBAL_GRAPH_DEFAULT_TYPES]),
-        }),
+      expect(globalCalls().at(-1)?.search.getAll("include")).toEqual(
+        expect.arrayContaining(["INVOICE", ...GLOBAL_GRAPH_DEFAULT_TYPES]),
       ),
     );
   });
