@@ -1,26 +1,27 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const server = vi.hoisted(() => ({ api: null as unknown }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
-import { getMockStore } from "@/mocks/store";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import { getDocumentEditor } from "./editor-queries";
+import { wireDetail, wireVersion } from "./wire-fixtures";
 
-const storedUserId = () => getMockStore().users[0]!.id;
-
-function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role, { id: storedUserId() }));
+function use(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.api = mocked.api;
+  return mocked;
 }
 
-const formatOf = (versionId: string | null) =>
-  getMockStore().documentVersions.find((version) => version.id === versionId)?.format;
+const markdown = (content = "# Texto") =>
+  wireVersion({ format: "MARKDOWN", file: null, content, url: null });
 
-function findDocument(
-  predicate: (row: ReturnType<typeof getMockStore>["documents"][number]) => boolean,
-) {
-  return getMockStore().documents.find((row) => row.archivedAt === null && predicate(row))!;
+function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
+  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
 }
 
 beforeEach(() => {
@@ -28,55 +29,56 @@ beforeEach(() => {
   asRole("MEMBER");
 });
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
-});
-
 describe("getDocumentEditor", () => {
   it("opens an unsigned markdown document for editing, starting from its draft", async () => {
-    const doc = findDocument(
-      (row) => row.status !== "FIRMADO" && formatOf(row.currentVersionId) === "MARKDOWN",
-    );
-    doc.draftContent = "# Pending draft";
-    const editor = await getDocumentEditor(doc.id);
-    expect(editor).toMatchObject({
+    use({
+      "GET /api/v1/documents/{id}": {
+        body: wireDetail({ currentVersion: markdown(), draftContent: "# Pending draft" }),
+      },
+    });
+    expect(await getDocumentEditor("doc_1")).toMatchObject({
       availability: "editable",
       content: "# Pending draft",
-      document: { id: doc.id },
+      document: { id: "doc_1" },
     });
   });
 
   it("starts from the current version when there is no draft", async () => {
-    const doc = findDocument(
-      (row) => row.status !== "FIRMADO" && formatOf(row.currentVersionId) === "MARKDOWN",
-    );
-    doc.draftContent = null;
-    const editor = await getDocumentEditor(doc.id);
-    expect(editor?.content).toBe(editor?.document.currentVersion?.content);
-    expect(editor?.content).toBeTruthy();
+    use({
+      "GET /api/v1/documents/{id}": {
+        body: wireDetail({ currentVersion: markdown("# V2"), draftContent: null }),
+      },
+    });
+    expect((await getDocumentEditor("doc_1"))?.content).toBe("# V2");
   });
 
-  it("reports a signed document as locked", async () => {
-    const doc = findDocument((row) => formatOf(row.currentVersionId) === "MARKDOWN");
-    doc.status = "FIRMADO";
-    expect(await getDocumentEditor(doc.id)).toMatchObject({ availability: "signed" });
+  it("reports a signed document as locked and a file document as not editable", async () => {
+    use({
+      "GET /api/v1/documents/{id}": {
+        body: wireDetail({ status: "FIRMADO", currentVersion: markdown() }),
+      },
+    });
+    expect(await getDocumentEditor("doc_1")).toMatchObject({ availability: "signed" });
+    use({ "GET /api/v1/documents/{id}": { body: wireDetail() } });
+    expect(await getDocumentEditor("doc_1")).toMatchObject({ availability: "notMarkdown" });
   });
 
-  it("reports a file or link document as not editable in markdown", async () => {
-    const doc = findDocument(
-      (row) => row.status !== "FIRMADO" && formatOf(row.currentVersionId) === "ARCHIVO",
-    );
-    expect(await getDocumentEditor(doc.id)).toMatchObject({ availability: "notMarkdown" });
-  });
-
-  it("answers null to a Viewer, an unknown id, a malformed id and an archived document", async () => {
-    const doc = findDocument((row) => formatOf(row.currentVersionId) === "MARKDOWN");
+  it("answers null to a Viewer (no call), an unknown id, a malformed id and an archived document", async () => {
+    const { calls } = use({ "GET /api/v1/documents/{id}": { body: wireDetail() } });
     asRole("VIEWER");
-    expect(await getDocumentEditor(doc.id)).toBeNull();
+    expect(await getDocumentEditor("doc_1")).toBeNull();
+    expect(calls).toHaveLength(0);
+
     asRole("MEMBER");
-    expect(await getDocumentEditor("doc_does_not_exist")).toBeNull();
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("NOT_FOUND") });
+    expect(await getDocumentEditor("doc_x")).toBeNull();
     expect(await getDocumentEditor("")).toBeNull();
-    doc.archivedAt = new Date().toISOString();
-    expect(await getDocumentEditor(doc.id)).toBeNull();
+
+    use({
+      "GET /api/v1/documents/{id}": {
+        body: wireDetail({ currentVersion: markdown(), archivedAt: "2026-02-01T00:00:00.000Z" }),
+      },
+    });
+    expect(await getDocumentEditor("doc_1")).toBeNull();
   });
 });

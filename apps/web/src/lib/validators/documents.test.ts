@@ -320,6 +320,25 @@ describe("document filters and DTOs", () => {
     expect(documentFilterSchema.safeParse({ sort: "draftContent:asc" }).success).toBe(false);
   });
 
+  it("carries a facet for each of the six link types (HU-20 CA1)", () => {
+    const parsed = documentFilterSchema.parse({
+      clientId: "c1",
+      contactId: "k1",
+      projectId: "p1",
+      invoiceId: "i1",
+      paymentId: "y1",
+      expenseId: "e1",
+    });
+    expect(parsed).toMatchObject({
+      clientId: ["c1"],
+      contactId: ["k1"],
+      projectId: ["p1"],
+      invoiceId: ["i1"],
+      paymentId: ["y1"],
+      expenseId: ["e1"],
+    });
+  });
+
   const category = { id: "cat_legal", name: "Legal", nameEn: null, color: null };
   const type = {
     id: "dtype_contract",
