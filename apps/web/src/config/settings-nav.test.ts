@@ -20,6 +20,7 @@ describe("settings sections (PRD §8.15)", () => {
       "rates",
       "fiscal",
       "payment-methods",
+      "integrations",
       "technologies",
       "document-types",
       "expense-categories",
@@ -42,6 +43,17 @@ describe("settings sections (PRD §8.15)", () => {
     for (const role of ["MEMBER", "VIEWER"] as const) {
       expect(visibleSlugs(role)).toEqual(["preferences", "api-tokens"]);
     }
+  });
+
+  it("shows the integration mapping to Owner and Admin only, the grant the BE checks on /settings/integrations", () => {
+    expect(findSettingsSection("integrations")).toMatchObject({
+      labelKey: "integrations",
+      permission: { action: "read", resource: "settings" },
+    });
+    expect(visibleSlugs("OWNER")).toContain("integrations");
+    expect(visibleSlugs("ADMIN")).toContain("integrations");
+    expect(visibleSlugs("MEMBER")).not.toContain("integrations");
+    expect(visibleSlugs("VIEWER")).not.toContain("integrations");
   });
 
   it("keeps API tokens visible to every signed-in role, with no permission check (own tokens only)", () => {
