@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import { namePrefix } from "./support/accessible-names";
-import { createAccountViaUi, pickDateViaUi } from "./support/ui-data";
+import { createAccountViaUi, createClientViaUi, pickDateViaUi } from "./support/ui-data";
 
 // FE-INT-R E.2 finance E2E (old 3.8 without HU-13; HU-13 is E.3's `fe-int-3-payments.spec.ts`). HU-09 CA1–CA3,
 // HU-10 CA1–CA3, HU-11 CA1–CA5, HU-12 CA1–CA3 and CA5, HU-14, HU-15 CA1–CA3, HU-16 CA1–CA2, HU-17 CA1–CA3, HU-28 for
@@ -47,15 +47,9 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-async function createClient(page: Page, name: string): Promise<string> {
-  await page.goto("/clients/new");
-  await page.getByLabel("Nombre comercial", { exact: true }).fill(name);
-  await page.getByLabel("Identificador fiscal", { exact: true }).fill(taxId());
-  await page.getByLabel("Dirección", { exact: true }).fill("Calle E2E 1");
-  await page.locator("#client-phone").fill("+57 300 123 4567");
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/clients\/[^/?#]+$/);
-  return idFromUrl(page.url(), "clients");
+// Shared with the other specs: a client created through /clients/new, its URL checked against a record id (not "new").
+function createClient(page: Page, name: string): Promise<string> {
+  return createClientViaUi(page, name, taxId());
 }
 
 async function createProject(page: Page, clientName: string, name: string): Promise<string> {
@@ -75,7 +69,12 @@ async function createProject(page: Page, clientName: string, name: string): Prom
  * An account of this run; the opening balance is entered in the account's currency. Returns its id. The shared helper
  * also fills the required opening date (`#account-opening-date`), which this spec did not, so the save was refused.
  */
-async function createAccount(page: Page, name: string, currency: string, opening: string): Promise<string> {
+async function createAccount(
+  page: Page,
+  name: string,
+  currency: string,
+  opening: string,
+): Promise<string> {
   return createAccountViaUi(page, { name, currency, openingBalance: opening });
 }
 
@@ -174,7 +173,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(page.getByText("Cobro recurrente creado")).toBeVisible();
 
     // CA1: the period's installment falls on the 28th or 29th of the month before the billing day.
-    const generate = page.getByRole("button", { name: `Generar periodos pendientes de ${chargeName}` });
+    const generate = page.getByRole("button", {
+      name: `Generar periodos pendientes de ${chargeName}`,
+    });
     await generate.click();
     await expect(page.getByText(/periodos? generados?/)).toBeVisible();
     await expect(page.getByText(/(28|29)\/\d{2}\/\d{4}/).first()).toBeVisible();
@@ -196,7 +197,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(page.getByText("Cobro recurrente creado")).toBeVisible();
     await page.getByRole("button", { name: `Pausar ${pausedName}` }).click();
     await expect(page.getByText("Cobro pausado: no genera cuotas")).toBeVisible();
-    await page.getByRole("button", { name: `Generar periodos pendientes de ${pausedName}` }).click();
+    await page
+      .getByRole("button", { name: `Generar periodos pendientes de ${pausedName}` })
+      .click();
     await expect(page.getByText("No había periodos pendientes por generar")).toBeVisible();
   });
 
@@ -227,7 +230,9 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     // CA5: the installment is FACTURADA and no longer offered.
     await page.goto(`/invoices/new?clientId=${clientId}`);
-    await expect(page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" })).toHaveCount(0);
+    await expect(
+      page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" }),
+    ).toHaveCount(0);
     await page.goto(`/projects/${projectId}/billing`);
     const row = page.getByRole("row", { name: /Anticipo 40 %/ });
     await expect(row.getByText("Facturada").first()).toBeVisible();
@@ -235,7 +240,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     // HU-09 CA3: a billed installment keeps its amount and currency; only the label is editable.
     await row.getByRole("button", { name: /Editar Anticipo 40 %/ }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText("Cuota facturada: solo se puede cambiar la etiqueta.")).toBeVisible();
+    await expect(
+      dialog.getByText("Cuota facturada: solo se puede cambiar la etiqueta."),
+    ).toBeVisible();
     await expect(dialog.getByLabel("Monto", { exact: true })).toBeDisabled();
     await expect(dialog.getByLabel("Nombre", { exact: true })).toBeEnabled();
   });
@@ -253,7 +260,10 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     // CA3: a second active invoice with the same number is refused by the BE (`numberTaken`).
     await page.goto(`/invoices/new?clientId=${clientId}`);
-    await page.getByRole("checkbox", { name: /^Facturar la cuota / }).first().click();
+    await page
+      .getByRole("checkbox", { name: /^Facturar la cuota / })
+      .first()
+      .click();
     await page.getByRole("button", { name: "Quitar línea" }).first().click();
     await page.locator("#invoice-number").fill(number);
     await page.locator('button[type="submit"][form="invoice-form"]').last().click();
@@ -280,7 +290,11 @@ test.describe("FE-INT-R E.2 finance", () => {
     await createAccount(page, account, "USD", "0");
 
     const { clientId } = await setupInstallmentClient(page);
-    const invoiceId = await draftInvoiceFromInstallment(page, clientId, uniq("n").replace(/\s/g, "-"));
+    const invoiceId = await draftInvoiceFromInstallment(
+      page,
+      clientId,
+      uniq("n").replace(/\s/g, "-"),
+    );
     await issueInvoice(page, invoiceId);
 
     // CA1: no payment and not due → EMITIDA.
@@ -316,9 +330,17 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     await page.goto(`/invoices/${invoiceId}`);
     await page.getByRole("button", { name: "Anular", exact: true }).first().click();
-    await page.getByRole("dialog").getByLabel("Motivo", { exact: true }).fill("E2E: no debe anularse");
-    await page.getByRole("dialog").getByRole("button", { name: "Anular factura", exact: true }).click();
-    await expect(page.getByText("La factura tiene pagos asignados: quita primero esas asignaciones")).toBeVisible();
+    await page
+      .getByRole("dialog")
+      .getByLabel("Motivo", { exact: true })
+      .fill("E2E: no debe anularse");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Anular factura", exact: true })
+      .click();
+    await expect(
+      page.getByText("La factura tiene pagos asignados: quita primero esas asignaciones"),
+    ).toBeVisible();
   });
 
   // ───────────────────────────── HU-14 · receipt ─────────────────────────────
@@ -333,12 +355,18 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     // The payment is created only as the receipt's carrier: an allocation to an issued invoice (HU-13 is E.3's).
     const { clientId } = await setupInstallmentClient(page);
-    const invoiceId = await draftInvoiceFromInstallment(page, clientId, uniq("c").replace(/\s/g, "-"));
+    const invoiceId = await draftInvoiceFromInstallment(
+      page,
+      clientId,
+      uniq("c").replace(/\s/g, "-"),
+    );
     await issueInvoice(page, invoiceId);
 
     await page.goto(`/payments/new?invoiceId=${invoiceId}`);
     await page.locator("#payment-account").click();
-    await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)} \\(USD\\)$`) }).click();
+    await page
+      .getByRole("option", { name: new RegExp(`^${escapeRegExp(account)} \\(USD\\)$`) })
+      .click();
     await page.locator("#payment-method").click();
     await page.getByRole("option", { name: /^Zelle$/ }).click();
     await page.locator("#payment-amount").fill("10");
@@ -371,7 +399,10 @@ test.describe("FE-INT-R E.2 finance", () => {
     // Archiving moves the invoice to the trash (HU-28 CA1): the trash lists it.
     await page.goto(`/invoices/${archivedId}`);
     await page.getByRole("button", { name: "Archivar", exact: true }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: "Archivar", exact: true }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Archivar", exact: true })
+      .click();
     await expect(page.getByText("Factura archivada")).toBeVisible();
 
     // The number is free again among the non-archived invoices (HU-11 CA3): a new invoice takes it.
@@ -385,7 +416,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(
       page.getByText("Otra factura activa ya usa este número. Edítala antes de restaurar esta."),
     ).toBeVisible();
-    await expect(row.getByRole("link", { name: /^Abrir / }).or(row.getByRole("button", { name: /^Abrir / }))).toBeVisible();
+    await expect(
+      row.getByRole("link", { name: /^Abrir / }).or(row.getByRole("button", { name: /^Abrir / })),
+    ).toBeVisible();
   });
 
   // ───────────────────────────── HU-15 · balances, book and reconciliation ─────────────────────────────
@@ -442,8 +475,12 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(page.getByText("Transferencia registrada")).toBeVisible();
 
     await page.goto("/accounts/list");
-    await expect(page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00"))).toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: target }).getByText(money("99,00"))).toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00")),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: target }).getByText(money("99,00")),
+    ).toBeVisible();
 
     // CA2: the same account on both sides is refused by the form.
     await page.goto("/accounts/transfers/new");
@@ -486,7 +523,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
-    await expect(page.getByText("La cuenta de pago es obligatoria para un gasto pagado")).toBeVisible();
+    await expect(
+      page.getByText("La cuenta de pago es obligatoria para un gasto pagado"),
+    ).toBeVisible();
     await dialog.locator("#mark-paid-account").click();
     await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
     await dialog.locator("#mark-paid-account-amount").fill("137");
@@ -522,7 +561,9 @@ async function payInvoice(
 ) {
   await page.goto(`/payments/new?invoiceId=${invoiceId}`);
   await page.locator("#payment-account").click();
-  await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)} \\(USD\\)$`) }).click();
+  await page
+    .getByRole("option", { name: new RegExp(`^${escapeRegExp(account)} \\(USD\\)$`) })
+    .click();
   await page.locator("#payment-method").click();
   await page.getByRole("option", { name: /^Zelle$/ }).click();
   await page.locator("#payment-amount").fill(amount);
