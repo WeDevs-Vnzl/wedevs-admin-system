@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, LogOut, RotateCcw } from "lucide-react";
+import { LogOut, RotateCcw } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -24,21 +25,15 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { initialsOf } from "@/components/app/app-sidebar";
-import { resetMockDataAction, setMockRoleAction } from "@/features/session/actions";
-import { USER_ROLE_VALUES, userRoleSchema, type UserRole } from "@/lib/validators/enums";
+import { resetMockDataAction } from "@/features/session/actions";
 import type { SessionUser } from "@/server/auth/types";
 
-// The user menu of the topbar. MOCK parts (Hito 1 only, DT-32, DT-40): "View as role" and "Reset mock
-// data" call the session actions; sign-out only navigates to /sign-in until Clerk arrives in Hito 2.
+// The user menu of the topbar. Sign-out goes through Clerk. MOCK part — until cleanup: "Reset mock data"
+// calls the session action and goes away with the mock layer.
 export function UserMenu({ user }: { user: SessionUser }) {
   const t = useTranslations("shell.userMenu");
   const tMock = useTranslations("mock");
@@ -46,23 +41,9 @@ export function UserMenu({ user }: { user: SessionUser }) {
   const tCommon = useTranslations("common");
   const tRole = useTranslations("enums.UserRole");
   const router = useRouter();
+  const { signOut } = useClerk();
   const [resetOpen, setResetOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  function changeRole(value: string) {
-    const parsed = userRoleSchema.safeParse(value);
-    if (!parsed.success) return;
-    const role: UserRole = parsed.data;
-    startTransition(async () => {
-      const result = await setMockRoleAction({ role });
-      if (!result.ok) {
-        toast.error(tCommon("errors.INTERNAL"));
-        return;
-      }
-      toast.success(tMock("viewAs.changed", { role: tRole(role) }));
-      router.refresh();
-    });
-  }
 
   function resetData() {
     startTransition(async () => {
@@ -109,28 +90,13 @@ export function UserMenu({ user }: { user: SessionUser }) {
                 {tMock("badge.label")}
               </Badge>
             </DropdownMenuLabel>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Eye aria-hidden />
-                {tMock("viewAs.label")}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={user.role} onValueChange={changeRole}>
-                  {USER_ROLE_VALUES.map((role) => (
-                    <DropdownMenuRadioItem key={role} value={role}>
-                      {tRole(role)}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
             <DropdownMenuItem onSelect={() => setResetOpen(true)}>
               <RotateCcw aria-hidden />
               {tMock("reset.label")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => router.push("/sign-in")}>
+          <DropdownMenuItem onSelect={() => void signOut({ redirectUrl: "/sign-in" })}>
             <LogOut aria-hidden />
             {tAuth("signOut")}
           </DropdownMenuItem>

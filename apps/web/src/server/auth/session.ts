@@ -7,8 +7,7 @@ import { getServerApi } from "@/lib/api/server";
 import type { SessionLocale, SessionTheme, SessionUser } from "./types";
 
 // The session user comes from the BE: `GET /api/v1/me` (BE-1, Q-BE1-2). The role is the BE's DB role
-// (C13); nothing here reads Clerk metadata. The "View as role" mock override lives in `@/mocks/session`
-// and applies to the mock service context only (C9).
+// (C13); nothing here reads Clerk metadata.
 
 /** The fields of `GET /api/v1/me` the session reads, picked from the generated DTO (C8). */
 export type MeProfile = Pick<
