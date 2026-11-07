@@ -49,6 +49,7 @@ export const DOCUMENT_VALIDATION_MESSAGES = {
 /** Markdown / draft size cap (characters). */
 export const DOCUMENT_CONTENT_MAX = 1_000_000;
 
+// MOCK — until cleanup: `mocks/services/alerts.ts` and the mock fixtures import this default.
 export const DEFAULT_ALERT_DAYS_BEFORE = 30;
 
 // ───────────────────────────── Statuses and transitions ─────────────────────────────
@@ -353,7 +354,11 @@ export const documentFilterSchema = withSortFields(
     format: facetOf(documentFormatSchema),
     /** Documents linked to these records. */
     clientId: facetOf(idSchema),
+    contactId: facetOf(idSchema),
     projectId: facetOf(idSchema),
+    invoiceId: facetOf(idSchema),
+    paymentId: facetOf(idSchema),
+    expenseId: facetOf(idSchema),
     tagId: facetOf(idSchema),
     expiresFrom: dateOnlySchema.optional(),
     expiresTo: dateOnlySchema.optional(),
@@ -451,6 +456,7 @@ export const documentDetailSchema = z.object({
 export type DocumentDetailDTO = z.infer<typeof documentDetailSchema>;
 
 /** Output of `saveDraft`. */
+// MOCK — until cleanup: the mock documents service returns this DTO.
 export const saveDraftResultSchema = z.object({
   documentId: idSchema,
   draftUpdatedAt: timestampSchema,
@@ -489,6 +495,8 @@ export type GetDocumentsOverviewInput = z.infer<typeof getDocumentsOverviewInput
  * `getDocumentVersion` and `getDocumentsOverview` are the screen counterparts that PRD §12 leaves
  * implicit.
  */
+// MOCK — until cleanup: `mocks/services/documents.ts` and `documents-lifecycle.test.ts` check the mock service
+// against this interface; the API serves every call now.
 export type DocumentsService<Ctx = unknown> = {
   createDocument: (ctx: Ctx, input: CreateDocumentInput) => Promise<DocumentDetailDTO>;
   updateDocumentMeta: (ctx: Ctx, input: UpdateDocumentMetaInput) => Promise<DocumentDetailDTO>;
