@@ -135,6 +135,7 @@ export type SetShareDocumentAccessKeyInput = z.infer<typeof setShareDocumentAcce
 export const shareIdInputSchema = z.object({ id: idSchema });
 export type ShareIdInput = z.infer<typeof shareIdInputSchema>;
 
+// MOCK — until cleanup: the portal inputs below are read only by `mocks/services/portal-shares.ts` (the portal feature talks to the BE).
 // ───────────────────────────── Inputs: portal (public) ─────────────────────────────
 
 /**
@@ -291,6 +292,7 @@ export type ShareAccessLogFilterInput = z.input<typeof shareAccessLogFilterSchem
 
 const counter = z.number().int().nonnegative();
 
+// MOCK — until cleanup: `shareCountersSchema` and the `*Schema` values of the DTOs below are parsed only by mocks and fixtures; the DTO types are read by the screens.
 /** Counters shown on the link (PRD §8.11 "Trazabilidad", DT-45). */
 export const shareCountersSchema = z.object({
   viewCount: counter,
@@ -414,6 +416,7 @@ export type SetShareDocumentAccessKeyResultDTO = z.infer<
   typeof setShareDocumentAccessKeyResultSchema
 >;
 
+// MOCK — until cleanup: the portal DTOs below are read only by `mocks/services/portal-shares.ts` and its fixtures.
 // ───────────────────────────── DTOs: portal (public) ─────────────────────────────
 
 /**
@@ -497,6 +500,7 @@ export const portalDownloadSchema = z.discriminatedUnion("kind", [
 ]);
 export type PortalDownloadDTO = z.infer<typeof portalDownloadSchema>;
 
+// MOCK — until cleanup: both service interfaces are implemented only by the mocks (`mocks/services/{shares,portal-shares}.ts`).
 // ───────────────────────────── Services (PRD §12 `shares`) ─────────────────────────────
 
 /**
