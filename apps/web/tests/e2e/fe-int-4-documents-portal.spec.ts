@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
+import { namePrefix } from "./support/accessible-names";
 
 // FE-INT-R E.2 documents and portal E2E (old 4.5). Back office (`@authenticated`): HU-18 CA1–CA4, HU-19 CA1 and CA4,
 // HU-20 CA1–CA2, HU-21 CA1–CA2, HU-22 CA1–CA2 (create a link; a key-protected document), HU-28 for a document.
@@ -41,7 +42,7 @@ async function createDocument(page: Page, title: string, typeName: RegExp): Prom
   await page.getByRole("option", { name: typeName }).click();
   await page.getByRole("button", { name: "Crear documento", exact: true }).click();
   await expect(page.getByText("Documento creado")).toBeVisible();
-  await expect(page).toHaveURL(/\/documents\/[^/?#]+$/);
+  await expect(page).toHaveURL(/\/documents\/(?!new$)[^/?#]+$/);
   return idFromUrl(page.url(), "documents");
 }
 
@@ -79,7 +80,7 @@ async function createClientAndProject(page: Page) {
   await page.getByLabel("Nombre", { exact: true }).fill(projectName);
   await page.getByLabel("Resumen", { exact: true }).fill("Proyecto E2E de documentos");
   await page.getByRole("combobox", { name: "Clientes", exact: true }).fill(clientName);
-  await page.getByRole("option", { name: clientName, exact: true }).click();
+  await page.getByRole("option", { name: namePrefix(clientName) }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
@@ -331,37 +332,37 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
   });
 
   test.fixme(
-    "@unauthenticated HU-22 CA3: a changed character of a real link's token → 404 — FE-INT-R E.2: needs a real link token, which an unauthenticated run cannot create; covered by h1-b4-documents-portal.spec.ts",
+    "@unauthenticated HU-22 CA3: a changed character of a real link's token → 404 — FE-INT-R E.2: needs a real link token, which an unauthenticated run cannot create; covered as @authenticated in h1-b4-documents-portal.spec.ts",
     async () => {
-      // Placeholder: the real-token case is covered by the authenticated legacy spec.
+      // Placeholder: the real-token case is covered as @authenticated in h1-b4-documents-portal.spec.ts.
     },
   );
 
   test.fixme(
-    "@unauthenticated HU-22 CA4: a revoked or expired link → the same generic 404 — FE-INT-R E.2: needs a real link token; covered by h1-b4-documents-portal.spec.ts",
+    "@unauthenticated HU-22 CA4: a revoked or expired link → the same generic 404 — FE-INT-R E.2: needs a real link token; covered as @authenticated in h1-b4-documents-portal.spec.ts",
     async () => {
-      // Placeholder: the real-token case is covered by the authenticated legacy spec.
+      // Placeholder: the real-token case is covered as @authenticated in h1-b4-documents-portal.spec.ts.
     },
   );
 
   test.fixme(
-    "@unauthenticated HU-22 CA2/CA5: the link lists its documents with view and download — FE-INT-R E.2: needs a real link token; covered by h1-b4-documents-portal.spec.ts",
+    "@unauthenticated HU-22 CA2/CA5: the link lists its documents with view and download — FE-INT-R E.2: needs a real link token; covered as @authenticated in h1-b4-documents-portal.spec.ts",
     async () => {
-      // Placeholder: the real-token case is covered by the authenticated legacy spec.
+      // Placeholder: the real-token case is covered as @authenticated in h1-b4-documents-portal.spec.ts.
     },
   );
 
   test.fixme(
-    "@unauthenticated HU-22 unlock: a wrong key, the lockout after five failures as the try-again state, and the right key → view and download (DT-224) — FE-INT-R E.2: needs a real link token; covered by h1-b4-documents-portal.spec.ts",
+    "@unauthenticated HU-22 unlock: a wrong key, the lockout after five failures as the try-again state, and the right key → view and download (DT-224) — FE-INT-R E.2: needs a real link token; covered as @authenticated in h1-b4-documents-portal.spec.ts",
     async () => {
-      // Placeholder: the real-token case is covered by the authenticated legacy spec.
+      // Placeholder: the real-token case is covered as @authenticated in h1-b4-documents-portal.spec.ts.
     },
   );
 
   test.fixme(
-    "@unauthenticated HU-22 CA6: allowDownload=false hides the download — FE-INT-R E.2: needs a real link token; covered by h1-b4-documents-portal.spec.ts (a link with downloads blocked, created in the authenticated run)",
+    "@unauthenticated HU-22 CA6: allowDownload=false hides the download — FE-INT-R E.2: needs a real link token; covered as @authenticated in h1-b4-documents-portal.spec.ts (a link with downloads blocked, created in the authenticated run)",
     async () => {
-      // Placeholder: the real-token case is covered by the authenticated legacy spec.
+      // Placeholder: the real-token case is covered as @authenticated in h1-b4-documents-portal.spec.ts.
     },
   );
 });

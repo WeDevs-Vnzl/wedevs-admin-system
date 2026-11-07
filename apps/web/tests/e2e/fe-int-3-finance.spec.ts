@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
+import { namePrefix } from "./support/accessible-names";
 
 // FE-INT-R E.2 finance E2E (old 3.8 without HU-13; HU-13 is E.3's `fe-int-3-payments.spec.ts`). HU-09 CA1–CA3,
 // HU-10 CA1–CA3, HU-11 CA1–CA5, HU-12 CA1–CA3 and CA5, HU-14, HU-15 CA1–CA3, HU-16 CA1–CA2, HU-17 CA1–CA3, HU-28 for
@@ -62,7 +63,7 @@ async function createProject(page: Page, clientName: string, name: string): Prom
   await page.getByLabel("Resumen", { exact: true }).fill("Proyecto E2E de finanzas");
   const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
   await clients.fill(clientName);
-  await page.getByRole("option", { name: clientName, exact: true }).click();
+  await page.getByRole("option", { name: namePrefix(clientName) }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
@@ -74,7 +75,7 @@ async function createAccount(page: Page, name: string, currency: string, opening
   await page.goto("/accounts/new");
   await page.getByLabel("Nombre", { exact: true }).fill(name);
   await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
-  await page.getByRole("option", { name: currency, exact: true }).click();
+  await page.getByRole("option", { name: namePrefix(`${currency} ·`) }).click();
   await page.getByLabel("Saldo inicial", { exact: true }).fill(opening);
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText("Cuenta creada")).toBeVisible();

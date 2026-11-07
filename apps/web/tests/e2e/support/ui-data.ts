@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { namePrefix } from "./accessible-names";
+
 // FE-INT-R E.3. Data for the E2E specs is created through the UI with unique names (W5 rule 29): the BE seed holds
 // catalogs and settings only, so no spec relies on a client or project that another spec created. These helpers
 // drive the real create forms; they never call the BE directly and never read a seeded id.
@@ -69,7 +71,7 @@ export async function createProjectViaUi(
   const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
   for (const link of options.clients) {
     await clients.fill(link.clientName);
-    await page.getByRole("option", { name: link.clientName, exact: true }).click();
+    await page.getByRole("option", { name: namePrefix(link.clientName) }).click();
     await page
       .getByRole("textbox", { name: `Rol: ${link.clientName}`, exact: true })
       .fill(link.role);
