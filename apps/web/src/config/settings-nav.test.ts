@@ -15,6 +15,7 @@ describe("settings sections (PRD §8.15)", () => {
       "company",
       "users",
       "preferences",
+      "api-tokens",
       "currencies",
       "rates",
       "fiscal",
@@ -34,12 +35,21 @@ describe("settings sections (PRD §8.15)", () => {
     expect(visibleSlugs("VIEWER")).not.toContain("users");
   });
 
-  it("shows the catalogs, company and trash to Owner and Admin, and only preferences to the rest", () => {
+  it("shows the catalogs, company and trash to Owner and Admin, and only preferences and API tokens to the rest", () => {
     const allSlugs = SETTINGS_SECTIONS.map((section) => section.slug);
     expect(visibleSlugs("OWNER")).toEqual(allSlugs);
     expect(visibleSlugs("ADMIN")).toEqual(allSlugs.filter((slug) => slug !== "users"));
     for (const role of ["MEMBER", "VIEWER"] as const) {
-      expect(visibleSlugs(role)).toEqual(["preferences"]);
+      expect(visibleSlugs(role)).toEqual(["preferences", "api-tokens"]);
+    }
+  });
+
+  it("keeps API tokens visible to every signed-in role, with no permission check (own tokens only)", () => {
+    const apiTokens = findSettingsSection("api-tokens");
+    expect(apiTokens).toMatchObject({ labelKey: "apiTokens", permission: null });
+    expect(isSettingsSectionVisible(apiTokens!, null)).toBe(false);
+    for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
+      expect(isSettingsSectionVisible(apiTokens!, user(role))).toBe(true);
     }
   });
 

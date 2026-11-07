@@ -33,6 +33,7 @@ export const namespaces = [
   "reports",
   "settings",
   "catalogs",
+  "apiTokens",
   "trash",
 ] as const;
 

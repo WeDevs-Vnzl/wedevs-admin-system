@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Tokens de API",
+    "description": "Los tokens de acceso personal permiten que herramientas como los clientes MCP actúen en tu nombre. Cada token funciona hasta que vence o lo revocas."
+  },
+  "actions": {
+    "create": "Nuevo token",
+    "copy": "Copiar token",
+    "copied": "Copiado",
+    "revoke": "Revocar {name}"
+  },
+  "columns": {
+    "name": "Nombre",
+    "prefix": "Token",
+    "createdAt": "Creado",
+    "expiresAt": "Vence",
+    "lastUsedAt": "Último uso",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "status": {
+    "active": "Activo",
+    "revoked": "Revocado",
+    "expired": "Vencido"
+  },
+  "lastUsed": {
+    "never": "Nunca"
+  },
+  "limit": "Puedes tener hasta {max} tokens activos.",
+  "empty": {
+    "title": "Aún no hay tokens",
+    "description": "Crea un token para conectar una herramienta externa a tu cuenta."
+  },
+  "form": {
+    "title": "Nuevo token de API",
+    "description": "Elige un nombre que indique dónde se usa el token y por cuánto tiempo será válido.",
+    "name": "Nombre",
+    "namePlaceholder": "p. ej. Claude Desktop",
+    "expiresInDays": "Vigencia (días)",
+    "expiresInDaysHint": "Entre 1 y 365 días. Por defecto, 90.",
+    "cancel": "Cancelar",
+    "submit": "Crear token",
+    "submitting": "Creando…"
+  },
+  "secret": {
+    "title": "Copia tu token ahora",
+    "description": "Esta es la única vez que se muestra el token completo. Guárdalo en un lugar seguro: no se puede recuperar después.",
+    "label": "Token",
+    "done": "Ya lo guardé"
+  },
+  "revoke": {
+    "title": "¿Revocar este token?",
+    "description": "{name} dejará de funcionar de inmediato. Esta acción no se puede deshacer.",
+    "confirm": "Revocar",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "created": "Token creado",
+    "revoked": "Token revocado",
+    "copyFailed": "No se pudo copiar el token. Selecciónalo y cópialo manualmente."
+  },
+  "errors": {
+    "limitReached": "Ya tienes el máximo de tokens activos. Revoca uno para crear otro.",
+    "outOfRange": "Ingresa un número entero de días entre 1 y 365"
+  }
+}
