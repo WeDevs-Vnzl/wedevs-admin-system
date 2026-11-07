@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({ refresh: vi.fn(), toast: { success: vi.fn(), e
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("@/features/invoices/actions", () => ({ attachInvoiceFileAction: vi.fn() }));
+vi.mock("@/components/ui/pdf-viewer", () => ({
+  PdfViewer: ({ url }: { url: string }) => <div data-testid="pdf-viewer" data-url={url} />,
+}));
 vi.mock("@/features/files/upload-adapter", () => ({ uploadAdapter: {} }));
 // The uploader has its own tests: here it hands over the file the adapter already confirmed.
 const confirmed: FileDTO = {
@@ -76,6 +79,11 @@ describe("InvoiceFilePanel (C23)", () => {
       "/files/fil_old/download",
     );
     expect(screen.queryByRole("button", { name: "confirm-upload" })).not.toBeInTheDocument();
+  });
+
+  it("renders the PDF inline in PdfViewer over fileDownloadPath", () => {
+    renderPanel({ ...confirmed, id: "fil_old" });
+    expect(screen.getByTestId("pdf-viewer")).toHaveAttribute("data-url", "/files/fil_old/download");
   });
 
   it("toasts the attach error without refreshing", async () => {

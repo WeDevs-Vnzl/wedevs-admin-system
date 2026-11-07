@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import { createNoteViaUi } from "./support/ui-data";
 
 // FE-INT-R E.1 — commercial E2E against the local BE (old FE-INT-2 § 2.11): HU-03 CA1–CA4; HU-04 CA1–CA2; HU-05 CA1–CA3;
 // HU-06 CA1–CA3; HU-07 CA1–CA3; HU-08 CA1, CA2, CA4; HU-23 CA1–CA3; HU-28 CA1–CA2 for CLIENT, CONTACT, PROJECT and NOTE;
@@ -422,25 +423,25 @@ test.describe("HU-08 status transitions (mutates projects)", () => {
 });
 
 // ───────────────────────────── HU-23 Rich-text notes ─────────────────────────────
-// A note needs a linked record chosen in the link picker, and its attachments go through the storage POST. Both are
-// driven at the batch-close manual check; the cases stay `fixme` until then (rules 29, 30).
+// CA1 and CA3 create their own client and note through the UI (`createNoteViaUi` links the note to a client); the
+// storage uploads are intercepted at Cloudinary (rule 30). CA2 needs the link picker and stays `fixme` (batch-close
+// manual check).
 
 test.describe("HU-23 notes (mutates notes)", () => {
   test.beforeEach(async ({ page }) => {
     await signInAs(page, "OWNER");
   });
 
-  test.fixme(
-    "FE-INT-R E.1: HU-23 CA1: a note keeps its author, date and tags and admits several attachments; the storage POST is intercepted (rule 30) and needs the link picker (batch-close manual check)",
-    async ({ page }) => {
-      await page.route("**/*upload*", (route) => route.fulfill({ status: 200, body: "" }));
-      await open(page, "/notes");
-      await page.getByRole("button", { name: oneOf("Nueva nota", "New note") }).click();
-      await page.getByLabel("Título", { exact: true }).fill(uniqueName("Nota CA1"));
-      await page.getByRole("button", { name: oneOf("Guardar nota", "Save note") }).click();
-      await expect(page.getByText("Nota creada", { exact: true })).toBeVisible();
-    },
-  );
+  test("@authenticated HU-23 CA1: a note is created on a client and listed; storage uploads are intercepted (rule 30); its attachments and tags are checked at the batch-close manual check", async ({
+    page,
+  }) => {
+    await page.route(/cloudinary\.com/, (route) => route.fulfill({ status: 200, body: "" }));
+    const clientPath = await createClient(page, uniqueName("E2E Nota CA1"));
+    const title = uniqueName("Nota CA1");
+    await createNoteViaUi(page, { clientId: clientPath.split("/").pop() ?? "", title });
+    await open(page, "/notes");
+    await expect(page.getByRole("row").filter({ hasText: title })).toBeVisible();
+  });
 
   test.fixme(
     "FE-INT-R E.1: HU-23 CA2: a note links to a client and a project at once and shows in both Notas tabs; needs the link picker (batch-close manual check)",
@@ -455,14 +456,15 @@ test.describe("HU-23 notes (mutates notes)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: HU-23 CA3: the content of a note is found by the global search; needs a note of this case's own (batch-close manual check)",
-    async ({ page }) => {
-      const term = uniqueName("contenido e2e");
-      await open(page, `/notes?q=${encodeURIComponent(term)}`);
-      await expect(page.getByRole("row").filter({ hasText: term })).toHaveCount(0);
-    },
-  );
+  test("@authenticated HU-23 CA3: a note is found by the notes search; the search of its content is checked at the batch-close manual check", async ({
+    page,
+  }) => {
+    const clientPath = await createClient(page, uniqueName("E2E Nota CA3"));
+    const term = uniqueName("Nota buscable");
+    await createNoteViaUi(page, { clientId: clientPath.split("/").pop() ?? "", title: term });
+    await open(page, `/notes?q=${encodeURIComponent(term)}`);
+    await expect(page.getByRole("row").filter({ hasText: term })).toBeVisible();
+  });
 });
 
 // ───────────────────────────── HU-28 Trash ─────────────────────────────
@@ -503,17 +505,21 @@ test.describe("HU-28 trash (mutates clients)", () => {
     await expect(page.getByText("1 cliente archivado", { exact: true })).toBeVisible();
 
     // The same tax id and country, now free because the first client is archived.
-    await createClient(page, uniqueName("E2E Conflicto activo"), taxId);
+    const activeName = uniqueName("E2E Conflicto activo");
+    await createClient(page, activeName, taxId);
 
     await open(page, "/settings/trash");
     const row = page.getByRole("row").filter({ hasText: archivedName });
     await row.getByRole("button", { name: /^(Restaurar|Restore)/ }).click();
-    await expect(
-      page.getByText("No se puede restaurar: otro cliente activo ya usa este identificador fiscal y país", {
-        exact: true,
-      }),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Abrir el cliente existente", exact: true })).toBeVisible();
+    // The trash copy (trash.errors.taxIdTaken) and its link (trash.conflict.open) name the blocking client.
+    const conflict = page
+      .getByRole("alert")
+      .filter({
+        hasText:
+          "Otro cliente activo ya usa este RIF. Archívalo o edítalo antes de restaurar este.",
+      });
+    await expect(conflict).toBeVisible();
+    await expect(conflict.getByRole("link", { name: `Abrir ${activeName}`, exact: true })).toBeVisible();
   });
 
   test.fixme(
@@ -546,14 +552,20 @@ test.describe("HU-28 trash (mutates clients)", () => {
     },
   );
 
-  test.fixme(
-    "FE-INT-R E.1: HU-28 CA1–CA2 NOTE: an archived note leaves the list and is restored from the trash; needs a note, which needs the link picker (batch-close manual check)",
-    async ({ page }) => {
-      await open(page, "/notes");
-      await page.getByRole("button", { name: /^(Archivar|Archive) / }).first().click();
-      await restoreFromTrash(page, "Nota");
-    },
-  );
+  test("@authenticated HU-28 CA1–CA2 NOTE: an archived note leaves the list and is restored from the trash", async ({
+    page,
+  }) => {
+    const clientPath = await createClient(page, uniqueName("E2E Papelera nota"));
+    const title = uniqueName("Nota papelera");
+    await createNoteViaUi(page, { clientId: clientPath.split("/").pop() ?? "", title });
+    await open(page, "/notes");
+    await page.getByRole("button", { name: `Archivar ${title}`, exact: true }).click();
+    const dialog = page.getByRole("alertdialog");
+    await dialog.getByRole("button", { name: oneOf("Archivar", "Archive") }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("button", { name: `Archivar ${title}`, exact: true })).toHaveCount(0);
+    await restoreFromTrash(page, title);
+  });
 });
 
 // ───────────────────────────── HU-29 Activity ─────────────────────────────
@@ -595,6 +607,8 @@ test.describe("HU-29 activity is read-only (mutates clients and projects)", () =
     await open(page, `${projectPath}/edit`);
     await page.getByLabel("Nombre", { exact: true }).fill(edited);
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
+    // Wait for the save before leaving the form, or the update is lost.
+    await expect(page.getByText("Proyecto actualizado", { exact: true })).toBeVisible();
 
     await open(page, `${projectPath}?tab=activity`);
     await expect(page.getByText(/^Actualizó /).first()).toBeVisible();

@@ -82,6 +82,7 @@ describe("security headers", () => {
     const directive = (name: string) =>
       CONTENT_SECURITY_POLICY.split("; ").find((d) => d.startsWith(`${name} `)) ?? "";
     expect(directive("connect-src")).toContain("https://api.example.test");
+    expect(directive("connect-src")).toContain("https://*.client.protect.clerk.com:*");
     expect(directive("img-src")).toContain("https://api.example.test");
     vi.unstubAllEnvs();
   });

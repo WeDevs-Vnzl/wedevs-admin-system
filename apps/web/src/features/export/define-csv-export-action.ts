@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { apiAction } from "@/lib/api/action";
 import { toApiListParams } from "@/lib/api/list-params";
 import type { ExportApiEntity, ExportBodyDto } from "@/lib/api/types/export";
+import { CSV_BOM } from "@/lib/csv";
 import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
 import { z } from "@/lib/validators/zod";
 import {
@@ -106,7 +107,8 @@ export function defineCsvExportAction<Row, Filter>(config: {
       return {
         data: {
           filename: fileNameOf(response, entity),
-          content: text as string,
+          // `parseAs: "text"` decodes UTF-8 and drops the BOM the BE writes; Excel needs it for accents.
+          content: `${CSV_BOM}${text as string}`,
           rowCount: Number(response.headers.get("X-Export-Row-Count") ?? 0) || 0,
           truncated: response.headers.get("X-Export-Truncated") === "true",
         },

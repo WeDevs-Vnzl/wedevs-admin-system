@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import enAccounts from "@/i18n/messages/en/accounts.json";
 import enCommon from "@/i18n/messages/en/common.json";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import enSettings from "@/i18n/messages/en/settings.json";
@@ -58,6 +59,7 @@ function setup(
       locale="en"
       timeZone="America/Caracas"
       messages={{
+        accounts: enAccounts,
         settings: enSettings,
         common: enCommon,
         validation: enValidation,
@@ -91,6 +93,38 @@ describe("IntegrationsForm", () => {
       "Binance wallet (USDT)",
     );
     expect(screen.getByText("Currency: USD")).toBeInTheDocument();
+  });
+
+  it("shows an inactive mapped account as a labelled option", async () => {
+    const inactive = { id: "acc_old", name: "Old Stripe", currency: "USD", inactive: true };
+    const mock = mockApi({});
+    mocks.api = mock.api;
+    render(
+      <NextIntlClientProvider
+        locale="en"
+        timeZone="America/Caracas"
+        messages={{
+          accounts: enAccounts,
+          settings: enSettings,
+          common: enCommon,
+          validation: enValidation,
+          patterns: enPatterns,
+        }}
+      >
+        <IntegrationsForm
+          initial={{
+            stripe: { accountId: "acc_old", paymentMethodId: "pm_stripe" },
+            binance: null,
+          }}
+          accounts={[...accounts, inactive]}
+          walletAccounts={walletAccounts}
+          methods={methods}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole("combobox", { name: "Target account" })).toHaveTextContent(
+      "Old Stripe (USD) · Inactive",
+    );
   });
 
   it("saves the picked mapping and shows the one the response returned", async () => {

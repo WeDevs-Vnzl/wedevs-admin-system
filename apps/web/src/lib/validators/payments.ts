@@ -1,11 +1,5 @@
 import { z } from "./zod";
-import {
-  dateOnlySchema,
-  entityRefSchema,
-  idSchema,
-  listQuerySchema,
-  withSortFields,
-} from "./common";
+import { dateOnlySchema, idSchema, listQuerySchema, withSortFields } from "./common";
 import { paymentStatusSchema } from "./enums";
 
 import { currencyCodeSchema, moneyAmountSchema, rateSchema } from "./money";
@@ -26,12 +20,6 @@ export const PAYMENT_MESSAGES = {
   feeExceedsAmount: "payments.validation.feeExceedsAmount",
   allocationsExceedAllocatable: "payments.validation.allocationsExceedAllocatable",
   duplicateInvoiceAllocation: "payments.validation.duplicateInvoiceAllocation",
-} as const;
-
-/** Non-blocking duplicate notice returned as an `ActionWarning` with `entity` = the existing payment. */
-export const DUPLICATE_PAYMENT_WARNING = {
-  code: "DUPLICATE_PAYMENT",
-  message: "payments.warnings.duplicate",
 } as const;
 
 const amountPositive = moneyAmountSchema({ sign: "positive" });
@@ -156,17 +144,7 @@ export function createPaymentInputSchemaFor(options: PaymentSchemaOptions = {}) 
     .superRefine((input, ctx) => checkPayment(input, options, ctx));
 }
 
-/** `updatePayment` input: the payment fields again plus its id; allocations change only through (de)allocate. */
-export function updatePaymentInputSchemaFor(options: PaymentSchemaOptions = {}) {
-  return z
-    .object({ id: idSchema, ...paymentFields })
-    .superRefine((input, ctx) => checkPayment(input, options, ctx));
-}
-
 export const createPaymentInputSchema = createPaymentInputSchemaFor();
-export type CreatePaymentInput = z.infer<typeof createPaymentInputSchema>;
-export const updatePaymentInputSchema = updatePaymentInputSchemaFor();
-export type UpdatePaymentInput = z.infer<typeof updatePaymentInputSchema>;
 
 /** Voiding a payment removes its allocations logically and recomputes the invoices (service rule). */
 export const setPaymentStatusInputSchema = z.object({
@@ -175,24 +153,6 @@ export const setPaymentStatusInputSchema = z.object({
   reason: optionalText(500),
 });
 export type SetPaymentStatusInput = z.infer<typeof setPaymentStatusInputSchema>;
-
-// ───────────────────────────── Duplicate detection (PRD §8.6) ─────────────────────────────
-
-export const duplicatePaymentMatchSchema = z.object({
-  payment: entityRefSchema,
-  date: dateOnlySchema,
-  amount: amountPositive,
-  currency: currencyCodeSchema,
-  status: paymentStatusSchema,
-});
-export type DuplicatePaymentMatch = z.infer<typeof duplicatePaymentMatchSchema>;
-
-/** Duplicate-warning DTO: empty `matches` means no duplicate. The UI links to each match. */
-export const duplicatePaymentWarningDtoSchema = z.object({
-  duplicate: z.boolean(),
-  matches: z.array(duplicatePaymentMatchSchema),
-});
-export type DuplicatePaymentWarningDTO = z.infer<typeof duplicatePaymentWarningDtoSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 

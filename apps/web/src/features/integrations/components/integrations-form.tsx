@@ -24,7 +24,13 @@ import { z } from "@/lib/validators/zod";
 import { updateIntegrationMapping } from "../api";
 
 /** An account the pickers offer; `currency` is shown next to the Stripe target (DT-183). */
-export type MappingAccountOption = { id: string; name: string; currency: string };
+export type MappingAccountOption = {
+  id: string;
+  name: string;
+  currency: string;
+  /** The mapped account was deactivated: it is offered, labelled, only because the mapping still points at it (rule 23). */
+  inactive?: boolean;
+};
 export type MappingMethodOption = { id: string; label: string };
 
 type IntegrationsFormProps = {
@@ -90,6 +96,7 @@ export function IntegrationsForm({
   methods,
 }: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations");
+  const tStatus = useTranslations("accounts.status");
   const tRoot = useTranslations();
   const router = useRouter();
   const api = useApiClient();
@@ -104,7 +111,8 @@ export function IntegrationsForm({
   const stripeCurrency = accounts.find((account) => account.id === stripeAccountId)?.currency;
 
   const accountLabel = (account: MappingAccountOption) =>
-    t("accountOption", { name: account.name, currency: account.currency });
+    t("accountOption", { name: account.name, currency: account.currency }) +
+    (account.inactive ? ` · ${tStatus("inactive")}` : "");
 
   async function onSubmit(values: FormValues) {
     const result = await updateIntegrationMapping(api, toBody(values));

@@ -9,6 +9,7 @@ import { ListCode, SimpleListCard } from "@/components/patterns/simple-list-card
 import { StatCard } from "@/components/patterns/stat-card";
 import { Button } from "@/components/ui/button";
 import type { PaymentListRowDto, PaymentsOverviewDto } from "@/lib/api/types/payments";
+import { compareMoney } from "@/lib/money";
 
 type PaymentsOverviewProps = {
   overview: PaymentsOverviewDto;
@@ -34,7 +35,7 @@ export async function PaymentsOverview({ overview, withCredit, canCreate }: Paym
 
   // Newest month first; months without collections add rows and no information.
   const collectedRows = overview.collectedByMonth
-    .filter((point) => Number(point.value) > 0)
+    .filter((point) => compareMoney(point.value, "0") > 0)
     .reverse()
     .map((point) => ({
       id: point.period,

@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { appBaseUrl } from "./support/app";
 import { signInAs } from "./support/auth";
+import { createNoteViaUi } from "./support/ui-data";
 
 // Wave 3 E2E, notes, roles, navigation, accessibility and responsive (H1-B2, docs/TASK.md "Tester scope"), kept by
 // FE-INT-R E.1. This file starts nothing: it runs against the app that PLAYWRIGHT_BASE_URL points to (safeguards.md
@@ -11,6 +12,13 @@ import { signInAs } from "./support/auth";
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const RAW_KEY = /^[a-z]+(\.[A-Za-z0-9]+)+$/;
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Matches one of the labels exactly, in any of the given locales. */
+function oneOf(...labels: string[]): RegExp {
+  return new RegExp(`^(${labels.map(escapeRegExp).join("|")})$`);
+}
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
@@ -80,6 +88,22 @@ async function createRecordsAsOwner(browser: Browser): Promise<{ clientPath: str
   }
 }
 
+/** Creates a client and one note on it as the Owner, in a browser context of its own (a Member case reads it). */
+async function createNoteAsOwner(browser: Browser): Promise<void> {
+  const context = await browser.newContext({ baseURL: appBaseUrl() });
+  try {
+    const page = await context.newPage();
+    await signInAs(page, "OWNER");
+    const clientPath = await createClient(page, uniqueName("E2E Nota propietario"));
+    await createNoteViaUi(page, {
+      clientId: clientPath.split("/").pop() ?? "",
+      title: uniqueName("Nota del propietario"),
+    });
+  } finally {
+    await context.close();
+  }
+}
+
 /** WCAG contrast ratio of the first heading in `main`, measured in the browser (dark mode spot check). */
 async function headingContrast(page: Page): Promise<number> {
   return page.evaluate(() => {
@@ -125,18 +149,21 @@ test.describe("HU-23 notes (read only)", () => {
     await signInAs(page, "OWNER");
   });
 
-  test.fixme(
-    "FE-INT-R E.1: a note keeps its author, date, tags and attachments; needs a note of this case's own, and a note needs a linked record chosen in the link picker (not driven in this file)",
+  test(
+    "a note keeps its author and creation date; its tags and attachments are checked at the batch-close manual check",
     async ({ page }) => {
-      await open(page, "/notes");
-      await page.getByRole("link").filter({ hasText: /./ }).first().click();
+      const clientPath = await createClient(page, uniqueName("E2E Nota autor"));
+      await createNoteViaUi(page, {
+        clientId: clientPath.split("/").pop() ?? "",
+        title: uniqueName("Nota autor"),
+      });
       await expect(page.getByText("Autor", { exact: true }).first()).toBeVisible();
       await expect(page.getByText("Creada", { exact: true }).first()).toBeVisible();
     },
   );
 
   test.fixme(
-    "FE-INT-R E.1: a note linked to a client and a project shows in both feeds; needs a note linked to both, and the link picker is not driven in this file",
+    "FE-INT-R E.1: a note linked to a client and a project shows in both feeds; needs a note linked to both, and the link picker is not driven in this file (batch-close manual check)",
     async ({ page }) => {
       const { clientPath, projectPath } = await createRecords(page);
       await open(page, `${clientPath}?tab=notes`);
@@ -234,10 +261,10 @@ test.describe("roles (View as role)", () => {
     ).toHaveCount(0);
   });
 
-  test.fixme(
-    "FE-INT-R E.1: Miembro archives only own notes: the archive control is missing on at least one note; needs notes of the Owner, and a note needs a linked record (not driven in this file)",
+  test(
+    "Miembro archives only own notes: the archive control is missing on at least one note",
     async ({ browser, page }) => {
-      await createRecordsAsOwner(browser);
+      await createNoteAsOwner(browser);
       await signInAs(page, "MEMBER");
       await open(page, "/notes");
       const rows = page.getByRole("row").filter({ has: page.getByRole("cell") });
@@ -358,12 +385,18 @@ test.describe("accessibility (read only)", () => {
     const tradeName = page.getByLabel("Nombre comercial", { exact: true });
     await tradeName.focus();
     await page.keyboard.press("Tab");
+    // The info button of the "Razón social" label is a Tab stop between the two inputs.
+    await expect(page.getByRole("button", { name: "Más información sobre Razón social", exact: true })).toBeFocused();
+    await page.keyboard.press("Tab");
     await expect(page.getByLabel("Razón social", { exact: true })).toBeFocused();
   });
 
   test("keyboard moves through the project form fields in order", async ({ page }) => {
     await open(page, "/projects/new");
     await page.getByLabel("Nombre", { exact: true }).focus();
+    await page.keyboard.press("Tab");
+    // The info button of the "Clientes" label is a Tab stop before the combobox.
+    await expect(page.getByRole("button", { name: "Más información sobre Clientes", exact: true })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("combobox", { name: "Clientes", exact: true })).toBeFocused();
   });
@@ -424,9 +457,9 @@ test.describe("locale on a detail page (mutates the locale preference)", () => {
       // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
       expect(after).not.toBe(before);
     } finally {
-      // The locale is the user's preference: switch back to Spanish for the next run.
+      // The locale is the user's preference: switch back to Spanish for the next run. The page is in English here.
       await open(page, projectPath);
-      await page.getByRole("button", { name: "Idioma", exact: true }).click();
+      await page.getByRole("button", { name: oneOf("Idioma", "Language") }).click();
       await page.getByRole("menuitemradio", { name: "Español", exact: true }).click();
     }
   });

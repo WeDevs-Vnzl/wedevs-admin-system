@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
+import { PdfViewer } from "@/components/ui/pdf-viewer";
 import { Uploader } from "@/components/ui/uploader/uploader";
 import { attachInvoiceFileAction } from "@/features/invoices/actions";
 import { uploadAdapter } from "@/features/files/upload-adapter";
@@ -51,6 +52,13 @@ export function InvoiceFilePanel({ invoiceId, file, canUpdate }: InvoiceFilePane
       <div className="flex flex-col gap-4">
         {file ? (
           <div className="flex flex-col gap-2">
+            {file.mimeType === "application/pdf" ? (
+              <PdfViewer
+                url={fileDownloadPath(file.id)}
+                onDownload={() => window.location.assign(fileDownloadPath(file.id))}
+                className="h-[560px]"
+              />
+            ) : null}
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex flex-col gap-0.5">
                 <dt className="text-xs text-muted-foreground">{t("fields.name")}</dt>

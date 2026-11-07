@@ -23,6 +23,9 @@ const PORTAL_SECURITY_HEADERS = [
 ];
 
 const clerkOrigins = "https://*.clerk.accounts.dev https://*.clerk.com";
+// Clerk's bot-protection probe reaches `*.client.protect.clerk.com` on non-standard ports (2082, 8443, 18443, 992), so the
+// source needs the `:*` port wildcard; a port-less host source only matches 443 (decision 7, C24).
+const clerkProtectOrigin = "https://*.client.protect.clerk.com:*";
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -31,7 +34,7 @@ export const CONTENT_SECURITY_POLICY = [
   // The portal image preview points at the API file route (302 to the signed Cloudinary URL).
   `img-src 'self' data: blob: ${apiOrigin} https://img.clerk.com https://res.cloudinary.com`,
   "font-src 'self' data:",
-  `connect-src 'self' ${apiOrigin} ${clerkOrigins} https://api.cloudinary.com https://res.cloudinary.com`,
+  `connect-src 'self' ${apiOrigin} ${clerkOrigins} ${clerkProtectOrigin} https://api.cloudinary.com https://res.cloudinary.com`,
   `frame-src ${clerkOrigins} https://challenges.cloudflare.com`,
   "worker-src 'self' blob:",
   "object-src 'none'",

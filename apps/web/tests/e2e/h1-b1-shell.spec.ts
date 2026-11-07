@@ -41,7 +41,7 @@ test.describe("sign-in page (no session)", () => {
     await expect(page.getByRole("button", { name: "Buscar", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Alertas/ })).toHaveCount(0);
     // The Google button starts Clerk's OAuth flow, which is external: only its presence is checked here.
-    await expect(page.getByRole("link", { name: "Continuar con Google", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar con Google", exact: true })).toBeVisible();
   });
 });
 
@@ -54,17 +54,20 @@ test.describe("routing", () => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(sidebar(page)).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Inicio", exact: true })).toBeVisible();
+    // The dashboard heading is the greeting of the part of the day ("Buenas tardes, <name>"), not "Inicio".
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^(Buenos días|Buenas tardes|Buenas noches), / }),
+    ).toBeVisible();
   });
 
-  test("every sidebar link (Owner) resolves to a page or the in-shell not-found", async ({
+  test("every sidebar link (Owner) resolves to a real page", async ({
     page,
   }) => {
     await page.goto("/dashboard");
     await expect(mainNav(page)).toBeVisible();
 
-    // "Clientes", "Proyectos", "Notas" and "Actividad" exist since H1-B2, the finance pages since H1-B3; the links
-    // below are still in-shell not-found.
+    // Every link resolves to a real page since H1-B2 (CRM), H1-B3 (finance) and H1-B4/B5 (documents, graph,
+    // reports); none lands on the in-shell not-found.
     for (const [label, url] of [
       ["Clientes", /\/clients$/],
       ["Proyectos", /\/projects$/],
@@ -74,18 +77,13 @@ test.describe("routing", () => {
       ["Pagos", /\/payments$/],
       ["Gastos", /\/expenses$/],
       ["Cuentas", /\/accounts$/],
+      ["Documentos", /\/documents(\/|$)/],
+      ["Grafo", /\/graph$/],
+      ["Reportes", /\/reports$/],
     ] as const) {
       await sidebar(page).getByRole("link", { name: label, exact: true }).click();
       await expect(page).toHaveURL(url);
       await expect(page.getByText("Página no encontrada", { exact: true })).toHaveCount(0);
-      await expect(mainNav(page)).toBeVisible();
-    }
-
-    const notFoundLinks = ["Documentos", "Grafo", "Reportes"];
-    for (const label of notFoundLinks) {
-      await sidebar(page).getByRole("link", { name: label, exact: true }).click();
-      await expect(page.getByText("Página no encontrada", { exact: true })).toBeVisible();
-      await expect(sidebar(page)).toBeVisible();
       await expect(mainNav(page)).toBeVisible();
     }
 
@@ -158,7 +156,7 @@ test.describe("locale and theme (mutate the Owner's preferences)", () => {
     await signInAs(page, "OWNER");
   });
   test.afterEach(async ({ page }) => {
-    await signInAs(page, "OWNER");
+    // The page is still signed in from `beforeEach`: a second `signInAs` would fail on the signed-in session.
     await restorePreferences(page);
   });
 

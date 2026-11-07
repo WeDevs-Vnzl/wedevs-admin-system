@@ -5,11 +5,13 @@ import { AppFooter } from "@/components/app/app-footer";
 import { AppSidebar, SidebarToggle } from "@/components/app/app-sidebar";
 import { CommandMenu } from "@/components/app/command-menu";
 import { LocaleSwitcher } from "@/components/app/locale-switcher";
+import { PreferenceSync } from "@/components/app/preference-sync";
 import { RateChip } from "@/components/app/rate-chip";
 import { SkipLink } from "@/components/app/skip-link";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import { UserMenu } from "@/components/app/user-menu";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getPreferences } from "@/features/preferences/queries";
 import { getShellData } from "@/features/shell/queries";
 import { can } from "@/lib/auth/permissions";
 
@@ -20,11 +22,15 @@ const MAIN_CONTENT_ID = "main-content";
 // Cmd+K trigger, rate chip, alerts, locale and theme, user menu, and the footer. From 768 to 1023 px the sidebar
 // still takes 16rem, so the topbar controls shrink (icon-only Cmd+K, rate without label) instead of overflowing.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // Sequential on purpose: a user the BE does not know gets 401 everywhere, and only the session seam's redirect
+  // (`/sign-in?reason=no-access`) must win; `getPreferences` maps 401 to a plain `/sign-in`.
   const shell = await getShellData();
+  const preferences = await getPreferences();
 
   return (
     <BreadcrumbLabelProvider>
       <SidebarProvider>
+        <PreferenceSync locale={preferences.locale} theme={preferences.theme} />
         <SkipLink targetId={MAIN_CONTENT_ID} />
         <AppSidebar user={shell.user} />
         <SidebarInset className="min-w-0">

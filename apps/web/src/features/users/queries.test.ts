@@ -52,7 +52,9 @@ describe("getUsers (first page of Settings → Usuarios)", () => {
       },
     });
     const page = await getUsers();
-    expect(page.total).toBe(2);
+    // The BE `total` counts users only: invitations are extra rows on page 1, not part of the paging.
+    expect(page.total).toBe(1);
+    expect(page.items).toHaveLength(2);
     expect(page.items.map((row) => row.status)).toEqual(["INVITED", "ACTIVE"]);
   });
 

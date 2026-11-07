@@ -37,7 +37,7 @@ describe("listUsersAction (HU-02: Owner list with the invitations merged on page
   });
   const invitation = { id: "uinv_1", email: "new@wedevs.dev", role: "MEMBER", createdAt };
 
-  it("puts the invitations on top of page 1 with the INVITED status and counts them in the total", async () => {
+  it("puts the invitations on top of page 1 with the INVITED status without counting them in the total", async () => {
     const { calls } = connect({
       "GET /api/v1/users": {
         body: { items: [user("u1", "OWNER")], total: 1, page: 1, pageSize: 25, pageCount: 1 },
@@ -45,7 +45,7 @@ describe("listUsersAction (HU-02: Owner list with the invitations merged on page
       "GET /api/v1/users/invitations": { body: { items: [invitation] } },
     });
     const result = await listUsersAction({});
-    expect(result).toMatchObject({ ok: true, data: { total: 2, page: 1, pageCount: 1 } });
+    expect(result).toMatchObject({ ok: true, data: { total: 1, page: 1, pageCount: 1 } });
     const rows = result.ok ? result.data.items : [];
     expect(rows.map((row) => [row.id, row.status])).toEqual([
       ["uinv_1", "INVITED"],
@@ -79,7 +79,7 @@ describe("listUsersAction (HU-02: Owner list with the invitations merged on page
     expect(call.search.getAll("role")).toEqual(["OWNER", "MEMBER"]);
     // Invitations only go on page 1.
     expect(result.ok && result.data.items).toEqual([]);
-    expect(result.ok && result.data.total).toBe(1);
+    expect(result.ok && result.data.total).toBe(0);
   });
 
   it("filters the invitations by role and text, and skips them when only ACTIVE is asked", async () => {

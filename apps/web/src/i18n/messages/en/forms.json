@@ -77,6 +77,7 @@
       "codeBlock": "Code block",
       "horizontalRule": "Divider",
       "table": "Insert table",
+      "image": "Insert image",
       "link": "Link",
       "linkUrl": "Link address",
       "linkPlaceholder": "https://…",

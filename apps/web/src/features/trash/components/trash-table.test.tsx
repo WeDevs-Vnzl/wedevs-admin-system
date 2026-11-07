@@ -119,22 +119,6 @@ describe("TrashTable (PRD §7.7)", () => {
     expect(mocks.toast.success).toHaveBeenCalledWith("Landing Veredas restored");
   });
 
-  it("shows the trash message of a CONFLICT and keeps the row", async () => {
-    const user = userEvent.setup();
-    mocks.restoreFromTrashAction.mockResolvedValue({
-      ok: false,
-      error: { code: "CONFLICT", message: "trash.errors.clientArchived" },
-    });
-    renderTable();
-    await user.click(
-      within(rowOf("Luis Rivas")).getByRole("button", { name: "Restore Luis Rivas" }),
-    );
-    await waitFor(() =>
-      expect(mocks.toast.error).toHaveBeenCalledWith(enTrash.errors.clientArchived),
-    );
-    expect(screen.getByText("Luis Rivas")).toBeInTheDocument();
-  });
-
   it("links a CONFLICT to the record that blocks the restore and keeps the row (HU-03 CA3)", async () => {
     const user = userEvent.setup();
     mocks.restoreFromTrashAction.mockResolvedValue({
@@ -154,6 +138,40 @@ describe("TrashTable (PRD §7.7)", () => {
     expect(screen.getByText(enTrash.errors.clientArchived)).toBeInTheDocument();
     expect(mocks.toast.error).not.toHaveBeenCalled();
     expect(screen.getByText("Luis Rivas")).toBeInTheDocument();
+  });
+
+  it("CONFLICT without an entity shows the message without a link", async () => {
+    const user = userEvent.setup();
+    mocks.restoreFromTrashAction.mockResolvedValue({
+      ok: false,
+      error: { code: "CONFLICT", message: "trash.errors.taxIdTaken" },
+    });
+    renderTable();
+    await user.click(
+      within(rowOf("Luis Rivas")).getByRole("button", { name: "Restore Luis Rivas" }),
+    );
+    expect(await screen.findByText(enTrash.errors.taxIdTaken)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByText("Luis Rivas")).toBeInTheDocument();
+  });
+
+  it("CONFLICT whose entity has no route shows the message without a link", async () => {
+    const user = userEvent.setup();
+    mocks.restoreFromTrashAction.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: "trash.errors.taxIdTaken",
+        entity: { id: "con_kairos_1", type: "CONTACT", label: "Kairos contact" },
+      },
+    });
+    renderTable();
+    await user.click(
+      within(rowOf("Luis Rivas")).getByRole("button", { name: "Restore Luis Rivas" }),
+    );
+    expect(await screen.findByText(enTrash.errors.taxIdTaken)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(mocks.toast.error).not.toHaveBeenCalled();
   });
 
   it("maps every trash CONFLICT key to a message", () => {

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
+import { namePrefix } from "./support/accessible-names";
 
 // T10 phase B E2E regression tests, H1-B3 money flows (odd/tasks/h1-b3-finance-ui.md S3, S5, S7), rewritten for FE-INT-R
 // E.2 (rule 29): no mock reset and no mock seed id. Every case creates its own client, project, billing plan and
@@ -42,7 +43,7 @@ async function createBilledProject(
   await page.getByLabel("Nombre", { exact: true }).fill(uniq("proyecto"));
   await page.getByLabel("Resumen", { exact: true }).fill("Proyecto E2E de dinero");
   await page.getByRole("combobox", { name: "Clientes", exact: true }).fill(clientName);
-  await page.getByRole("option", { name: clientName, exact: true }).click();
+  await page.getByRole("option", { name: namePrefix(clientName) }).click();
   await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
