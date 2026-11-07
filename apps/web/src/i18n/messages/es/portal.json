@@ -53,5 +53,10 @@
   "notFound": {
     "title": "Enlace no disponible",
     "description": "Este enlace no existe o ya no está disponible."
+  },
+  "rateLimited": {
+    "title": "Demasiadas solicitudes",
+    "description": "Hay demasiadas solicitudes en este momento. Inténtalo de nuevo en unos instantes.",
+    "retry": "Reintentar"
   }
 }

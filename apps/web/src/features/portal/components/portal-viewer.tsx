@@ -15,28 +15,29 @@ import {
 import { MarkdownView } from "@/components/ui/markdown-view/markdown-view";
 import { PdfViewer } from "@/components/ui/pdf-viewer";
 import { Spinner } from "@/components/ui/spinner";
-import type { PortalDocumentDTO, PortalDocumentViewDTO } from "@/lib/validators/shares";
-import { openSharedDocumentAction } from "../actions";
-import { portalFileUrl } from "./portal-document-card";
+import { portalFileUrl, usePortalApiClient } from "@/lib/api/client";
+import type { PortalDocumentDto, PortalDocumentViewDto } from "@/lib/api/types/portal";
+import { fetchPortalDocument, recordPortalView } from "../api";
 
 /** Result of one load, tagged with the document and attempt it was started for (anything else is still loading). */
 type ViewState =
-  { status: "error"; key: string } | { status: "ready"; key: string; view: PortalDocumentViewDTO };
+  { status: "error"; key: string } | { status: "ready"; key: string; view: PortalDocumentViewDto };
 
 export interface PortalViewerProps {
   token: string;
   /** The open document; `null` shows the empty state. */
-  document: PortalDocumentDTO | null;
+  document: PortalDocumentDto | null;
   allowDownload: boolean;
 }
 
 /**
  * Viewer panel of the portal (PRD §8.11 "Comportamiento del portal"): embedded PDF, sanitized markdown with print,
- * image, or an external link as a button. Opening a document records its `VIEW` (Server Action).
+ * image, or an external link as a button. Opening a document reads it from the BE and then records its `VIEW`.
  */
 export function PortalViewer({ token, document, allowDownload }: PortalViewerProps) {
   const t = useTranslations("portal.viewer");
   const documentId = document?.documentId ?? null;
+  const api = usePortalApiClient();
   const [state, setState] = useState<ViewState | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -45,22 +46,25 @@ export function PortalViewer({ token, document, allowDownload }: PortalViewerPro
   useEffect(() => {
     if (!documentId) return;
     let cancelled = false;
-    openSharedDocumentAction({ token, documentId })
-      .then((result) => {
+    (async () => {
+      try {
+        const result = await fetchPortalDocument(api, token, documentId);
         if (cancelled) return;
-        setState(
-          result.ok
-            ? { status: "ready", key: loadKey, view: result.data }
-            : { status: "error", key: loadKey },
-        );
-      })
-      .catch(() => {
+        if (!result.ok) {
+          setState({ status: "error", key: loadKey });
+          return;
+        }
+        setState({ status: "ready", key: loadKey, view: result.data });
+        // Only a document that was actually served is a view; a failed log never blocks the visitor.
+        recordPortalView(api, token, documentId).catch(() => undefined);
+      } catch {
         if (!cancelled) setState({ status: "error", key: loadKey });
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [token, documentId, loadKey]);
+  }, [api, token, documentId, loadKey]);
 
   const current = state?.key === loadKey ? state : null;
 
@@ -113,13 +117,13 @@ function ViewerContent({
   allowDownload,
 }: {
   token: string;
-  view: PortalDocumentViewDTO;
+  view: PortalDocumentViewDto;
   allowDownload: boolean;
 }) {
   const t = useTranslations("portal");
   const { document, content } = view;
-  const fileUrl = portalFileUrl(token, document.documentId);
-  const downloadUrl = portalFileUrl(token, document.documentId, true);
+  const fileUrl = portalFileUrl(token, document.documentId, "inline");
+  const downloadUrl = portalFileUrl(token, document.documentId, "attachment");
 
   if (content.format === "MARKDOWN") {
     return (

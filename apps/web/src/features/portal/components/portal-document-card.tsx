@@ -12,8 +12,9 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { portalFileUrl } from "@/lib/api/client";
+import type { PortalDocumentDto } from "@/lib/api/types/portal";
 import type { DocumentFormat } from "@/lib/validators/enums";
-import type { PortalDocumentDTO } from "@/lib/validators/shares";
 import { cn } from "@/lib/utils";
 
 const FORMAT_ICONS: Record<DocumentFormat, LucideIcon> = {
@@ -22,15 +23,9 @@ const FORMAT_ICONS: Record<DocumentFormat, LucideIcon> = {
   ENLACE: LinkIcon,
 };
 
-/** The portal route of a shared document; `download` asks for an attachment (logged as `DOWNLOAD`). */
-export function portalFileUrl(token: string, documentId: string, download = false): string {
-  const base = `/api/s/${token}/files/${encodeURIComponent(documentId)}`;
-  return download ? `${base}?download=1` : base;
-}
-
 export interface PortalDocumentCardProps {
   token: string;
-  document: PortalDocumentDTO;
+  document: PortalDocumentDto;
   allowDownload: boolean;
   selected: boolean;
   onView: () => void;
@@ -106,7 +101,11 @@ export function PortalDocumentCard({
             </Button>
             {allowDownload ? (
               <Button asChild className="flex-1">
-                <a href={portalFileUrl(token, document.documentId, true)} rel="noreferrer" download>
+                <a
+                  href={portalFileUrl(token, document.documentId, "attachment")}
+                  rel="noreferrer"
+                  download
+                >
                   <DownloadIcon aria-hidden />
                   {t("actions.download")}
                 </a>

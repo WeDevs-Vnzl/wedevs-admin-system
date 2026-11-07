@@ -19,27 +19,28 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { usePortalApiClient } from "@/lib/api/client";
+import type { PortalDocumentDto } from "@/lib/api/types/portal";
 import {
   ACCESS_KEY_LOCKOUT_MINUTES,
   ACCESS_KEY_MAX_LENGTH,
   ACCESS_KEY_MIN_LENGTH,
-  type PortalDocumentDTO,
 } from "@/lib/validators/shares";
-import { unlockSharedDocumentAction } from "../actions";
+import { unlockPortalDocument } from "../api";
 
 type UnlockState = "idle" | "invalid" | "tooShort" | "locked" | "error";
 
 export interface UnlockDialogProps {
   token: string;
   /** The document to unlock; `null` keeps the dialog closed. */
-  document: PortalDocumentDTO | null;
+  document: PortalDocumentDto | null;
   onClose: () => void;
   onUnlocked: (documentId: string) => void;
 }
 
 /**
  * Unlock dialog of a key-protected portal document (DT-45, frontend-patterns §11): a masked key input, a wrong-key
- * error and the lockout state after too many failures. The key travels only in the Server Action body, never in a
+ * error and the lockout state after too many failures. The key travels only in the unlock request body, never in a
  * URL, and the dialog forgets it when it closes.
  */
 export function UnlockDialog({ token, document, onClose, onUnlocked }: UnlockDialogProps) {
@@ -68,7 +69,7 @@ function UnlockForm({
   onClose,
 }: {
   token: string;
-  document: PortalDocumentDTO;
+  document: PortalDocumentDto;
   onUnlocked: (documentId: string) => void;
   onClose: () => void;
 }) {
@@ -78,6 +79,7 @@ function UnlockForm({
   const [key, setKey] = useState("");
   const [visible, setVisible] = useState(false);
   const [state, setState] = useState<UnlockState>("idle");
+  const api = usePortalApiClient();
   const [pending, startTransition] = useTransition();
   const locked = state === "locked";
 
@@ -100,17 +102,15 @@ function UnlockForm({
       return;
     }
     startTransition(async () => {
-      const result = await unlockSharedDocumentAction({
-        token,
-        documentId: document.documentId,
-        key: trimmed,
-      });
-      if (result.ok) {
+      const result = await unlockPortalDocument(api, token, document.documentId, trimmed).catch(
+        () => null,
+      );
+      if (result?.ok) {
         setKey("");
         onUnlocked(document.documentId);
         return;
       }
-      const code = result.error.code;
+      const code = result?.error.code;
       setState(
         code === "ACCESS_KEY_LOCKED"
           ? "locked"
