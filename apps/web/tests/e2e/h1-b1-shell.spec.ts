@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import { loadRateViaUi } from "./support/ui-data";
 
 // Wave 5 shell E2E (H1-B1, docs/TASK.md "Tester scope"), FE-INT-R E.3. Runs against PLAYWRIGHT_BASE_URL with the local
 // BE (safeguards.md rule 1); nothing here starts a server. Every test signs in as the Owner through the Clerk test
@@ -164,6 +165,8 @@ test.describe("locale and theme (mutate the Owner's preferences)", () => {
   test("ES to EN via the topbar translates the shell and reformats the BCV rate chip", async ({
     page,
   }) => {
+    // A fresh BE has no rate: the chip would show "Sin tasa para hoy". Load today's BCV rate through the rates UI.
+    await loadRateViaUi(page, "VES", "36.50");
     await page.goto("/dashboard");
     await expect(page.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /Tasa BCV/ })).toContainText(RATE_ES);
