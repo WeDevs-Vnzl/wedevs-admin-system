@@ -1,61 +1,53 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import {
+  addInstallmentViaUi,
+  caracasToday,
+  createClientViaUi,
+  createProjectViaUi,
+  openPage,
+  pickDateViaUi,
+} from "./support/ui-data";
 
-// Wave 3 E2E, projects (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
-// PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
-// every browser context shares it, so the tests that mutate it run one at a time (`--workers=1`, no serial mode, so
-// one failure does not skip the rest) and reset it through the user menu ("Restablecer datos de prueba") before each
-// test. View-as-role lives in the cookie of each context. Seed facts used below (src/mocks/fixtures/projects.ts):
-// `pry_kairos_web` is EN_CURSO and has two REPOSITORIO links; `pry_orinoco_tracking` is PROPUESTA with no billing (no
-// INTEGRITY_LOCK on archive); `pry_solaris_portal` is EN_CURSO; `cli_kairos` (CLI-0001) and `cli_hotel_mochima`-style
-// clients exist as client pickers' options. Billing plans, installments, recurring charges and invoices are empty in
-// the seed (fixtures/billing.ts, fixtures/invoices.ts), so no project has active billing: the archive INTEGRITY_LOCK
-// step is not reachable.
+// Wave 3 E2E, projects (H1-B2, docs/TASK.md "Tester scope"), FE-INT-R E.3. Runs against PLAYWRIGHT_BASE_URL with the
+// local BE (safeguards.md rule 1); nothing here starts a server. Every test signs in as the Owner (DT-204) and creates
+// its own clients and projects through the UI with unique names (W5 rule 29): no seeded id, no mock reset. View-as-role
+// tests create the project as the Owner first, then sign in as the other role.
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
 
-/** Restores the mock data through the user menu. Locale-agnostic on purpose. */
-async function resetMockData(page: Page) {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
-  await page
-    .getByRole("menuitem", { name: /^(Restablecer datos de prueba|Reset mock data)$/ })
-    .click();
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: /^(Restablecer|Reset)$/ })
-    .click();
-  await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Opens a page and waits until React has hydrated it (clicks before that are lost). */
-async function open(page: Page, path: string) {
-  await page.goto(path);
-  await page.waitForLoadState("networkidle");
-}
-
 /** The link handles of the Enlaces tab, in DOM order (the aria-label names the link). */
 function linkHandles(page: Page) {
   return page.getByRole("button", { name: /^Reordenar / });
 }
 
+/** Adds one REPOSITORIO link per entry on the project edit page and saves it. */
+async function addRepositoryLinks(page: Page, projectId: string, links: { label: string; url: string }[]) {
+  await openPage(page, `/projects/${projectId}/edit`);
+  for (const [index, link] of links.entries()) {
+    await page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true }).click();
+    await page.getByLabel("Etiqueta", { exact: true }).nth(index).fill(link.label);
+    await page.getByLabel("URL", { exact: true }).nth(index).fill(link.url);
+  }
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(page.getByText("Enlaces guardados", { exact: true })).toBeVisible();
+}
+
+const runId = () => Date.now().toString(36);
+
 // ───────────────────────────── HU-05 Create project ─────────────────────────────
 
-test.describe("HU-05 create project (mutates projects)", () => {
+test.describe("HU-05 create project", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
 
   test("CA1: no save without a client", async ({ page }) => {
-    await open(page, "/projects/new");
-    await page.getByLabel("Nombre", { exact: true }).fill("Proyecto sin cliente E2E");
+    await openPage(page, "/projects/new");
+    await page.getByLabel("Nombre", { exact: true }).fill(`Proyecto sin cliente E2E ${runId()}`);
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
 
     await expect(page.getByText("Vincula al menos un cliente.", { exact: true })).toBeVisible();
@@ -65,33 +57,31 @@ test.describe("HU-05 create project (mutates projects)", () => {
   test("CA2: each linked client keeps its own role; CA3: the project is listed in each client's Proyectos tab", async ({
     page,
   }) => {
-    const name = "Proyecto E2E dos clientes";
-    await open(page, "/projects/new");
-    await page.getByLabel("Nombre", { exact: true }).fill(name);
-    await page
-      .getByLabel("Resumen", { exact: true })
-      .fill("Resumen del proyecto E2E de dos clientes");
+    const run = runId();
+    const kairos = `E2E Kairos ${run}`;
+    const playa = `E2E Playa ${run}`;
+    const kairosId = await createClientViaUi(page, kairos, `E2E-${run}-A`);
+    const playaId = await createClientViaUi(page, playa, `E2E-${run}-B`);
 
-    const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
-    await clients.fill("Kairos");
-    await page.getByRole("option", { name: "Kairos Studio" }).click();
-    await page
-      .getByRole("textbox", { name: "Rol: Kairos Studio", exact: true })
-      .fill("Contratante");
+    const name = `Proyecto E2E dos clientes ${run}`;
+    const projectId = await createProjectViaUi(page, {
+      name,
+      summary: "Resumen del proyecto E2E de dos clientes",
+      clients: [
+        { clientName: kairos, role: "Contratante" },
+        { clientName: playa, role: "Usuario final" },
+      ],
+    });
+    expect(projectId).toMatch(/^[a-z0-9]{20,}$/);
 
-    await clients.fill("Hotel Playa");
-    await page.getByRole("option", { name: "Hotel Playa Mochima" }).click();
-    await page
-      .getByRole("textbox", { name: "Rol: Hotel Playa Mochima", exact: true })
-      .fill("Usuario final");
-
-    await page.getByRole("button", { name: "Guardar", exact: true }).click();
-    await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
-    await expect(page).toHaveURL(/\/projects\/pry_/);
+    // CA2: the roles were saved per client (the Clientes tab of the project shows each role).
+    await openPage(page, `/projects/${projectId}`);
+    await expect(page.getByText("Contratante", { exact: true })).toBeVisible();
+    await expect(page.getByText("Usuario final", { exact: true })).toBeVisible();
 
     // CA3: listed in each linked client's Proyectos tab.
-    for (const clientId of ["cli_kairos", "cli_hotel_mochima"]) {
-      await open(page, `/clients/${clientId}?tab=projects`);
+    for (const clientId of [kairosId, playaId]) {
+      await openPage(page, `/clients/${clientId}?tab=projects`);
       // The name sits inside the project cell next to its code, so match it by substring (not exact text).
       await expect(page.getByText(name)).toBeVisible();
     }
@@ -100,11 +90,15 @@ test.describe("HU-05 create project (mutates projects)", () => {
 
 // ───────────────────────────── HU-06 Technologies ─────────────────────────────
 
-test.describe("HU-06 technologies (read only)", () => {
+test.describe("HU-06 technologies", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
+
   test("CA1: the stack picker groups the active technologies by their translated category", async ({
     page,
   }) => {
-    await open(page, "/projects/new");
+    await openPage(page, "/projects/new");
 
     await page.locator("#project-stack").click();
     const list = page.getByRole("listbox");
@@ -118,28 +112,51 @@ test.describe("HU-06 technologies (read only)", () => {
   test("CA2: the Tecnología filter on /projects/list narrows the table to the projects that use Next.js", async ({
     page,
   }) => {
-    await open(page, "/projects/list");
+    const run = runId();
+    const client = `E2E Tecnología ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-T`);
+    const name = `Proyecto E2E Next ${run}`;
+    await createProjectViaUi(page, {
+      name,
+      clients: [{ clientName: client, role: "Contratante" }],
+      technology: "Next.js",
+    });
+
+    await openPage(page, "/projects/list");
     await page.getByRole("button", { name: "Tecnología", exact: true }).click();
     await page.getByText("Next.js", { exact: true }).click();
 
     const rows = page.getByRole("row").filter({ has: page.getByRole("cell") });
-    await expect(rows.first()).toBeVisible();
-    await expect(rows.filter({ hasText: "Kairos Studio" }).first()).toBeVisible();
+    await expect(rows.filter({ hasText: name }).first()).toBeVisible();
   });
 });
 
 // ───────────────────────────── HU-07 Links ─────────────────────────────
 
-test.describe("HU-07 project links (mutates link order)", () => {
+test.describe("HU-07 project links", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
 
+  /** A project with two repository links, created through the UI. */
+  async function projectWithRepositories(page: Page): Promise<string> {
+    const run = runId();
+    const client = `E2E Enlaces ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-L`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E enlaces ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+    await addRepositoryLinks(page, projectId, [
+      { label: "Repositorio principal", url: "https://example.com/repo-main" },
+      { label: "Repositorio secundario", url: "https://example.com/repo-second" },
+    ]);
+    return projectId;
+  }
+
   test("CA1: several REPOSITORIO links are listed in their group", async ({ page }) => {
-    await open(page, "/projects/pry_kairos_web?tab=links");
+    const projectId = await projectWithRepositories(page);
+    await openPage(page, `/projects/${projectId}?tab=links`);
     // The group heading is the trigger of a collapsible: its name is "Repositorio" plus the count, so match the button.
     await expect(page.getByRole("button", { name: /^Repositorio/ }).first()).toBeVisible();
     expect(await linkHandles(page).count()).toBeGreaterThanOrEqual(2);
@@ -148,7 +165,8 @@ test.describe("HU-07 project links (mutates link order)", () => {
   test("CA2: reorder by keyboard (dnd-kit) and by drag, and keep the order after reload", async ({
     page,
   }) => {
-    await open(page, "/projects/pry_kairos_web?tab=links");
+    const projectId = await projectWithRepositories(page);
+    await openPage(page, `/projects/${projectId}?tab=links`);
     const before = await linkHandles(page).evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("aria-label") ?? ""),
     );
@@ -191,29 +209,30 @@ test.describe("HU-07 project links (mutates link order)", () => {
   });
 
   test("CA3: a link with an invalid URL shows the error on the URL field", async ({ page }) => {
-    await open(page, "/projects/pry_kairos_web/edit");
+    const run = runId();
+    const client = `E2E URL ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-U`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E URL ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+
+    await openPage(page, `/projects/${projectId}/edit`);
     await page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true }).click();
+    await page.getByLabel("Etiqueta", { exact: true }).first().fill("Enlace E2E");
     const urls = page.getByLabel("URL", { exact: true });
-    const blank = await urls.evaluateAll((nodes) =>
-      nodes.findIndex((node) => node instanceof HTMLInputElement && node.value === ""),
-    );
-    expect(blank).toBeGreaterThanOrEqual(0);
-    await page.getByLabel("Etiqueta", { exact: true }).nth(blank).fill("Enlace E2E");
-    await urls.nth(blank).fill("esto no es una URL");
+    await urls.first().fill("esto no es una URL");
     await page.getByRole("button", { name: "Guardar", exact: true }).click();
 
-    await expect(urls.nth(blank)).toHaveAttribute("aria-invalid", "true");
+    await expect(urls.first()).toHaveAttribute("aria-invalid", "true");
   });
 });
 
 // ───────────────────────────── HU-08 Status transitions ─────────────────────────────
 
-test.describe("HU-08 project status (mutates project status)", () => {
+test.describe("HU-08 project status", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
 
   async function chooseTarget(page: Page, label: string) {
@@ -225,8 +244,32 @@ test.describe("HU-08 project status (mutates project status)", () => {
     return dialog;
   }
 
+  /** A new project (PROPUESTA) moved to EN_CURSO with a start date, so the next transition has a source. */
+  async function inProgressProject(page: Page): Promise<string> {
+    const run = runId();
+    const client = `E2E Estado ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-S`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E estado ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+    await openPage(page, `/projects/${projectId}`);
+    const dialog = await chooseTarget(page, "En curso");
+    await pickDateViaUi(page, dialog.getByLabel("Fecha de inicio", { exact: true }), caracasToday());
+    await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    return projectId;
+  }
+
   test("CA1: EN_CURSO needs a start date", async ({ page }) => {
-    await open(page, "/projects/pry_orinoco_tracking");
+    const run = runId();
+    const client = `E2E Inicio ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-I`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E inicio ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+    await openPage(page, `/projects/${projectId}`);
     const dialog = await chooseTarget(page, "En curso");
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
     await expect(
@@ -236,7 +279,8 @@ test.describe("HU-08 project status (mutates project status)", () => {
   });
 
   test("CA2: ENTREGADO needs the delivery date", async ({ page }) => {
-    await open(page, "/projects/pry_solaris_portal");
+    const projectId = await inProgressProject(page);
+    await openPage(page, `/projects/${projectId}`);
     const dialog = await chooseTarget(page, "Entregado");
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
     await expect(
@@ -245,7 +289,8 @@ test.describe("HU-08 project status (mutates project status)", () => {
   });
 
   test("CA3: CANCELADO opens the cancel confirmation with its two options", async ({ page }) => {
-    await open(page, "/projects/pry_solaris_portal");
+    const projectId = await inProgressProject(page);
+    await openPage(page, `/projects/${projectId}`);
     const dialog = await chooseTarget(page, "Cancelado");
     // Submitting CANCELADO leaves the transition dialog for the cancel confirmation (ProjectCancelDialog).
     await dialog.getByRole("button", { name: "Cambiar estado", exact: true }).click();
@@ -259,23 +304,29 @@ test.describe("HU-08 project status (mutates project status)", () => {
   });
 
   test("CA4: a status change shows as STATUS_CHANGE in the Actividad tab", async ({ page }) => {
-    await open(page, "/projects/pry_kairos_web?tab=activity");
+    const projectId = await inProgressProject(page);
+    await openPage(page, `/projects/${projectId}?tab=activity`);
     await expect(page.getByText(/^Cambió el estado de /).first()).toBeVisible();
   });
 });
 
 // ───────────────────────────── Archive a project ─────────────────────────────
 
-test.describe("archive a project (mutates projects)", () => {
+test.describe("archive a project", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
 
   test("a project without active billing archives after one confirmation", async ({ page }) => {
-    await open(page, "/projects/pry_orinoco_tracking");
+    const run = runId();
+    const client = `E2E Archivo ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-R`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E archivo ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+
+    await openPage(page, `/projects/${projectId}`);
     await page.getByRole("button", { name: "Más acciones", exact: true }).click();
     await page.getByRole("menuitem", { name: "Archivar proyecto", exact: true }).click();
     const dialog = page.getByRole("alertdialog");
@@ -288,24 +339,33 @@ test.describe("archive a project (mutates projects)", () => {
     await expect(page.getByText("Registro archivado", { exact: true })).toBeVisible();
   });
 
-  // The H1-B3 seed gives pry_kairos_web a billing plan with pending installments, so the first request
-  // answers INTEGRITY_LOCK and the dialog asks again before archiving.
-  test("a project with active billing asks for the INTEGRITY_LOCK confirmation first", async ({
+  // DT-220: the project gets an open installment through the UI, so the first archive request answers
+  // INTEGRITY_LOCK and the dialog asks again before archiving. The dialog's "Fecha de facturación" is a calendar
+  // popover (DateField), so `addInstallmentViaUi` picks the day in it; the labels come from billing.json.
+  test("a project with an open installment asks for the INTEGRITY_LOCK confirmation first (HU-08 CA3, DT-220)", async ({
     page,
   }) => {
-    await open(page, "/projects/pry_kairos_web");
+    const run = runId();
+    const client = `E2E Bloqueo ${run}`;
+    await createClientViaUi(page, client, `E2E-${run}-K`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E bloqueo ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+    await addInstallmentViaUi(page, projectId, { label: "Cuota E2E", amount: "100" });
+
+    await openPage(page, `/projects/${projectId}`);
     await page.getByRole("button", { name: "Más acciones", exact: true }).click();
     await page.getByRole("menuitem", { name: "Archivar proyecto", exact: true }).click();
-    const dialog = page.getByRole("alertdialog");
-    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
+    const archive = page.getByRole("alertdialog");
+    await archive.getByRole("button", { name: "Archivar", exact: true }).click();
 
     await expect(
-      dialog.getByText("El proyecto tiene cobros o facturas activos. Confirma para archivarlo.", {
+      archive.getByText("El proyecto tiene cobros o facturas activos. Confirma para archivarlo.", {
         exact: true,
       }),
     ).toBeVisible();
-    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
-
+    await archive.getByRole("button", { name: "Archivar", exact: true }).click();
     await expect(page.getByText("Proyecto archivado", { exact: true })).toBeVisible();
   });
 });
@@ -314,17 +374,20 @@ test.describe("archive a project (mutates projects)", () => {
 
 test.describe("projects (read only)", () => {
   test("an unknown project id renders the in-shell 404 page", async ({ page }) => {
+    await signInAs(page, "OWNER");
     await page.goto("/projects/pry_no_existe");
     await expect(notFoundText(page)).toBeVisible();
     await expect(sidebar(page)).toBeVisible();
   });
 
   test("an unknown project id answers HTTP 404", async ({ page }) => {
+    await signInAs(page, "OWNER");
     const response = await page.goto("/projects/pry_no_existe");
     expect(response?.status()).toBe(404);
   });
 
   test("the project form renders in dark mode", async ({ page }) => {
+    await signInAs(page, "OWNER");
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
     await page.goto("/projects/new");
     await expect(page.locator("html")).toHaveClass(DARK_CLASS);
@@ -332,17 +395,35 @@ test.describe("projects (read only)", () => {
   });
 
   test("Miembro edits a project and does not see the Nuevo proyecto action", async ({ page }) => {
+    const run = runId();
+    const client = `E2E Miembro ${run}`;
+    await signInAs(page, "OWNER");
+    await createClientViaUi(page, client, `E2E-${run}-M`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E miembro ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+
     await signInAs(page, "MEMBER");
-    await open(page, "/projects/pry_kairos_web");
+    await openPage(page, `/projects/${projectId}`);
     await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
 
-    await open(page, "/projects/list");
+    await openPage(page, "/projects/list");
     await expect(page.getByRole("link", { name: "Nuevo proyecto", exact: true })).toHaveCount(0);
   });
 
   test("Lector sees no write action on a project", async ({ page }) => {
+    const run = runId();
+    const client = `E2E Lector ${run}`;
+    await signInAs(page, "OWNER");
+    await createClientViaUi(page, client, `E2E-${run}-V`);
+    const projectId = await createProjectViaUi(page, {
+      name: `Proyecto E2E lector ${run}`,
+      clients: [{ clientName: client, role: "Contratante" }],
+    });
+
     await signInAs(page, "VIEWER");
-    await open(page, "/projects/pry_kairos_web");
+    await openPage(page, `/projects/${projectId}`);
     await expect(page.getByRole("link", { name: "Editar", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Cambiar estado", exact: true })).toHaveCount(0);
   });
