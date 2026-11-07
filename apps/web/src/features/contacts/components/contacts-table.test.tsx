@@ -8,7 +8,7 @@ import enContacts from "@/i18n/messages/en/contacts.json";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import enTags from "@/i18n/messages/en/tags.json";
 import enValidation from "@/i18n/messages/en/validation.json";
-import type { ContactListRowDTO } from "@/lib/validators/contacts";
+import type { ContactViewDto } from "@/lib/api/types/clients";
 import { archiveContactAction, setPrimaryContactAction } from "@/features/contacts/actions";
 import { ContactsTable } from "./contacts-table";
 
@@ -41,7 +41,7 @@ const base = {
   archivedAt: null,
   tags: [],
 };
-const contacts: ContactListRowDTO[] = [
+const contacts: ContactViewDto[] = [
   {
     ...base,
     id: "con_ana",

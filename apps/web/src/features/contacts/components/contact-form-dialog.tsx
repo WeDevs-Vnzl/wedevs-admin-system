@@ -20,11 +20,8 @@ import { PhoneInput } from "@/components/ui/phone-input/phone-input";
 import { Switch } from "@/components/ui/switch";
 import { createContactAction, updateContactAction } from "@/features/contacts/actions";
 import { TagPicker } from "@/features/tags/components/tag-picker";
-import {
-  createContactInputSchema,
-  updateContactInputSchema,
-  type ContactListRowDTO,
-} from "@/lib/validators/contacts";
+import type { ContactViewDto } from "@/lib/api/types/clients";
+import { createContactInputSchema, updateContactInputSchema } from "@/lib/validators/contacts";
 import type { z } from "@/lib/validators/zod";
 import type { TagChipDTO } from "@/lib/validators/tags";
 import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
@@ -32,7 +29,7 @@ import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 type ContactFormDialogProps = {
   clientId: string;
   /** Absent for a new contact. */
-  contact?: ContactListRowDTO;
+  contact?: ContactViewDto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canCreateTags: boolean;
