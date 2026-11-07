@@ -28,6 +28,17 @@ export function createMockContext(options: {
   return { db: options.db ?? getMockStore(), user: options.user, now: options.now };
 }
 
+/**
+ * Adds the signed-in user to the store's users the first time it acts, so mock services that resolve the
+ * actor (activity, note author) render its real name. Existing rows are never changed. Called by
+ * `getServiceContext` only, so the fixture stores the tests build keep their seeded users.
+ */
+export function registerMockActor(db: MockStore, user: SessionUser, now: Date): void {
+  if (db.users.some((row) => row.id === user.id)) return;
+  const stamp = now.toISOString();
+  db.users.push({ ...user, createdAt: stamp, updatedAt: stamp });
+}
+
 export function createMockPublicContext(options: {
   now: Date;
   db?: MockStore;

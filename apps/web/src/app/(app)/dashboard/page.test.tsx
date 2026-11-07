@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn(), requireSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/mocks/session", () => ({ getMockSessionUser: session.getMockSessionUser }));
+// The page reads the role through requireSessionUser (BE session); the feature reads data via the mock context.
+vi.mock("@/server/auth/session", () => ({ requireSessionUser: session.requireSessionUser }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 
 import { makeSessionUser } from "@/mocks/test-helpers";
@@ -15,15 +17,20 @@ const render = async (search: Record<string, string> = {}) =>
     searchParams: Promise.resolve(search),
   })) as ReactElement<DashboardViewProps>;
 
+/** Signs the same user in for the page (BE session) and for the mock service context. */
+const signIn = (user: ReturnType<typeof makeSessionUser>) => {
+  session.requireSessionUser.mockResolvedValue(user);
+  session.getMockSessionUser.mockResolvedValue(user);
+};
+
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
+  session.requireSessionUser.mockReset();
 });
 
 describe("/dashboard page", () => {
   it("reads the period from the URL and aggregates the cards over it", async () => {
-    session.getMockSessionUser.mockResolvedValue(
-      makeSessionUser("OWNER", { name: "Andrés Molina" }),
-    );
+    signIn(makeSessionUser("OWNER", { name: "Andrés Molina" }));
     const month = (await render()).props;
     const year = (await render({ period: "year" })).props;
 
@@ -40,7 +47,7 @@ describe("/dashboard page", () => {
   });
 
   it("tells the view to hide financial data from Member and Viewer", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    signIn(makeSessionUser("VIEWER"));
     const { showFinancials } = (await render({ period: "junk" })).props;
     expect(showFinancials).toBe(false);
   });

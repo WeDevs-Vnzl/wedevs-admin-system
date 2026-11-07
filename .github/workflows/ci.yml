@@ -97,9 +97,32 @@ jobs:
     name: web (lint, types, tests, api, i18n, build, e2e)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # The unauthenticated E2E runs against a real local BE (FE-INT-0 A2): its Postgres is this service; the BE is
+    # built and started from apps/api in the E2E step.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: core
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d core"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       PORT: "3000"
       PLAYWRIGHT_BASE_URL: http://localhost:3000
+      # Inlined into the browser bundle at build time; the BE listens on API_PORT.
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      API_PORT: "3001"
+      # The Clerk dev publishable key is not a secret (it ships in the bundle): a repository variable (DT-214).
+      # Without it every FE route answers 500. The dev secret key is a repository secret, read only by the E2E step.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      DATABASE_URL: postgresql://postgres:dev@localhost:5432/core
+      DIRECT_URL: postgresql://postgres:dev@localhost:5432/core
     defaults:
       run:
         working-directory: apps/web
@@ -147,43 +170,90 @@ jobs:
         run: bun run api:check
       - if: steps.affected.outputs.run == 'true'
         run: bun run i18n:check
+      - name: Require the Clerk dev keys
+        if: steps.affected.outputs.run == 'true'
+        env:
+          HAS_CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY != '' }}
+        run: |
+          if [ -z "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::error::Repository variable NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is not set (DT-214)"
+            exit 1
+          fi
+          if [ "$HAS_CLERK_SECRET_KEY" != "true" ]; then
+            echo "::error::Repository secret CLERK_SECRET_KEY (Clerk dev instance) is not set (DT-214)"
+            exit 1
+          fi
       - if: steps.affected.outputs.run == 'true'
         run: bun run build
+
+      # Migrations and the seed on the service database, then the production build of the BE.
+      - name: Prepare the local BE
+        if: steps.affected.outputs.run == 'true'
+        working-directory: apps/api
+        run: |
+          bun run prisma:generate
+          bunx prisma migrate deploy
+          bun run db:seed
+          bun run build
 
       - name: Install Playwright Chromium
         if: steps.affected.outputs.run == 'true'
         run: bun x playwright install --with-deps chromium
 
-      - name: Start app, run E2E, stop app
+      - name: Start BE and app, run E2E, stop both
         if: steps.affected.outputs.run == 'true'
+        env:
+          # The Clerk dev secret key (repository secret, DT-214): the Next server's clerkMiddleware verifies the
+          # dev-instance handshake a real browser triggers with it. The BE reads the same name.
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          # Literal placeholders, not secrets: the unauthenticated E2E never reaches the BE's Clerk or Cloudinary
+          # calls. Svix decodes the webhook secret at boot, so its placeholder is valid base64.
+          CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_JWT_KEY: ci-placeholder-jwt-key
+          CLERK_WEBHOOK_SECRET: whsec_Y2ktcGxhY2Vob2xkZXItd2ViaG9vay1zZWNyZXQ=
+          CLOUDINARY_CLOUD_NAME: ci-placeholder
+          CLOUDINARY_API_KEY: ci-placeholder
+          CLOUDINARY_API_SECRET: ci-placeholder
+          SHARE_IP_SALT: ci-placeholder-share-ip-salt-0123456789
+          SHARE_UNLOCK_SECRET: ci-placeholder-share-unlock-secret-0123456789
+          APP_URL: http://localhost:3000
         run: |
+          wait_for() {
+            local name="$1" url="$2" pid="$3" log="$4"
+            for _ in $(seq 1 60); do
+              if curl --silent --fail --output /dev/null "$url"; then
+                return 0
+              fi
+              if ! kill -0 "$pid" 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
+            echo "::error::$name did not become ready within 60 s"
+            cat "$log"
+            exit 1
+          }
+
+          (cd ../api && NODE_ENV=production PORT="$API_PORT" node dist/main.js) > "$RUNNER_TEMP/api-start.log" 2>&1 &
+          api_pid=$!
           bun run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$server_pid" "$api_pid" 2>/dev/null || true' EXIT
 
-          ready=0
-          for _ in $(seq 1 60); do
-            if curl --silent --fail --output /dev/null "$PLAYWRIGHT_BASE_URL"; then
-              ready=1
-              break
-            fi
-            if ! kill -0 "$server_pid" 2>/dev/null; then
-              break
-            fi
-            sleep 1
-          done
+          wait_for BE "$NEXT_PUBLIC_API_BASE_URL/api/v1/health" "$api_pid" "$RUNNER_TEMP/api-start.log"
+          wait_for App "$PLAYWRIGHT_BASE_URL/sign-in" "$server_pid" "$RUNNER_TEMP/next-start.log"
 
-          if [ "$ready" -ne 1 ]; then
-            echo "::error::Server did not become ready within 60 s"
-            cat "$RUNNER_TEMP/next-start.log"
-            exit 1
-          fi
+          # Only the unauthenticated project: the authenticated one needs Clerk test users and the secret key,
+          # and stays user-run (DT-204). The legacy mock-backed specs need a session since FE-INT-0.
+          # The secret key above is for the BE and the Next server; Playwright runs without it, so the global setup
+          # skips the Clerk testing-token call the unauthenticated project does not need.
+          env -u CLERK_SECRET_KEY bun x playwright test --project=unauthenticated
 
-          bun run test:e2e --pass-with-no-tests
-
-      - name: Stop app (safety net)
+      - name: Stop BE and app (safety net)
         if: always()
-        run: pkill -f "next start" || pkill -f "next-server" || true
+        run: |
+          pkill -f "next start" || pkill -f "next-server" || true
+          pkill -f "node dist/main.js" || true
 
       - name: Upload Playwright report
         if: failure()

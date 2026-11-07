@@ -20,7 +20,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["src/lib/money.ts", "src/lib/rates.ts", "src/lib/finance/**"],
+      include: ["src/lib/money.ts", "src/lib/rates.ts", "src/lib/finance/**", "src/lib/api/**"],
+      // Generated types and the test helper carry no runtime logic to cover.
+      exclude: ["src/lib/api/schema.d.ts", "src/lib/api/testing.ts", "src/lib/api/dto.ts"],
       thresholds: {
         lines: 90,
         functions: 90,
