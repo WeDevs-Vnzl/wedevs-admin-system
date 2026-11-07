@@ -1,16 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
-vi.mock("@/mocks/session", () => session);
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
 import {
   createDocumentCategoryAction,
   createDocumentTypeAction,
@@ -22,12 +19,7 @@ import {
   updateDocumentTypeAction,
 } from "./actions";
 
-function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
-}
-
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
   cache.revalidatePath.mockReset();
   cache.updateTag.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -40,6 +32,18 @@ const category = {
   color: null,
   order: 3,
   types: [],
+};
+
+const contract = {
+  id: "dtyp_contrato",
+  name: "Contrato laboral",
+  nameEn: null,
+  defaultFormat: "ARCHIVO",
+  requiresSignature: true,
+  hasExpiration: false,
+  active: true,
+  documentCount: 0,
+  category: { id: "dcat_rrhh", name: "Recursos humanos", nameEn: null, color: null },
 };
 
 const forbidden = { ok: false, error: { code: "FORBIDDEN" } };
@@ -151,32 +155,185 @@ describe("document category writes through the API (settings grant)", () => {
   });
 });
 
-// Document type writes still run on the mock seam until their own unit moves them to the API.
-describe("document type actions: permissions (settings row)", () => {
-  it.each(["MEMBER", "VIEWER"] as const)(
-    "refuses every type write to %s with FORBIDDEN",
-    async (role) => {
-      asRole(role);
-      const id = "dtyp_x";
-      const results = await Promise.all([
-        updateDocumentTypeAction({ id, categoryId: "dcat_x", name: "Nuevo" }),
-        setDocumentTypeActiveAction({ id, active: false }),
-        deleteDocumentTypeAction({ id }),
-        createDocumentTypeAction({ categoryId: "dcat_x", name: "Nuevo" }),
-      ]);
-      for (const result of results) expect(result).toMatchObject(forbidden);
-    },
-  );
-});
+describe("document type writes through the API (settings grant)", () => {
+  it("creates a type inside its category through POST /api/v1/document-types with the schema defaults", async () => {
+    const { api, calls } = mockApi({
+      "POST /api/v1/document-types": { status: 201, body: contract },
+    });
+    server.getServerApi.mockResolvedValue(api);
 
-describe("deleteDocumentTypeAction: in-use lock (HU-21 CA2)", () => {
-  it("answers INTEGRITY_LOCK for a type that documents use", async () => {
-    asRole("OWNER");
+    expect(
+      await createDocumentTypeAction({
+        categoryId: "dcat_rrhh",
+        name: "Contrato laboral",
+        requiresSignature: true,
+      }),
+    ).toEqual({ ok: true, data: contract });
+    expect(calls[0]?.body).toEqual({
+      categoryId: "dcat_rrhh",
+      name: "Contrato laboral",
+      active: true,
+      defaultFormat: "ARCHIVO",
+      hasExpiration: false,
+      requiresSignature: true,
+    });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/document-types");
+  });
+
+  it("answers VALIDATION with the field key of an unknown category", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/document-types": errorEnvelope("VALIDATION", {
+        fieldErrors: { categoryId: ["catalogs.documentTypes.errors.unknownCategory"] },
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      createDocumentTypeAction({ categoryId: "dcat_gone", name: "Nuevo" }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION",
+        fieldErrors: { categoryId: ["catalogs.documentTypes.errors.unknownCategory"] },
+      },
+    });
+  });
+
+  it("answers CONFLICT with the field key of a name taken inside the category", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/document-types": errorEnvelope("CONFLICT", {
+        fieldErrors: { name: ["catalogs.documentTypes.errors.typeNameTaken"] },
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      createDocumentTypeAction({ categoryId: "dcat_rrhh", name: "Contrato laboral" }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        fieldErrors: { name: ["catalogs.documentTypes.errors.typeNameTaken"] },
+      },
+    });
+  });
+
+  it("replaces every field through PATCH /api/v1/document-types/{id} without the id in the body", async () => {
+    const { api, calls } = mockApi({
+      "PATCH /api/v1/document-types/{id}": { body: { ...contract, hasExpiration: true } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      updateDocumentTypeAction({
+        id: "dtyp_contrato",
+        categoryId: "dcat_rrhh",
+        name: "Contrato laboral",
+        requiresSignature: true,
+        hasExpiration: true,
+        defaultFormat: "ARCHIVO",
+        active: true,
+      }),
+    ).resolves.toMatchObject({ ok: true, data: { hasExpiration: true } });
+    expect(calls[0]?.path).toBe("/api/v1/document-types/dtyp_contrato");
+    expect(calls[0]?.body).toEqual({
+      categoryId: "dcat_rrhh",
+      name: "Contrato laboral",
+      active: true,
+      defaultFormat: "ARCHIVO",
+      hasExpiration: true,
+      requiresSignature: true,
+    });
+  });
+
+  it("activates and deactivates through POST /api/v1/document-types/{id}/active", async () => {
+    const { api, calls } = mockApi({
+      "POST /api/v1/document-types/{id}/active": { body: { ...contract, active: false } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      setDocumentTypeActiveAction({ id: "dtyp_contrato", active: false }),
+    ).resolves.toMatchObject({
+      ok: true,
+      data: { active: false },
+    });
+    expect(calls[0]?.path).toBe("/api/v1/document-types/dtyp_contrato/active");
+    expect(calls[0]?.body).toEqual({ active: false });
+  });
+
+  it("deletes an unused type through DELETE /api/v1/document-types/{id}", async () => {
+    const { api } = mockApi({
+      "DELETE /api/v1/document-types/{id}": { body: { id: "dtyp_contrato" } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(deleteDocumentTypeAction({ id: "dtyp_contrato" })).resolves.toEqual({
+      ok: true,
+      data: { id: "dtyp_contrato" },
+    });
+  });
+
+  it("answers INTEGRITY_LOCK for a type that documents use (HU-21 CA2)", async () => {
+    const { api } = mockApi({
+      "DELETE /api/v1/document-types/{id}": errorEnvelope("INTEGRITY_LOCK", {
+        message: "catalogs.documentTypes.errors.typeInUse",
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
     await expect(
       deleteDocumentTypeAction({ id: "dtyp_contrato_servicios" }),
     ).resolves.toMatchObject({
       ok: false,
       error: { code: "INTEGRITY_LOCK", message: "catalogs.documentTypes.errors.typeInUse" },
+    });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("refuses every type write to Member and Viewer with FORBIDDEN from the BE", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/document-types": errorEnvelope("FORBIDDEN"),
+      "PATCH /api/v1/document-types/{id}": errorEnvelope("FORBIDDEN"),
+      "POST /api/v1/document-types/{id}/active": errorEnvelope("FORBIDDEN"),
+      "DELETE /api/v1/document-types/{id}": errorEnvelope("FORBIDDEN"),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    const results = await Promise.all([
+      createDocumentTypeAction({ categoryId: "dcat_x", name: "Nuevo" }),
+      updateDocumentTypeAction({ id: "dtyp_x", categoryId: "dcat_x", name: "Nuevo" }),
+      setDocumentTypeActiveAction({ id: "dtyp_x", active: false }),
+      deleteDocumentTypeAction({ id: "dtyp_x" }),
+    ]);
+    for (const result of results) expect(result).toMatchObject(forbidden);
+  });
+
+  it("lets Admin create a category and a type inside it", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/document-categories": { status: 201, body: category },
+      "POST /api/v1/document-types": {
+        status: 201,
+        body: {
+          ...contract,
+          category: { id: "dcat_rrhh", name: "Recursos humanos", nameEn: null, color: null },
+        },
+      },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    const created = await createDocumentCategoryAction({ name: "Recursos humanos" });
+    expect(created).toMatchObject({ ok: true, data: { name: "Recursos humanos", types: [] } });
+    if (!created.ok) return;
+    await expect(
+      createDocumentTypeAction({
+        categoryId: created.data.id,
+        name: "Contrato laboral",
+        requiresSignature: true,
+      }),
+    ).resolves.toMatchObject({
+      ok: true,
+      data: { name: "Contrato laboral", requiresSignature: true, defaultFormat: "ARCHIVO" },
     });
   });
 });

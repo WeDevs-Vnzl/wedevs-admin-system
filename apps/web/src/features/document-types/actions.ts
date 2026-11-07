@@ -1,7 +1,12 @@
 "use server";
 
 import { apiAction } from "@/lib/api/action";
-import type { DeletedRefDto, DocumentCategoryResponseDto } from "@/lib/api/types/taxonomy";
+import type {
+  DeletedRefDto,
+  DocumentCategoryResponseDto,
+  DocumentTypeBodyDto,
+  DocumentTypeDetailDto,
+} from "@/lib/api/types/taxonomy";
 import {
   createDocumentCategoryInputSchema,
   createDocumentTypeInputSchema,
@@ -13,12 +18,9 @@ import {
   updateDocumentTypeInputSchema,
 } from "@/lib/validators/document-types";
 import { z } from "@/lib/validators/zod";
-import * as documentTypes from "@/mocks/services/document-types";
-import { defineAction } from "@/server/actions/define-action";
 
-// Settings → Tipos de documento writes (settings grant, Owner and Admin). The category writes are thin API
-// proxies (C10): the BE decides the grant and the lock rules; the forms validate for UX only.
-// The inputs are the forms' zod input types, as `defineAction` took them.
+// Settings → Tipos de documento writes (settings grant, Owner and Admin). Thin API proxies (C10): the BE decides
+// the grant and the lock rules; the forms validate for UX only. The inputs are the forms' zod input types.
 const SETTINGS_PATH = "/settings/document-types";
 
 // ───────────────────────────── Categories ─────────────────────────────
@@ -60,34 +62,59 @@ export const deleteDocumentCategoryAction = apiAction<
   revalidate: [SETTINGS_PATH],
 });
 
-// ───────────────────────────── Types (still on the mock seam) ─────────────────────────────
+// ───────────────────────────── Types ─────────────────────────────
 
-export const createDocumentTypeAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: createDocumentTypeInputSchema,
+type DocumentTypeFields = z.input<typeof createDocumentTypeInputSchema>;
+
+/**
+ * The typed body of a document type. The schema defaults (`active`, `defaultFormat`, `hasExpiration`,
+ * `requiresSignature`) are applied here, so the body carries every field the BE replaces.
+ */
+function toTypeBody(fields: DocumentTypeFields): DocumentTypeBodyDto {
+  return {
+    categoryId: fields.categoryId,
+    name: fields.name,
+    nameEn: fields.nameEn,
+    active: fields.active ?? true,
+    defaultFormat: fields.defaultFormat ?? "ARCHIVO",
+    hasExpiration: fields.hasExpiration ?? false,
+    requiresSignature: fields.requiresSignature ?? false,
+  };
+}
+
+/** Creates a type inside a category. The BE answers VALIDATION on an unknown category, CONFLICT on a taken name. */
+export const createDocumentTypeAction = apiAction<DocumentTypeFields, DocumentTypeDetailDto>({
+  call: (input, api) => api.POST("/api/v1/document-types", { body: toTypeBody(input) }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => documentTypes.createDocumentType(ctx, data),
 });
 
-export const updateDocumentTypeAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateDocumentTypeInputSchema,
+export const updateDocumentTypeAction = apiAction<
+  z.input<typeof updateDocumentTypeInputSchema>,
+  DocumentTypeDetailDto
+>({
+  call: ({ id, ...fields }, api) =>
+    api.PATCH("/api/v1/document-types/{id}", {
+      params: { path: { id } },
+      body: toTypeBody(fields),
+    }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => documentTypes.updateDocumentType(ctx, data),
 });
 
 /** Activate or deactivate: the way to retire a type that documents use (HU-21 CA2). */
-export const setDocumentTypeActiveAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: setDocumentTypeActiveInputSchema,
+export const setDocumentTypeActiveAction = apiAction<
+  z.input<typeof setDocumentTypeActiveInputSchema>,
+  DocumentTypeDetailDto
+>({
+  call: ({ id, active }, api) =>
+    api.POST("/api/v1/document-types/{id}/active", { params: { path: { id } }, body: { active } }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => documentTypes.setDocumentTypeActive(ctx, data),
 });
 
 /** `INTEGRITY_LOCK` when any document uses the type (the UI offers deactivation). */
-export const deleteDocumentTypeAction = defineAction({
-  permission: { action: "delete", resource: "settings" },
-  input: deleteDocumentTypeInputSchema,
+export const deleteDocumentTypeAction = apiAction<
+  z.input<typeof deleteDocumentTypeInputSchema>,
+  DeletedRefDto
+>({
+  call: ({ id }, api) => api.DELETE("/api/v1/document-types/{id}", { params: { path: { id } } }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => documentTypes.deleteDocumentType(ctx, data),
 });
