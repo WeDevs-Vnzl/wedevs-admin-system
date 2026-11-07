@@ -5,7 +5,7 @@ import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { InvoiceForm } from "@/features/invoices/components/invoice-form";
 import { loadInvoiceFormOptions } from "@/features/invoices/form-options";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type NewInvoicePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

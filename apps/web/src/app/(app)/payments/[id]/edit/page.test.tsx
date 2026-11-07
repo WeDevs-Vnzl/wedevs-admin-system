@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/features/payments/form-options", () => ({
   getPaymentFormOptions: mocks.getPaymentFormOptions,
@@ -26,7 +26,7 @@ vi.mock("@/features/payments/components/payment-form", () => ({ PaymentForm: () 
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { makePayment } from "@/features/payments/test-fixtures";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import PaymentEditPage from "./page";
 
 const render = () => PaymentEditPage({ params: Promise.resolve({ id: "pay_1" }) });

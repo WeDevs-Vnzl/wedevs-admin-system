@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-// MOCK — until cleanup: reads still signal refusals with `ServiceError` (see `queries.ts`).
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 
 /**
  * Expenses are Owner and Admin only (PRD §4.3): a role the BE refuses (`FORBIDDEN`) and an unknown id

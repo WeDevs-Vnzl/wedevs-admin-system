@@ -3,8 +3,8 @@ import { getServerApi } from "@/lib/api/server";
 import type { ShellResponseDto } from "@/lib/api/types/shell";
 import type { DateOnly } from "@/lib/dates";
 import { RATE_SOURCE_VALUES, type RateSource } from "@/lib/validators/enums";
-import { getSessionUserOrRedirect, UnauthenticatedError } from "@/server/auth/session";
-import type { SessionUser } from "@/server/auth/types";
+import { getSessionUserOrRedirect, UnauthenticatedError } from "@/lib/auth/session";
+import type { SessionUser } from "@/lib/auth/types";
 
 /** The BCV chip of the topbar: the latest VES rate and the date it comes from (PRD §9.2). */
 export interface ShellVesRate {

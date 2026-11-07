@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 // Both the documents reads and the catalogs module read through the API (HTTP double, not a mocked domain layer).
 const server = vi.hoisted(() => ({ api: null as unknown }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
@@ -13,8 +13,8 @@ vi.mock("@/features/clients/queries", () => ({ getClient: commercial.getClient }
 vi.mock("@/features/projects/queries", () => ({ getProject: commercial.getProject }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { ServiceError } from "@/server/errors";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { ServiceError } from "@/lib/service-error";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   documentLinkPrefill,
   getDocument,
@@ -37,7 +37,7 @@ function use(routes: RouteTable) {
 }
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
+  session.requireSessionUser.mockReset();
 });
 
 afterEach(() => {
@@ -53,7 +53,7 @@ describe("getDocumentPermissions", () => {
   ] as const)(
     "%s can attach: %s, can unlink: %s, can see archived: %s",
     async (role, canCreate, canUpdate, canRestore) => {
-      session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
+      session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
       expect(await getDocumentPermissions()).toEqual({ canCreate, canUpdate, canRestore });
     },
   );
@@ -255,7 +255,7 @@ describe("getDocumentDetailPermissions", () => {
     ["MEMBER", true, false],
     ["VIEWER", false, false],
   ] as const)("%s can update: %s, read activity: %s", async (role, canUpdate, canReadActivity) => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
+    session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
     expect(await getDocumentDetailPermissions()).toEqual({ canUpdate, canReadActivity });
   });
 });

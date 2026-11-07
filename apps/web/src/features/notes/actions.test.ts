@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
@@ -10,12 +9,10 @@ const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
-vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { RichTextDoc } from "@/lib/validators/notes";
-import { makeSessionUser } from "@/mocks/test-helpers";
 import {
   archiveNoteAction,
   attachFileAction,
@@ -73,8 +70,6 @@ function useApi(routes: RouteTable) {
 }
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER", { id: "usr_test" }));
   cache.revalidatePath.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });

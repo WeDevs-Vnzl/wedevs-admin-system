@@ -9,8 +9,8 @@ import {
 } from "@/lib/validators/activity";
 import type { Paginated } from "@/lib/validators/common";
 import type { EntityType } from "@/lib/validators/enums";
-import { can } from "@/server/auth/permissions";
-import { getSessionUser } from "@/server/auth/session";
+import { can } from "@/lib/auth/permissions";
+import { getSessionUser } from "@/lib/auth/session";
 import { requestActivityOverview, requestActivityPage } from "./api";
 import { activityListQuery, activityOverviewQuery } from "./query-params";
 

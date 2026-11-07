@@ -1,18 +1,12 @@
 // T10 phase A regression tests (odd/tasks/h1-b3-finance-ui.md): the spec examples of S2-S10 over lib/finance.
 import { describe, expect, it } from "vitest";
 import {
-  accountBalance,
-  accountLedger,
   allocationProblems,
-  computeInvoiceStatus,
   computeInvoiceTotals,
   computePaymentAmounts,
-  dueRecurringPeriods,
   installmentSumMismatch,
   proposeAllocation,
-  reconciliationAdjustment,
   splitByTemplate,
-  transferProblem,
 } from "@/lib/finance";
 
 const base = { ivaWithheld: "0", islrWithheld: "0", otherWithheld: "0", usdRate: "1" };
@@ -109,48 +103,6 @@ describe("S3 HU-09", () => {
   });
 });
 
-describe("S4 HU-10 CA1 schedule", () => {
-  const sched = {
-    frequency: "MENSUAL" as const,
-    startDate: "2026-01-01",
-    endDate: null,
-    billingDay: 5,
-    leadDays: 7,
-    status: "ACTIVO" as const,
-  };
-  it("day 5, lead 7 → generated on 28/29 of previous month", () => {
-    expect(dueRecurringPeriods(sched, ["2026-04-05"], "2026-04-27")).toEqual([]);
-    expect(dueRecurringPeriods(sched, ["2026-04-05"], "2026-04-28")).toHaveLength(1);
-    expect(dueRecurringPeriods(sched, ["2026-04-05", "2026-05-05"], "2026-04-28")).toHaveLength(0);
-  });
-  it("generateOn values", () => {
-    const g = (last: string) => dueRecurringPeriods(sched, [last], "2027-12-31")[0]!.generateOn;
-    expect(g("2026-04-05")).toBe("2026-04-28"); // May 5 − 7 (April has 30)
-    expect(g("2026-03-05")).toBe("2026-03-29"); // Apr 5 − 7 (March has 31)
-    expect(g("2026-02-05")).toBe("2026-02-26"); // Mar 5 − 7 (Feb 28) — outside "28 o 29"
-    expect(dueRecurringPeriods({ ...sched, status: "PAUSADO" }, [], "2027-01-01")).toEqual([]);
-  });
-});
-
-describe("S6 HU-12 status", () => {
-  const inv = {
-    voided: false,
-    draft: false,
-    dueDate: "2026-10-20",
-    receivable: "100.00",
-    paidAmount: "0.00",
-  };
-  it("CA1-CA4", () => {
-    expect(computeInvoiceStatus(inv, "2026-10-09")).toBe("EMITIDA");
-    expect(computeInvoiceStatus({ ...inv, paidAmount: "50" }, "2026-10-09")).toBe("PARCIAL");
-    expect(computeInvoiceStatus({ ...inv, paidAmount: "99.99" }, "2026-10-09")).toBe("PAGADA");
-    expect(computeInvoiceStatus({ ...inv, paidAmount: "99.98" }, "2026-10-09")).toBe("PARCIAL");
-    expect(computeInvoiceStatus({ ...inv, paidAmount: "50" }, "2026-10-21")).toBe("VENCIDA");
-    expect(computeInvoiceStatus({ ...inv }, "2026-10-20")).toBe("EMITIDA");
-    expect(computeInvoiceStatus({ ...inv, paidAmount: "99.99" }, "2026-10-21")).toBe("PAGADA");
-  });
-});
-
 describe("S7 HU-13", () => {
   it("CA2 100 USD IGTF 3 fee 0", () => {
     expect(
@@ -188,62 +140,5 @@ describe("S7 HU-13", () => {
         invoiceUsdRateOnPaymentDate: "1",
       }),
     ).toEqual({ amountUsd: "100.00", amountInvoiceCurrency: "100.00" });
-  });
-});
-
-describe("S9/S10", () => {
-  const empty = {
-    openingBalance: "100",
-    payments: [],
-    expenses: [],
-    transfersIn: [],
-    transfersOut: [],
-    movements: [],
-  };
-  it("§9.7 with accountAmount and running balance", () => {
-    const act = {
-      ...empty,
-      payments: [
-        { date: "2026-01-02", netCredited: "50", status: "CONFIRMADO" as const },
-        { date: "2026-01-02", netCredited: "999", status: "PENDIENTE" as never },
-      ],
-      expenses: [
-        { date: "2026-01-03", amount: "10", accountAmount: "365", status: "PAGADO" as const },
-        { date: "2026-01-03", amount: "10", accountAmount: null, status: "PENDIENTE" as const },
-      ],
-      transfersOut: [{ date: "2026-01-04", amountFrom: "20", feeAmount: "1" }],
-      transfersIn: [{ date: "2026-01-05", amountTo: "5" }],
-      movements: [
-        { date: "2026-01-06", type: "RETIRO_SOCIO" as const, amount: "4" },
-        { date: "2026-01-06", type: "AJUSTE" as const, amount: "-0.5" },
-      ],
-    };
-    expect(accountBalance(act, "2026-12-31")).toBe("-235.50");
-    expect(accountLedger(act, "2026-12-31").map((e) => e.balance)).toEqual([
-      "150.00",
-      "-215.00",
-      "-236.00",
-      "-231.00",
-      "-235.00",
-      "-235.50",
-    ]);
-    expect(reconciliationAdjustment("-235.50", "-230")).toBe("5.50");
-    expect(reconciliationAdjustment("10", "10.00")).toBeNull();
-  });
-  it("transfer 100 → 99", () => {
-    const zelle = accountBalance(
-      {
-        ...empty,
-        openingBalance: "0",
-        transfersOut: [{ date: "2026-01-01", amountFrom: "100", feeAmount: "0" }],
-      },
-      "2026-12-31",
-    );
-    const bin = accountBalance(
-      { ...empty, openingBalance: "0", transfersIn: [{ date: "2026-01-01", amountTo: "99" }] },
-      "2026-12-31",
-    );
-    expect([zelle, bin]).toEqual(["-100.00", "99.00"]);
-    expect(transferProblem("a", "a")).toBe("sameAccount");
   });
 });

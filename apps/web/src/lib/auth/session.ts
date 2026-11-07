@@ -75,8 +75,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
 /**
  * The signed-in user of the current request, or `null` when signed out. A Clerk session without a local user
- * redirects to `/sign-in?reason=no-access`. Read by the mock service context, so the `(app)` shell and every
- * service call send an unknown Clerk user to the no-access state instead of failing.
+ * redirects to `/sign-in?reason=no-access`. Read by the `(app)` shell and every
+ * page, so an unknown Clerk user reaches the no-access state instead of failing.
  */
 export async function getSessionUserOrRedirect(): Promise<SessionUser | null> {
   const state = await resolveSession();

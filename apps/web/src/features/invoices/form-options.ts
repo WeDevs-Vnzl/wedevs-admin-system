@@ -2,7 +2,7 @@ import "server-only";
 import { listCurrencies, getFiscalSettings } from "@/features/catalogs/queries";
 import { listClients } from "@/features/clients/queries";
 import { todayInCaracas } from "@/lib/dates";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { listBillableInstallments } from "./queries";
 
 // Options the invoice form needs on the server: the clients to bill, the currencies, the fiscal settings (allowed

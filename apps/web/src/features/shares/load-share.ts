@@ -2,8 +2,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { z } from "@/lib/validators/zod";
 import type { ShareLinkDetailDTO } from "@/lib/validators/shares";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { getShareLink } from "./queries";
 
 /**

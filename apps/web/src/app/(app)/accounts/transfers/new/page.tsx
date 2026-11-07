@@ -6,7 +6,7 @@ import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listAccounts } from "@/features/accounts/queries";
 import { notFoundWhenRefused } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type TransferNewPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

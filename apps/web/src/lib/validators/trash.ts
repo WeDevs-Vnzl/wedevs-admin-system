@@ -1,11 +1,5 @@
 import { z } from "./zod";
-import {
-  entityRefSchema,
-  idSchema,
-  listQuerySchema,
-  dateOnlySchema,
-  type Paginated,
-} from "./common";
+import { entityRefSchema, idSchema, listQuerySchema, dateOnlySchema } from "./common";
 import { entityTypeSchema } from "./enums";
 import { facetOf, timestampSchema, withSortFields } from "./tags";
 import { userRefSchema } from "./users";
@@ -44,7 +38,6 @@ export const RESTORABLE_ENTITY_TYPE_VALUES = [
   "DOCUMENT",
 ] as const satisfies readonly (typeof TRASHABLE_ENTITY_TYPE_VALUES)[number][];
 export const trashableEntityTypeSchema = z.enum(TRASHABLE_ENTITY_TYPE_VALUES);
-export type TrashableEntityType = z.infer<typeof trashableEntityTypeSchema>; // MOCK — until cleanup
 
 // ───────────────────────────── Shared archive result ─────────────────────────────
 
@@ -53,16 +46,7 @@ export const archivedRecordSchema = z.object({
   id: idSchema,
   archivedAt: timestampSchema,
 });
-export type ArchivedRecordDTO = z.infer<typeof archivedRecordSchema>; // MOCK — until cleanup
-
-// ───────────────────────────── Inputs ─────────────────────────────
-
-/** `restoreFromTrash`: clears `deletedAt`. Returns CONFLICT when a unique rule now collides. */
-export const restoreFromTrashInputSchema = z.object({
-  entityType: trashableEntityTypeSchema,
-  entityId: idSchema,
-});
-export type RestoreFromTrashInput = z.infer<typeof restoreFromTrashInputSchema>; // MOCK — until cleanup
+export type ArchivedRecordDTO = z.infer<typeof archivedRecordSchema>;
 
 // ───────────────────────────── Filters ─────────────────────────────
 
@@ -77,7 +61,6 @@ export const trashFilterSchema = withSortFields(
   }),
   TRASH_SORT_FIELDS,
 );
-export type TrashFilter = z.infer<typeof trashFilterSchema>; // MOCK — until cleanup
 export type TrashFilterInput = z.input<typeof trashFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
@@ -91,23 +74,4 @@ export const trashRowSchema = z.object({
   deletedAt: timestampSchema,
   deletedBy: userRefSchema.nullable(),
 });
-export type TrashRowDTO = z.infer<typeof trashRowSchema>; // MOCK — until cleanup
-
-/** Output of `restoreFromTrash`. */
-export const restoredRecordSchema = z.object({
-  entity: entityRefSchema.extend({ type: trashableEntityTypeSchema }),
-  restoredAt: timestampSchema,
-});
-export type RestoredRecordDTO = z.infer<typeof restoredRecordSchema>; // MOCK — until cleanup
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Trash services (Owner/Admin; PRD §12 does not list them). Every service is `fn(ctx, input) →
- * Promise<DTO>` (C9, C11).
- */
-// MOCK — until cleanup: the mock services type-check against it (CLEAN deletes it).
-export type TrashService<Ctx = unknown> = {
-  listTrash: (ctx: Ctx, input: TrashFilter) => Promise<Paginated<TrashRowDTO>>;
-  restoreFromTrash: (ctx: Ctx, input: RestoreFromTrashInput) => Promise<RestoredRecordDTO>;
-};
+export type TrashRowDTO = z.infer<typeof trashRowSchema>;

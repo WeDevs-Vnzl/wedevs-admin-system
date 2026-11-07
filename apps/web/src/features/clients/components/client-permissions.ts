@@ -1,4 +1,4 @@
-import { can, canSeeFinancials, type PermissionSubject } from "@/server/auth/permissions";
+import { can, canSeeFinancials, type PermissionSubject } from "@/lib/auth/permissions";
 
 /**
  * What the signed-in role may do on the clients screens, computed on the server and passed to the client

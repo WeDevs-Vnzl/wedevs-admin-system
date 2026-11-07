@@ -15,10 +15,9 @@ import {
   type DocumentVersionDetailDTO,
   type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
-import { can } from "@/server/auth/permissions";
-import { getServiceContext } from "@/server/context";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { ServiceError } from "@/lib/service-error";
 import { toDocumentListQuery } from "./api-query";
 import { toDocumentDetail, toDocumentPage, toDocumentsOverview } from "./mappers";
 
@@ -27,14 +26,13 @@ const ENTITY_TAB_PAGE_SIZE = 100;
 
 /**
  * Unwraps a read. A BE `404` throws `ServiceError("NOT_FOUND")`, `403` `FORBIDDEN` and `422` `VALIDATION` (message and
- * field errors kept): notes and the pages catch these until CLEAN replaces `@/server/errors` and its consumers.
+ * field errors kept): notes and the pages catch these until CLEAN replaces `@/lib/service-error` and its consumers.
  */
 function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   const mapped = toActionResult(result);
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the cross-module readers catch.
     throw new ServiceError(code, { message, ...(fieldErrors ? { fieldErrors } : {}) });
   }
   throw new Error(`${what} failed with ${result.response.status}`);
@@ -97,7 +95,7 @@ export async function listDocumentCategories() {
  * cosmetic; the BE checks the same grants again (C13).
  */
 export async function getDocumentPermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canCreate: can(user, "create", "document"),
     canUpdate: can(user, "update", "document"),
@@ -118,7 +116,6 @@ export async function getDocumentsOverview(): Promise<DocumentsOverviewDTO> {
  * `ServiceError`; a malformed id answers like an unknown one, without calling the BE.
  */
 export async function getDocument(id: string): Promise<DocumentDetailDTO> {
-  // MOCK — until cleanup: a malformed id is the same `NOT_FOUND` as an unknown one.
   if (!idSchema.safeParse(id).success) throw new ServiceError("NOT_FOUND");
   const api = await getServerApi();
   return toDocumentDetail(
@@ -214,7 +211,7 @@ export async function readDocumentVersion(
  * Member) and read the *Actividad* tab (`activity` READ). Hiding a control is cosmetic; the BE checks again (C13).
  */
 export async function getDocumentDetailPermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canUpdate: can(user, "update", "document"),
     canReadActivity: can(user, "read", "activity"),

@@ -1,4 +1,3 @@
-import type { ProjectsService } from "./projects";
 import { describe, expect, it } from "vitest";
 import { VALIDATION_MESSAGES } from "./common";
 import { PROJECT_STATUS_VALUES } from "./enums";
@@ -6,7 +5,6 @@ import {
   PROJECT_STATUS_TRANSITIONS,
   canTransitionProject,
   createProjectInputSchema,
-  projectDetailSchema,
   projectFilterSchema,
   projectLinkInputSchema,
   projectListRowSchema,
@@ -328,37 +326,5 @@ describe("project filters and DTOs", () => {
   it("list row money columns are strings", () => {
     expect(projectListRowSchema.safeParse(row).success).toBe(true);
     expect(projectListRowSchema.safeParse({ ...row, invoicedUsd: 4000 }).success).toBe(false);
-  });
-
-  it("detail DTO", () => {
-    expect(
-      projectDetailSchema.safeParse({
-        ...row,
-        summary: "Resumen",
-        description: null,
-        endDate: null,
-        links: [],
-        hasBillingPlan: false,
-        createdAt: "2026-10-01T10:00:00.000Z",
-        updatedAt: "2026-10-01T10:00:00.000Z",
-      }).success,
-    ).toBe(true);
-  });
-});
-
-describe("ProjectsService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createProject",
-      "updateProject",
-      "setProjectStatus",
-      "setProjectClients",
-      "setProjectTechnologies",
-      "upsertProjectLinks",
-      "reorderProjectLinks",
-      "archiveProject",
-      "getProjectFinancials",
-    ] as const satisfies readonly (keyof ProjectsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

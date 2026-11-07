@@ -8,7 +8,7 @@ import {
   type ExpenseFiltersInput,
   type RecurringExpenseFiltersInput,
 } from "@/lib/validators/expenses";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toExpenseListQuery, toRecurringExpenseListQuery } from "./api-query";
 
 // Reads for the expense pages (RSC, PRD §8.8) over the generated client. A refused read throws `ServiceError` with
@@ -18,7 +18,6 @@ import { toExpenseListQuery, toRecurringExpenseListQuery } from "./api-query";
 function unwrap<T>(response: ApiResponseLike<T>): T {
   const result = toActionResult(response);
   if (result.ok) return result.data;
-  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/server/errors`.
   throw new ServiceError(result.error.code, {
     message: result.error.message,
     ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),

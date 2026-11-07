@@ -5,7 +5,7 @@ import { InvoicesOverview } from "@/features/invoices/components/invoices-overvi
 import { getInvoicesOverview } from "@/features/invoices/queries";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { notFoundWhenRefused } from "@/features/invoices/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("invoices.page");

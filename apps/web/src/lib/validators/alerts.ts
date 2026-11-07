@@ -164,19 +164,3 @@ export const alertDismissalSchema = z.object({
   active: z.boolean(),
 });
 export type AlertDismissalDTO = z.infer<typeof alertDismissalSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Alert services (PRD §7.9; §12 does not list them). Every service is `fn(ctx, input) → Promise<DTO>`
- * (C9, C11); alerts are computed per user from `ctx.user` and `ctx.now`.
- */
-// MOCK — until cleanup: `mocks/services/alerts.ts` implements and type-checks against this interface.
-export type AlertsService<Ctx = unknown> = {
-  listAlerts: (ctx: Ctx, input: ListAlertsInput) => Promise<AlertsSummaryDTO>;
-  dismissAlert: (ctx: Ctx, input: DismissAlertInput) => Promise<AlertDismissalDTO>;
-  snoozeAlert: (ctx: Ctx, input: SnoozeAlertInput) => Promise<AlertDismissalDTO>;
-  restoreAlert: (ctx: Ctx, input: RestoreAlertInput) => Promise<AlertDismissalDTO>;
-  /** A2: per-user read mark; the alert stays listed. */
-  markAlertsRead: (ctx: Ctx, input: MarkAlertsReadInput) => Promise<AlertsReadResultDTO>;
-};

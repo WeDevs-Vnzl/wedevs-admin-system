@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/features/clients/queries", () => ({ getClient: mocks.getClient }));
 vi.mock("@/features/technologies/queries", () => ({
   listActiveTechnologies: mocks.listActiveTechnologies,
@@ -22,8 +22,8 @@ vi.mock("@/features/technologies/queries", () => ({
 vi.mock("@/features/tags/queries", () => ({ canCreateTagsInline: mocks.canCreateTagsInline }));
 vi.mock("@/features/projects/components/project-form", () => ({ ProjectForm: () => null }));
 
-import { ServiceError } from "@/server/errors";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { ServiceError } from "@/lib/service-error";
+import { makeSessionUser } from "@/lib/auth/testing";
 import NewProjectPage from "./page";
 
 const render = (searchParams: Record<string, string> = {}) =>

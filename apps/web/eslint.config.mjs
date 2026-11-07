@@ -4,15 +4,17 @@ import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 import i18next from "eslint-plugin-i18next";
 
-const mocksImports = {
-  group: ["@/mocks", "@/mocks/**"],
+// The BE is the only data source (DU-03): the mock layer and `src/server/` are gone, and nobody may bring them
+// back (tests included).
+const removedLayerImports = {
+  group: ["@/mocks", "@/mocks/**", "@/server", "@/server/**"],
   message:
-    "Mock code is isolated (C9): only features/*/queries.ts, features/*/actions.ts, server/context.ts, server/auth/session.ts, src/mocks/** and tests may import @/mocks.",
+    "The mock layer and src/server/ are gone (DU-03): data comes from the BE through the typed client in src/lib/api/**.",
 };
 
 const prismaImports = {
   group: ["@prisma/*", "@/generated/prisma", "@/generated/prisma/**"],
-  message: "Prisma is only reachable inside src/server/ (C7).",
+  message: "The FE never touches Prisma or a database (DU-03, C7): the BE owns the data.",
 };
 
 const apiClientMessage =
@@ -33,7 +35,7 @@ const apiImports = [openapiFetchImports, apiSchemaImports];
 const clerkServerImports = {
   group: ["@clerk/nextjs/server"],
   message:
-    "@clerk/nextjs/server is only allowed in src/proxy.ts, src/lib/api/server.ts and src/server/auth/session.ts (C26).",
+    "@clerk/nextjs/server is only allowed in src/proxy.ts, src/lib/api/server.ts and src/lib/auth/session.ts (C26).",
 };
 
 const zodMessage =
@@ -45,21 +47,6 @@ const zodImports = { name: "zod", message: zodMessage };
 // `zod/*` subpaths (`zod/v4`, `zod/mini`, ...) bypass the wrapper just the same. The pattern `zod/*`
 // cannot match the relative "./zod" or "@/lib/validators/zod".
 const zodSubpathImports = { group: ["zod/*"], message: zodMessage };
-
-const frameworkImports = {
-  group: [
-    "next",
-    "next/*",
-    "react",
-    "react/*",
-    "react-dom",
-    "react-dom/*",
-    "next-intl",
-    "next-intl/*",
-    "@clerk/*",
-  ],
-  message: "Services are framework-free (C11): no next/*, react, next-intl or @clerk/*.",
-};
 
 // Entries with a `name` become `paths` (exact module); entries with a `group` become `patterns`.
 const restrict = (...entries) => ({
@@ -87,79 +74,53 @@ export default defineConfig([
     "src/generated/**",
   ]),
 
-  // C7 + C9: default for every source file.
+  // C7: default for every source file, tests and e2e specs included: no mock layer, no src/server, no Prisma, no
+  // raw zod, no openapi-fetch or generated schema outside src/lib/api/**, no Clerk server helpers.
   {
     files: ["**/*.{ts,tsx,mts,mjs}"],
     rules: restrict(
-      mocksImports,
+      removedLayerImports,
       prismaImports,
       zodImports,
       zodSubpathImports,
       ...apiImports,
       clerkServerImports,
     ),
-  },
-  // C7: Prisma is allowed inside src/server/ (mocks stay restricted there).
-  {
-    files: ["src/server/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, zodImports, zodSubpathImports, ...apiImports, clerkServerImports),
-  },
-  // C9: the only files outside src/mocks/ allowed to import @/mocks/**.
-  {
-    files: [
-      "src/features/*/queries.ts",
-      "src/features/*/actions.ts",
-      "src/mocks/**/*.{ts,tsx}",
-      "tests/**/*.{ts,tsx}",
-      "**/*.test.{ts,tsx}",
-    ],
-    rules: restrict(
-      prismaImports,
-      zodImports,
-      zodSubpathImports,
-      ...apiImports,
-      clerkServerImports,
-    ),
-  },
-  {
-    files: ["src/server/context.ts"],
-    rules: restrict(zodImports, zodSubpathImports, ...apiImports, clerkServerImports),
-  },
-  // C11: services are framework-free (Hito 2 services and Hito 1 mock services).
-  {
-    files: ["src/server/services/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, frameworkImports, zodImports, zodSubpathImports, ...apiImports),
-  },
-  {
-    files: ["src/mocks/services/**/*.{ts,tsx}"],
-    rules: restrict(prismaImports, frameworkImports, zodImports, zodSubpathImports, ...apiImports),
   },
 
   // C1, C2: the only modules that import the raw "zod" package; every other file imports `z` from
   // `@/lib/validators/zod`.
   {
     files: ["src/lib/validators/zod.ts", "src/lib/validators/zod-config.ts"],
-    rules: restrict(mocksImports, prismaImports, ...apiImports, clerkServerImports),
+    rules: restrict(removedLayerImports, prismaImports, ...apiImports, clerkServerImports),
   },
 
   // C7, C8: the single API client lives in src/lib/api/**; openapi-fetch and the generated schema are
   // importable there only. Clerk server helpers: server.ts alone.
   {
     files: ["src/lib/api/**/*.{ts,tsx}"],
-    rules: restrict(mocksImports, prismaImports, zodImports, zodSubpathImports, clerkServerImports),
+    rules: restrict(
+      removedLayerImports,
+      prismaImports,
+      zodImports,
+      zodSubpathImports,
+      clerkServerImports,
+    ),
   },
   {
     files: ["src/lib/api/server.ts"],
-    rules: restrict(mocksImports, prismaImports, zodImports, zodSubpathImports),
+    rules: restrict(removedLayerImports, prismaImports, zodImports, zodSubpathImports),
   },
   // C26: the other places allowed to import @clerk/nextjs/server.
   {
-    files: ["src/proxy.ts"],
-    rules: restrict(mocksImports, prismaImports, zodImports, zodSubpathImports, ...apiImports),
-  },
-  {
-    files: ["src/server/auth/session.ts"],
-    rules: restrict(zodImports, zodSubpathImports, ...apiImports),
+    files: ["src/proxy.ts", "src/lib/auth/session.ts"],
+    rules: restrict(
+      removedLayerImports,
+      prismaImports,
+      zodImports,
+      zodSubpathImports,
+      ...apiImports,
+    ),
   },
 
   // C7: no global fetch in UI code; the BE is reached through the typed client from src/lib/api/**.

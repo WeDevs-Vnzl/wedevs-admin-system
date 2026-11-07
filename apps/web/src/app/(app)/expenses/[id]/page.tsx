@@ -12,7 +12,7 @@ import {
   orNullWhenUnavailable,
 } from "@/features/expenses/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type ExpenseDetailPageProps = {
   params: Promise<{ id: string }>;

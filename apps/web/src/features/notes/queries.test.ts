@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 vi.mock("@/lib/api/server", () => server);
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { getNote, getNotesViewer, listNotes } from "./queries";
 
 const row = {
@@ -25,8 +25,8 @@ const row = {
 };
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  session.getMockSessionUser.mockResolvedValue(
+  session.requireSessionUser.mockReset();
+  session.requireSessionUser.mockResolvedValue(
     makeSessionUser("MEMBER", { id: "usr_diego_paredes" }),
   );
 });

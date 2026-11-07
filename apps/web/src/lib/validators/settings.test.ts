@@ -12,7 +12,6 @@ import {
   sameRate,
   settingsDtoSchema,
   updateCompanySettingsInputSchema,
-  type CompanySettingsService,
   type FiscalSettings,
 } from "./settings";
 
@@ -108,14 +107,6 @@ describe("company settings", () => {
 });
 
 describe("CompanySettingsService (A1)", () => {
-  it("declares getCompanySettings and updateCompanySettings", () => {
-    const names = [
-      "getCompanySettings",
-      "updateCompanySettings",
-    ] as const satisfies readonly (keyof CompanySettingsService)[];
-    expect(new Set(names).size).toBe(names.length);
-  });
-
   it("the update input is still the company schema (name required, logo optional)", () => {
     expect(updateCompanySettingsInputSchema.safeParse({ name: "WeDevs" }).success).toBe(true);
     expect(updateCompanySettingsInputSchema.safeParse({ name: "" }).success).toBe(false);

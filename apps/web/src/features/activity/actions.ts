@@ -9,15 +9,12 @@ import {
   type ActivityFilterInput,
 } from "@/lib/validators/activity";
 import { errorMessageKey, zodFieldErrors, type ActionResult } from "@/lib/validators/common";
-import * as activity from "@/mocks/services/activity"; // MOCK — until cleanup: export source only (5.6)
-import { exportCsv } from "@/mocks/services/export"; // MOCK — until cleanup: ignored by the export helper (5.6)
 import { requestActivityPage } from "./api";
 import { ACTIVITY_EXPORT_COLUMNS } from "./columns";
 import { activityListQuery } from "./query-params";
 
 // The activity log is read-only (C20): the only actions are reads and the export of the same rows.
 // Owner and Admin read it (PRD §4.3, DT-66); the BE decides (`can()`), Member and Viewer get FORBIDDEN.
-const READ_ACTIVITY = { action: "read", resource: "activity" } as const;
 
 const listActivity = apiAction<ActivityFilter, ActivityListResponseDto>({
   call: (data, api) => requestActivityPage(api, activityListQuery(data)),
@@ -44,7 +41,6 @@ export async function listActivityAction(
 /** "Exportar CSV" of `/activity` and of an entity's timeline: the filtered set, capped at 10,000 rows. */
 export const exportActivityCsvAction = defineCsvExportAction({
   entity: "ACTIVITY",
-  permission: READ_ACTIVITY,
   source: {
     entity: "ACTIVITY",
     facets: [
@@ -55,9 +51,7 @@ export const exportActivityCsvAction = defineCsvExportAction({
       { id: "date", kind: "dateRange", fromKey: "from", toKey: "to" },
     ],
     filterSchema: activityFilterSchema,
-    list: activity.listActivity,
     columns: ACTIVITY_EXPORT_COLUMNS,
   },
-  exportCsv,
   namespace: "activity",
 });

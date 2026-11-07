@@ -4,7 +4,7 @@ import { fileStatusSchema } from "./enums";
 
 /**
  * File contracts (C23, DT-41): upload request, allowlists and size limits per context, the
- * `UploadAdapter` seam (mock adapter in Hito 1, presigned adapter in Hito 2) and `FileDTO`.
+ * `UploadAdapter` seam (presigned-URL adapter) and `FileDTO`.
  *
  * These rules are the client-side/first-line checks. Hito 2 repeats them on the server and validates the
  * real MIME by magic bytes at confirm time.
@@ -177,7 +177,7 @@ export const fileDtoSchema = z.object({
 });
 export type FileDTO = z.infer<typeof fileDtoSchema>;
 
-/** Where and how to send the bytes. `url` is `null` for the Hito 1 mock adapter (nothing is uploaded). */
+/** Where and how to send the bytes. `url` is `null` when nothing is uploaded. */
 export interface UploadTarget {
   fileId: string;
   url: string | null;
@@ -195,8 +195,7 @@ export interface UploadPutOptions {
 }
 
 /**
- * The uploader's only way to reach storage (frontend-patterns §6). Hito 1: mock adapter. Hito 2:
- * presigned-URL adapter over `requestUpload` / `confirmUpload` (PRD §12 `files`).
+ * The uploader's only way to reach storage (frontend-patterns §6): the presigned-URL adapter over `requestUpload` / `confirmUpload` (PRD §12 `files`).
  */
 export interface UploadAdapter {
   requestUpload(input: RequestUploadInput): Promise<ActionResult<UploadTarget>>;

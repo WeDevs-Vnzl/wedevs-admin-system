@@ -15,8 +15,8 @@ import { listTechnologies } from "@/features/technologies/queries";
 import { resolveTechnologyIcon } from "@/features/technologies/icons";
 import { technologyLabel } from "@/features/technologies/label";
 import { isLocale, type Locale } from "@/i18n/config";
-import { requireSessionUser } from "@/server/auth/session";
-import { can, canSeeFinancials } from "@/server/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { can, canSeeFinancials } from "@/lib/auth/permissions";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

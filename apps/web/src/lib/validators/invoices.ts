@@ -8,16 +8,10 @@ import {
   withSortFields,
 } from "./common";
 import { invoiceStatusSchema, installmentKindSchema } from "./enums";
-import { fileDtoSchema } from "./files";
+
 import { currencyCodeSchema, moneyAmountSchema, percentSchema, rateSchema } from "./money";
-import {
-  addUsdRateIssue,
-  facetSchema,
-  optionalText,
-  requiredText,
-  timestampSchema,
-} from "./catalogs";
-import { agingBucketsSchema, multiSeriesSchema, signedDecimalSchema } from "./dashboard";
+import { addUsdRateIssue, facetSchema, optionalText, requiredText } from "./catalogs";
+
 import { DEFAULT_IVA_RATES, isAllowedIvaRate, sameRate } from "./settings";
 import { isDecimalString, mulMoney, compareMoney, toDecimal } from "../money";
 
@@ -255,49 +249,6 @@ export type ListOpenInvoicesInput = z.infer<typeof listOpenInvoicesInputSchema>;
 
 // ───────────────────────────── "Invoice installments" wizard (PRD §8.5) ─────────────────────────────
 
-/**
- * Selected pending installments of any project of the client. The result is a prefilled draft (one
- * line per installment, project and installment already linked) that the user edits as a normal
- * invoice. `amount` bills part of an installment (partial billing); `ivaRate` defaults to the fiscal
- * default when omitted, and `null` means exempt.
- */
-// MOCK — until cleanup: "Invoice installments" wizard input: only the mock service reads it.
-export const invoiceInstallmentsWizardInputSchema = z
-  .object({
-    clientId: idSchema,
-    items: z
-      .array(
-        z.object({
-          installmentId: idSchema,
-          amount: amountPositive.optional(),
-          ivaRate: percentSchema.nullable().optional(),
-        }),
-      )
-      .min(1, VALIDATION_MESSAGES.required)
-      .max(50),
-  })
-  .superRefine((input, ctx) => {
-    input.items.forEach((item, index) => {
-      if (input.items.findIndex((other) => other.installmentId === item.installmentId) !== index) {
-        ctx.addIssue({
-          code: "custom",
-          message: INVOICE_MESSAGES.duplicateInstallment,
-          path: ["items", index, "installmentId"],
-        });
-      }
-    });
-  });
-export type InvoiceInstallmentsWizardInput = z.infer<typeof invoiceInstallmentsWizardInputSchema>;
-
-// MOCK — until cleanup: wizard draft: only the mock service reads it.
-export const invoiceInstallmentsDraftSchema = z.object({
-  clientId: idSchema,
-  /** Currency of the installments (an invoice has a single currency). */
-  currency: currencyCodeSchema,
-  lines: z.array(invoiceLineInputSchema).min(1),
-});
-export type InvoiceInstallmentsDraft = z.infer<typeof invoiceInstallmentsDraftSchema>;
-
 /** A pending installment the wizard offers (PRD §8.5: `PENDIENTE` ones of the client's projects). */
 export const billableInstallmentRowSchema = z.object({
   installment: entityRefSchema,
@@ -311,148 +262,6 @@ export const billableInstallmentRowSchema = z.object({
   dueDate: dateOnlySchema.nullable(),
 });
 export type BillableInstallmentRow = z.infer<typeof billableInstallmentRowSchema>;
-
-// ───────────────────────────── DTOs ─────────────────────────────
-
-// MOCK — until cleanup: the invoice line DTO: the screens read the generated `InvoiceResponseDto` (`lib/api/types/invoices`).
-export const invoiceLineDtoSchema = z.object({
-  id: idSchema,
-  order: z.number().int(),
-  description: z.string(),
-  project: entityRefSchema.nullable(),
-  installment: entityRefSchema.nullable(),
-  quantity: amountPositive,
-  unitPrice: amountPositive,
-  /** `round(quantity × unitPrice, 2)`. */
-  amount: amountNonNegative,
-  discount: amountNonNegative,
-  /** `amount − discount`. */
-  netAmount: amountNonNegative,
-  /** `null` = exempt; `"0"` = taxable at 0 % (e.g. service export). */
-  ivaRate: percentSchema.nullable(),
-});
-export type InvoiceLineDTO = z.infer<typeof invoiceLineDtoSchema>;
-
-/** IVA of one rate: base, amount and the manual adjustment that produced it. */
-// MOCK — until cleanup: the tax line DTO: only mocks use it.
-export const invoiceTaxLineDtoSchema = z.object({
-  ivaRate: percentSchema,
-  taxBase: amountNonNegative,
-  /** Final IVA of the rate: `round(taxBase × ivaRate / 100, 2) + adjustment`. */
-  ivaAmount: amountNonNegative,
-  /** Manual adjustment within ±0.01 (`"0.00"` when none). */
-  adjustment: amountAny,
-});
-export type InvoiceTaxLineDTO = z.infer<typeof invoiceTaxLineDtoSchema>;
-
-/** Header totals (all derived from the lines and tax lines, C17) plus USD snapshots (C16). */
-// MOCK — until cleanup: the totals DTO: only mocks use it.
-export const invoiceTotalsDtoSchema = z.object({
-  subtotal: amountNonNegative,
-  discount: amountNonNegative,
-  exemptAmount: amountNonNegative,
-  taxBase: amountNonNegative,
-  ivaAmount: amountNonNegative,
-  total: amountNonNegative,
-  ivaWithheld: amountNonNegative,
-  islrWithheld: amountNonNegative,
-  otherWithheld: amountNonNegative,
-  otherWithheldNote: z.string().nullable(),
-  /** `total − withholdings`. */
-  receivable: amountNonNegative,
-  totalUsd: amountNonNegative,
-  receivableUsd: amountNonNegative,
-  paidAmount: amountNonNegative,
-  /** `receivable − paidAmount`. */
-  balance: amountAny,
-  /** Balance in USD at the invoice's own rate. */
-  balanceUsd: amountAny,
-});
-export type InvoiceTotalsDTO = z.infer<typeof invoiceTotalsDtoSchema>;
-
-/** Allocation as seen from the invoice ("Pagos" tab). */
-// MOCK — until cleanup: the allocation row DTO: only mocks use it.
-export const invoiceAllocationRowSchema = z.object({
-  id: idSchema,
-  payment: entityRefSchema,
-  paymentDate: dateOnlySchema,
-  paymentCurrency: currencyCodeSchema,
-  amountPaymentCurrency: amountPositive,
-  amountInvoiceCurrency: amountPositive,
-  amountUsd: amountNonNegative,
-});
-export type InvoiceAllocationRow = z.infer<typeof invoiceAllocationRowSchema>;
-
-/** Table row (PRD §8.5 columns). */
-// MOCK — until cleanup: the table row DTO: the screens read the generated `InvoiceListItemDto`.
-export const invoiceListRowSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  invoiceNumber: z.string(),
-  client: entityRefSchema,
-  projects: z.array(entityRefSchema),
-  issueDate: dateOnlySchema,
-  dueDate: dateOnlySchema,
-  currency: currencyCodeSchema,
-  total: amountNonNegative,
-  balance: amountAny,
-  totalUsd: amountNonNegative,
-  balanceUsd: amountAny,
-  status: invoiceStatusSchema,
-  /** Days past the due date; `0` when not overdue. */
-  daysOverdue: z.number().int().nonnegative(),
-  /** Secondary "Partial payment" indicator on an overdue invoice with payments. */
-  hasPartialPayment: z.boolean(),
-});
-export type InvoiceListRow = z.infer<typeof invoiceListRowSchema>;
-
-// MOCK — until cleanup: the detail DTO: the screens read the generated `InvoiceResponseDto`.
-export const invoiceDetailDtoSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  client: entityRefSchema,
-  invoiceNumber: z.string(),
-  controlNumber: z.string().nullable(),
-  issueDate: dateOnlySchema,
-  dueDate: dateOnlySchema,
-  currency: currencyCodeSchema,
-  usdRate: rateSchema,
-  bcvRate: rateSchema.nullable(),
-  isDraft: z.boolean(),
-  status: invoiceStatusSchema,
-  voidedAt: timestampSchema.nullable(),
-  voidReason: z.string().nullable(),
-  /** Archived invoices leave the lists and the alerts and free their number (HU-11 CA3). */
-  archivedAt: timestampSchema.nullable(),
-  fileId: idSchema.nullable(),
-  file: fileDtoSchema.nullable(),
-  lines: z.array(invoiceLineDtoSchema),
-  taxLines: z.array(invoiceTaxLineDtoSchema),
-  totals: invoiceTotalsDtoSchema,
-  allocations: z.array(invoiceAllocationRowSchema),
-  daysOverdue: z.number().int().nonnegative(),
-  hasPartialPayment: z.boolean(),
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-  createdById: idSchema.nullable(),
-});
-export type InvoiceDetailDTO = z.infer<typeof invoiceDetailDtoSchema>;
-
-/** Open invoice of a client, as the payment form's "Apply to invoices" list needs it. */
-// MOCK — until cleanup: open invoices are the payments module's (W4); only mocks use this row.
-export const openInvoiceRowSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  invoiceNumber: z.string(),
-  issueDate: dateOnlySchema,
-  dueDate: dateOnlySchema,
-  currency: currencyCodeSchema,
-  usdRate: rateSchema,
-  receivable: amountNonNegative,
-  balance: amountNonNegative,
-  status: invoiceStatusSchema,
-});
-export type OpenInvoiceRow = z.infer<typeof openInvoiceRowSchema>;
 
 // ───────────────────────────── List filters and overview ─────────────────────────────
 
@@ -483,22 +292,3 @@ export const invoiceFiltersSchema = withSortFields(
   INVOICE_SORT_FIELDS,
 );
 export type InvoiceFilters = z.infer<typeof invoiceFiltersSchema>;
-
-// MOCK — until cleanup: the overview DTO: the screen reads the generated `InvoicesOverviewDto`.
-export const invoicesOverviewDtoSchema = z.object({
-  /** Last 6 months, series ids `billed` and `collected` (USD). */
-  billedVsCollected: multiSeriesSchema,
-  /** Open receivables in USD by days past due. */
-  aging: agingBucketsSchema,
-  overdueCount: z.number().int().nonnegative(),
-  /** Open totals per invoice currency. */
-  totalsByCurrency: z.array(
-    z.object({
-      currency: currencyCodeSchema,
-      total: amountNonNegative,
-      balance: signedDecimalSchema,
-      overdue: amountNonNegative,
-    }),
-  ),
-});
-export type InvoicesOverviewDTO = z.infer<typeof invoicesOverviewDtoSchema>;

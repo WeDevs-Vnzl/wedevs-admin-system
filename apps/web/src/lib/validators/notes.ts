@@ -5,7 +5,6 @@ import {
   entityRefSchema,
   idSchema,
   listQuerySchema,
-  type Paginated,
 } from "./common";
 import { fileDtoSchema } from "./files";
 import {
@@ -17,7 +16,7 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import type { ArchivedRecordDTO } from "./trash";
+
 import { userRefSchema } from "./users";
 
 /**
@@ -292,7 +291,6 @@ export const noteDetailSchema = z.object({
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
 });
-// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type NoteDetailDTO = z.infer<typeof noteDetailSchema>;
 
 /** Row of the notes table and card of an entity's feed (PRD §8.10). */
@@ -310,24 +308,4 @@ export const noteListRowSchema = z.object({
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
 });
-// MOCK — until cleanup: the mock services and fixtures import this DTO.
 export type NoteListRowDTO = z.infer<typeof noteListRowSchema>;
-
-// ───────────────────────────── Services (PRD §12 `notes`) ─────────────────────────────
-
-// MOCK — until cleanup: only `src/mocks/services/notes.ts` implements this interface (the BE is the service now).
-/**
- * `notes` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `listNotes` / `getNote`
- * are the read counterparts that PRD §12 leaves implicit.
- */
-export type NotesService<Ctx = unknown> = {
-  createNote: (ctx: Ctx, input: CreateNoteInput) => Promise<NoteDetailDTO>;
-  updateNote: (ctx: Ctx, input: UpdateNoteInput) => Promise<NoteDetailDTO>;
-  pinNote: (ctx: Ctx, input: PinNoteInput) => Promise<NoteDetailDTO>;
-  linkNote: (ctx: Ctx, input: LinkNoteInput) => Promise<NoteDetailDTO>;
-  unlinkNote: (ctx: Ctx, input: UnlinkNoteInput) => Promise<NoteDetailDTO>;
-  attachFile: (ctx: Ctx, input: AttachFileInput) => Promise<NoteDetailDTO>;
-  archiveNote: (ctx: Ctx, input: ArchiveNoteInput) => Promise<ArchivedRecordDTO>;
-  listNotes: (ctx: Ctx, input: NoteFilter) => Promise<Paginated<NoteListRowDTO>>;
-  getNote: (ctx: Ctx, input: NoteIdInput) => Promise<NoteDetailDTO>;
-};

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import {
   findNavItem,
   NAV_GROUPS,

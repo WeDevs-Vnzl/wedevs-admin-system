@@ -10,8 +10,8 @@ import { RecurringChargesTable } from "@/features/billing/components/recurring-c
 import { getBillingPage } from "@/features/billing/queries";
 import { listCurrencies } from "@/features/catalogs/queries";
 import { loadProjectOr404 } from "@/features/projects/load-project";
-import { can } from "@/server/auth/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type ProjectBillingPageProps = {
   params: Promise<{ id: string }>;

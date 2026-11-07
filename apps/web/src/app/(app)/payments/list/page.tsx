@@ -15,7 +15,7 @@ import { paymentFilterOf } from "@/features/payments/components/payment-table-qu
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { listPayments } from "@/features/payments/queries";
 import { notFoundWhenRefused } from "@/features/payments/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

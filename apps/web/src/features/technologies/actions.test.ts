@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
@@ -10,11 +10,15 @@ const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 vi.mock("next/cache", () => cache);
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/session")>()),
+  requireSessionUser: session.requireSessionUser,
+}));
 vi.mock("next-intl/server", () => intl);
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { UnauthenticatedError } from "@/lib/auth/session";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   createTechnologyAction,
   deleteTechnologyAction,
@@ -28,7 +32,7 @@ import {
 const listQuery = { page: 1, pageSize: 25, includeArchived: false, filters: {} };
 
 function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
+  session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
 }
 
 /** Routes the server client of the export action to an HTTP double of `POST /exports/TECHNOLOGY`. */
@@ -58,7 +62,7 @@ const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
   });
 };
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
+  session.requireSessionUser.mockReset();
   cache.revalidatePath.mockReset();
   cache.updateTag.mockReset();
 });
@@ -238,20 +242,27 @@ describe("technology actions: permissions (DT-71)", () => {
     });
   });
 
-  it("resolves a Simple Icons slug for Owner and Admin (read on settings)", async () => {
-    asRole("ADMIN");
-    const result = await resolveTechnologyIconAction({ slug: "nextdotjs" });
-    expect(result).toMatchObject({ ok: true, data: { title: "Next.js" } });
+  it("resolves a Simple Icons slug for any signed-in user (the BE owns the grants)", async () => {
+    for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
+      asRole(role);
+      const result = await resolveTechnologyIconAction({ slug: "nextdotjs" });
+      expect(result).toMatchObject({ ok: true, data: { title: "Next.js" } });
+    }
   });
 
-  it("refuses the icon preview to Member and Viewer with FORBIDDEN", async () => {
-    for (const role of ["MEMBER", "VIEWER"] as const) {
-      asRole(role);
-      await expect(resolveTechnologyIconAction({ slug: "nextdotjs" })).resolves.toMatchObject({
-        ok: false,
-        error: { code: "FORBIDDEN" },
-      });
-    }
+  it("answers UNAUTHENTICATED when nobody is signed in", async () => {
+    session.requireSessionUser.mockRejectedValue(new UnauthenticatedError());
+    await expect(resolveTechnologyIconAction({ slug: "nextdotjs" })).resolves.toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED" },
+    });
+  });
+
+  it("answers VALIDATION for an invalid slug", async () => {
+    asRole("OWNER");
+    await expect(
+      resolveTechnologyIconAction({ slug: "Not A Slug!" }),
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
   });
 });
 

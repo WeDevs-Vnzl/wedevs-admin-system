@@ -18,7 +18,7 @@ import { clientScreenPermissions } from "@/features/clients/components/client-pe
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { listClients } from "@/features/clients/queries";
 import { getPreferences } from "@/features/preferences/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

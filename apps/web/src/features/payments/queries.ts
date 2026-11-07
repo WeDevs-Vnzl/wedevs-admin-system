@@ -3,7 +3,7 @@ import { toActionResult, type ApiResponseLike } from "@/lib/api/errors";
 import { getServerApi } from "@/lib/api/server";
 import { idSchema } from "@/lib/validators/common";
 import { paymentFiltersSchema, type PaymentFilters } from "@/lib/validators/payments";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toPaymentListQuery } from "./api-query";
 import { toOpenInvoiceOption } from "./open-invoice";
 import type { OpenInvoiceOption } from "./types";
@@ -15,7 +15,6 @@ import type { OpenInvoiceOption } from "./types";
 function unwrap<T>(response: ApiResponseLike<T>): T {
   const result = toActionResult(response);
   if (result.ok) return result.data;
-  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/server/errors`.
   throw new ServiceError(result.error.code, {
     message: result.error.message,
     ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),
@@ -25,7 +24,6 @@ function unwrap<T>(response: ApiResponseLike<T>): T {
 /** A malformed id answers the same as an unknown one and never reaches the BE. */
 function pathId(id: string): string {
   const parsed = idSchema.safeParse(id);
-  // MOCK — until cleanup: see `unwrap`.
   if (!parsed.success) throw new ServiceError("NOT_FOUND");
   return parsed.data;
 }
@@ -86,7 +84,6 @@ export async function getInvoiceForPayment(
   );
   if (!result.ok) {
     if (result.error.code === "NOT_FOUND") return null;
-    // MOCK — until cleanup: see `unwrap`.
     throw new ServiceError(result.error.code, { message: result.error.message });
   }
   return { client: result.data.client, invoice: toOpenInvoiceOption(result.data.invoice) };

@@ -27,9 +27,6 @@ import {
   type ProjectFilterInput,
 } from "@/lib/validators/projects";
 import { z } from "@/lib/validators/zod";
-// MOCK — until cleanup: the export source only (`list` and `exportCsv` are ignored by the helper; the BE builds the CSV).
-import { exportCsv } from "@/mocks/services/export";
-import * as projects from "@/mocks/services/projects";
 import { toProjectListQuery } from "./api-query";
 import { PROJECT_EXPORT_COLUMNS, PROJECT_FACETS } from "./columns";
 
@@ -247,19 +244,16 @@ export async function searchProjectsAction(
 }
 
 /**
- * CSV of the table, filtered as the table is (PRD §7.3). The export source keeps the mock list for its column
- * and facet metadata only; the helper calls `POST /exports/PROJECT`.
+ * CSV of the table, filtered as the table is (PRD §7.3). The export source supplies the column and facet
+ * metadata only; the helper calls `POST /exports/PROJECT`.
  */
 export const exportProjectsCsvAction = defineCsvExportAction({
   entity: exportEntitySchema.enum.PROJECT,
-  permission: { action: "read", resource: "project" },
   source: {
     entity: "PROJECT",
     facets: PROJECT_FACETS,
     filterSchema: projectFilterSchema,
-    list: projects.listProjects,
     columns: PROJECT_EXPORT_COLUMNS,
   },
-  exportCsv,
   namespace: "projects",
 });

@@ -1,10 +1,5 @@
-// Financial formulas, implemented once (C17). Mock services, real services and live form totals call
-// these; nobody re-derives a formula inline.
-export * from "./accounts";
+// Financial formulas, implemented once (C17). The live form previews (invoice totals, installment splits, payment
+// amounts) call these; nobody re-derives a formula inline. Persisted figures always come from the BE.
 export * from "./installments";
-export * from "./invoice-status";
 export * from "./invoice-totals";
-export * from "./kpis";
 export * from "./payments";
-export * from "./project-summary";
-export * from "./recurring";

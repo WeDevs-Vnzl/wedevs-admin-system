@@ -6,8 +6,8 @@ import { NoteDetail } from "@/features/notes/components/note-detail";
 import { getNote, getNotesViewer } from "@/features/notes/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { noteDisplayTitle } from "@/lib/rich-text";
-import { ServiceError } from "@/server/context";
-import { can } from "@/server/auth/permissions";
+import { ServiceError } from "@/lib/service-error";
+import { can } from "@/lib/auth/permissions";
 
 type NotePageProps = {
   params: Promise<{ id: string }>;

@@ -1,14 +1,8 @@
 import { z } from "./zod";
-import {
-  VALIDATION_MESSAGES,
-  dateOnlySchema,
-  idSchema,
-  listQuerySchema,
-  type Paginated,
-} from "./common";
+import { VALIDATION_MESSAGES, dateOnlySchema, idSchema, listQuerySchema } from "./common";
 import { clientKindSchema, clientStatusSchema } from "./enums";
 import { moneyAmountSchema } from "./money";
-import { contactDetailSchema, e164PhoneSchema } from "./contacts";
+import { e164PhoneSchema } from "./contacts";
 import {
   bulkIdsSchema,
   facetOf,
@@ -21,7 +15,6 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import { archivedRecordSchema } from "./trash";
 
 /**
  * Clients (PRD §8.2). Money metrics are USD decimal strings (C15).
@@ -145,10 +138,6 @@ export type ArchiveClientInput = z.infer<typeof archiveClientInputSchema>;
 export const restoreClientInputSchema = z.object({ id: idSchema });
 export type RestoreClientInput = z.infer<typeof restoreClientInputSchema>;
 
-// MOCK — until cleanup: imported by the mock clients service.
-export const clientIdInputSchema = z.object({ id: idSchema });
-export type ClientIdInput = z.infer<typeof clientIdInputSchema>;
-
 /** Bulk archive from the table's selection (PRD §7.3). Same `confirm` rule as `archiveClient`. */
 export const archiveClientsInputSchema = z.object({
   ids: bulkIdsSchema,
@@ -189,10 +178,6 @@ export type ClientFilterInput = z.input<typeof clientFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
-// MOCK — until cleanup: the DTO schemas and types below are kept only because `src/mocks/**` (services,
-// fixtures, tests) and the CSV export source import them. The screens read the generated DTOs of
-// `@/lib/api/types/clients`. CLEAN deletes this section.
-
 /** USD amount that can be zero but not negative (totals). */
 const usdTotalSchema = moneyAmountSchema({ sign: "nonNegative" });
 
@@ -215,95 +200,3 @@ export const clientListRowSchema = z.object({
   archivedAt: timestampSchema.nullable(),
 });
 export type ClientListRowDTO = z.infer<typeof clientListRowSchema>;
-
-/** `getClientFinancials` and the "Resumen" metrics: all USD decimal strings. */
-export const clientFinancialsSchema = z.object({
-  clientId: idSchema,
-  totalInvoicedUsd: usdTotalSchema,
-  totalCollectedUsd: usdTotalSchema,
-  /** Receivable balance. */
-  receivableUsd: usdTotalSchema,
-  /** Part of the receivable balance that is overdue (`VENCIDA`). */
-  overdueUsd: usdTotalSchema,
-  /** Credit balance: confirmed payments not yet allocated ("saldo a favor"). */
-  creditBalanceUsd: usdTotalSchema,
-  projectCount: z.number().int().nonnegative(),
-});
-export type ClientFinancialsDTO = z.infer<typeof clientFinancialsSchema>;
-
-export const clientDetailSchema = z.object({
-  id: idSchema,
-  code: z.string(),
-  kind: clientKindSchema,
-  tradeName: z.string(),
-  legalName: z.string(),
-  taxId: z.string(),
-  country: countryCodeSchema,
-  address: z.string(),
-  phone: z.string(),
-  email: z.string().nullable(),
-  website: z.string().nullable(),
-  status: clientStatusSchema,
-  /** Set the first time the client became `ACTIVO`. */
-  activatedAt: timestampSchema.nullable(),
-  tags: z.array(tagChipSchema),
-  /** Highlighted contacts (primary first) for the "Resumen" tab; the full list is `listContacts`. */
-  contacts: z.array(contactDetailSchema),
-  financials: clientFinancialsSchema,
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-  archivedAt: timestampSchema.nullable(),
-});
-export type ClientDetailDTO = z.infer<typeof clientDetailSchema>;
-
-/** Output of `archiveClient`: the archived record plus how many contacts went with it. */
-export const clientArchiveResultSchema = archivedRecordSchema.extend({
-  archivedContacts: z.number().int().nonnegative(),
-});
-export type ClientArchiveResultDTO = z.infer<typeof clientArchiveResultSchema>;
-
-/** Output of `archiveClients`: one result per archived client. */
-export const clientsArchiveResultSchema = z.object({
-  archived: z.array(clientArchiveResultSchema),
-});
-export type ClientsArchiveResultDTO = z.infer<typeof clientsArchiveResultSchema>;
-
-/** `/clients` overview (PRD §8.2 "Overview"). */
-export const clientsOverviewSchema = z.object({
-  countByStatus: z.object({
-    PROSPECTO: z.number().int().nonnegative(),
-    ACTIVO: z.number().int().nonnegative(),
-    INACTIVO: z.number().int().nonnegative(),
-  }),
-  /** Top 5 by collected revenue over the last 12 months. */
-  topByRevenue: z.array(clientListRowSchema.extend({ collectedLast12MonthsUsd: usdTotalSchema })),
-  withOverdueBalance: z.array(clientListRowSchema.extend({ overdueUsd: usdTotalSchema })),
-  recentlyCreated: z.array(clientListRowSchema),
-});
-export type ClientsOverviewDTO = z.infer<typeof clientsOverviewSchema>;
-
-export const getClientsOverviewInputSchema = z.object({}).strict();
-export type GetClientsOverviewInput = z.infer<typeof getClientsOverviewInputSchema>;
-
-// ───────────────────────────── Services (PRD §12 `clients`) ─────────────────────────────
-
-// MOCK — until cleanup: `ClientsService` is implemented by `mocks/services/clients.ts` and checked by its tests.
-
-/**
- * `clients` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11); `Ctx` is the service
- * context `{ db, user, now }`. Failures (CONFLICT on a duplicate tax id + country, INTEGRITY_LOCK…) are
- * reported to the action adapter, never returned as DTOs. `getClientsOverview` and `archiveClients`
- * are the screen counterparts that PRD §12 ("servicios principales") leaves implicit.
- */
-export type ClientsService<Ctx = unknown> = {
-  createClient: (ctx: Ctx, input: CreateClientInput) => Promise<ClientDetailDTO>;
-  updateClient: (ctx: Ctx, input: UpdateClientInput) => Promise<ClientDetailDTO>;
-  setClientStatus: (ctx: Ctx, input: SetClientStatusInput) => Promise<ClientDetailDTO>;
-  archiveClient: (ctx: Ctx, input: ArchiveClientInput) => Promise<ClientArchiveResultDTO>;
-  restoreClient: (ctx: Ctx, input: RestoreClientInput) => Promise<ClientDetailDTO>;
-  listClients: (ctx: Ctx, input: ClientFilter) => Promise<Paginated<ClientListRowDTO>>;
-  getClient: (ctx: Ctx, input: ClientIdInput) => Promise<ClientDetailDTO>;
-  getClientFinancials: (ctx: Ctx, input: ClientIdInput) => Promise<ClientFinancialsDTO>;
-  getClientsOverview: (ctx: Ctx, input: GetClientsOverviewInput) => Promise<ClientsOverviewDTO>;
-  archiveClients: (ctx: Ctx, input: ArchiveClientsInput) => Promise<ClientsArchiveResultDTO>;
-};

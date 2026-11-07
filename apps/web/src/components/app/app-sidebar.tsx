@@ -23,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { findNavItem, SETTINGS_NAV_ITEM, visibleNavGroups, type NavItem } from "@/config/nav";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 
 /** Up to two initials of a name, for the avatar fallback (sidebar user block and topbar menu). */
 export function initialsOf(name: string): string {

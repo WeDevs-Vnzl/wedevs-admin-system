@@ -12,8 +12,7 @@ import {
   invoiceFiltersSchema,
   type BillableInstallmentRow,
 } from "@/lib/validators/invoices";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toInvoiceListQuery } from "./api-query";
 import type { InvoiceFilterInput } from "./components/invoice-table-query";
 
@@ -23,14 +22,13 @@ import type { InvoiceFilterInput } from "./components/invoice-table-query";
 /**
  * Unwraps a read. A BE `404` throws `ServiceError("NOT_FOUND")`, `403` `FORBIDDEN` and `422` `VALIDATION`, keeping
  * the message and field errors: other modules (notes, invoices form options) catch these until CLEAN replaces
- * `@/server/errors` and its consumers.
+ * `@/lib/service-error` and its consumers.
  */
 function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   const mapped = toActionResult(result);
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors, entity } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the cross-module readers catch.
     throw new ServiceError(code, {
       message,
       ...(fieldErrors ? { fieldErrors } : {}),
@@ -62,7 +60,6 @@ export async function getInvoicesOverview(): Promise<InvoicesOverviewDto> {
 /** A malformed id answers like an unknown one (`NOT_FOUND`), without calling the BE. */
 export async function getInvoice(id: string): Promise<InvoiceResponseDto> {
   if (!idSchema.safeParse(id).success) {
-    // MOCK — until cleanup: same `ServiceError` contract as the BE-mapped 404.
     throw new ServiceError("NOT_FOUND");
   }
   const api = await getServerApi();
@@ -80,7 +77,6 @@ export async function listBillableInstallments(
   clientId: string,
 ): Promise<BillableInstallmentRow[]> {
   if (!idSchema.safeParse(clientId).success) {
-    // MOCK — until cleanup: same `ServiceError` contract as the BE-mapped 404.
     throw new ServiceError("NOT_FOUND");
   }
   const api = await getServerApi();

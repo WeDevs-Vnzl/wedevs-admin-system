@@ -9,7 +9,7 @@ import enNav from "@/i18n/messages/en/nav.json";
 import enShell from "@/i18n/messages/en/shell.json";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import { AppSidebar } from "./app-sidebar";
 
 const mocks = vi.hoisted(() => ({

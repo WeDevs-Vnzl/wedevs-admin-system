@@ -12,8 +12,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("@/features/settings/queries", async () => {
-  const { can } = await import("@/server/auth/permissions");
-  const { makeSessionUser } = await import("@/mocks/test-helpers");
+  const { can } = await import("@/lib/auth/permissions");
+  const { makeSessionUser } = await import("@/lib/auth/testing");
   return {
     // The real access rule of the settings section: `read` on `settings` (Owner and Admin).
     getOpenableSettingsSection: async (slug: string) =>

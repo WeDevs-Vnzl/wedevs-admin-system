@@ -9,8 +9,7 @@ import type {
   ClientsOverviewDto,
 } from "@/lib/api/types/clients";
 import { clientFilterSchema, type ClientFilterInput } from "@/lib/validators/clients";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toClientListQuery } from "./api-query";
 
 // Reads for the clients pages (RSC), over the generated client. Pages call `notFound()` when `getClient` throws a
@@ -18,14 +17,13 @@ import { toClientListQuery } from "./api-query";
 
 /**
  * Unwraps a read. A BE `404` throws `ServiceError("NOT_FOUND")`, `403` `FORBIDDEN` and `422` `VALIDATION`: other
- * modules (documents, notes, projects) catch these until CLEAN replaces `@/server/errors` and its consumers.
+ * modules (documents, notes, projects) catch these until CLEAN replaces `@/lib/service-error` and its consumers.
  */
 function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   const mapped = toActionResult(result);
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the cross-module readers catch.
     throw new ServiceError(code, { message, ...(fieldErrors ? { fieldErrors } : {}) });
   }
   throw new Error(`${what} failed with ${result.response.status}`);

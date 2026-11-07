@@ -1,22 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 vi.mock("@/lib/api/server", () => server);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
-import { ServiceError } from "@/server/errors";
+import { makeSessionUser } from "@/lib/auth/testing";
+import { ServiceError } from "@/lib/service-error";
 import {
   getShareLink,
   getShareableDocuments,
   getSharePermissions,
   listShareAccessLog,
   listShareLinks,
-  shareableDocumentOf,
 } from "./queries";
 import {
   page,
@@ -35,7 +34,7 @@ function useApi(routes: RouteTable) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
+  session.requireSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
 });
 
 describe("getSharePermissions", () => {
@@ -46,7 +45,7 @@ describe("getSharePermissions", () => {
       canUpdate: true,
       canUpdateDocuments: true,
     });
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    session.requireSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
     expect(await getSharePermissions()).toEqual({
       canRead: false,
       canCreate: false,
@@ -169,19 +168,5 @@ describe("getShareableDocuments", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await expect(getShareableDocuments(["doc_a"])).rejects.toThrow();
-  });
-});
-
-describe("shareableDocumentOf", () => {
-  it("returns null for an archived document and throws NOT_FOUND for an unknown one", async () => {
-    useApi({
-      "GET /api/v1/documents/{id}": (call) =>
-        call.path.endsWith("doc_gone")
-          ? errorEnvelope("NOT_FOUND")
-          : { body: wireDocument("doc_old", { archivedAt: "2026-10-01T00:00:00.000Z" }) },
-    });
-
-    expect(await shareableDocumentOf("doc_old")).toBeNull();
-    await expect(shareableDocumentOf("doc_gone")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

@@ -5,7 +5,7 @@ import { PaymentsOverview } from "@/features/payments/components/payments-overvi
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getPaymentsOverview, listPayments } from "@/features/payments/queries";
 import { notFoundWhenRefused } from "@/features/payments/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 /** Rows of the "with credit" aside: a short queue, the full list is one click away. */
 const WITH_CREDIT_LIMIT = 5;

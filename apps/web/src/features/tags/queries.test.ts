@@ -3,15 +3,15 @@ import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { UserRole } from "@/lib/validators/enums";
 
 vi.mock("server-only", () => ({}));
-const { getServiceContext } = vi.hoisted(() => ({ getServiceContext: vi.fn() }));
-vi.mock("@/server/context", () => ({ getServiceContext }));
+const { requireSessionUser } = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser }));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
 
 import { canCreateTagsInline, canManageTags, getTag, getTags } from "./queries";
 
 function asRole(role: UserRole) {
-  getServiceContext.mockResolvedValue({ user: { id: "usr_test", role } });
+  requireSessionUser.mockResolvedValue({ id: "usr_test", role });
 }
 
 const tag = {
@@ -53,7 +53,7 @@ describe("getTag", () => {
 });
 
 describe("canManageTags", () => {
-  beforeEach(() => getServiceContext.mockReset());
+  beforeEach(() => requireSessionUser.mockReset());
 
   it.each(["OWNER", "ADMIN"] as const)("lets %s manage the catalogue", async (role) => {
     asRole(role);
@@ -67,7 +67,7 @@ describe("canManageTags", () => {
 });
 
 describe("canCreateTagsInline", () => {
-  beforeEach(() => getServiceContext.mockReset());
+  beforeEach(() => requireSessionUser.mockReset());
 
   // The grants of createTagAction: Owner, Admin and Member hold one of them, Viewer holds none.
   it.each(["OWNER", "ADMIN", "MEMBER"] as const)("lets %s create a tag inline", async (role) => {

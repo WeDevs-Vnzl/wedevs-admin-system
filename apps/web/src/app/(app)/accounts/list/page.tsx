@@ -14,7 +14,7 @@ import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listAccounts } from "@/features/accounts/queries";
 import { notFoundWhenRefused } from "@/features/accounts/refusal";
 import { listCurrencies } from "@/features/catalogs/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

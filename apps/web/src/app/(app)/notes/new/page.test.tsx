@@ -24,7 +24,7 @@ vi.mock("@/features/tags/queries", () => ({
 }));
 vi.mock("@/features/notes/components/note-composer", () => ({ NoteComposerPage: () => null }));
 
-import { ServiceError } from "@/server/context";
+import { ServiceError } from "@/lib/service-error";
 import NewNotePage from "./page";
 
 function propsFor(entityType: string, entityId: string) {

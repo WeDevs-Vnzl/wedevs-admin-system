@@ -1,7 +1,7 @@
 import "server-only";
 import { getServerApi } from "@/lib/api/server";
 import type { AlertsInboxDTO } from "@/lib/validators/alerts";
-import { UnauthenticatedError } from "@/server/auth/session";
+import { UnauthenticatedError } from "@/lib/auth/session";
 import type { ListAlertsFilter } from "./actions";
 
 /** The current user's active alerts, most urgent first, filtered by role by the BE (PRD §7.9). */

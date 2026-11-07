@@ -5,7 +5,7 @@ import { AccountsOverview } from "@/features/accounts/components/accounts-overvi
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccountsOverview } from "@/features/accounts/queries";
 import { notFoundWhenRefused } from "@/features/accounts/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("accounts.page");

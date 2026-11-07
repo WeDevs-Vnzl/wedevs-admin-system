@@ -5,7 +5,6 @@ import {
   entityRefSchema,
   idSchema,
   listQuerySchema,
-  type Paginated,
 } from "./common";
 import { documentFormatSchema, documentStatusSchema, type DocumentStatus } from "./enums";
 import { fileDtoSchema } from "./files";
@@ -25,7 +24,7 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import type { ArchivedRecordDTO } from "./trash";
+
 import { userRefSchema } from "./users";
 
 /**
@@ -49,7 +48,6 @@ export const DOCUMENT_VALIDATION_MESSAGES = {
 /** Markdown / draft size cap (characters). */
 export const DOCUMENT_CONTENT_MAX = 1_000_000;
 
-// MOCK — until cleanup: `mocks/services/alerts.ts` and the mock fixtures import this default.
 export const DEFAULT_ALERT_DAYS_BEFORE = 30;
 
 // ───────────────────────────── Statuses and transitions ─────────────────────────────
@@ -456,7 +454,6 @@ export const documentDetailSchema = z.object({
 export type DocumentDetailDTO = z.infer<typeof documentDetailSchema>;
 
 /** Output of `saveDraft`. */
-// MOCK — until cleanup: the mock documents service returns this DTO.
 export const saveDraftResultSchema = z.object({
   documentId: idSchema,
   draftUpdatedAt: timestampSchema,
@@ -485,45 +482,3 @@ export type DocumentsOverviewDTO = z.infer<typeof documentsOverviewSchema>;
 
 export const getDocumentsOverviewInputSchema = z.object({}).strict();
 export type GetDocumentsOverviewInput = z.infer<typeof getDocumentsOverviewInputSchema>;
-
-// ───────────────────────────── Services (PRD §12 `documents`) ─────────────────────────────
-
-/**
- * `documents` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). Failures
- * (INTEGRITY_LOCK on a `FIRMADO` document, VALIDATION on a type rule…) are reported to the action
- * adapter. `archiveDocument(s)`, `listDocuments`, `getDocument`, `listDocumentVersions`,
- * `getDocumentVersion` and `getDocumentsOverview` are the screen counterparts that PRD §12 leaves
- * implicit.
- */
-// MOCK — until cleanup: `mocks/services/documents.ts` and `documents-lifecycle.test.ts` check the mock service
-// against this interface; the API serves every call now.
-export type DocumentsService<Ctx = unknown> = {
-  createDocument: (ctx: Ctx, input: CreateDocumentInput) => Promise<DocumentDetailDTO>;
-  updateDocumentMeta: (ctx: Ctx, input: UpdateDocumentMetaInput) => Promise<DocumentDetailDTO>;
-  saveDraft: (ctx: Ctx, input: SaveDraftInput) => Promise<SaveDraftResultDTO>;
-  publishVersion: (ctx: Ctx, input: PublishVersionInput) => Promise<DocumentDetailDTO>;
-  uploadVersion: (ctx: Ctx, input: UploadVersionInput) => Promise<DocumentDetailDTO>;
-  restoreVersion: (ctx: Ctx, input: RestoreVersionInput) => Promise<DocumentDetailDTO>;
-  setDocumentStatus: (ctx: Ctx, input: SetDocumentStatusInput) => Promise<DocumentDetailDTO>;
-  linkDocument: (ctx: Ctx, input: LinkDocumentInput) => Promise<DocumentLinkDTO[]>;
-  unlinkDocument: (ctx: Ctx, input: UnlinkDocumentInput) => Promise<DocumentLinkDTO[]>;
-  archiveDocument: (ctx: Ctx, input: ArchiveDocumentInput) => Promise<ArchivedRecordDTO>;
-  archiveDocuments: (
-    ctx: Ctx,
-    input: ArchiveDocumentsInput,
-  ) => Promise<{ archived: ArchivedRecordDTO[] }>;
-  listDocuments: (ctx: Ctx, input: DocumentFilter) => Promise<Paginated<DocumentListRowDTO>>;
-  getDocument: (ctx: Ctx, input: DocumentIdInput) => Promise<DocumentDetailDTO>;
-  listDocumentVersions: (
-    ctx: Ctx,
-    input: ListDocumentVersionsInput,
-  ) => Promise<DocumentVersionRowDTO[]>;
-  getDocumentVersion: (
-    ctx: Ctx,
-    input: GetDocumentVersionInput,
-  ) => Promise<DocumentVersionDetailDTO>;
-  getDocumentsOverview: (
-    ctx: Ctx,
-    input: GetDocumentsOverviewInput,
-  ) => Promise<DocumentsOverviewDTO>;
-};

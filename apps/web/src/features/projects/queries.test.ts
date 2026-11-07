@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { EntityRef } from "@/lib/validators/common";
 import type { ProjectFilterInput } from "@/lib/validators/projects";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 
 vi.mock("server-only", () => ({}));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));

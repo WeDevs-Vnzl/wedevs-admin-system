@@ -1,8 +1,8 @@
 import "server-only";
 import { getServerApi } from "@/lib/api/server";
 import { tagFilterSchema, tagIdInputSchema, type TagFilterInput } from "@/lib/validators/tags";
-import { can } from "@/server/auth/permissions";
-import { getServiceContext } from "@/server/context";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 import { toTagListQuery } from "./api-query";
 import { CREATE_TAG_GRANTS } from "./grants";
 
@@ -29,8 +29,8 @@ export async function getTag(id: string) {
 
 /** Whether the signed-in user manages the tag catalogue (Settings → Etiquetas: Owner and Admin). */
 export async function canManageTags(): Promise<boolean> {
-  const ctx = await getServiceContext();
-  return can(ctx.user, "read", "settings");
+  const user = await requireSessionUser();
+  return can(user, "read", "settings");
 }
 
 /**
@@ -38,6 +38,6 @@ export async function canManageTags(): Promise<boolean> {
  * projects screens pass this boolean to their components (R13).
  */
 export async function canCreateTagsInline(): Promise<boolean> {
-  const ctx = await getServiceContext();
-  return CREATE_TAG_GRANTS.some(({ action, resource }) => can(ctx.user, action, resource));
+  const user = await requireSessionUser();
+  return CREATE_TAG_GRANTS.some(({ action, resource }) => can(user, action, resource));
 }

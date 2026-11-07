@@ -16,7 +16,7 @@ import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
 import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type AccountDetailPageProps = {
   params: Promise<{ id: string }>;

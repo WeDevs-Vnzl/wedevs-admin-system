@@ -6,7 +6,7 @@ import { getPaymentFormOptions } from "@/features/payments/form-options";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getInvoiceForPayment, listOpenInvoices } from "@/features/payments/queries";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type PaymentNewPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

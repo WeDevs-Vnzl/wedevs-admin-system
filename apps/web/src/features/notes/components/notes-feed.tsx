@@ -18,7 +18,7 @@ import {
 } from "@/features/notes/actions";
 import type { Paginated } from "@/lib/validators/common";
 import type { NoteDetailDTO, NoteListRowDTO } from "@/lib/validators/notes";
-import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { can, type PermissionSubject } from "@/lib/auth/permissions";
 import { NOTES_FEED_PAGE_SIZE } from "../constants";
 import { NoteCard } from "./note-card";
 import { NoteComposer, type NoteLinkRef } from "./note-composer";

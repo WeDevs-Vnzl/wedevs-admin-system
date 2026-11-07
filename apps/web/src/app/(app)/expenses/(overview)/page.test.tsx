@@ -9,14 +9,14 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/features/expenses/components/expenses-overview", () => ({
   ExpensesOverview: () => null,
 }));
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { makeExpense } from "@/features/expenses/test-fixtures";
 import ExpensesOverviewPage from "./page";
 

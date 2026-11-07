@@ -11,7 +11,7 @@ import esSearch from "@/i18n/messages/es/search.json";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { SearchGroupDto, SearchResultDto, SearchResultsDto } from "@/lib/api/types/search";
 import { mockApi, type RecordedCall } from "@/lib/api/testing";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import { BreadcrumbLabel, BreadcrumbLabelProvider } from "./breadcrumb-label";
 import { CommandMenu } from "./command-menu";
 

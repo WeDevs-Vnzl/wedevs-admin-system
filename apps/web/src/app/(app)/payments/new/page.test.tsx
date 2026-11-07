@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/features/clients/queries", () => ({ listClients: mocks.listClients }));
 vi.mock("@/features/accounts/queries", () => ({ listAccounts: mocks.listAccounts }));
@@ -28,7 +28,7 @@ vi.mock("@/features/payments/components/payment-form", () => ({ PaymentForm: () 
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { makeOpenInvoice } from "@/features/payments/test-fixtures";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import NewPaymentPage from "./page";
 
 const render = (searchParams: Record<string, string | undefined> = {}) =>

@@ -17,7 +17,6 @@ import {
   type RestoreClientInput,
   type SetClientStatusInput,
   type UpdateClientFormValues,
-  // MOCK — until cleanup: the export source below types its rows with the mock DTO.
   type ClientListRowDTO,
   type ClientFilter,
 } from "@/lib/validators/clients";
@@ -29,11 +28,7 @@ import {
   type EntityRef,
 } from "@/lib/validators/common";
 import type { z } from "@/lib/validators/zod";
-// MOCK — until cleanup: the export source only (`list` and `exportCsv` are ignored by the helper; the BE builds the CSV).
 import type { ExportSource } from "@/lib/validators/export";
-import * as clients from "@/mocks/services/clients";
-import { exportCsv } from "@/mocks/services/export";
-import type { ServiceContext } from "@/server/context";
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
 import { toClientListQuery } from "./api-query";
 import { CLIENT_EXPORT_COLUMNS, CLIENT_FACETS } from "./columns";
@@ -154,20 +149,16 @@ export async function listClientsAction(
   return listClients(parsed.data);
 }
 
-// MOCK — until cleanup: `list` is ignored by the export helper; the columns and facets drive the CSV.
-const exportSource: ExportSource<ClientListRowDTO, ClientFilter, ServiceContext> = {
+const exportSource: ExportSource<ClientListRowDTO, ClientFilter> = {
   entity: "CLIENT",
   facets: CLIENT_FACETS,
   filterSchema: clientFilterSchema,
-  list: (ctx, filter) => clients.listClients(ctx, filter),
   columns: CLIENT_EXPORT_COLUMNS,
 };
 
 /** CSV of the clients table: same filter schema and columns as the table (PD-2); the BE builds the file. */
 export const exportClientsCsvAction = defineCsvExportAction({
   entity: "CLIENT",
-  permission: { action: "read", resource: "client" },
   source: exportSource,
-  exportCsv,
   namespace: "clients",
 });

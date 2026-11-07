@@ -10,11 +10,9 @@ import {
   type ShareAccessLogFilterInput,
   type ShareFilterInput,
 } from "@/lib/validators/shares";
-// MOCK — until cleanup: `getServiceContext` and `can` feed only the cosmetic permissions read below (C13).
-import { can } from "@/server/auth/permissions";
-import { getServiceContext } from "@/server/context";
-// MOCK — until cleanup: the pages and the loader catch `ServiceError`; CLEAN replaces `@/server/errors` and them.
-import { ServiceError } from "@/server/errors";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { ServiceError } from "@/lib/service-error";
 import { toAccessLogQuery, toShareListQuery } from "./api-query";
 import { toAccessLogPage, toShareDetail, toSharePage } from "./mappers";
 import type { ShareableDocument } from "./types";
@@ -28,7 +26,6 @@ function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   if (mapped.ok) return mapped.data;
   const { code, message, fieldErrors } = mapped.error;
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError` the pages and loader catch.
     throw new ServiceError(code, { message, ...(fieldErrors ? { fieldErrors } : {}) });
   }
   throw new Error(`${what} failed with ${result.response.status}`);
@@ -78,7 +75,7 @@ export async function listShareAccessLog(filter: ShareAccessLogFilterInput) {
  * `ENVIADO` needs `document` update. Hiding a control is cosmetic; the BE checks the same grants again (C13).
  */
 export async function getSharePermissions() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return {
     canRead: can(user, "read", "share"),
     canCreate: can(user, "create", "share"),
@@ -139,20 +136,4 @@ export async function getShareableDocuments(ids: readonly string[]): Promise<Sha
     }),
   );
   return found.filter((doc): doc is ShareableDocument => doc !== null);
-}
-
-/**
- * One document as the share form lists it. Throws `ServiceError` for what the BE refuses (`NOT_FOUND` for an unknown
- * id); an archived document is `null`.
- */
-export async function shareableDocumentOf(id: string): Promise<ShareableDocument | null> {
-  const api = await getServerApi();
-  const result = await readShareableDocument(api, idSchema.parse(id));
-  if (result.ok) return result.data;
-  const { code, message } = result.error;
-  if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
-    // MOCK — until cleanup: the BE error becomes the mock-era `ServiceError`.
-    throw new ServiceError(code, { message });
-  }
-  throw new Error(`reading document ${id} failed with ${code}`);
 }

@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/features/payments/components/payments-overview", () => ({
   PaymentsOverview: () => null,
@@ -17,7 +17,7 @@ vi.mock("@/features/payments/components/payments-overview", () => ({
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { makePaymentRow, page } from "@/features/payments/test-fixtures";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import PaymentsOverviewPage from "./page";
 
 const overview = {

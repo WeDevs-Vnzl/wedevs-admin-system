@@ -6,9 +6,7 @@ import {
   projectIdInputSchema,
   type ProjectFilterInput,
 } from "@/lib/validators/projects";
-// MOCK — until cleanup: other modules still catch `ServiceError` from these reads (documents/notes prefill,
-// `loadProjectOr404`); CLEAN replaces `@/server/errors` and those consumers.
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toProjectListQuery } from "./api-query";
 
 // Reads for the project screens (RSC): one BE call each, through the typed client. Authorization is the BE's
@@ -18,7 +16,6 @@ import { toProjectListQuery } from "./api-query";
 /** The failure of a read: a known BE refusal becomes a `ServiceError`, anything else a plain error. */
 function failure(request: string, error: unknown, status: number): Error {
   const code = envelopeToActionError(error).code;
-  // MOCK — until cleanup: the BE error code → the `ServiceError` the cross-module readers catch.
   if (code === "NOT_FOUND" || code === "FORBIDDEN" || code === "VALIDATION") {
     return new ServiceError(code);
   }

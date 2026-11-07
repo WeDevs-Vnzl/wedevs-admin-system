@@ -120,7 +120,7 @@ export function zodFieldErrors(error: z.ZodError): FieldErrors {
 
 // ───────────────────────────── Ids, references, dates ─────────────────────────────
 
-/** Entity id: cuid in Hito 2, readable mock ids in Hito 1. Never trusted without a lookup (C14). */
+/** Entity id: a cuid or a readable fixture id. Never trusted without a lookup (C14). */
 export const idSchema = z
   .string()
   .min(1, VALIDATION_MESSAGES.required)

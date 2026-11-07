@@ -8,8 +8,8 @@ import { PaymentLinksPanel } from "@/features/invoices/components/payment-links-
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
 import { orNullWhenMissing } from "@/features/invoices/refusal";
-import { can } from "@/server/auth/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ id: string }>;

@@ -4,10 +4,10 @@ const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 const session = vi.hoisted(() => ({ getSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/api/server", () => server);
-vi.mock("@/server/auth/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
 
 import { errorEnvelope, mockApi, type RouteResponse } from "@/lib/api/testing";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import {
   activityFilterFromSearchParams,
   canReadActivity,

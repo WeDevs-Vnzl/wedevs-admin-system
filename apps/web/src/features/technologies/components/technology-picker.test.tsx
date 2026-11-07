@@ -72,7 +72,6 @@ const rustChip: TechnologyChipDTO = {
   id: "tec_rust",
   name: "Rust",
   nameEn: null,
-  slug: "rust",
   category: "LENGUAJE",
   iconSlug: null,
   color: null,

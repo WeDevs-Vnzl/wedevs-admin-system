@@ -5,7 +5,7 @@ import { ExpensesOverview } from "@/features/expenses/components/expenses-overvi
 import { getExpensesOverview } from "@/features/expenses/queries";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
 import { notFoundWhenRefused } from "@/features/expenses/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("expenses.page");
