@@ -35,7 +35,7 @@ import { resolveTechnologyIcon, type ResolvedIcon } from "./icons";
 const SETTINGS_PATH = "/settings/technologies";
 
 // Settings → Tecnologías writes: thin proxies (C10). The settings grant is the BE's rule; the form validates for UX.
-// The inputs are the form's zod input types (as `defineAction` took them): the dialog sends `nameEn: null` and
+// The inputs are the form's zod input types (the form values before the schema defaults): the dialog sends `nameEn: null` and
 // omits `active` when the schema default applies, so `active` takes the schema default (`true`) for the typed body.
 
 /** Creates a technology (settings grant). The BE answers CONFLICT on a taken name or slug. */
