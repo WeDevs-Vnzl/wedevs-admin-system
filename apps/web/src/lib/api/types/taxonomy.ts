@@ -34,3 +34,14 @@ export type CreateTechnologyDto = components["schemas"]["CreateTechnologyDto"];
 export type UpdateTechnologyDto = components["schemas"]["UpdateTechnologyDto"];
 export type SetTechnologyActiveDto = components["schemas"]["SetTechnologyActiveDto"];
 export type TechnologyDeletedDto = components["schemas"]["TechnologyDeletedDto"];
+
+/** One document category with its types, in order (`GET /api/v1/document-categories`). */
+export type DocumentCategoryResponseDto = components["schemas"]["DocumentCategoryResponseDto"];
+export type DocumentCategoryBodyDto = components["schemas"]["DocumentCategoryBodyDto"];
+export type ReorderDocumentCategoriesDto = components["schemas"]["ReorderDocumentCategoriesDto"];
+/** One document type with its category and document count. */
+export type DocumentTypeDetailDto = components["schemas"]["DocumentTypeDetailDto"];
+export type DocumentTypeBodyDto = components["schemas"]["DocumentTypeBodyDto"];
+export type SetDocumentTypeActiveDto = components["schemas"]["SetDocumentTypeActiveDto"];
+/** Response of the category and type deletes: the id of the removed row. */
+export type DeletedRefDto = components["schemas"]["DeletedRefDto"];
