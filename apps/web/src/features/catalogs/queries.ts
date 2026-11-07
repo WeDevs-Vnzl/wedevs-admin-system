@@ -22,6 +22,7 @@ import {
   paymentMethodListInputSchema,
   type CurrencyDTO,
   type CurrencyListInputRaw,
+  type ExchangeRateDTO,
   type ExchangeRateFilters,
   type ExpenseCategoryListInputRaw,
   type ExpenseCategoryTreeNode,
@@ -35,6 +36,7 @@ import {
   type DocumentTypeFilterInput,
   type DocumentTypeListRowDTO,
 } from "@/lib/validators/document-types";
+import type { SelectedRate } from "@/lib/rates";
 import type { FiscalSettings } from "@/lib/validators/settings";
 import { tagFilterSchema, type TagFilterInput, type TagListRowDTO } from "@/lib/validators/tags";
 import {
@@ -42,15 +44,19 @@ import {
   type TechnologyFilterInput,
   type TechnologyListRowDTO,
 } from "@/lib/validators/technologies";
-import * as catalogs from "@/mocks/services/catalogs";
-import { getServiceContext } from "@/server/context";
-import { unwrap } from "./read";
+import { toExchangeRateQuery, unwrap } from "./read";
 
 // Reference data every signed-in role needs to fill a form (currencies, methods, technologies, tags…).
 // Managing it is a different matter: that goes through the `settings` actions (Owner and Admin).
 
-export async function getRateFor(input: GetRateForInput) {
-  return catalogs.getRateFor(await getServiceContext(), getRateForInputSchema.parse(input));
+/** The lookup behind `lookupRateAction`: `null` when no rate exists on or before the date. */
+export async function getRateFor(input: GetRateForInput): Promise<SelectedRate | null> {
+  const { date, currency } = getRateForInputSchema.parse(input);
+  const api = await getServerApi();
+  const { rate } = unwrap(
+    await api.GET("/api/v1/exchange-rates/lookup", { params: { query: { date, currency } } }),
+  );
+  return rate;
 }
 
 /** `includeInactive` goes out only when set: pickers get the active rows (the BE default). */
@@ -237,14 +243,13 @@ export async function getQuickLoadContext(): Promise<{
   today: string;
   currencies: QuickLoadCurrency[];
 }> {
-  const ctx = await getServiceContext();
-  const today = todayInCaracas(ctx.now);
-  const currencies = await catalogs.listCurrencies(ctx, currencyListInputSchema.parse({}));
+  const today = todayInCaracas(new Date());
+  const currencies = await listCurrencies();
   const rows = await Promise.all(
     currencies
       .filter((currency) => currency.code !== "USD")
       .map(async (currency) => {
-        const rate = await catalogs.getRateFor(ctx, { date: today, currency: currency.code });
+        const rate = await getRateFor({ date: today, currency: currency.code });
         return {
           code: currency.code,
           name: currency.name,
@@ -256,9 +261,12 @@ export async function getQuickLoadContext(): Promise<{
 }
 
 /** Settings → Tasas table: one page of stored rates, newest date first. */
-export async function listExchangeRates(input: ExchangeRateFilterInput = {}) {
-  return catalogs.listExchangeRates(
-    await getServiceContext(),
-    exchangeRateFiltersSchema.parse(input),
+export async function listExchangeRates(
+  input: ExchangeRateFilterInput = {},
+): Promise<Paginated<ExchangeRateDTO>> {
+  const filter = exchangeRateFiltersSchema.parse(input);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/exchange-rates", { params: { query: toExchangeRateQuery(filter) } }),
   );
 }

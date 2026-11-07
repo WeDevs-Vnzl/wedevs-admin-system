@@ -123,3 +123,22 @@ export function mergeImportErrors(
   });
   return [...parseErrors, ...mapped].sort((a, b) => a.row - b.row);
 }
+
+/**
+ * A 422 may name the rejected rows as `rows.<i>.<field>` (0-based index into the rows sent). They become
+ * 1-based positions, the shape `mergeImportErrors` maps back to CSV rows.
+ */
+export function rowErrorsFromFieldErrors(
+  fieldErrors: Record<string, string[]> | undefined,
+): RowError[] {
+  const byRow = new Map<number, string[]>();
+  for (const [path, messages] of Object.entries(fieldErrors ?? {})) {
+    const match = /^rows\.(\d+)\./.exec(path);
+    if (!match) continue;
+    const row = Number(match[1]) + 1;
+    byRow.set(row, [...(byRow.get(row) ?? []), ...messages]);
+  }
+  return [...byRow.entries()]
+    .map(([row, messages]) => ({ row, messages }))
+    .sort((a, b) => a.row - b.row);
+}

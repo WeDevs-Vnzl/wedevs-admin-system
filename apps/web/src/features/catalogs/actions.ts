@@ -1,12 +1,14 @@
 "use server";
 
 import { apiAction } from "@/lib/api/action";
+import type { RateLookupResult } from "@/components/ui/rate-input";
+import type { ApiResponseLike } from "@/lib/api/errors";
 import {
-  exchangeRateFiltersSchema,
-  getRateForInputSchema,
-  importRatesCsvInputSchema,
-  quickRateLoadInputSchema,
-  upsertExchangeRateInputSchema,
+  type ExchangeRateFilters,
+  type GetRateForInput,
+  type ImportRatesCsvInput,
+  type QuickRateLoadInput,
+  type UpsertExchangeRateInput,
   createCurrencyInputSchema,
   createExpenseCategoryInputSchema,
   createPaymentMethodInputSchema,
@@ -16,18 +18,20 @@ import {
 } from "@/lib/validators/catalogs";
 import type { updateFiscalSettingsInputSchema } from "@/lib/validators/settings";
 import type { z } from "@/lib/validators/zod";
-import * as catalogs from "@/mocks/services/catalogs";
-import { defineAction } from "@/server/actions/define-action";
+import { toExchangeRateQuery } from "./read";
 
 /**
  * Read action behind `RateInput` (DT-67): the rate to prefill for a currency on a date, with every usable
- * rate of the effective date as `options`. `SelectedRate | null`: `null` means the user types the rate.
- * Exchange rates are reference data, so any signed-in role may ask.
+ * rate of the effective date as `options`. `RateLookupResult | null`: `null` means the user types the rate.
+ * Exchange rates are reference data, so any signed-in role may ask (DT-132). FROZEN signature.
  */
-export const lookupRateAction = defineAction({
-  permission: "authenticated",
-  input: getRateForInputSchema,
-  handler: (ctx, data) => catalogs.getRateFor(ctx, data),
+export const lookupRateAction = apiAction({
+  call: async (input: GetRateForInput, api): Promise<ApiResponseLike<RateLookupResult | null>> => {
+    const { data, error, response } = await api.GET("/api/v1/exchange-rates/lookup", {
+      params: { query: { date: input.date, currency: input.currency } },
+    });
+    return { data: data ? (data.rate ?? null) : undefined, error, response };
+  },
 });
 
 // ───────────────────────────── Settings writes (Owner and Admin, `settings` row) ─────────────────────────────
@@ -62,33 +66,29 @@ export const updateCurrencyAction = apiAction({
 });
 
 /** Settings → Tasas table: the rows of one page (the table refreshes through it on a query change). */
-export const listExchangeRatesAction = defineAction({
-  permission: { action: "read", resource: "settings" },
-  input: exchangeRateFiltersSchema,
-  handler: (ctx, data) => catalogs.listExchangeRates(ctx, data),
+export const listExchangeRatesAction = apiAction({
+  call: (input: Partial<ExchangeRateFilters>, api) =>
+    api.GET("/api/v1/exchange-rates", { params: { query: toExchangeRateQuery(input) } }),
 });
 
-export const upsertExchangeRateAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: upsertExchangeRateInputSchema,
+export const upsertExchangeRateAction = apiAction({
+  call: (input: UpsertExchangeRateInput, api) =>
+    api.POST("/api/v1/exchange-rates", { body: input }),
   revalidate: [PATHS.rates],
-  handler: (ctx, data) => catalogs.upsertExchangeRate(ctx, data),
 });
 
 /** Quick daily load (PRD §8.15): several currencies for one date and source. */
-export const loadDailyRatesAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: quickRateLoadInputSchema,
+export const loadDailyRatesAction = apiAction({
+  call: (input: QuickRateLoadInput, api) =>
+    api.POST("/api/v1/exchange-rates/daily", { body: input }),
   revalidate: [PATHS.rates],
-  handler: (ctx, data) => catalogs.loadDailyRates(ctx, data),
 });
 
 /** CSV import: the client parses the file (`rates-csv.ts`) and sends the valid rows. */
-export const importRatesCsvAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: importRatesCsvInputSchema,
+export const importRatesCsvAction = apiAction({
+  call: (input: ImportRatesCsvInput, api) =>
+    api.POST("/api/v1/exchange-rates/import", { body: input }),
   revalidate: [PATHS.rates],
-  handler: (ctx, data) => catalogs.importRatesCsv(ctx, data),
 });
 
 /** Fiscal rates and amounts stay decimal strings (C15); the BE keeps no per-method IGTF code list. */
