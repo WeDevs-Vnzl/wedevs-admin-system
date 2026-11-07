@@ -1,50 +1,56 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const mocks = vi.hoisted(() => ({ auth: vi.fn(), getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@clerk/nextjs/server", () => ({ auth: mocks.auth }));
+vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
+// next/navigation is not reached by these queries; the session module imports it, so it is stubbed.
+vi.mock("next/navigation", () => ({ redirect: () => undefined }));
 
-import { makeSessionUser } from "@/mocks/test-helpers";
-import { markAlertsRead } from "@/mocks/services/alerts";
-import { getMockStore } from "@/mocks/store";
-import { createMockContext } from "@/mocks/ctx";
 import { countUnreadAlerts, listAlerts } from "./queries";
 
+const inbox = {
+  total: 3,
+  unread: 2,
+  byType: { DOCUMENT_EXPIRED: 2, MISSING_RATE: 1 },
+  readKeys: ["DOCUMENT_EXPIRED:doc_a"],
+  items: [],
+} as const;
+
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
+  mocks.auth.mockReset();
+  mocks.getServerApi.mockReset();
+  mocks.auth.mockResolvedValue({ userId: "user_clerk", getToken: async () => "clerk-token" });
 });
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
-});
-
-describe("listAlerts query", () => {
-  it("applies the input defaults and reads as the session user", async () => {
-    const summary = await listAlerts();
-    expect(summary.total).toBeGreaterThan(0);
-    expect(summary.items.length).toBeLessThanOrEqual(50);
+describe("listAlerts query (GET /api/v1/alerts)", () => {
+  it("returns the inbox of the BE unchanged", async () => {
+    const api = mockApi({ "GET /api/v1/alerts": { body: inbox } });
+    mocks.getServerApi.mockResolvedValue(api.api);
+    expect(await listAlerts()).toEqual(inbox);
   });
 
-  it("narrows by type", async () => {
-    const summary = await listAlerts({ types: ["DOCUMENT_EXPIRED"] });
-    expect(summary.items.every((item) => item.type === "DOCUMENT_EXPIRED")).toBe(true);
+  it("sends the type narrowing and the limit", async () => {
+    const api = mockApi({ "GET /api/v1/alerts": { body: inbox } });
+    mocks.getServerApi.mockResolvedValue(api.api);
+    await listAlerts({ types: ["DOCUMENT_EXPIRED"], limit: 5 });
+    expect(api.calls[0]?.search.getAll("types")).toEqual(["DOCUMENT_EXPIRED"]);
+    expect(api.calls[0]?.search.get("limit")).toBe("5");
   });
 
-  it("throws UNAUTHENTICATED without a session", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
+  it("throws UNAUTHENTICATED on a 401", async () => {
+    const api = mockApi({ "GET /api/v1/alerts": errorEnvelope("UNAUTHENTICATED") });
+    mocks.getServerApi.mockResolvedValue(api.api);
     await expect(listAlerts()).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
   });
+});
 
-  it("countUnreadAlerts is the bell counter: active alerts minus the ones the user read", async () => {
-    const summary = await listAlerts();
-    expect(await countUnreadAlerts()).toBe(summary.total);
-
-    const user = makeSessionUser("OWNER");
-    const first = summary.items[0]!.alertKey;
-    await markAlertsRead(createMockContext({ user, now: new Date(), db: getMockStore() }), {
-      alertKeys: [first],
-    });
-    expect(await countUnreadAlerts()).toBe(summary.total - 1);
+describe("countUnreadAlerts (the bell counter)", () => {
+  it("is the unread counter of the BE, asked with the smallest page", async () => {
+    const api = mockApi({ "GET /api/v1/alerts": { body: inbox } });
+    mocks.getServerApi.mockResolvedValue(api.api);
+    expect(await countUnreadAlerts()).toBe(2);
+    expect(api.calls[0]?.search.get("limit")).toBe("1");
   });
 });
