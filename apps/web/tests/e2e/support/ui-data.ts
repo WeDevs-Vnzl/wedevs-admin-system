@@ -64,9 +64,8 @@ export async function createProjectViaUi(
 ): Promise<string> {
   await openPage(page, "/projects/new");
   await page.getByLabel("Nombre", { exact: true }).fill(options.name);
-  if (options.summary) {
-    await page.getByLabel("Resumen", { exact: true }).fill(options.summary);
-  }
+  // The summary is required (PRD §8.3, at most 280 characters): a blank one keeps the form from saving.
+  await page.getByLabel("Resumen", { exact: true }).fill(options.summary ?? "Resumen E2E");
 
   const clients = page.getByRole("combobox", { name: "Clientes", exact: true });
   for (const link of options.clients) {
@@ -94,14 +93,25 @@ export function caracasToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Caracas" }).format(now);
 }
 
+/** The calendar's month buttons (react-day-picker labels, Spanish and English). */
+const PREVIOUS_MONTH = /^(Ir al mes anterior|Go to the Previous Month)$/;
+const NEXT_MONTH = /^(Ir al mes siguiente|Go to the Next Month)$/;
+
 /**
  * Picks a day in a `DateField` (a button that opens a calendar popover, not a text input, so `fill` does not work).
- * The calendar opens on the month of the selected day, or of today, so `isoDate` must be in that month. Every
- * calendar cell carries its day as `data-day="YYYY-MM-DD"`.
+ * The calendar opens on the month of the selected day, or of today: when `isoDate` is in another month, the helper
+ * steps the calendar there with its month buttons. Every calendar cell carries its day as `data-day="YYYY-MM-DD"`.
  */
 export async function pickDateViaUi(page: Page, trigger: Locator, isoDate: string): Promise<void> {
   await trigger.click();
-  await page.locator(`[role="gridcell"][data-day="${isoDate}"] button`).click();
+  const day = page.locator(`[role="gridcell"][data-day="${isoDate}"] button`);
+  for (let step = 0; step < 24 && (await day.count()) === 0; step += 1) {
+    // A day in the middle of the grid always belongs to the shown month: its month tells the direction to step.
+    const shown = await page.locator('[role="gridcell"][data-day]').nth(21).getAttribute("data-day");
+    const forward = shown !== null && shown.slice(0, 7) < isoDate.slice(0, 7);
+    await page.getByRole("button", { name: forward ? NEXT_MONTH : PREVIOUS_MONTH }).click();
+  }
+  await day.click();
 }
 
 /**

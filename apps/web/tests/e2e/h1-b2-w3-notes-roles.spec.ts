@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { appBaseUrl } from "./support/app";
 import { signInAs } from "./support/auth";
+import { restorePreferences, switchLocaleViaTopbar } from "./support/preferences";
 import { createNoteViaUi } from "./support/ui-data";
 
 // Wave 3 E2E, notes, roles, navigation, accessibility and responsive (H1-B2, docs/TASK.md "Tester scope"), kept by
@@ -12,13 +13,6 @@ import { createNoteViaUi } from "./support/ui-data";
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const RAW_KEY = /^[a-z]+(\.[A-Za-z0-9]+)+$/;
-
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-/** Matches one of the labels exactly, in any of the given locales. */
-function oneOf(...labels: string[]): RegExp {
-  return new RegExp(`^(${labels.map(escapeRegExp).join("|")})$`);
-}
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
@@ -449,18 +443,15 @@ test.describe("locale on a detail page (mutates the locale preference)", () => {
     const before = await page.locator("main").innerText();
 
     try {
-      await page.getByRole("button", { name: "Idioma", exact: true }).click();
-      await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
+      await switchLocaleViaTopbar(page, "Idioma", "English");
       await expect(page.getByRole("button", { name: /^Search\b/ })).toBeVisible();
 
       const after = await page.locator("main").innerText();
       // Dates and money are rendered per locale (HU-30 CA1): the same record reads differently in EN.
       expect(after).not.toBe(before);
     } finally {
-      // The locale is the user's preference: switch back to Spanish for the next run. The page is in English here.
-      await open(page, projectPath);
-      await page.getByRole("button", { name: oneOf("Idioma", "Language") }).click();
-      await page.getByRole("menuitemradio", { name: "Español", exact: true }).click();
+      // The locale is the user's preference: restore Español, Claro and America/Caracas for the next spec.
+      await restorePreferences(page);
     }
   });
 });

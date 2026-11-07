@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import { restorePreferences, switchLocaleViaTopbar } from "./support/preferences";
 import { loadRateViaUi } from "./support/ui-data";
 
 // Wave 5 shell E2E (H1-B1, docs/TASK.md "Tester scope"), FE-INT-R E.3. Runs against PLAYWRIGHT_BASE_URL with the local
@@ -15,18 +16,6 @@ const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const mainNav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
 const commandMenu = (page: Page) => page.getByRole("dialog", { name: "Menú de comandos" });
-
-/** Restores the Owner's preferences (Español, Claro, America/Caracas) through the preferences form. */
-async function restorePreferences(page: Page) {
-  await page.goto("/settings/preferences");
-  await page.waitForLoadState("networkidle"); // the form submits only after hydration
-  await page.getByRole("radio", { name: "Español", exact: true }).click();
-  await page.getByRole("radio", { name: "Claro", exact: true }).click();
-  await page.getByRole("combobox", { name: /Zona horaria|Time zone/ }).click();
-  await page.getByRole("option", { name: "America/Caracas", exact: true }).click();
-  await page.getByRole("button", { name: /^(Guardar cambios|Save changes)$/ }).click();
-  await expect(page.getByText(/^(Preferencias guardadas|Preferences saved)$/)).toBeVisible();
-}
 
 test.describe("sign-in page (no session)", () => {
   test("@unauthenticated /sign-in renders outside the shell with no counters and offers Google sign-in", async ({
@@ -169,8 +158,7 @@ test.describe("locale and theme (mutate the Owner's preferences)", () => {
     await expect(page.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /Tasa BCV/ })).toContainText(RATE_ES);
 
-    await page.getByRole("button", { name: "Idioma", exact: true }).click();
-    await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
+    await switchLocaleViaTopbar(page, "Idioma", "English");
 
     await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
@@ -181,8 +169,7 @@ test.describe("locale and theme (mutate the Owner's preferences)", () => {
     ).toBeVisible();
     await expect(page.getByRole("link", { name: /BCV rate/ })).toContainText(RATE_EN);
 
-    await page.getByRole("button", { name: "Language", exact: true }).click();
-    await page.getByRole("menuitemradio", { name: "Español", exact: true }).click();
+    await switchLocaleViaTopbar(page, "Language", "Español");
     await expect(page.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /Tasa BCV/ })).toContainText(RATE_ES);
   });
