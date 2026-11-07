@@ -4,33 +4,30 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { MoneyText } from "@/components/patterns/money-text";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { PaymentDetailDTO } from "@/lib/validators/payments";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
-import { PaymentAllocationsTable } from "@/features/payments/components/payment-allocations-table";
+import { PaymentAllocationsPanel } from "@/features/payments/components/payment-allocations-panel";
 import { PaymentDetailHeader } from "@/features/payments/components/payment-detail-header";
 import { PaymentReceipt } from "@/features/payments/components/payment-receipt";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getPayment } from "@/features/payments/queries";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
+import {
+  notFoundWhenRefused,
+  orNullWhenMissing,
+  orNullWhenUnavailable,
+} from "@/features/payments/refusal";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type PaymentDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readPayment(id: string): Promise<PaymentDetailDTO | null> {
-  try {
-    return await getPayment(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// An unknown id is `null`; a `FORBIDDEN` from the BE is the same not-found page (C13).
+const readPayment = (id: string) => orNullWhenMissing(() => getPayment(id));
 
 export async function generateMetadata({ params }: PaymentDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const t = await getTranslations("payments.page");
-  const payment = await readPayment(id);
+  const payment = await orNullWhenUnavailable(() => getPayment(id));
   return { title: payment ? payment.code : t("detailTitle") };
 }
 
@@ -41,8 +38,7 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
   const user = await requireSessionUser();
   const permissions = paymentScreenPermissions(user);
   if (!permissions.canRead) notFound();
-  const payment = await readPayment(id);
-  if (!payment) notFound();
+  const payment = await notFoundWhenRefused(async () => (await readPayment(id)) ?? notFound());
 
   const [t, tPayments, locale] = await Promise.all([
     getTranslations("payments.detail"),
@@ -54,6 +50,7 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment={payment.id} label={payment.code} />
       <PaymentDetailHeader
+        canUpdate={permissions.canUpdate}
         payment={{
           id: payment.id,
           code: payment.code,
@@ -126,15 +123,7 @@ export default async function PaymentDetailPage({ params }: PaymentDetailPagePro
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("allocationsTitle")}</CardTitle>
-          <CardDescription>{t("allocationsDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PaymentAllocationsTable rows={payment.allocations} currency={payment.currency} />
-        </CardContent>
-      </Card>
+      <PaymentAllocationsPanel payment={payment} canUpdate={permissions.canUpdate} />
 
       <PaymentReceipt receipt={payment.receipt} />
     </div>

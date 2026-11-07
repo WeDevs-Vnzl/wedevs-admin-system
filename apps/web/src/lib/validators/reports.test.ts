@@ -14,7 +14,6 @@ import {
   reportIdSchema,
   reportResultSchema,
   taxesRegisteredReportSchema,
-  type ReportsService,
 } from "./reports";
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -260,12 +259,5 @@ describe("KPI result", () => {
     expect(
       kpiResultDtoSchema.safeParse({ ...kpi, sparkline: Array(13).fill(kpi.sparkline[0]) }).success,
     ).toBe(false);
-  });
-});
-
-describe("ReportsService (A1)", () => {
-  it("declares getReport and getKpi", () => {
-    const names = ["getReport", "getKpi"] as const satisfies readonly (keyof ReportsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

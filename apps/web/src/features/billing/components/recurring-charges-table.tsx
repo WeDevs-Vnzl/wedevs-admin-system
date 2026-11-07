@@ -80,11 +80,23 @@ export function RecurringChargesTable({
     );
   }
 
+  // The periods are the BE's: a resume never back-fills, so this lists exactly what it created.
   function generate(charge: RecurringChargeDTO) {
-    run(
-      () => generateMissingPeriodsAction({ recurringChargeId: charge.id }),
-      () => toast.success(t("toast.generated")),
-    );
+    startTransition(async () => {
+      const result = await generateMissingPeriodsAction({ recurringChargeId: charge.id });
+      if (!result.ok) {
+        toast.error(tRoot(result.error.message as never));
+        return;
+      }
+      if (result.data.created === 0) {
+        toast.success(t("toast.nothingToGenerate"));
+      } else {
+        toast.success(t("toast.generated", { count: result.data.created }), {
+          description: result.data.periodStarts.map((date) => formatDate(date, locale)).join(", "),
+        });
+      }
+      router.refresh();
+    });
   }
 
   const columns: DataTableColumnDef<RecurringChargeDTO>[] = [

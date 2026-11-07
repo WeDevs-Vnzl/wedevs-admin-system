@@ -1,36 +1,66 @@
 import "server-only";
+import { toActionResult, type ApiResponseLike } from "@/lib/api/errors";
+import { getServerApi } from "@/lib/api/server";
 import { idSchema } from "@/lib/validators/common";
-import { expenseFiltersSchema, type ExpenseFiltersInput } from "@/lib/validators/expenses";
-import * as expenses from "@/mocks/services/expenses";
-import { can } from "@/server/auth/permissions";
-import { getServiceContext, ServiceError } from "@/server/context";
+import {
+  expenseFiltersSchema,
+  recurringExpenseFiltersSchema,
+  type ExpenseFiltersInput,
+  type RecurringExpenseFiltersInput,
+} from "@/lib/validators/expenses";
+import { ServiceError } from "@/lib/service-error";
+import { toExpenseListQuery, toRecurringExpenseListQuery } from "./api-query";
 
-// Reads for the expense pages (RSC, PRD §8.8). The `read` grant on `expense` (Owner and Admin) is checked before the
-// service runs; a missing expense is a `NOT_FOUND` that the page turns into `notFound()`.
+// Reads for the expense pages (RSC, PRD §8.8) over the generated client. A refused read throws `ServiceError` with
+// the BE's code (`404` → NOT_FOUND, `403` → FORBIDDEN, `422` → VALIDATION), the contract the pages catch.
 
-async function readContext() {
-  const ctx = await getServiceContext();
-  if (!can(ctx.user, "read", "expense")) throw new ServiceError("FORBIDDEN");
-  return ctx;
+/** Unwraps a read or throws the BE's code as a `ServiceError`. */
+function unwrap<T>(response: ApiResponseLike<T>): T {
+  const result = toActionResult(response);
+  if (result.ok) return result.data;
+  throw new ServiceError(result.error.code, {
+    message: result.error.message,
+    ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),
+  });
 }
 
+/** `GET /api/v1/expenses/overview` (DT-175): `FORBIDDEN` without the expense read grant. */
 export async function getExpensesOverview() {
-  return expenses.getExpensesOverview(await readContext());
+  const api = await getServerApi();
+  return unwrap(await api.GET("/api/v1/expenses/overview"));
 }
 
 /** The table's first page: the URL query parsed with the same filter schema as `listExpensesAction`. */
 export async function listExpenses(input: ExpenseFiltersInput = {}) {
-  return expenses.listExpenses(await readContext(), expenseFiltersSchema.parse(input));
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/expenses", {
+      params: { query: toExpenseListQuery(expenseFiltersSchema.parse(input)) },
+    }),
+  );
 }
 
 export async function getExpense(id: string) {
-  return expenses.getExpense(await readContext(), idSchema.parse(id));
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/expenses/{id}", { params: { path: { id: idSchema.parse(id) } } }),
+  );
 }
 
-export async function listRecurringExpenses(input: { q?: string; pageSize?: 25 | 50 | 100 } = {}) {
-  return expenses.listRecurringExpenses(await readContext(), input);
+export async function listRecurringExpenses(input: RecurringExpenseFiltersInput = {}) {
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/recurring-expenses", {
+      params: { query: toRecurringExpenseListQuery(recurringExpenseFiltersSchema.parse(input)) },
+    }),
+  );
 }
 
 export async function getRecurringExpense(id: string) {
-  return expenses.getRecurringExpense(await readContext(), idSchema.parse(id));
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/recurring-expenses/{id}", {
+      params: { path: { id: idSchema.parse(id) } },
+    }),
+  );
 }

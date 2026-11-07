@@ -8,10 +8,12 @@
     "company": "Company",
     "users": "Users",
     "preferences": "Preferences",
+    "apiTokens": "API tokens",
     "currencies": "Currencies",
     "rates": "Exchange rates",
     "fiscal": "Tax",
     "paymentMethods": "Payment methods",
+    "integrations": "Integrations",
     "technologies": "Technologies",
     "documentTypes": "Documents",
     "expenseCategories": "Expense categories",
@@ -146,6 +148,38 @@
     "errors": {
       "emailTaken": "This e-mail already has a user or a pending invitation",
       "lastOwner": "The last Owner cannot be demoted"
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "description": "Choose where the money that arrives through Stripe and Binance is recorded. Leave a provider unmapped to ignore it.",
+    "none": "Not mapped",
+    "noneHint": "This provider will not post any money.",
+    "stripe": {
+      "title": "Stripe",
+      "description": "The account and payment method that Stripe payments are recorded against.",
+      "account": "Target account",
+      "method": "Payment method",
+      "accountPlaceholder": "Select an account",
+      "methodPlaceholder": "Select a payment method",
+      "methodHint": "Create the Stripe payment method in the catalog first.",
+      "currency": "Currency: {currency}"
+    },
+    "binance": {
+      "title": "Binance",
+      "description": "The crypto wallet account that mirrors the Binance balance.",
+      "account": "Wallet account",
+      "accountPlaceholder": "Select a wallet account",
+      "noWallets": "There are no crypto wallet accounts yet. Create one in Accounts first."
+    },
+    "accountOption": "{name} ({currency})",
+    "save": "Save mapping",
+    "saving": "Saving…",
+    "saved": "Mapping saved",
+    "errors": {
+      "stripeIncomplete": "Choose both the account and the payment method, or leave Stripe unmapped.",
+      "forbidden": "You do not have permission to change the integrations.",
+      "walletRequired": "Choose a crypto wallet account."
     }
   }
 }

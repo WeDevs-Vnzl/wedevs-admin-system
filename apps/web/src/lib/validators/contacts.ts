@@ -1,5 +1,5 @@
 import { z } from "./zod";
-import { VALIDATION_MESSAGES, idSchema, listQuerySchema, type Paginated } from "./common";
+import { VALIDATION_MESSAGES, idSchema, listQuerySchema } from "./common";
 import {
   optionalEmailSchema,
   optionalText,
@@ -9,7 +9,6 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import type { ArchivedRecordDTO } from "./trash";
 
 /**
  * Contacts (PRD §8.2 "Contacto"): people of a client, managed in the client's Contactos tab (no global
@@ -120,22 +119,3 @@ export const contactDetailSchema = z.object({
   updatedAt: timestampSchema,
   archivedAt: timestampSchema.nullable(),
 });
-export type ContactDetailDTO = z.infer<typeof contactDetailSchema>;
-
-/** Row of the client's Contactos tab. */
-export const contactListRowSchema = contactDetailSchema;
-export type ContactListRowDTO = z.infer<typeof contactListRowSchema>;
-
-// ───────────────────────────── Services (PRD §12 `contacts`) ─────────────────────────────
-
-/**
- * `contacts` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `listContacts` is the
- * read counterpart that PRD §12 leaves implicit.
- */
-export type ContactsService<Ctx = unknown> = {
-  createContact: (ctx: Ctx, input: CreateContactInput) => Promise<ContactDetailDTO>;
-  updateContact: (ctx: Ctx, input: UpdateContactInput) => Promise<ContactDetailDTO>;
-  setPrimaryContact: (ctx: Ctx, input: SetPrimaryContactInput) => Promise<ContactDetailDTO>;
-  archiveContact: (ctx: Ctx, input: ArchiveContactInput) => Promise<ArchivedRecordDTO>;
-  listContacts: (ctx: Ctx, input: ContactFilter) => Promise<Paginated<ContactListRowDTO>>;
-};

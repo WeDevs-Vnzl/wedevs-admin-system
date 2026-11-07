@@ -15,7 +15,8 @@ const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 
 vi.mock("@/features/projects/actions", () => actions);
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() } }));
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), warning: vi.fn() }));
+vi.mock("sonner", () => ({ toast }));
 
 const messages = {
   common: enCommon,
@@ -41,7 +42,13 @@ beforeEach(() => {
   actions.setProjectStatusAction.mockResolvedValue({ ok: true, data: { project: {}, hints: [] } });
   router.push.mockReset();
   router.refresh.mockReset();
+  toast.error.mockReset();
 });
+
+const CONFLICT = {
+  ok: false,
+  error: { code: "CONFLICT", message: "common.errors.CONFLICT" },
+};
 
 function renderTransition(
   status: "PROPUESTA" | "EN_CURSO",
@@ -115,6 +122,34 @@ describe("ProjectTransitionDialog (HU-08)", () => {
     await user.click(screen.getByRole("button", { name: "Change status" }));
     expect(onRequestCancel).toHaveBeenCalledTimes(1);
     expect(actions.setProjectStatusAction).not.toHaveBeenCalled();
+  });
+});
+
+describe("status change CONFLICT without an entity (DT-177)", () => {
+  it("shows the generic message and does not refresh when the transition conflicts", async () => {
+    const user = userEvent.setup();
+    actions.setProjectStatusAction.mockResolvedValue(CONFLICT);
+    renderTransition("EN_CURSO", vi.fn(), "2026-07-01");
+    await pickTarget(user, "Paused");
+    await user.click(screen.getByRole("button", { name: "Change status" }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(enCommon.errors.CONFLICT));
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it("does the same for the cancellation", async () => {
+    const user = userEvent.setup();
+    actions.setProjectStatusAction.mockResolvedValue(CONFLICT);
+    render(
+      <NextIntlClientProvider locale="en" messages={messages} timeZone="America/Caracas">
+        <ProjectCancelDialog open onOpenChange={vi.fn()} projectId="pry_kairos_web" />
+      </NextIntlClientProvider>,
+    );
+    const dialog = screen.getByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: enPatterns.confirm.variants.cancel.action }),
+    );
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(enCommon.errors.CONFLICT));
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 });
 

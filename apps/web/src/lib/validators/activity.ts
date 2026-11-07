@@ -1,11 +1,5 @@
 import { z } from "./zod";
-import {
-  VALIDATION_MESSAGES,
-  dateOnlySchema,
-  idSchema,
-  listQuerySchema,
-  type Paginated,
-} from "./common";
+import { VALIDATION_MESSAGES, dateOnlySchema, idSchema, listQuerySchema } from "./common";
 import { activityActionSchema, actorTypeSchema, entityTypeSchema } from "./enums";
 import { facetOf, timestampSchema, withSortFields } from "./tags";
 
@@ -143,17 +137,3 @@ export type ActivityEntryDTO = z.infer<typeof activityEntrySchema>;
 /** Row of the activity table / timeline item; the entry itself. */
 export const activityListRowSchema = activityEntrySchema;
 export type ActivityListRowDTO = z.infer<typeof activityListRowSchema>;
-
-// ───────────────────────────── Services (PRD §12 `activity`) ─────────────────────────────
-
-/**
- * Activity services. `listActivity` is `fn(ctx, input)` like every service and the only one reachable
- * from the UI (Owner/Admin). `logActivity` is internal and has **one** signature, `(tx, input)` (C8,
- * C12): it runs on the transaction client of the mutation that caused the event, so the entry commits
- * or rolls back with it; it takes no service context and returns nothing the UI uses. There is no
- * update or delete (C20). CSV export of the log goes through the `export` module (`exportCsv`).
- */
-export type ActivityService<Ctx = unknown, Tx = unknown> = {
-  logActivity: (tx: Tx, input: LogActivityInput) => Promise<ActivityEntryDTO>;
-  listActivity: (ctx: Ctx, input: ActivityFilter) => Promise<Paginated<ActivityListRowDTO>>;
-};

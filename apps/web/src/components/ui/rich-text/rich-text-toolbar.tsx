@@ -9,6 +9,7 @@ import {
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  ImageIcon,
   ItalicIcon,
   LinkIcon,
   ListChecksIcon,
@@ -166,8 +167,18 @@ function LinkControl({ editor, disabled }: { editor: Editor; disabled: boolean }
 }
 
 /** Formatting toolbar of `RichTextEditor`: registry toggle / button-group / separator / tooltip inside the Radix Toolbar (roving focus: one tab stop, arrows move), i18n labels. */
-export function RichTextToolbar({ editor, disabled = false }: { editor: Editor; disabled?: boolean }) {
+export function RichTextToolbar({
+  editor,
+  disabled = false,
+  onPickImage,
+}: {
+  editor: Editor;
+  disabled?: boolean;
+  /** Opens the image picker; the button is not rendered without it (images disabled or no upload adapter). */
+  onPickImage?: () => void;
+}) {
   const t = useTranslations("forms.richText.toolbar");
+  const tUploader = useTranslations("forms.uploader");
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -224,6 +235,9 @@ export function RichTextToolbar({ editor, disabled = false }: { editor: Editor; 
         <Separator orientation="vertical" className="mx-1 h-5" />
         <ButtonGroup>
           <LinkControl editor={editor} disabled={disabled} />
+          {onPickImage ? (
+            <ActionButton label={tUploader("browse")} icon={ImageIcon} disabled={disabled} onClick={onPickImage} />
+          ) : null}
           <ActionButton label={t("unlink")} icon={UnlinkIcon} disabled={disabled || !state.link} onClick={() => run().unsetLink().run()} />
         </ButtonGroup>
         <Separator orientation="vertical" className="mx-1 h-5" />

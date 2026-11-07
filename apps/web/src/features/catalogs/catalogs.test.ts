@@ -1,15 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const server = vi.hoisted(() => ({ api: null as unknown }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
-import { getMockStore } from "@/mocks/store";
-import { makeSessionUser } from "@/mocks/test-helpers";
-import { lookupRateAction } from "./actions";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import {
   getFiscalSettings,
-  getRateFor,
   listCurrencies,
   listDocumentCategories,
   listDocumentTypes,
@@ -18,134 +15,127 @@ import {
   listTags,
   listTechnologies,
 } from "./queries";
+import { CatalogReadError } from "./read";
+
+function useApi(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.api = mocked.api;
+  return mocked;
+}
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date("2026-10-09T15:00:00.000Z"));
+  server.api = null;
 });
 
-afterEach(() => {
-  vi.useRealTimers();
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
-});
+const usd = { code: "USD", name: "US Dollar", symbol: "$", decimals: 2, active: true };
 
-describe("lookupRateAction", () => {
-  it("returns the SelectedRate the RateInput consumes (DT-67), not the DTO schema", async () => {
-    const result = await lookupRateAction({ date: "2026-10-09", currency: "VES" });
-    expect(result.ok).toBe(true);
-    if (!result.ok || result.data === null) throw new Error("expected a rate");
-    expect(Object.keys(result.data).sort()).toEqual([
-      "effectiveDate",
-      "isFallback",
-      "options",
-      "source",
-      "usdRate",
-    ]);
-    expect(result.data).toMatchObject({
-      source: "BCV",
-      isFallback: false,
-      effectiveDate: "2026-10-09",
-    });
-    expect(result.data.options.map((o) => o.source)).toEqual(["BCV", "OTRA"]);
+describe("catalog list reads", () => {
+  it("lists the active currencies by default and every row with includeInactive", async () => {
+    const { calls } = useApi({ "GET /api/v1/currencies": { body: [usd] } });
+    expect(await listCurrencies()).toEqual([usd]);
+    await listCurrencies({ includeInactive: true });
+    expect(calls[0]?.search.has("includeInactive")).toBe(false);
+    expect(calls[1]?.search.get("includeInactive")).toBe("true");
   });
 
-  it("returns the fallback flag for the missing business day", async () => {
-    expect(await lookupRateAction({ date: "2026-10-02", currency: "VES" })).toMatchObject({
-      ok: true,
-      data: { isFallback: true, effectiveDate: "2026-10-01" },
-    });
+  it("lists payment methods", async () => {
+    const method = {
+      id: "pm1",
+      code: "ZELLE",
+      name: "Zelle",
+      nameEn: null,
+      requiresReference: true,
+      suggestsIgtf: true,
+      active: true,
+    };
+    const { calls } = useApi({ "GET /api/v1/payment-methods": { body: [method] } });
+    expect(await listPaymentMethods({ includeInactive: true })).toEqual([method]);
+    expect(calls[0]?.search.get("includeInactive")).toBe("true");
   });
 
-  it("returns ok with null when there is no rate: the user types it", async () => {
-    expect(await lookupRateAction({ date: "2020-01-01", currency: "VES" })).toEqual({
-      ok: true,
-      data: null,
-    });
+  it("lists the expense category tree", async () => {
+    const root = {
+      id: "c1",
+      name: "Hosting",
+      nameEn: null,
+      color: null,
+      parentId: null,
+      active: true,
+      children: [],
+    };
+    useApi({ "GET /api/v1/expense-categories": { body: [root] } });
+    expect(await listExpenseCategories()).toEqual([root]);
   });
 
-  it("is reference data: every signed-in role may ask", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
-    expect(await lookupRateAction({ date: "2026-10-09", currency: "EUR" })).toMatchObject({
-      ok: true,
-    });
-  });
-
-  it("requires a session and a valid input", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect(await lookupRateAction({ date: "2026-10-09", currency: "VES" })).toMatchObject({
-      ok: false,
-      error: { code: "UNAUTHENTICATED" },
-    });
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-    expect(await lookupRateAction({ date: "2026-13-40", currency: "ves" })).toMatchObject({
-      ok: false,
-      error: {
-        code: "VALIDATION",
-        fieldErrors: {
-          date: ["validation.date.invalid"],
-          currency: ["validation.currency.invalid"],
+  it("returns the fiscal parameters with decimal strings and no method codes (the BE has none)", async () => {
+    useApi({
+      "GET /api/v1/settings/fiscal": {
+        body: {
+          ivaRates: ["16", "8", "0"],
+          ivaDefaultRate: "16",
+          igtfRate: "3",
+          igtfCurrencies: ["USD"],
+          invoiceDefaultDueDays: 15,
         },
       },
     });
+    expect(await getFiscalSettings()).toEqual({
+      ivaRates: ["16", "8", "0"],
+      ivaDefaultRate: "16",
+      igtfRate: "3",
+      igtfCurrencies: ["USD"],
+      igtfMethodCodes: [],
+      invoiceDefaultDueDays: 15,
+    });
+  });
+
+  it("throws the mapped error when the read fails", async () => {
+    useApi({ "GET /api/v1/currencies": errorEnvelope("FORBIDDEN") });
+    await expect(listCurrencies()).rejects.toBeInstanceOf(CatalogReadError);
+    await expect(listCurrencies()).rejects.toMatchObject({ error: { code: "FORBIDDEN" } });
   });
 });
 
-describe("catalog queries", () => {
-  it("read through the session context", async () => {
-    expect((await listCurrencies()).map((c) => c.code)).toContain("VES");
-    expect(await listPaymentMethods()).toHaveLength(10);
-    expect(await listPaymentMethods({ includeInactive: true })).toHaveLength(10);
-    expect((await getFiscalSettings()).ivaRates).toEqual(["16", "8", "0"]);
-    expect(await getRateFor({ date: "2026-10-09", currency: "USD" })).toMatchObject({
-      usdRate: "1",
-    });
-    expect(await listExpenseCategories()).toHaveLength(10);
-    expect(await listDocumentCategories()).toHaveLength(5);
+describe("picker reads (read-only; the writes belong to taxonomy)", () => {
+  const page = { total: 0, page: 1, pageSize: 25, pageCount: 1 };
+
+  it("listTags → GET /tags with the parsed filter", async () => {
+    const { calls } = useApi({ "GET /api/v1/tags": { body: { items: [], ...page } } });
+    await listTags({ q: "cli", sort: "usageCount:desc", entityType: "CLIENT" });
+    const search = calls[0]!.search;
+    expect(search.get("q")).toBe("cli");
+    expect(search.get("sort")).toBe("usageCount:desc");
+    expect(search.getAll("entityType")).toEqual(["CLIENT"]);
+    expect(search.get("page")).toBe("1");
+    expect(search.get("pageSize")).toBe("25");
   });
 
-  it("parse the filter before calling the service (defaults, URL strings)", async () => {
-    const techs = await listTechnologies();
-    expect(techs).toMatchObject({ page: 1, pageSize: 25 });
-    expect(
-      (await listTechnologies({ category: "IA", pageSize: "100" as never })).items.every(
-        (t) => t.category === "IA",
-      ),
-    ).toBe(true);
-    expect((await listDocumentTypes({ requiresSignature: "true" as never })).total).toBe(5);
-    expect((await listTags({ q: "cliente" })).items.map((t) => t.name)).toEqual(["Cliente clave"]);
+  it("listTechnologies → GET /technologies with category and active facets", async () => {
+    const { calls } = useApi({ "GET /api/v1/technologies": { body: { items: [], ...page } } });
+    await listTechnologies({ category: "IA", active: true, pageSize: "100" as never });
+    const search = calls[0]!.search;
+    expect(search.getAll("category")).toEqual(["IA"]);
+    expect(search.get("active")).toBe("true");
+    expect(search.get("pageSize")).toBe("100");
   });
 
-  it("hide inactive rows unless the Settings screens ask for them (m-g)", async () => {
-    const store = getMockStore();
-    store.currencies.find((c) => c.code === "COP")!.active = false;
-    store.paymentMethods[0]!.active = false;
-    store.expenseCategories.find((c) => c.name === "Otros")!.active = false;
-
-    expect((await listCurrencies()).map((c) => c.code)).not.toContain("COP");
-    expect((await listCurrencies({ includeInactive: true })).map((c) => c.code)).toContain("COP");
-    expect(await listPaymentMethods()).toHaveLength(9);
-    expect(await listPaymentMethods({ includeInactive: "true" as never })).toHaveLength(10);
-    expect((await listExpenseCategories()).map((n) => n.name)).not.toContain("Otros");
-    expect((await listExpenseCategories({ includeInactive: true })).map((n) => n.name)).toContain(
-      "Otros",
-    );
+  it("listDocumentCategories → GET /document-categories", async () => {
+    const category = { id: "dc1", name: "Legal", nameEn: null, color: null, order: 0, types: [] };
+    useApi({ "GET /api/v1/document-categories": { body: [category] } });
+    expect(await listDocumentCategories()).toEqual([category]);
   });
 
-  it("serve the moved tag and technology services with usage counts", async () => {
-    const tags = await listTags({ sort: "usageCount:desc" });
-    expect(tags.items[0]!.usageCount).toBeGreaterThan(0);
-    const techs = await listTechnologies({ sort: "usageCount:desc" });
-    expect(techs.items[0]!.usageCount).toBeGreaterThan(0);
+  it("listDocumentTypes → GET /document-types with boolean facets as strings", async () => {
+    const { calls } = useApi({ "GET /api/v1/document-types": { body: { items: [], ...page } } });
+    await listDocumentTypes({ requiresSignature: "true" as never, categoryId: "dc1" });
+    const search = calls[0]!.search;
+    expect(search.get("requiresSignature")).toBe("true");
+    expect(search.getAll("categoryId")).toEqual(["dc1"]);
   });
 
-  it("reject an invalid filter", async () => {
+  it("rejects an invalid filter before calling the API", async () => {
+    const { calls } = useApi({});
     await expect(listTechnologies({ sort: "bogus" })).rejects.toThrow();
-  });
-
-  it("need a session", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    await expect(listCurrencies()).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+    expect(calls).toHaveLength(0);
   });
 });

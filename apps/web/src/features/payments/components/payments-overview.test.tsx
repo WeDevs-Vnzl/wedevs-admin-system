@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import { createTranslator } from "next-intl";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import enPayments from "@/i18n/messages/en/payments.json";
-import type { PaymentListRow, PaymentsOverviewDTO } from "@/lib/validators/payments";
+import type { PaymentListRowDto, PaymentsOverviewDto } from "@/lib/api/types/payments";
 import { PaymentsOverview } from "./payments-overview";
 import { installResizeObserver, renderWithIntl } from "./test-utils";
 
@@ -12,7 +12,7 @@ vi.mock("next-intl/server", () => ({
     createTranslator({ locale: "en", messages: { payments: enPayments }, namespace }),
 }));
 
-const overview: PaymentsOverviewDTO = {
+const overview: PaymentsOverviewDto = {
   collectedByMonth: [
     { period: "2026-08", value: "0.00" },
     { period: "2026-09", value: "1200.00" },
@@ -23,7 +23,7 @@ const overview: PaymentsOverviewDTO = {
   pendingVerificationCount: 2,
   unallocatedCount: 1,
   unallocatedTotalUsd: "200.00",
-} as PaymentsOverviewDTO;
+} as PaymentsOverviewDto;
 
 const withCredit = [
   {
@@ -33,7 +33,7 @@ const withCredit = [
     currency: "USD",
     unallocated: "200.00",
   },
-] as unknown as PaymentListRow[];
+] as unknown as PaymentListRowDto[];
 
 async function renderOverview() {
   return renderWithIntl(await PaymentsOverview({ overview, withCredit, canCreate: true }));

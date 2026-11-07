@@ -1,4 +1,3 @@
-import type { ContactsService } from "./contacts";
 import { describe, expect, it } from "vitest";
 import { VALIDATION_MESSAGES } from "./common";
 import {
@@ -124,17 +123,5 @@ describe("contact DTOs and filters", () => {
         archivedAt: null,
       }).success,
     ).toBe(true);
-  });
-});
-
-describe("ContactsService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createContact",
-      "updateContact",
-      "setPrimaryContact",
-      "archiveContact",
-    ] as const satisfies readonly (keyof ContactsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

@@ -14,7 +14,8 @@ import { PaymentsTable } from "@/features/payments/components/payments-table";
 import { paymentFilterOf } from "@/features/payments/components/payment-table-query";
 import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { listPayments } from "@/features/payments/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { notFoundWhenRefused } from "@/features/payments/refusal";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);
@@ -29,19 +30,22 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // `/payments/list` (DT-25): every payment in the server table, with facets, search, header sort, pagination and
-// the query in the URL. Roles without the payment read grant get the not-found page.
+// the query in the URL. Roles without the payment read grant, and a `FORBIDDEN` from the BE, get the not-found page.
 export default async function PaymentsListPage({ searchParams }: PaymentsListPageProps) {
   const user = await requireSessionUser();
   const permissions = paymentScreenPermissions(user);
   if (!permissions.canRead) notFound();
   const query = urlStateToListQuery(loadTableState(await searchParams));
-  const [page, accounts, methods, currencies, t] = await Promise.all([
-    listPayments(paymentFilterOf(query)),
-    listAccounts({ pageSize: 100 }),
-    listPaymentMethods({ includeInactive: true }),
-    listCurrencies({ includeInactive: true }),
-    getTranslations("payments"),
-  ]);
+  // A `FORBIDDEN` from the BE (C13) is the same not-found page as the cosmetic gate above.
+  const [page, accounts, methods, currencies, t] = await notFoundWhenRefused(() =>
+    Promise.all([
+      listPayments(paymentFilterOf(query)),
+      listAccounts({ pageSize: 100 }),
+      listPaymentMethods({ includeInactive: true }),
+      listCurrencies({ includeInactive: true }),
+      getTranslations("payments"),
+    ]),
+  );
 
   return (
     <div className="flex flex-col gap-6">

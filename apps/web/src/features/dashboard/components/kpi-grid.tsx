@@ -4,14 +4,18 @@ import { useLocale, useTranslations } from "next-intl";
 import { KpiCard } from "@/components/patterns/kpi-card";
 import { MoneyText } from "@/components/patterns/money-text";
 import { formatMoney, isNegativeMoney, isZeroMoney } from "@/lib/money";
-import type { DashboardKpiId, KpiCardDTO } from "@/lib/validators/dashboard";
+import type { DashboardKpiCardDto } from "@/lib/api/types/intel";
+import type { DashboardKpiId } from "@/lib/validators/dashboard";
 import type { DashboardPeriod } from "../period";
 
 /** The one card a Member or Viewer keeps: every other card is financial data (PRD §11). */
 const NON_FINANCIAL_KPIS = new Set<DashboardKpiId>(["ACTIVE_PROJECTS"]);
 
 /** Cards shown to the viewer, in display order. */
-export function visibleKpis(kpis: readonly KpiCardDTO[], showFinancials: boolean): KpiCardDTO[] {
+export function visibleKpis(
+  kpis: readonly DashboardKpiCardDto[],
+  showFinancials: boolean,
+): DashboardKpiCardDto[] {
   return showFinancials ? [...kpis] : kpis.filter((card) => NON_FINANCIAL_KPIS.has(card.id));
 }
 
@@ -24,7 +28,7 @@ export function formatChange(changePercent: string, locale: string): string {
   }).format(Number(changePercent) / 100);
 }
 
-function KpiValue({ card }: { card: KpiCardDTO }) {
+function KpiValue({ card }: { card: DashboardKpiCardDto }) {
   const t = useTranslations("dashboard.kpis");
   const locale = useLocale();
   if (card.unit !== "USD") return <>{card.value}</>;
@@ -41,7 +45,7 @@ function KpiValue({ card }: { card: KpiCardDTO }) {
 }
 
 type KpiGridProps = {
-  kpis: readonly KpiCardDTO[];
+  kpis: readonly DashboardKpiCardDto[];
   period: DashboardPeriod;
   showFinancials: boolean;
 };
@@ -51,7 +55,7 @@ export function KpiGrid({ kpis, period, showFinancials }: KpiGridProps) {
   const t = useTranslations("dashboard.kpis");
   const locale = useLocale();
 
-  const variation = (card: KpiCardDTO) => {
+  const variation = (card: DashboardKpiCardDto) => {
     if (card.previousValue === null) return undefined;
     if (card.changePercent === null) {
       const previous =

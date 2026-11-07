@@ -23,10 +23,14 @@ vi.mock("@/features/clients/actions", () => ({
   searchClientsAction: vi.fn(async () => ({ ok: true, data: [] })),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() } }));
-vi.mock("@/features/files/upload-adapter", () => ({ uploadAdapter: {} }));
+vi.mock("sonner", () => ({ toast }));
+const editor = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), warning: vi.fn() }));
 vi.mock("@/components/ui/rich-text", () => ({
-  RichTextEditor: () => <div data-testid="rich-text" />,
+  RichTextEditor: (props: Record<string, unknown>) => {
+    editor.props.push(props);
+    return <div data-testid="rich-text" />;
+  },
   RichTextView: () => null,
 }));
 vi.mock("@/features/tags/components/tag-picker", () => ({
@@ -92,6 +96,9 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  editor.props.length = 0;
+  toast.error.mockReset();
+  actions.updateProjectAction.mockReset();
   actions.createProjectAction.mockReset();
   actions.createProjectAction.mockResolvedValue({
     ok: true,
@@ -210,5 +217,66 @@ describe("ProjectForm (create)", () => {
       }),
     );
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/projects/pry_new"));
+  });
+});
+
+async function fillAndSave(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Add Kairos" }));
+  await user.type(screen.getByLabelText("Name"), "Sitio Kairos");
+  await user.type(screen.getByLabelText("Summary"), "Resumen corto");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+}
+
+describe("ProjectForm description (C4)", () => {
+  it("disables images in the description editor and offers no upload adapter", () => {
+    renderCreate();
+    expect(editor.props.at(-1)).toMatchObject({ allowImages: false });
+    expect(editor.props.at(-1)).not.toHaveProperty("uploadAdapter");
+  });
+});
+
+describe("ProjectForm server errors", () => {
+  it("shows an inactive technology (422, HU-06 CA1) on the stack field", async () => {
+    const user = userEvent.setup();
+    actions.createProjectAction.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "VALIDATION",
+        message: "common.errors.VALIDATION",
+        fieldErrors: { technologyIds: ["projects.errors.technologyInactive"] },
+      },
+    });
+    renderCreate();
+    await fillAndSave(user);
+    expect(await screen.findByText(enProjects.errors.technologyInactive)).toBeInTheDocument();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("toasts a link row error (links.0.url, HU-07 CA3) instead of swallowing it", async () => {
+    const user = userEvent.setup();
+    actions.createProjectAction.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "VALIDATION",
+        message: "common.errors.VALIDATION",
+        fieldErrors: { "links.0.url": ["validation.invalidUrl"] },
+      },
+    });
+    renderCreate();
+    await fillAndSave(user);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(enCommon.errors.VALIDATION));
+  });
+
+  it("answers a CONFLICT without an entity (DT-177) with the generic message and keeps the form", async () => {
+    const user = userEvent.setup();
+    actions.createProjectAction.mockResolvedValue({
+      ok: false,
+      error: { code: "CONFLICT", message: "common.errors.CONFLICT" },
+    });
+    renderCreate();
+    await fillAndSave(user);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(enCommon.errors.CONFLICT));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Name")).toHaveValue("Sitio Kairos");
   });
 });

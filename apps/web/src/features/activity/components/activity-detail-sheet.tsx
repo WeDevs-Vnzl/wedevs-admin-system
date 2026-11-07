@@ -16,22 +16,9 @@ import {
 } from "@/components/ui/sheet";
 import { formatDateTime } from "@/lib/dates";
 import { entityHref } from "@/lib/entity-routes";
-import type { ActivityListRowDTO } from "@/lib/validators/activity";
+import type { ActivityRow } from "@/lib/api/types/activity";
+import { knownEntityType } from "../entity-type";
 import { ActivityDiff } from "./activity-diff";
-
-/**
- * The IP of a user action with its last octet (or last group, IPv6) masked, e.g. `192.0.2.•••` (PRD §8.14).
- * `null` when the entry carries no IP.
- */
-export function maskIp(ip: string | null): string | null {
-  if (!ip) return null;
-  if (ip.includes(":")) {
-    const groups = ip.split(":");
-    return `${groups.slice(0, 3).join(":")}:•••`;
-  }
-  const octets = ip.split(".");
-  return octets.length === 4 ? `${octets.slice(0, 3).join(".")}.•••` : "•••";
-}
 
 /** The browser family of a user agent, as a key of `activity.browser` (`null` when there is no agent). */
 export function browserKey(
@@ -52,7 +39,7 @@ export function ActivityDetailSheet({
   onOpenChange,
   onCloseAutoFocus,
 }: {
-  entry: ActivityListRowDTO | null;
+  entry: ActivityRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Where focus goes when the sheet closes; the opener is not a Radix trigger, so the parent restores it. */
@@ -68,9 +55,11 @@ export function ActivityDetailSheet({
   const entry = entryProp ?? lastEntry;
   if (!entry) return null;
 
-  const href = entityHref({ type: entry.entityType, id: entry.entityId });
+  const entityType = knownEntityType(entry.entityType);
+  const href = entityType ? entityHref({ type: entityType, id: entry.entityId }) : null;
   const browser = browserKey(entry.userAgent);
-  const ip = maskIp(entry.ip);
+  // The IP arrives already masked from the BE (PRD §8.14, BE-2 choice 5); it is shown as received.
+  const ip = entry.ip;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

@@ -1,9 +1,9 @@
-import type { PermissionAction, PermissionResource } from "@/server/auth/permissions";
+import type { PermissionAction, PermissionResource } from "@/lib/auth/permissions";
 
 /**
- * The grants that let a user create a tag (any one of them): `createTagAction` checks them on submit (C13) and
- * `canCreateTagsInline()` uses the same list to show or hide the inline "Crear". Not in `actions.ts` because a
- * `"use server"` file may only export async functions.
+ * The grants that let a user create a tag (any one of them). They only decide whether `canCreateTagsInline()`
+ * shows the inline "Crear" (cosmetic visibility); `POST /api/v1/tags` answers the real `can()` decision (C13).
+ * Not in `actions.ts` because a `"use server"` file may only export async functions.
  */
 export const CREATE_TAG_GRANTS = [
   { action: "create", resource: "settings" },

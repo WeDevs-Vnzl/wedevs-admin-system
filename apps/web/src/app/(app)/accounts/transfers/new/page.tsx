@@ -4,8 +4,9 @@ import { getTranslations } from "next-intl/server";
 import { TransferForm } from "@/features/accounts/components/transfer-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listAccounts } from "@/features/accounts/queries";
+import { notFoundWhenRefused } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type TransferNewPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -23,7 +24,7 @@ export default async function NewTransferPage({ searchParams }: TransferNewPageP
   const permissions = accountScreenPermissions(user);
   if (!permissions.canCreate) notFound();
   const { from } = await searchParams;
-  const page = await listAccounts({ pageSize: 100 });
+  const page = await notFoundWhenRefused(() => listAccounts({ pageSize: 100 }));
   const accounts = page.items
     .filter((account) => account.active)
     .map(({ id, name, currency }) => ({ id, name, currency }));

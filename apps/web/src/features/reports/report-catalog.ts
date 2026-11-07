@@ -13,7 +13,9 @@ import {
 
 export type ReportPage = { kind: "report"; id: ReportId } | { kind: "kpi"; id: KpiId };
 
-const toSlug = (id: string) => id.toLowerCase().replaceAll("_", "-");
+/** The kebab-case path segment of a report or KPI id (`TAXES_REGISTERED` → `taxes-registered`). */
+export const reportSlug = (id: string) => id.toLowerCase().replaceAll("_", "-");
+const toSlug = reportSlug;
 
 const PAGES_BY_SLUG = new Map<string, ReportPage>([
   ...REPORT_ID_VALUES.map((id) => [toSlug(id), { kind: "report", id }] as const),

@@ -1,4 +1,3 @@
-import type { DocumentsService } from "./documents";
 import { describe, expect, it } from "vitest";
 import { VALIDATION_MESSAGES } from "./common";
 import { DOCUMENT_STATUS_VALUES } from "./enums";
@@ -320,6 +319,25 @@ describe("document filters and DTOs", () => {
     expect(documentFilterSchema.safeParse({ sort: "draftContent:asc" }).success).toBe(false);
   });
 
+  it("carries a facet for each of the six link types (HU-20 CA1)", () => {
+    const parsed = documentFilterSchema.parse({
+      clientId: "c1",
+      contactId: "k1",
+      projectId: "p1",
+      invoiceId: "i1",
+      paymentId: "y1",
+      expenseId: "e1",
+    });
+    expect(parsed).toMatchObject({
+      clientId: ["c1"],
+      contactId: ["k1"],
+      projectId: ["p1"],
+      invoiceId: ["i1"],
+      paymentId: ["y1"],
+      expenseId: ["e1"],
+    });
+  });
+
   const category = { id: "cat_legal", name: "Legal", nameEn: null, color: null };
   const type = {
     id: "dtype_contract",
@@ -366,22 +384,5 @@ describe("document filters and DTOs", () => {
         createdAt: "2026-10-01T10:00:00.000Z",
       }).success,
     ).toBe(true);
-  });
-});
-
-describe("DocumentsService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createDocument",
-      "updateDocumentMeta",
-      "saveDraft",
-      "publishVersion",
-      "uploadVersion",
-      "restoreVersion",
-      "setDocumentStatus",
-      "linkDocument",
-      "unlinkDocument",
-    ] as const satisfies readonly (keyof DocumentsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

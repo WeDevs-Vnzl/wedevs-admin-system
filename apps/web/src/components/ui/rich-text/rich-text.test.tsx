@@ -215,8 +215,92 @@ describe("RichTextEditor", () => {
     expect(adapter.requestUpload).toHaveBeenCalledWith(expect.objectContaining({ name: "captura.png", context: "general" }));
     const doc = onChange.mock.calls.at(-1)![0];
     expect(doc.content?.find((node) => node.type === "image")?.attrs).toEqual({ fileId: "fil_0042", alt: "captura.png" });
+    expect(dom.querySelector("img")).toHaveAttribute("src", "/files/fil_0042/download");
+  });
+});
+
+describe("RichTextEditor images", () => {
+  const adapter = (): UploadAdapter => ({
+    requestUpload: vi.fn(async () => ({ ok: true as const, data: { fileId: "fil_0042", url: null } })),
+    put: vi.fn(async () => {}),
+    confirmUpload: vi.fn(async () => ({
+      ok: true as const,
+      data: {
+        id: "fil_0042",
+        originalName: "captura.png",
+        mimeType: "image/png",
+        sizeBytes: 10,
+        status: "READY" as const,
+        uploadedById: "usr_x",
+        createdAt: "2026-10-09T00:00:00.000Z",
+      },
+    })),
+  });
+
+  function pasteImage(dom: HTMLElement) {
+    const file = new File([new Uint8Array(10)], "captura.png", { type: "image/png" });
+    const event = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", { value: { files: [file], getData: () => "" } });
+    dom.dispatchEvent(event);
+    return event;
+  }
+
+  it("shows the image toolbar button when an upload adapter is given", async () => {
+    wrap(<RichTextEditor uploadAdapter={adapter()} />);
+    expect(await screen.findByRole("button", { name: "Elegir archivos" })).toBeInTheDocument();
+  });
+
+  it("with images disabled there is no toolbar button and a pasted image is rejected without upload", async () => {
+    const uploads = adapter();
+    const onChange = vi.fn();
+    wrap(<RichTextEditor uploadAdapter={uploads} allowImages={false} onChange={onChange} />);
+    await readyEditor();
+    expect(screen.queryByRole("button", { name: "Elegir archivos" })).toBeNull();
+    const dom = document.querySelector(".ProseMirror") as HTMLElement;
+    let event!: Event;
+    await act(async () => {
+      event = pasteImage(dom);
+    });
+    expect(event.defaultPrevented).toBe(true);
+    expect(uploads.requestUpload).not.toHaveBeenCalled();
     expect(dom.querySelector("img")).toBeNull();
-    expect(dom.textContent).toContain("captura.png");
+  });
+
+  it("without an adapter there is no toolbar button either", async () => {
+    wrap(<RichTextEditor />);
+    await readyEditor();
+    expect(screen.queryByRole("button", { name: "Elegir archivos" })).toBeNull();
+  });
+
+  it("picking a file in the toolbar uploads it through the adapter", async () => {
+    const uploads = adapter();
+    const onChange = vi.fn<(doc: RichTextDoc) => void>();
+    wrap(<RichTextEditor uploadAdapter={uploads} onChange={onChange} />);
+    await readyEditor();
+    const input = document.querySelector('input[type="file"][data-slot="rich-text-image-input"]') as HTMLInputElement;
+    const file = new File([new Uint8Array(10)], "captura.png", { type: "image/png" });
+    await act(async () => {
+      Object.defineProperty(input, "files", { value: [file], configurable: true });
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await waitFor(() => expect(uploads.requestUpload).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(onChange.mock.calls.at(-1)![0].content?.find((node) => node.type === "image")?.attrs).toEqual({
+        fileId: "fil_0042",
+        alt: "captura.png",
+      }),
+    );
+  });
+
+  it("never lets script or onerror content from an alt reach the DOM", async () => {
+    const hostileAlt = '"><script>window.__pwned = 9</script><img src=x onerror="window.__pwned = 10">';
+    const view: RichTextDoc = { type: "doc", content: [{ type: "image", attrs: { fileId: "fil_0003", alt: hostileAlt } }] };
+    wrap(<RichTextView content={view} />);
+    await waitFor(() => expect(document.querySelector("img")).not.toBeNull());
+    expect(document.querySelector("script")).toBeNull();
+    expect(document.querySelectorAll("img")).toHaveLength(1);
+    expect(document.querySelector("img")!.getAttribute("onerror")).toBeNull();
+    expect((window as unknown as { __pwned?: number }).__pwned).toBeUndefined();
   });
 });
 
@@ -229,14 +313,25 @@ describe("RichTextView", () => {
     ],
   };
 
-  it("renders links with rel and target, images as a placeholder, and no img element", async () => {
+  it("renders links with rel and target and images from their fileId", async () => {
     wrap(<RichTextView content={doc} />);
     const link = await screen.findByRole("link", { name: "sitio" });
     expect(link).toHaveAttribute("href", "https://ok.example");
     expect(link).toHaveAttribute("rel", "noopener noreferrer nofollow");
     expect(link).toHaveAttribute("target", "_blank");
-    expect(screen.getByText("Imagen adjunta: plano.png")).toBeInTheDocument();
-    expect(document.querySelector("img")).toBeNull();
+    const image = screen.getByAltText("plano.png");
+    expect(image).toHaveAttribute("src", "/files/fil_0001/download");
+  });
+
+  it("ignores a stored src: the displayed src always comes from the fileId", async () => {
+    const withSrc = {
+      type: "doc",
+      content: [{ type: "image", attrs: { fileId: "fil_0007", alt: "x.png", src: "/api/files/fil_0007/download" } }],
+    } as unknown as RichTextDoc;
+    wrap(<RichTextView content={withSrc} />);
+    const image = await screen.findByAltText("x.png");
+    expect(image).toHaveAttribute("src", "/files/fil_0007/download");
+    expect(document.body.innerHTML).not.toContain("/api/files/");
   });
 
   it("does not render a document that fails the allowlist schema (script, iframe, handlers, unsafe URLs)", () => {
@@ -255,7 +350,13 @@ describe("RichTextView", () => {
 
   it("renders in EN", async () => {
     wrap(<RichTextView content={doc} />, "en");
-    expect(await screen.findByText("Attached image: plano.png")).toBeInTheDocument();
+    expect(await screen.findByAltText("plano.png")).toBeInTheDocument();
+  });
+
+  it("falls back to the translated label as alt when the node has none", async () => {
+    const noAlt: RichTextDoc = { type: "doc", content: [{ type: "image", attrs: { fileId: "fil_0002" } }] };
+    wrap(<RichTextView content={noAlt} />, "en");
+    expect(await screen.findByAltText("Attached image: unnamed")).toHaveAttribute("src", "/files/fil_0002/download");
   });
 
   it("survives a locale change that re-creates the editor (extensions memo changes)", async () => {
@@ -265,9 +366,9 @@ describe("RichTextView", () => {
       </NextIntlClientProvider>
     );
     const view = render(tree("es"));
-    expect(await screen.findByText("Imagen adjunta: plano.png")).toBeInTheDocument();
+    expect(await screen.findByAltText("plano.png")).toBeInTheDocument();
     expect(() => view.rerender(tree("en"))).not.toThrow();
-    expect(await screen.findByText("Attached image: plano.png")).toBeInTheDocument();
+    expect(await screen.findByAltText("plano.png")).toBeInTheDocument();
   });
 
   it("exports an empty paragraph as the empty document", () => {

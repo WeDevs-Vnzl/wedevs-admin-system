@@ -108,6 +108,17 @@
       "notes": "Notes"
     }
   },
+  "snapshot": {
+    "title": "Binance snapshot",
+    "description": "Balances at the exchange as of the last sync. Read-only.",
+    "columns": {
+      "asset": "Asset",
+      "free": "Available",
+      "locked": "Locked"
+    },
+    "syncedAt": "Synced at",
+    "empty": "No balances at the exchange."
+  },
   "ledger": {
     "title": "Ledger",
     "description": "Every movement that changes the balance, with the running balance after it.",
@@ -137,12 +148,13 @@
     "readOnly": "Read only: you do not have permission to reconcile this account.",
     "date": "Statement date",
     "statement": "Statement balance",
-    "submit": "Calculate difference",
+    "submit": "Reconcile",
     "system": "System balance",
     "difference": "Difference",
     "suggestion": "The difference suggests an adjustment for that amount.",
     "adjust": "Record adjustment",
-    "noDifference": "No difference: the system balance matches the statement."
+    "noDifference": "No difference: the system balance matches the statement.",
+    "recorded": "Reconciliation recorded"
   },
   "transfer": {
     "title": "New transfer",
@@ -208,6 +220,9 @@
     "partnerRequired": "Enter the partner",
     "adjustmentNonZero": "An adjustment cannot be zero",
     "inactive": "The account is inactive",
-    "currencyLocked": "The currency cannot change once the account has movements"
+    "currencyLocked": "The currency cannot change once the account has movements",
+    "unknownCurrency": "The currency is not in the catalog",
+    "usdRateMustBeOne": "The rate of a USD account is 1",
+    "invalidType": "Invalid type"
   }
 }

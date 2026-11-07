@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Ban, CheckCircle2, Repeat } from "lucide-react";
+import { Ban, CheckCircle2, Pencil, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { DateText } from "@/components/patterns/date-text";
@@ -18,10 +18,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { voidExpenseAction } from "@/features/expenses/actions";
 import type { ExpenseAccountOption } from "@/features/expenses/form-options";
 import { MarkPaidDialog } from "@/features/expenses/components/mark-paid-dialog";
-import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
+import type { ExpenseResponseDto } from "@/lib/api/types/expenses";
 
 type ExpenseDetailProps = {
-  expense: ExpenseDetailDTO;
+  expense: ExpenseResponseDto;
   accounts: ExpenseAccountOption[];
   /** Business "today" (America/Caracas), computed on the server. */
   today: string;
@@ -30,13 +30,15 @@ type ExpenseDetailProps = {
 
 /**
  * `/expenses/[id]` (PRD §8.8): the facts of an expense, its amounts in the expense currency, the account and the
- * USD snapshot. A pending expense can be marked as paid (CA2); an expense that is not voided can be voided.
+ * USD snapshot. A pending expense can be edited (cosmetic: the BE refuses a paid one) and marked as paid (CA2); an
+ * expense that is not voided can be voided.
  */
 export function ExpenseDetail({ expense, accounts, today, canUpdate }: ExpenseDetailProps) {
   const t = useTranslations("expenses");
   const tEnums = useTranslations("enums");
   const tRoot = useTranslations();
   const tErrors = useTranslations("common.errors");
+  const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const router = useRouter();
   const [paying, setPaying] = useState(false);
@@ -81,6 +83,14 @@ export function ExpenseDetail({ expense, accounts, today, canUpdate }: ExpenseDe
         actions={
           canUpdate && (isPending || !isVoided) ? (
             <div className="flex flex-wrap gap-2">
+              {isPending ? (
+                <Button variant="outline" asChild>
+                  <Link href={`/expenses/${expense.id}/edit`}>
+                    <Pencil aria-hidden />
+                    {tActions("edit")}
+                  </Link>
+                </Button>
+              ) : null}
               {isPending ? (
                 <Button onClick={() => setPaying(true)}>
                   <CheckCircle2 aria-hidden />

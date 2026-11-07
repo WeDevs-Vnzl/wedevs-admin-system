@@ -15,6 +15,11 @@ import { GetReport } from '../../application/use-cases/reports/get-report.use-ca
 import type { ReportOutput } from '../../application/use-cases/reports/report-types';
 import { KpisResponseDto, REPORT_RESPONSE_DTOS, ReportFilterQueryDto } from './reports.dto';
 
+/** `reportId` wire id → report schema, read from each DTO's literal so the two cannot drift. */
+const REPORT_DISCRIMINATOR_MAPPING: Record<string, string> = Object.fromEntries(
+  REPORT_RESPONSE_DTOS.map((dto) => [dto.schema.shape.reportId.value, getSchemaPath(dto)]),
+);
+
 /**
  * Reports and KPIs (PRD §8.13, HU-31): Owner and Admin only. `/reports/kpis` is declared before
  * `/reports/:slug` so the literal wins; the slug is whitelisted by the use case. The use cases run `can()`
@@ -52,7 +57,9 @@ export class ReportsController {
   @ApiOkResponse({
     schema: {
       oneOf: REPORT_RESPONSE_DTOS.map((dto) => ({ $ref: getSchemaPath(dto) })),
-      discriminator: { propertyName: 'reportId' },
+      // The mapping ties each wire id to its schema; without it generated clients type `reportId` as the
+      // schema name and cannot narrow the union.
+      discriminator: { propertyName: 'reportId', mapping: REPORT_DISCRIMINATOR_MAPPING },
     },
   })
   @ApiErrorResponses('UNAUTHENTICATED', 'FORBIDDEN', 'NOT_FOUND', 'VALIDATION', 'INTERNAL')

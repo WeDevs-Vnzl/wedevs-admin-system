@@ -12,7 +12,6 @@ import { MoneyText } from "@/components/patterns/money-text";
 import { SectionCard } from "@/components/patterns/section-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DateField } from "@/components/ui/date-field/date-field";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -28,17 +27,30 @@ import { Uploader } from "@/components/ui/uploader";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
 import { lookupRateAction } from "@/features/catalogs/actions";
 import { uploadAdapter } from "@/features/files/upload-adapter";
-import { proposeIgtfAmount } from "@/lib/finance";
 import {
   createPaymentAction,
   detectDuplicatePaymentAction,
   listOpenInvoicesAction,
+  updatePaymentAction,
 } from "@/features/payments/actions";
-import { computePaymentAmounts, proposeAllocation } from "@/lib/finance";
 import type { OpenInvoiceOption } from "@/features/payments/types";
-import { compareMoney, isDecimalString, type MoneyString } from "@/lib/money";
-import { createPaymentInputSchema, type DuplicatePaymentMatch } from "@/lib/validators/payments";
 import type { DateOnly } from "@/lib/dates";
+import { computePaymentAmounts, proposeIgtfAmount } from "@/lib/finance";
+import { compareMoney, isDecimalString, type MoneyString } from "@/lib/money";
+import type {
+  CreatePaymentDto,
+  DuplicatePaymentResponseDto,
+  PaymentResponseDto,
+} from "@/lib/api/types/payments";
+import type { ActionError } from "@/lib/validators/common";
+import { fileDtoSchema } from "@/lib/validators/files";
+import { createPaymentInputSchema } from "@/lib/validators/payments";
+import {
+  AllocationRows,
+  isPositiveAmount,
+  shownInvoiceAmount,
+  type AppliedRow,
+} from "./allocation-rows";
 
 const FORM_ID = "payment-form";
 const FIELD_NAMES = [
@@ -55,7 +67,7 @@ const FIELD_NAMES = [
 ] as const;
 
 export type PaymentFormClient = { id: string; name: string };
-export type PaymentFormAccount = { id: string; name: string; currency: string };
+export type PaymentFormAccount = { id: string; name: string; currency: string; active?: boolean };
 export type PaymentFormMethod = {
   id: string;
   code: string;
@@ -63,6 +75,8 @@ export type PaymentFormMethod = {
   nameEn: string | null;
   requiresReference: boolean;
   suggestsIgtf: boolean;
+  /** Absent means active; an inactive one is offered only when the edited payment already uses it (rule 23). */
+  active?: boolean;
 };
 
 export type PaymentFormProps = {
@@ -76,9 +90,14 @@ export type PaymentFormProps = {
   today: DateOnly;
   /** Client preselected from `?invoiceId=`, with its open invoices. */
   initialClientId?: string;
-  initialOpenInvoices: OpenInvoiceOption[];
+  initialOpenInvoices?: OpenInvoiceOption[];
   /** Invoice preselected by `?invoiceId=`: it is ticked, with its balance as the amount. */
   initialInvoiceId?: string;
+  /**
+   * Edit mode (Q-FEINT-11 (A), DT-213): the stored payment. The form patches it; allocations change only through
+   * "Asignar" / "Desasignar" on the detail, so the "Aplicar a facturas" section is not shown.
+   */
+  payment?: PaymentResponseDto;
 };
 
 type PaymentFormValues = {
@@ -95,31 +114,32 @@ type PaymentFormValues = {
   receiptFileId?: string | undefined;
 };
 
-/** State of one invoice row of "Aplicar a facturas". `invoiceAmount` is set only when the user edits it. */
-type AppliedRow = { selected: boolean; amountPayment: string; invoiceAmount?: string | undefined };
+type PickerOption = { id: string; label: string; inactive: boolean };
 
-/** Proposed amount in the invoice currency, from the payment-date rate (HU-13 CA4), or `null` when not computable. */
-function proposeInvoiceAmount(
-  amountPayment: string,
-  paymentCurrency: string,
-  paymentUsdRate: string,
-  invoice: OpenInvoiceOption,
-): string | null {
-  if (!isDecimalString(amountPayment) || compareMoney(amountPayment, "0") <= 0) return null;
-  if (!isDecimalString(paymentUsdRate) || compareMoney(paymentUsdRate, "0") <= 0) return null;
-  return proposeAllocation({
-    amountPaymentCurrency: amountPayment,
-    paymentCurrency,
-    paymentUsdRate,
-    invoiceCurrency: invoice.currency,
-    invoiceUsdRateOnPaymentDate: invoice.currency === "USD" ? "1" : invoice.usdRate,
-  }).amountInvoiceCurrency;
+/**
+ * Options of a picker, plus the record's own value when the picker no longer offers it (rule 23): an inactive item
+ * the edited payment already uses stays selectable, and a value missing from the list is shown from the payment's
+ * own label. Both carry the "inactive" hint, and the value is sent unchanged unless the user picks another.
+ */
+function pickerOptions<T extends { id: string; active?: boolean }>(
+  items: readonly T[],
+  labelOf: (item: T) => string,
+  stored: { id: string; label: string } | undefined,
+): PickerOption[] {
+  const options = items
+    .filter((item) => item.active !== false || item.id === stored?.id)
+    .map((item) => ({ id: item.id, label: labelOf(item), inactive: item.active === false }));
+  if (stored && !items.some((item) => item.id === stored.id)) {
+    options.push({ id: stored.id, label: stored.label, inactive: true });
+  }
+  return options;
 }
 
 /**
  * Payment form (HU-13, HU-14). The fields of the contract are required (CA1), the reference when the method asks
  * for it. IGTF is proposed from the fiscal settings (DT-70) and stays editable. The unallocated rest is credit
- * (CA5). Possible duplicates are shown as a warning, never as a refusal (CA6).
+ * (CA5). Possible duplicates are shown as a warning, never as a refusal (CA6). With `payment` it edits that payment
+ * (DT-213) without the allocations section.
  */
 export function PaymentForm({
   clients,
@@ -128,8 +148,9 @@ export function PaymentForm({
   fiscal,
   today,
   initialClientId,
-  initialOpenInvoices,
+  initialOpenInvoices = [],
   initialInvoiceId,
+  payment,
 }: PaymentFormProps) {
   const t = useTranslations("payments");
   const tRoot = useTranslations();
@@ -137,15 +158,20 @@ export function PaymentForm({
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const router = useRouter();
+  const editing = payment !== undefined;
   const [saving, setSaving] = useState(false);
   const [openInvoices, setOpenInvoices] = useState<OpenInvoiceOption[]>(initialOpenInvoices);
-  const [igtfEdited, setIgtfEdited] = useState(false);
+  const [igtfEdited, setIgtfEdited] = useState(editing);
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
+  const [allocationsError, setAllocationsError] = useState<string | undefined>();
   const [duplicateResult, setDuplicateResult] = useState<{
     key: string;
-    matches: DuplicatePaymentMatch[];
+    matches: DuplicatePaymentResponseDto["matches"];
   }>({ key: "", matches: [] });
 
-  const initialAccount = accounts.find((account) => account.currency === "USD") ?? accounts[0];
+  const initialAccount = payment
+    ? accounts.find((account) => account.id === payment.account.id)
+    : (accounts.find((account) => account.currency === "USD") ?? accounts[0]);
   const initialInvoice = initialOpenInvoices.find((invoice) => invoice.id === initialInvoiceId);
   const [applied, setApplied] = useState<Record<string, AppliedRow>>(() =>
     initialInvoice
@@ -161,19 +187,33 @@ export function PaymentForm({
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(createPaymentInputSchema) as never,
-    defaultValues: {
-      clientId: initialClientId ?? clients[0]?.id ?? "",
-      date: today,
-      accountId: initialAccount?.id ?? "",
-      methodId: methods[0]?.id ?? "",
-      currency: initialAccount?.currency ?? "",
-      amount: "",
-      igtfAmount: "0.00",
-      feeAmount: "0.00",
-      usdRate: initialAccount?.currency === "USD" ? "1" : "",
-      reference: "",
-      receiptFileId: undefined,
-    },
+    defaultValues: payment
+      ? {
+          clientId: payment.client.id,
+          date: payment.date,
+          accountId: payment.account.id,
+          methodId: payment.method.id,
+          currency: payment.currency,
+          amount: payment.amount,
+          igtfAmount: payment.igtfAmount,
+          feeAmount: payment.feeAmount,
+          usdRate: payment.usdRate,
+          reference: payment.reference ?? "",
+          receiptFileId: payment.receiptFileId ?? undefined,
+        }
+      : {
+          clientId: initialClientId ?? clients[0]?.id ?? "",
+          date: today,
+          accountId: initialAccount?.id ?? "",
+          methodId: methods[0]?.id ?? "",
+          currency: initialAccount?.currency ?? "",
+          amount: "",
+          igtfAmount: "0.00",
+          feeAmount: "0.00",
+          usdRate: initialAccount?.currency === "USD" ? "1" : "",
+          reference: "",
+          receiptFileId: undefined,
+        },
   });
 
   const errors = form.formState.errors;
@@ -190,9 +230,31 @@ export function PaymentForm({
   const usdRate = useWatch({ control: form.control, name: "usdRate" });
   const reference = useWatch({ control: form.control, name: "reference" });
 
+  const hint = ` · ${t("form.inactiveHint")}`;
+  const clientOptions = pickerOptions(
+    clients,
+    (item) => item.name,
+    payment ? { id: payment.client.id, label: payment.client.label } : undefined,
+  );
+  const accountOptions = pickerOptions(
+    accounts,
+    (item) => `${item.name} (${item.currency})`,
+    payment
+      ? { id: payment.account.id, label: `${payment.account.label} (${payment.currency})` }
+      : undefined,
+  );
+  const methodOptions = pickerOptions(
+    methods,
+    (item) => catalogLabel(item, locale),
+    payment ? { id: payment.method.id, label: catalogLabel(payment.method, locale) } : undefined,
+  );
+  const methodOf = (id: string) => methods.find((item) => item.id === id);
+  // Client and account stay put while the payment has live allocations (cosmetic: the BE keeps `INTEGRITY_LOCK`).
+  const locked = (payment?.allocations.length ?? 0) > 0;
+
   const account = accounts.find((item) => item.id === accountId);
-  const currency = account?.currency ?? "";
-  const method = methods.find((item) => item.id === methodId);
+  const currency = account?.currency ?? payment?.currency ?? "";
+  const method = methodOf(methodId);
   const isUsd = currency === "USD";
   const requiresReference = method?.requiresReference ?? false;
 
@@ -211,11 +273,13 @@ export function PaymentForm({
     );
   }, [amount, currency, method, igtfEdited, fiscal, form]);
 
-  // Possible duplicate (CA6): the same reference, method and account. A warning only, looked up after a pause.
+  // Possible duplicate (CA6): the same reference, method and account. A warning only, looked up after a pause. The
+  // edited payment is excluded so it does not match itself.
   const duplicateKey =
     methodId && accountId && reference.trim() !== ""
       ? `${methodId}|${accountId}|${reference.trim()}`
       : "";
+  const editedId = payment?.id;
   useEffect(() => {
     if (!duplicateKey) return;
     const timer = setTimeout(() => {
@@ -223,25 +287,26 @@ export function PaymentForm({
         methodId,
         accountId,
         reference: reference.trim(),
+        ...(editedId ? { excludePaymentId: editedId } : {}),
       }).then((result) => {
-        setDuplicateResult({
-          key: duplicateKey,
-          matches: result.ok && result.data ? result.data.matches : [],
-        });
+        setDuplicateResult({ key: duplicateKey, matches: result.ok ? result.data.matches : [] });
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [duplicateKey, methodId, accountId, reference]);
+  }, [duplicateKey, methodId, accountId, reference, editedId]);
   const duplicates = duplicateResult.key === duplicateKey ? duplicateResult.matches : [];
 
-  // Amounts shown live (lib/finance, C17): allocatable, net credited and the credit left on this payment.
+  // Amounts shown live (lib/finance, C17): allocatable, net credited and the credit left on this payment. A
+  // display-only preview: the saved figures come from the BE response.
   const amounts = useMemo(() => {
     const validAmount = isDecimalString(amount) ? amount : "0";
     const validIgtf = isDecimalString(igtfAmount) ? igtfAmount : "0";
     const validFee = isDecimalString(feeAmount) ? feeAmount : "0";
-    const allocated = Object.values(applied)
-      .filter((row) => row.selected && isDecimalString(row.amountPayment))
-      .map((row) => row.amountPayment);
+    const allocated = editing
+      ? (payment?.allocations ?? []).map((row) => row.amountPaymentCurrency)
+      : Object.values(applied)
+          .filter((row) => row.selected && isDecimalString(row.amountPayment))
+          .map((row) => row.amountPayment);
     if (compareMoney(validAmount, "0") <= 0 || compareMoney(validIgtf, validAmount) > 0) {
       return null;
     }
@@ -251,13 +316,15 @@ export function PaymentForm({
       feeAmount: compareMoney(validFee, validAmount) > 0 ? "0" : validFee,
       allocated,
     });
-  }, [amount, igtfAmount, feeAmount, applied]);
+  }, [amount, igtfAmount, feeAmount, applied, editing, payment]);
 
   async function changeClient(nextClientId: string) {
     form.setValue("clientId", nextClientId, { shouldValidate: true });
+    if (editing) return;
     setApplied({});
+    setRowErrors({});
     const result = await listOpenInvoicesAction({ clientId: nextClientId });
-    setOpenInvoices(result.ok && result.data ? (result.data as OpenInvoiceOption[]) : []);
+    setOpenInvoices(result.ok ? result.data : []);
   }
 
   function changeAccount(nextAccountId: string) {
@@ -268,6 +335,12 @@ export function PaymentForm({
   }
 
   function setRow(invoiceId: string, patch: Partial<AppliedRow>) {
+    setRowErrors((current) => {
+      const next = { ...current };
+      delete next[invoiceId];
+      return next;
+    });
+    setAllocationsError(undefined);
     setApplied((current) => ({
       ...current,
       [invoiceId]: { selected: false, amountPayment: "", ...current[invoiceId], ...patch },
@@ -279,32 +352,60 @@ export function PaymentForm({
     return result.ok && result.data ? (result.data as RateLookupResult) : null;
   }
 
-  /** The allocations ticked in the section, with their invoice-currency amount (edited or proposed). */
+  /**
+   * The ticked allocations, with both amounts exactly as the fields show them (rule 22): the payment-currency amount
+   * as typed and the invoice-currency amount as shown, edited or proposed. A row with nothing valid to send is
+   * flagged instead of being completed with a hidden value.
+   */
   function buildAllocations() {
-    return openInvoices.flatMap((invoice) => {
+    const allocations: CreatePaymentDto["allocations"] = [];
+    const missing: Record<string, string> = {};
+    for (const invoice of openInvoices) {
       const row = applied[invoice.id];
-      if (!row?.selected || !isDecimalString(row.amountPayment)) return [];
-      const proposal = proposeInvoiceAmount(row.amountPayment, currency, usdRate, invoice);
-      const invoiceAmount = row.invoiceAmount ?? proposal ?? row.amountPayment;
-      return [
-        {
-          invoiceId: invoice.id,
-          amountPaymentCurrency: row.amountPayment,
-          amountInvoiceCurrency: invoiceAmount,
-        },
-      ];
-    });
+      if (!row?.selected) continue;
+      const shown = shownInvoiceAmount(row, invoice, currency, usdRate);
+      if (!isPositiveAmount(row.amountPayment) || !isPositiveAmount(shown)) {
+        missing[invoice.id] = "payments.validation.allocationAmountRequired";
+        continue;
+      }
+      allocations.push({
+        invoiceId: invoice.id,
+        amountPaymentCurrency: row.amountPayment,
+        amountInvoiceCurrency: shown,
+      });
+    }
+    return { allocations, missing };
+  }
+
+  /** The BE's refusal: each field error at its path (a row of "Aplicar a facturas", the section, a field). */
+  function showError(error: ActionError, submittedInvoiceIds: readonly string[]) {
+    const nextRowErrors: Record<string, string> = {};
+    for (const [path, messages] of Object.entries(error.fieldErrors ?? {})) {
+      const message = messages[0];
+      if (!message) continue;
+      const [root = "", index, ...rest] = path.split(".");
+      if (root === "allocations" && index === undefined) {
+        setAllocationsError(message);
+      } else if (root === "allocations") {
+        const invoiceId = submittedInvoiceIds[Number(index)];
+        if (invoiceId && rest.length > 0) nextRowErrors[invoiceId] = message;
+      } else if ((FIELD_NAMES as readonly string[]).includes(root)) {
+        form.setError(root as (typeof FIELD_NAMES)[number], { message });
+      }
+    }
+    setRowErrors(nextRowErrors);
+    toast.error(error.message ? tRoot(error.message as never) : tErrors(error.code));
   }
 
   async function onSubmit(values: PaymentFormValues) {
-    // The reference rule follows the method (HU-13 CA1); the server repeats it. The resolver output drops a
-    // blank reference to `undefined`, so the check must not assume a string.
+    // The reference rule follows the method (HU-13 CA1); the server repeats it. The resolver output drops a blank
+    // reference to `undefined`, so the check must not assume a string.
     if (requiresReference && !values.reference?.trim()) {
       form.setError("reference", { message: "payments.validation.referenceRequired" });
       return;
     }
-    const allocations = buildAllocations();
-    const payload: Parameters<typeof createPaymentAction>[0] = {
+    setAllocationsError(undefined);
+    const fields = {
       clientId: values.clientId,
       date: values.date,
       accountId: values.accountId,
@@ -315,33 +416,48 @@ export function PaymentForm({
       feeAmount: values.feeAmount,
       usdRate: isUsd ? "1" : values.usdRate,
       reference: values.reference || undefined,
+    };
+
+    if (payment) {
+      setSaving(true);
+      const result = await updatePaymentAction({
+        id: payment.id,
+        ...fields,
+        // Removing the stored receipt clears it; an untouched one is sent unchanged.
+        receiptFileId: values.receiptFileId ?? null,
+      });
+      setSaving(false);
+      if (!result.ok) {
+        showError(result.error, []);
+        return;
+      }
+      toast.success(t("toast.updated"));
+      router.push(`/payments/${result.data.id}`);
+      return;
+    }
+
+    const { allocations, missing } = buildAllocations();
+    if (Object.keys(missing).length > 0) {
+      setRowErrors(missing);
+      toast.error(tErrors("VALIDATION"));
+      return;
+    }
+    setRowErrors({});
+
+    setSaving(true);
+    const result = await createPaymentAction({
+      ...fields,
       receiptFileId: values.receiptFileId || undefined,
       status: "CONFIRMADO",
       allocations,
-    };
-
-    setSaving(true);
-    const result = await createPaymentAction(payload);
+    });
     setSaving(false);
 
     if (!result.ok) {
-      const { error } = result;
-      if (error.fieldErrors) {
-        for (const [field, messages] of Object.entries(error.fieldErrors)) {
-          const message = messages[0];
-          const root = field.split(".")[0] ?? "";
-          if (message && (FIELD_NAMES as readonly string[]).includes(root)) {
-            form.setError(root as (typeof FIELD_NAMES)[number], {
-              message: tRoot(message as never),
-            });
-          }
-        }
-        const allocationMessage = Object.entries(error.fieldErrors).find(([key]) =>
-          key.startsWith("allocations"),
-        )?.[1]?.[0];
-        if (allocationMessage) toast.error(tRoot(allocationMessage as never));
-      }
-      toast.error(tErrors(error.code));
+      showError(
+        result.error,
+        allocations.map((allocation) => allocation.invoiceId),
+      );
       return;
     }
 
@@ -349,20 +465,29 @@ export function PaymentForm({
     router.push(`/payments/${result.data.id}`);
   }
 
+  const receiptFile = payment?.receipt ? fileDtoSchema.safeParse(payment.receipt) : undefined;
+
   return (
     <form id={FORM_ID} noValidate onSubmit={form.handleSubmit(onSubmit)}>
       <FormPage
-        title={t("form.title")}
-        description={t("form.description")}
-        backHref="/payments/list"
+        title={editing ? t("form.editTitle") : t("form.title")}
+        description={editing ? t("form.editDescription") : t("form.description")}
+        backHref={payment ? `/payments/${payment.id}` : "/payments/list"}
         dirty={form.formState.isDirty}
         footer={
           <>
             <Button variant="outline" asChild>
-              <Link href="/payments">{tActions("cancel")}</Link>
+              <Link href={payment ? `/payments/${payment.id}` : "/payments"}>
+                {tActions("cancel")}
+              </Link>
             </Button>
-            <Button type="submit" form={FORM_ID} disabled={saving}>
-              {t("form.submit")}
+            <Button
+              type="submit"
+              form={FORM_ID}
+              disabled={saving}
+              className="transition-transform active:scale-[0.96]"
+            >
+              {editing ? t("form.save") : t("form.submit")}
             </Button>
           </>
         }
@@ -376,7 +501,7 @@ export function PaymentForm({
           <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
             <Field data-invalid={errors.clientId ? true : undefined}>
               <FieldLabel htmlFor="payment-client">{t("form.fields.client")}</FieldLabel>
-              <Select value={clientId} onValueChange={changeClient}>
+              <Select value={clientId} onValueChange={changeClient} disabled={locked}>
                 <SelectTrigger
                   id="payment-client"
                   className="w-full"
@@ -385,9 +510,9 @@ export function PaymentForm({
                   <SelectValue placeholder={t("form.fields.clientPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((client) => (
+                  {clientOptions.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name}
+                      {client.label + (client.inactive ? hint : "")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -412,7 +537,7 @@ export function PaymentForm({
             </Field>
             <Field data-invalid={errors.accountId ? true : undefined}>
               <FieldLabel htmlFor="payment-account">{t("form.fields.account")}</FieldLabel>
-              <Select value={accountId} onValueChange={changeAccount}>
+              <Select value={accountId} onValueChange={changeAccount} disabled={locked}>
                 <SelectTrigger
                   id="payment-account"
                   className="w-full"
@@ -421,9 +546,9 @@ export function PaymentForm({
                   <SelectValue placeholder={t("form.fields.accountPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((item) => (
+                  {accountOptions.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
-                      {`${item.name} (${item.currency})`}
+                      {item.label + (item.inactive ? hint : "")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -446,9 +571,9 @@ export function PaymentForm({
                   <SelectValue placeholder={t("form.fields.methodPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {methods.map((item) => (
+                  {methodOptions.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
-                      {catalogLabel(item, locale)}
+                      {item.label + (item.inactive ? hint : "")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -469,7 +594,12 @@ export function PaymentForm({
               <FieldLabel htmlFor="payment-amount">
                 {t("form.fields.amount")} {currency ? `(${currency})` : null}
               </FieldLabel>
-              <Input id="payment-amount" inputMode="decimal" {...form.register("amount")} />
+              <Input
+                id="payment-amount"
+                inputMode="decimal"
+                className="tabular-nums"
+                {...form.register("amount")}
+              />
               <FieldError>{fieldMessage(errors.amount?.message)}</FieldError>
             </Field>
             <Field data-invalid={errors.igtfAmount ? true : undefined}>
@@ -477,6 +607,7 @@ export function PaymentForm({
               <Input
                 id="payment-igtf"
                 inputMode="decimal"
+                className="tabular-nums"
                 {...form.register("igtfAmount", {
                   onChange: () => setIgtfEdited(true),
                 })}
@@ -486,10 +617,15 @@ export function PaymentForm({
             </Field>
             <Field data-invalid={errors.feeAmount ? true : undefined}>
               <FieldLabel htmlFor="payment-fee">{t("form.fields.fee")}</FieldLabel>
-              <Input id="payment-fee" inputMode="decimal" {...form.register("feeAmount")} />
+              <Input
+                id="payment-fee"
+                inputMode="decimal"
+                className="tabular-nums"
+                {...form.register("feeAmount")}
+              />
               <FieldError>{fieldMessage(errors.feeAmount?.message)}</FieldError>
             </Field>
-            {account && !isUsd ? (
+            {currency !== "" && !isUsd ? (
               <Field data-invalid={errors.usdRate ? true : undefined}>
                 <FieldLabel htmlFor="payment-usd-rate">
                   {t("form.fields.usdRate", { currency })}
@@ -506,6 +642,7 @@ export function PaymentForm({
                       date={date}
                       currency={currency}
                       lookupRate={lookupRate}
+                      prefillOnMount={!editing}
                     />
                   )}
                 />
@@ -532,25 +669,29 @@ export function PaymentForm({
           </dl>
         </SectionCard>
 
-        <SectionCard
-          group
-          span={1}
-          title={t("form.sections.allocations.title")}
-          description={t("form.sections.allocations.description")}
-        >
-          <AllocationsSection
-            openInvoices={openInvoices}
-            clientSelected={clientId !== ""}
-            applied={applied}
-            currency={currency}
-            usdRate={usdRate}
-            onRowChange={setRow}
-          />
-        </SectionCard>
+        {editing ? null : (
+          <SectionCard
+            group
+            span={1}
+            title={t("form.sections.allocations.title")}
+            description={t("form.sections.allocations.description")}
+          >
+            <AllocationsSection
+              openInvoices={openInvoices}
+              clientSelected={clientId !== ""}
+              applied={applied}
+              currency={currency}
+              usdRate={usdRate}
+              errors={rowErrors}
+              sectionError={allocationsError}
+              onRowChange={setRow}
+            />
+          </SectionCard>
+        )}
 
         <SectionCard group span={1} title={t("form.sections.reference.title")}>
           {duplicates.length > 0 ? (
-            <Alert className="mb-4">
+            <Alert className="mb-4 duration-200 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95">
               <AlertTitle>{t("form.duplicate.title")}</AlertTitle>
               <AlertDescription>
                 {t("form.duplicate.description", {
@@ -576,6 +717,7 @@ export function PaymentForm({
                 context="payment_receipt"
                 multiple={false}
                 aria-label={t("form.ariaReceipt")}
+                {...(receiptFile?.success ? { defaultFiles: [receiptFile.data] } : {})}
                 onChange={(files) =>
                   form.setValue("receiptFileId", files[0]?.id ?? undefined, {
                     shouldValidate: true,
@@ -604,7 +746,7 @@ function AmountLine({
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd>
+      <dd className="tabular-nums">
         {amount !== undefined && currency !== "" ? (
           <MoneyText amount={amount} currency={currency} />
         ) : (
@@ -621,6 +763,8 @@ function AllocationsSection({
   applied,
   currency,
   usdRate,
+  errors,
+  sectionError,
   onRowChange,
 }: {
   openInvoices: OpenInvoiceOption[];
@@ -628,9 +772,12 @@ function AllocationsSection({
   applied: Record<string, AppliedRow>;
   currency: string;
   usdRate: string;
+  errors: Record<string, string>;
+  sectionError: string | undefined;
   onRowChange: (invoiceId: string, patch: Partial<AppliedRow>) => void;
 }) {
   const t = useTranslations("payments.form");
+  const tRoot = useTranslations();
 
   if (!clientSelected) {
     return <p className="text-sm text-muted-foreground">{t("fields.noClient")}</p>;
@@ -641,65 +788,19 @@ function AllocationsSection({
 
   return (
     <div className="flex flex-col gap-3">
-      {openInvoices.map((invoice) => {
-        const row = applied[invoice.id];
-        const selected = row?.selected ?? false;
-        const proposal = row?.amountPayment
-          ? proposeInvoiceAmount(row.amountPayment, currency, usdRate, invoice)
-          : null;
-        return (
-          <div
-            key={invoice.id}
-            className="grid items-center gap-3 rounded-xl border p-3 text-sm @lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
-          >
-            <label className="flex items-center gap-3">
-              <Checkbox
-                checked={selected}
-                onCheckedChange={(value) => onRowChange(invoice.id, { selected: value === true })}
-                aria-label={invoice.code}
-              />
-              <span className="flex flex-col">
-                <span className="font-medium">{invoice.code}</span>
-                <span className="text-xs text-muted-foreground">{invoice.invoiceNumber}</span>
-              </span>
-            </label>
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground">{t("fields.balanceHeader")}</span>
-              <MoneyText amount={invoice.balance} currency={invoice.currency} />
-            </div>
-            <Field>
-              <FieldLabel htmlFor={`payment-alloc-${invoice.id}`}>
-                {t("fields.amountHeader", { currency })}
-              </FieldLabel>
-              <Input
-                id={`payment-alloc-${invoice.id}`}
-                inputMode="decimal"
-                disabled={!selected}
-                value={row?.amountPayment ?? ""}
-                onChange={(event) =>
-                  onRowChange(invoice.id, {
-                    amountPayment: event.target.value,
-                    invoiceAmount: undefined,
-                  })
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={`payment-alloc-inv-${invoice.id}`}>
-                {t("fields.invoiceCurrencyHeader", { currency: invoice.currency })}
-              </FieldLabel>
-              <Input
-                id={`payment-alloc-inv-${invoice.id}`}
-                inputMode="decimal"
-                disabled={!selected}
-                value={row?.invoiceAmount ?? proposal ?? ""}
-                onChange={(event) => onRowChange(invoice.id, { invoiceAmount: event.target.value })}
-              />
-              <FieldDescription>{t("fields.proposedHint")}</FieldDescription>
-            </Field>
-          </div>
-        );
-      })}
+      <AllocationRows
+        openInvoices={openInvoices}
+        applied={applied}
+        currency={currency}
+        usdRate={usdRate}
+        errors={errors}
+        onRowChange={onRowChange}
+      />
+      {sectionError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {tRoot(sectionError as never)}
+        </p>
+      ) : null}
     </div>
   );
 }

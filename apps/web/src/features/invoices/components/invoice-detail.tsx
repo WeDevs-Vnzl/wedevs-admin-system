@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Send, Archive } from "lucide-react";
@@ -22,23 +23,26 @@ import { InvoiceLinesTable } from "@/features/invoices/components/invoice-lines-
 import { InvoiceTotalsPanel } from "@/features/invoices/components/invoice-totals-panel";
 import { VoidInvoiceDialog } from "@/features/invoices/components/void-invoice-dialog";
 import { sumMoney } from "@/lib/money";
-import type { InvoiceAllocationRow, InvoiceDetailDTO } from "@/lib/validators/invoices";
+import type { InvoiceAllocationDto, InvoiceResponseDto } from "@/lib/api/types/invoices";
+import { useActionErrorMessage } from "./use-action-error";
 
 type InvoiceDetailProps = {
-  invoice: InvoiceDetailDTO;
+  invoice: InvoiceResponseDto;
   canUpdate: boolean;
+  /** The async payment-links panel the page renders on the server (6.1); shown at the foot of the Pagos tab. */
+  paymentLinks?: ReactNode;
 };
 
-const allocationHelper = createDataTableColumnHelper<InvoiceAllocationRow>();
+const allocationHelper = createDataTableColumnHelper<InvoiceAllocationDto>();
 
 /**
  * `/invoices/[id]` (PRD §8.5): the header with its status and actions, then three tabs: the lines with the per-rate
  * totals, the payments that allocate to the invoice, and the "Archivo" with the PDF of the real invoice (CA4).
  * The "Detalle | Grafo" toggle opens `/invoices/[id]/graph` (A4).
  */
-export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, canUpdate, paymentLinks }: InvoiceDetailProps) {
   const t = useTranslations("invoices");
-  const tErrors = useTranslations("common.errors");
+  const errorMessage = useActionErrorMessage();
   const router = useRouter();
   const isVoided = invoice.voidedAt !== null;
   const editable = canUpdate && !isVoided;
@@ -46,7 +50,7 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   async function onIssue() {
     const result = await issueDraftAction({ id: invoice.id });
     if (!result.ok) {
-      toast.error(tErrors(result.error.code));
+      toast.error(errorMessage(result.error));
       return;
     }
     toast.success(t("toast.issued"));
@@ -56,14 +60,14 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
   async function onArchive() {
     const result = await archiveInvoiceAction({ id: invoice.id });
     if (!result.ok) {
-      toast.error(tErrors(result.error.code));
+      toast.error(errorMessage(result.error));
       return;
     }
     toast.success(t("toast.archived"));
     router.push("/invoices/list");
   }
 
-  const allocationColumns: DataTableColumnDef<InvoiceAllocationRow>[] = [
+  const allocationColumns: DataTableColumnDef<InvoiceAllocationDto>[] = [
     allocationHelper.display({
       id: "payment",
       header: t("payments.columns.payment"),
@@ -129,16 +133,19 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
       value: "payments",
       label: t("detail.tabs.payments"),
       content: (
-        <DataTable
-          variant="compact"
-          data={invoice.allocations}
-          columns={allocationColumns}
-          getRowId={(row) => row.id}
-          emptyState={{
-            title: t("payments.empty.title"),
-            description: t("payments.empty.description"),
-          }}
-        />
+        <div className="flex flex-col gap-6">
+          <DataTable
+            variant="compact"
+            data={invoice.allocations}
+            columns={allocationColumns}
+            getRowId={(row) => row.id}
+            emptyState={{
+              title: t("payments.empty.title"),
+              description: t("payments.empty.description"),
+            }}
+          />
+          {paymentLinks}
+        </div>
       ),
     },
     {
@@ -202,7 +209,7 @@ export function InvoiceDetail({ invoice, canUpdate }: InvoiceDetailProps) {
 }
 
 /** The withholdings stored on the invoice, summed with `Decimal` (PRD §9). */
-function sumWithholdings(invoice: InvoiceDetailDTO): string {
+function sumWithholdings(invoice: InvoiceResponseDto): string {
   return sumMoney([
     invoice.totals.ivaWithheld,
     invoice.totals.islrWithheld,

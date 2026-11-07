@@ -3,7 +3,8 @@
 import { LogOut, PanelLeft, PanelLeftClose, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/app/brand-mark";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { findNavItem, SETTINGS_NAV_ITEM, visibleNavGroups, type NavItem } from "@/config/nav";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 
 /** Up to two initials of a name, for the avatar fallback (sidebar user block and topbar menu). */
 export function initialsOf(name: string): string {
@@ -48,7 +49,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
   const tAuth = useTranslations("auth");
   const tUser = useTranslations("shell.userMenu");
   const tRole = useTranslations("enums.UserRole");
-  const router = useRouter();
+  const { signOut } = useClerk();
   const pathname = usePathname();
   const groups = visibleNavGroups(user);
   const settingsActive = isActivePath(pathname, SETTINGS_NAV_ITEM.href);
@@ -135,7 +136,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
             className="size-8 shrink-0 group-data-[collapsible=icon]:hidden"
             aria-label={tAuth("signOut")}
             title={tAuth("signOut")}
-            onClick={() => router.push("/sign-in")}
+            onClick={() => void signOut({ redirectUrl: "/sign-in" })}
           >
             <LogOut aria-hidden />
           </Button>

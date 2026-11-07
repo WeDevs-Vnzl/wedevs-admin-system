@@ -1,17 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
+vi.mock("next/cache", () => cache);
 vi.mock("next-intl/server", () => intl);
 
-import { getMockStore } from "@/mocks/store";
+import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { ExportCsvInputRaw } from "@/lib/validators/export";
-import { makeSessionUser } from "@/mocks/test-helpers";
-import type { UserRole } from "@/lib/validators/enums";
 import {
   assignTagsAction,
   createTagAction,
@@ -21,229 +22,276 @@ import {
   updateTagAction,
 } from "./actions";
 
-const signIn = (role: UserRole) =>
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role, { id: "usr_actor" }));
-
-/** Fixtures of the dataset: an active client, an active project and the first two tags. */
-const fixtures = () => {
-  const db = getMockStore();
-  return {
-    client: db.clients.find((row) => !row.archivedAt)!,
-    project: db.projects.find((row) => !row.archivedAt)!,
-    tags: db.tags,
-  };
+const tag = {
+  id: "tag_ur",
+  name: "Urgente",
+  color: "#ff0000",
+  usageCount: 3,
+  createdAt: "2026-01-01T00:00:00.000Z",
 };
 
-beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-});
+const chip = { id: "tag_ur", name: "Urgente", color: "#ff0000" };
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
+beforeEach(() => {
+  cache.revalidatePath.mockReset();
+  cache.updateTag.mockReset();
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("createTagAction", () => {
-  it("lets an Owner create a tag from the settings", async () => {
-    signIn("OWNER");
-    expect(await createTagAction({ name: "Prioridad alta", color: "#123456" })).toMatchObject({
+  it("creates a tag through POST /api/v1/tags and refreshes the Settings table", async () => {
+    const { api, calls } = mockApi({ "POST /api/v1/tags": { status: 201, body: tag } });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(await createTagAction({ name: "Urgente", color: "#ff0000" })).toEqual({
       ok: true,
-      data: { name: "Prioridad alta", color: "#123456", usageCount: 0 },
+      data: tag,
+    });
+    expect(calls[0]?.body).toEqual({ name: "Urgente", color: "#ff0000" });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/tags");
+  });
+
+  it("answers CONFLICT with the existing tag as the entity and revalidates nothing", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/tags": errorEnvelope("CONFLICT", {
+        entity: { type: "TAG", id: tag.id, code: null, label: tag.name },
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(await createTagAction({ name: "urgente", color: "#ff0000" })).toEqual({
+      ok: false,
+      error: expect.objectContaining({
+        code: "CONFLICT",
+        entity: { type: "TAG", id: tag.id, label: tag.name },
+      }),
+    });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps the field keys the BE returns onto the field errors", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/tags": errorEnvelope("VALIDATION", {
+        fieldErrors: { color: ["validation.invalidFormat"] },
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(await createTagAction({ name: "Urgente", color: "rojo" })).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION", fieldErrors: { color: ["validation.invalidFormat"] } },
     });
   });
 
-  it("lets a Member create one inline from a note or a project (any-of grants)", async () => {
-    signIn("MEMBER");
-    expect(await createTagAction({ name: "Inline miembro", color: "#123456" })).toMatchObject({
-      ok: true,
-    });
-  });
+  it("maps FORBIDDEN when the BE refuses the caller", async () => {
+    const { api } = mockApi({ "POST /api/v1/tags": errorEnvelope("FORBIDDEN") });
+    server.getServerApi.mockResolvedValue(api);
 
-  it("refuses a Viewer", async () => {
-    signIn("VIEWER");
     expect(await createTagAction({ name: "Lector", color: "#123456" })).toMatchObject({
       ok: false,
       error: { code: "FORBIDDEN" },
     });
-    expect(getMockStore().tags.some((tag) => tag.name === "Lector")).toBe(false);
-  });
-
-  it("answers CONFLICT with the existing tag as the entity", async () => {
-    signIn("OWNER");
-    const existing = fixtures().tags[0]!;
-    expect(await createTagAction({ name: existing.name.toUpperCase(), color: "#000000" })).toEqual({
-      ok: false,
-      error: expect.objectContaining({
-        code: "CONFLICT",
-        entity: { type: "TAG", id: existing.id, label: existing.name },
-      }),
-    });
-  });
-
-  it("requires a session and a valid colour", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect(await createTagAction({ name: "Sin sesión", color: "#123456" })).toMatchObject({
-      ok: false,
-      error: { code: "UNAUTHENTICATED" },
-    });
-    signIn("OWNER");
-    expect(await createTagAction({ name: "Color roto", color: "rojo" })).toMatchObject({
-      ok: false,
-      error: { code: "VALIDATION" },
-    });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
   });
 });
 
 describe("updateTagAction", () => {
-  it("lets an Owner rename and recolour a tag", async () => {
-    signIn("OWNER");
-    const tag = fixtures().tags[0]!;
+  it("renames and recolours through PATCH /api/v1/tags/{id} without the id in the body", async () => {
+    const { api, calls } = mockApi({
+      "PATCH /api/v1/tags/{id}": { body: { ...tag, color: "#abcdef" } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
     expect(await updateTagAction({ id: tag.id, color: "#abcdef" })).toMatchObject({
       ok: true,
       data: { id: tag.id, color: "#abcdef" },
     });
+    expect(calls[0]?.path).toBe("/api/v1/tags/tag_ur");
+    expect(calls[0]?.body).toEqual({ color: "#abcdef" });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/tags");
   });
 
-  it("refuses a Member: the catalogue is settings (Owner and Admin)", async () => {
-    signIn("MEMBER");
-    const tag = fixtures().tags[0]!;
-    expect(await updateTagAction({ id: tag.id, color: "#abcdef" })).toMatchObject({
-      ok: false,
-      error: { code: "FORBIDDEN" },
+  it("answers CONFLICT with the field key when the new name is taken", async () => {
+    const { api } = mockApi({
+      "PATCH /api/v1/tags/{id}": errorEnvelope("CONFLICT", {
+        fieldErrors: { name: ["tags.errors.nameTaken"] },
+      }),
     });
-    expect(getMockStore().tags.find((row) => row.id === tag.id)?.color).toBe(tag.color);
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(await updateTagAction({ id: tag.id, name: "Prioridad" })).toMatchObject({
+      ok: false,
+      error: { code: "CONFLICT", fieldErrors: { name: ["tags.errors.nameTaken"] } },
+    });
   });
 
-  it("validates the input before the service runs", async () => {
-    signIn("OWNER");
-    expect(await updateTagAction({ id: "../tag", color: "#abcdef" })).toMatchObject({
+  it("answers NOT_FOUND for a tag that no longer exists", async () => {
+    const { api } = mockApi({ "PATCH /api/v1/tags/{id}": errorEnvelope("NOT_FOUND") });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(await updateTagAction({ id: "tag_gone", color: "#abcdef" })).toMatchObject({
       ok: false,
-      error: { code: "VALIDATION" },
+      error: { code: "NOT_FOUND" },
     });
   });
 });
 
 describe("assignTagsAction", () => {
-  it("lets a Member tag a project", async () => {
-    signIn("MEMBER");
-    const { project, tags } = fixtures();
+  it("tags an entity through POST /api/v1/tags/assign and returns the chips", async () => {
+    const { api, calls } = mockApi({
+      "POST /api/v1/tags/assign": { body: { items: [chip] } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
     expect(
-      await assignTagsAction({
-        entityType: "PROJECT",
-        entityId: project.id,
-        tagIds: [tags[0]!.id],
-      }),
-    ).toMatchObject({ ok: true, data: [expect.objectContaining({ id: tags[0]!.id })] });
-    expect(getMockStore().projects.find((row) => row.id === project.id)?.tagIds).toContain(
-      tags[0]!.id,
-    );
+      await assignTagsAction({ entityType: "PROJECT", entityId: "prj_1", tagIds: [tag.id] }),
+    ).toEqual({ ok: true, data: [chip] });
+    expect(calls[0]?.body).toEqual({ entityType: "PROJECT", entityId: "prj_1", tagIds: [tag.id] });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/tags");
   });
 
-  it("refuses a Member on a client with FORBIDDEN from the service check, and writes nothing", async () => {
-    signIn("MEMBER");
-    const { client, tags } = fixtures();
-    const before = [...(client.tagIds ?? [])];
+  it("maps FORBIDDEN when a Member tags a client, and changes nothing", async () => {
+    const { api } = mockApi({ "POST /api/v1/tags/assign": errorEnvelope("FORBIDDEN") });
+    server.getServerApi.mockResolvedValue(api);
+
     expect(
-      await assignTagsAction({ entityType: "CLIENT", entityId: client.id, tagIds: [tags[0]!.id] }),
+      await assignTagsAction({ entityType: "CLIENT", entityId: "cli_1", tagIds: [tag.id] }),
     ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-    expect(client.tagIds ?? []).toEqual(before);
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("refuses a Viewer at the gate", async () => {
-    signIn("VIEWER");
-    const { project, tags } = fixtures();
-    expect(
-      await assignTagsAction({
-        entityType: "PROJECT",
-        entityId: project.id,
-        tagIds: [tags[0]!.id],
+  it("maps the VALIDATION key of an unknown tag id", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/tags/assign": errorEnvelope("VALIDATION", {
+        fieldErrors: { tagIds: ["validation.invalidOption"] },
       }),
-    ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(
+      await assignTagsAction({ entityType: "PROJECT", entityId: "prj_1", tagIds: ["tag_missing"] }),
+    ).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION", fieldErrors: { tagIds: ["validation.invalidOption"] } },
+    });
   });
 
-  it("answers VALIDATION for a bad entity type or an empty tag list", async () => {
-    signIn("OWNER");
-    const { project, tags } = fixtures();
-    expect(
-      await assignTagsAction({
-        entityType: "NOT_A_TYPE" as never,
-        entityId: project.id,
-        tagIds: [tags[0]!.id],
-      }),
-    ).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(
-      await assignTagsAction({ entityType: "PROJECT", entityId: project.id, tagIds: [] }),
-    ).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-  });
+  it("maps NOT_FOUND for an unknown entity", async () => {
+    const { api } = mockApi({ "POST /api/v1/tags/assign": errorEnvelope("NOT_FOUND") });
+    server.getServerApi.mockResolvedValue(api);
 
-  it("answers NOT_FOUND for an unknown tag and keeps the entity's tags", async () => {
-    signIn("OWNER");
-    const { project } = fixtures();
-    const before = [...(project.tagIds ?? [])];
     expect(
-      await assignTagsAction({
-        entityType: "PROJECT",
-        entityId: project.id,
-        tagIds: ["tag_missing"],
-      }),
+      await assignTagsAction({ entityType: "PROJECT", entityId: "prj_gone", tagIds: [tag.id] }),
     ).toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
-    expect(project.tagIds ?? []).toEqual(before);
   });
 });
 
 describe("unassignTagAction", () => {
-  it("lets a Member untag a project and refuses the same on a client", async () => {
-    signIn("MEMBER");
-    const { project, client, tags } = fixtures();
-    project.tagIds = [tags[0]!.id];
-    client.tagIds = [tags[0]!.id];
+  it("removes one tag through POST /api/v1/tags/unassign", async () => {
+    const { api, calls } = mockApi({ "POST /api/v1/tags/unassign": { body: { items: [] } } });
+    server.getServerApi.mockResolvedValue(api);
+
     expect(
-      await unassignTagAction({ entityType: "PROJECT", entityId: project.id, tagId: tags[0]!.id }),
-    ).toMatchObject({ ok: true, data: [] });
+      await unassignTagAction({ entityType: "PROJECT", entityId: "prj_1", tagId: tag.id }),
+    ).toEqual({ ok: true, data: [] });
+    expect(calls[0]?.body).toEqual({ entityType: "PROJECT", entityId: "prj_1", tagId: tag.id });
+  });
+
+  it("maps FORBIDDEN when a Member untags a client", async () => {
+    const { api } = mockApi({ "POST /api/v1/tags/unassign": errorEnvelope("FORBIDDEN") });
+    server.getServerApi.mockResolvedValue(api);
+
     expect(
-      await unassignTagAction({ entityType: "CLIENT", entityId: client.id, tagId: tags[0]!.id }),
+      await unassignTagAction({ entityType: "CLIENT", entityId: "cli_1", tagId: tag.id }),
     ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
   });
 });
 
 describe("listTagsAction", () => {
-  it('is reference data: every signed-in role may read it ("authenticated")', async () => {
-    signIn("VIEWER");
-    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+  it('is reference data: every signed-in role reads GET /api/v1/tags ("authenticated")', async () => {
+    const { api, calls } = mockApi({
+      "GET /api/v1/tags": { body: { items: [tag], total: 1, page: 1, pageSize: 25, pageCount: 1 } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 25, q: "ur" })).toEqual({
       ok: true,
-      data: { total: getMockStore().tags.length },
+      data: { items: [tag], total: 1, page: 1, pageSize: 25, pageCount: 1 },
+    });
+    expect(calls[0]?.search.get("q")).toBe("ur");
+  });
+
+  it("maps the UNAUTHENTICATED envelope the BE sends without a session", async () => {
+    const { api } = mockApi({ "GET /api/v1/tags": errorEnvelope("UNAUTHENTICATED") });
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED", redirectTo: "/sign-in" },
     });
   });
 
-  it("requires a session", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect(await listTagsAction({ pageSize: 25 })).toMatchObject({
+  it("answers VALIDATION for a page size the table cannot send, without calling the BE", async () => {
+    const { api, calls } = mockApi({});
+    server.getServerApi.mockResolvedValue(api);
+    expect(await listTagsAction({ pageSize: 33 as never })).toMatchObject({
       ok: false,
-      error: { code: "UNAUTHENTICATED" },
+      error: { code: "VALIDATION" },
     });
+    expect(calls).toHaveLength(0);
   });
 });
 
 describe("exportTagsCsvAction", () => {
+  /** Routes the server client of the export action to an HTTP double of `POST /exports/TAG`. */
+  function exportApi(response?: () => Response) {
+    const mocked = mockApi({
+      "POST /api/v1/exports/TAG":
+        response ??
+        (() =>
+          new Response("h\r\n", {
+            status: 200,
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "X-Export-Row-Count": "2",
+              "X-Export-Truncated": "false",
+            },
+          })),
+    });
+    server.getServerApi.mockResolvedValue(mocked.api);
+    return mocked;
+  }
+
+  const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
+    const { status, body } = errorEnvelope(code);
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
   const input: ExportCsvInputRaw = {
     entity: "TAG",
     query: { page: 1, pageSize: 25 },
     columns: ["name", "usageCount"],
   };
 
-  it("lets an Owner and an Admin export the tag table", async () => {
-    signIn("OWNER");
-    expect(await exportTagsCsvAction(input)).toMatchObject({ ok: true });
-    signIn("ADMIN");
-    expect(await exportTagsCsvAction(input)).toMatchObject({ ok: true });
+  it("posts the visible columns, translated labels and the query to /exports/TAG", async () => {
+    const { calls } = exportApi();
+    expect(await exportTagsCsvAction(input)).toMatchObject({
+      ok: true,
+      data: { rowCount: 2, truncated: false },
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.body).toMatchObject({
+      columns: [
+        { id: "name", label: expect.stringMatching(/^tags:.*name$/) },
+        { id: "usageCount", label: expect.stringMatching(/^tags:.*usageCount$/) },
+      ],
+      query: { archived: "exclude", filters: {} },
+    });
   });
 
-  it("refuses a Member and a Viewer: the export needs read on settings", async () => {
-    signIn("MEMBER");
-    expect(await exportTagsCsvAction(input)).toMatchObject({
-      ok: false,
-      error: { code: "FORBIDDEN" },
-    });
-    signIn("VIEWER");
+  it("maps the FORBIDDEN envelope the BE sends to Member and Viewer", async () => {
+    exportApi(errorResponse("FORBIDDEN"));
     expect(await exportTagsCsvAction(input)).toMatchObject({
       ok: false,
       error: { code: "FORBIDDEN" },

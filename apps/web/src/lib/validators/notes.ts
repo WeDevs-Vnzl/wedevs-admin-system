@@ -5,7 +5,6 @@ import {
   entityRefSchema,
   idSchema,
   listQuerySchema,
-  type Paginated,
 } from "./common";
 import { fileDtoSchema } from "./files";
 import {
@@ -17,7 +16,7 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import type { ArchivedRecordDTO } from "./trash";
+
 import { userRefSchema } from "./users";
 
 /**
@@ -310,21 +309,3 @@ export const noteListRowSchema = z.object({
   archivedAt: timestampSchema.nullable(),
 });
 export type NoteListRowDTO = z.infer<typeof noteListRowSchema>;
-
-// ───────────────────────────── Services (PRD §12 `notes`) ─────────────────────────────
-
-/**
- * `notes` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `listNotes` / `getNote`
- * are the read counterparts that PRD §12 leaves implicit.
- */
-export type NotesService<Ctx = unknown> = {
-  createNote: (ctx: Ctx, input: CreateNoteInput) => Promise<NoteDetailDTO>;
-  updateNote: (ctx: Ctx, input: UpdateNoteInput) => Promise<NoteDetailDTO>;
-  pinNote: (ctx: Ctx, input: PinNoteInput) => Promise<NoteDetailDTO>;
-  linkNote: (ctx: Ctx, input: LinkNoteInput) => Promise<NoteDetailDTO>;
-  unlinkNote: (ctx: Ctx, input: UnlinkNoteInput) => Promise<NoteDetailDTO>;
-  attachFile: (ctx: Ctx, input: AttachFileInput) => Promise<NoteDetailDTO>;
-  archiveNote: (ctx: Ctx, input: ArchiveNoteInput) => Promise<ArchivedRecordDTO>;
-  listNotes: (ctx: Ctx, input: NoteFilter) => Promise<Paginated<NoteListRowDTO>>;
-  getNote: (ctx: Ctx, input: NoteIdInput) => Promise<NoteDetailDTO>;
-};

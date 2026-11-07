@@ -5,8 +5,7 @@ import {
 } from "@/lib/validators/activity";
 
 /**
- * Per-field diff for the activity log (PRD §8.14, C12). Pure and framework-free, so the Hito 1 mock
- * services and the Hito 2 services (H2-B3) build `changes` the same way.
+ * Per-field diff for the activity log (PRD §8.14, C12). Pure and framework-free.
  */
 
 export interface DiffFieldsOptions {

@@ -1,12 +1,12 @@
 "use client";
 
 import { Download } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { DateText } from "@/components/patterns/date-text";
 import { Button } from "@/components/ui/button";
 import { AlertList } from "@/features/alerts/components/alert-list";
-import type { DateOnly } from "@/lib/dates";
-import type { DashboardDTO, KpiCardDTO } from "@/lib/validators/dashboard";
+import type { DashboardResponseDto } from "@/lib/api/types/intel";
+import { formatDate } from "@/lib/dates";
 import { downloadCsv, toCsv } from "../csv";
 import type { DashboardPeriod } from "../period";
 import {
@@ -24,16 +24,14 @@ import { PeriodSelector } from "./period-selector";
 export type DayPart = "morning" | "afternoon" | "evening";
 
 export type DashboardViewProps = {
-  /** The current month's dashboard: chart and panels. */
-  dashboard: DashboardDTO;
-  /** The eight cards over `period`. */
-  kpis: KpiCardDTO[];
+  /** The BE's dashboard of `period`: the eight cards, the chart, the panels and the period bounds. */
+  dashboard: DashboardResponseDto;
   period: DashboardPeriod;
   /** `canSeeFinancials`: Member and Viewer get the version without financial data (PRD §11). */
   showFinancials: boolean;
   userName: string;
   dayPart: DayPart;
-  today: DateOnly;
+  today: string;
 };
 
 /**
@@ -42,7 +40,6 @@ export type DashboardViewProps = {
  */
 export function DashboardView({
   dashboard,
-  kpis,
   period,
   showFinancials,
   userName,
@@ -50,14 +47,15 @@ export function DashboardView({
   today,
 }: DashboardViewProps) {
   const t = useTranslations("dashboard");
-  const mrr = kpis.find((card) => card.id === "MRR")?.value ?? null;
+  const locale = useLocale();
+  const mrr = dashboard.kpis.find((card) => card.id === "MRR")?.value ?? null;
 
   const exportKpis = () =>
     downloadCsv(
-      t("page.exportFilename", { period: `${period}-${dashboard.month}` }),
+      t("page.exportFilename", { period: `${period}-${dashboard.periodStart}` }),
       toCsv(
         [t("kpis.csvCard"), t("kpis.csvValue"), t("kpis.csvPrevious"), t("kpis.csvChange")],
-        visibleKpis(kpis, showFinancials).map((card) => [
+        visibleKpis(dashboard.kpis, showFinancials).map((card) => [
           t(`kpis.${card.id}`, { period }),
           card.value,
           card.previousValue ?? "",
@@ -76,6 +74,12 @@ export function DashboardView({
           <p className="text-sm text-muted-foreground">
             <DateText value={today} style="long" /> · {t("page.summary")}
           </p>
+          <p className="text-sm text-muted-foreground">
+            {t("page.periodRange", {
+              from: formatDate(dashboard.periodStart, locale),
+              to: formatDate(dashboard.periodEnd, locale),
+            })}
+          </p>
           {showFinancials ? (
             <p className="text-xs text-muted-foreground">{t("page.currencyNote")}</p>
           ) : null}
@@ -89,7 +93,7 @@ export function DashboardView({
         </div>
       </header>
 
-      <KpiGrid kpis={kpis} period={period} showFinancials={showFinancials} />
+      <KpiGrid kpis={dashboard.kpis} period={period} showFinancials={showFinancials} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="grid min-w-0 content-start gap-6">

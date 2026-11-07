@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ArrowLeftRight, Pencil, Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
@@ -9,26 +10,20 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AccountLedgerTable } from "@/features/accounts/components/account-ledger-table";
+import { ExchangeSnapshot } from "@/features/accounts/components/exchange-snapshot";
 import { ReconciliationForm } from "@/features/accounts/components/reconciliation-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
+import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import type { AccountDTO } from "@/lib/validators/accounts";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type AccountDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readAccount(id: string): Promise<AccountDTO | null> {
-  try {
-    return await getAccount(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// FORBIDDEN from the BE is the same not-found page as an unknown id (C13).
+const readAccount = (id: string) => orNullWhenMissing(() => getAccount(id));
 
 export async function generateMetadata({ params }: AccountDetailPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -44,11 +39,10 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
   const user = await requireSessionUser();
   const permissions = accountScreenPermissions(user);
   if (!permissions.canRead) notFound();
-  const account = await readAccount(id);
-  if (!account) notFound();
+  const account = await notFoundWhenRefused(async () => (await readAccount(id)) ?? notFound());
 
   const [ledger, t, tEnums] = await Promise.all([
-    getAccountLedger({ accountId: account.id, pageSize: 100 }),
+    notFoundWhenRefused(() => getAccountLedger({ accountId: account.id, pageSize: 100 })),
     getTranslations("accounts"),
     getTranslations("enums"),
   ]);
@@ -114,6 +108,9 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
                 className="text-sm text-muted-foreground"
               />
             )}
+            <Suspense fallback={null}>
+              <ExchangeSnapshot accountId={account.id} accountType={account.type} />
+            </Suspense>
           </CardContent>
         </Card>
         <Card className="@lg:col-span-2">

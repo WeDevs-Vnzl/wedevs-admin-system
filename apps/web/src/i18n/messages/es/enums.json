@@ -159,7 +159,9 @@
     "RECURRING_CHARGE": "Cargo recurrente",
     "TAG": "Etiqueta",
     "SETTING": "Configuración",
-    "USER": "Usuario"
+    "USER": "Usuario",
+    "PAYMENT_LINK": "Link de pago",
+    "API_TOKEN": "Token de API"
   },
   "ActivityAction": {
     "CREATE": "Creó",

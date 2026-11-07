@@ -10,15 +10,11 @@ import {
   createExpenseInputSchema,
   createExpenseInputSchemaFor,
   createRecurringExpenseInputSchema,
-  expenseDetailDtoSchema,
   EXPENSE_SORT_FIELDS,
   RECURRING_EXPENSE_SORT_FIELDS,
   expenseFiltersSchema,
-  expenseListRowSchema,
-  expensesOverviewDtoSchema,
   markExpensePaidInputSchema,
   markExpensePaidInputSchemaFor,
-  recurringExpenseDtoSchema,
   recurringExpenseFiltersSchema,
   setRecurringExpenseStatusInputSchema,
   updateExpenseInputSchema,
@@ -37,12 +33,6 @@ function hasKey(catalog: unknown, path: string[]): boolean {
   }
   return typeof node === "string" && node.length > 0;
 }
-
-const ref = (id: string, type: "ACCOUNT" | "PROJECT" | "EXPENSE" | "RECURRING_EXPENSE") => ({
-  id,
-  label: id,
-  type,
-});
 
 describe("expense message keys", () => {
   it("exist in the expenses namespace for es and en", () => {
@@ -238,91 +228,11 @@ describe("recurring expenses", () => {
   });
 });
 
-describe("expense DTOs", () => {
-  const category = {
-    id: "cat2",
-    name: "Hosting",
-    nameEn: null,
-    parent: { id: "cat1", name: "Infraestructura", nameEn: null },
-  };
-  const row = {
-    id: "exp1",
-    code: "GAS-0001",
-    date: "2026-10-09",
-    dueDate: null,
-    description: "Hosting octubre",
-    vendor: "Netlify",
-    category,
-    account: ref("acc1", "ACCOUNT"),
-    project: null,
-    currency: "USD",
-    amount: "20.00",
-    amountUsd: "20.00",
-    status: "PAGADO",
-    overdue: false,
-    recurring: false,
-  };
-
-  it("list row", () => {
-    expect(expenseListRowSchema.safeParse(row).success).toBe(true);
-    expect(expenseListRowSchema.safeParse({ ...row, status: "ATRASADO" }).success).toBe(false);
-  });
-
-  it("detail adds accountAmount, rate and recurring origin", () => {
-    const detail = {
-      ...row,
-      paidAt: "2026-10-09",
-      accountAmount: null,
-      usdRate: "1",
-      receiptFileId: null,
-      receipt: null,
-      recurringExpense: ref("re1", "RECURRING_EXPENSE"),
-      periodStart: "2026-10-01",
-      createdAt: "2026-10-09T10:00:00Z",
-      updatedAt: "2026-10-09T10:00:00Z",
-      createdById: null,
-    };
-    expect(expenseDetailDtoSchema.safeParse(detail).success).toBe(true);
-  });
-
-  it("recurring DTO", () => {
-    const dto = {
-      id: "re1",
-      name: "Neon",
-      vendor: null,
-      category,
-      account: null,
-      project: null,
-      currency: "USD",
-      amount: "19.00",
-      frequency: "MENSUAL",
-      dayOfPeriod: 5,
-      leadDays: 5,
-      startDate: "2026-01-01",
-      endDate: null,
-      status: "ACTIVO",
-      lastGeneratedPeriodStart: "2026-10-05",
-      resumedOn: null,
-      nextDueDate: "2026-11-05",
-      createdAt: "2026-01-01T00:00:00Z",
-    };
-    expect(recurringExpenseDtoSchema.safeParse(dto).success).toBe(true);
-  });
-
-  it("filters and overview", () => {
+describe("expense filters", () => {
+  it("parses the status and the recurring flag", () => {
     const filters = expenseFiltersSchema.parse({ status: "PENDIENTE", recurringOnly: "true" });
     expect(filters.status).toEqual(["PENDIENTE"]);
     expect(filters.recurringOnly).toBe(true);
-    const overview = {
-      byMonthAndCategory: {
-        periods: ["2026-09", "2026-10"],
-        series: [{ id: "cat1", label: "Infraestructura", values: ["10.00", "20.00"] }],
-      },
-      byCategory: [{ key: "cat1", label: "Infraestructura", value: "30.00" }],
-      committedMonthly: "120.00",
-      upcoming: [row],
-    };
-    expect(expensesOverviewDtoSchema.safeParse(overview).success).toBe(true);
   });
 });
 

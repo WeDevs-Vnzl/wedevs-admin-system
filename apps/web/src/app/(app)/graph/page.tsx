@@ -5,8 +5,8 @@ import { GlobalGraph } from "@/features/graph/components/global-graph";
 import { getGlobalGraph } from "@/features/graph/queries";
 import { getTags } from "@/features/tags/queries";
 import { listActiveTechnologies } from "@/features/technologies/queries";
-import { can } from "@/server/auth/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("graph.page");
@@ -22,12 +22,13 @@ export default async function GlobalGraphPage() {
     getTags({ pageSize: 100 }),
     listActiveTechnologies(),
   ]);
+  if (!graph.ok) throw new Error(`GET /api/v1/graph failed: ${graph.error.code}`);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("globalTitle")} description={t("globalDescription")} />
       <GlobalGraph
-        initial={graph}
+        initial={graph.data}
         canSeeArchived={can(user, "restore", "trash")}
         tags={tags.items.map((tag) => ({ id: tag.id, name: tag.name }))}
         technologies={technologies.map((tech) => ({ id: tech.id, name: tech.name }))}

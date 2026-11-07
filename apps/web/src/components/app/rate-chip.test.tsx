@@ -55,6 +55,14 @@ describe("RateChip", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent("As of");
   });
 
+  it("shows the earlier rate's date as a fallback when today has no rate yet", async () => {
+    const user = userEvent.setup();
+    renderChip({ canManage: false, rate: { ...rate, date: "2026-10-08" } as ShellVesRate, missing: true });
+    await user.tab();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Using the rate from");
+    expect(screen.getByText(/755\.16/)).toBeInTheDocument();
+  });
+
   it("shows the missing-rate tooltip when there is no rate at all", async () => {
     const user = userEvent.setup();
     renderChip({ canManage: false, rate: null, missing: true });

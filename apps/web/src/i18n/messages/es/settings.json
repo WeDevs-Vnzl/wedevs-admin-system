@@ -8,10 +8,12 @@
     "company": "Empresa",
     "users": "Usuarios",
     "preferences": "Preferencias",
+    "apiTokens": "Tokens de API",
     "currencies": "Monedas",
     "rates": "Tasas de cambio",
     "fiscal": "Fiscal",
     "paymentMethods": "Métodos de pago",
+    "integrations": "Integraciones",
     "technologies": "Tecnologías",
     "documentTypes": "Documentos",
     "expenseCategories": "Categorías de gasto",
@@ -146,6 +148,38 @@
     "errors": {
       "emailTaken": "Este correo ya tiene un usuario o una invitación pendiente",
       "lastOwner": "No se puede degradar al último Owner"
+    }
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "description": "Elige dónde se registra el dinero que llega por Stripe y Binance. Deja un proveedor sin asignar para ignorarlo.",
+    "none": "Sin asignar",
+    "noneHint": "Este proveedor no registrará dinero.",
+    "stripe": {
+      "title": "Stripe",
+      "description": "La cuenta y el método de pago contra los que se registran los pagos de Stripe.",
+      "account": "Cuenta destino",
+      "method": "Método de pago",
+      "accountPlaceholder": "Selecciona una cuenta",
+      "methodPlaceholder": "Selecciona un método de pago",
+      "methodHint": "Crea primero el método de pago Stripe en el catálogo.",
+      "currency": "Moneda: {currency}"
+    },
+    "binance": {
+      "title": "Binance",
+      "description": "La cuenta de billetera cripto que refleja el saldo de Binance.",
+      "account": "Cuenta de billetera",
+      "accountPlaceholder": "Selecciona una cuenta de billetera",
+      "noWallets": "Aún no hay cuentas de billetera cripto. Crea una primero en Cuentas."
+    },
+    "accountOption": "{name} ({currency})",
+    "save": "Guardar asignación",
+    "saving": "Guardando…",
+    "saved": "Asignación guardada",
+    "errors": {
+      "stripeIncomplete": "Elige la cuenta y el método de pago, o deja Stripe sin asignar.",
+      "forbidden": "No tienes permiso para cambiar las integraciones.",
+      "walletRequired": "Elige una cuenta de billetera cripto."
     }
   }
 }

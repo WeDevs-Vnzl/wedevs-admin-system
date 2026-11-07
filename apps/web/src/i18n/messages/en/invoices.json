@@ -124,6 +124,7 @@
     "createTitle": "New invoice",
     "editTitle": "Edit invoice",
     "description": "Split the invoice into lines; each line has its own VAT rate and an optional discount.",
+    "openExisting": "Open invoice {code}",
     "totalsInvalid": "Check the lines: a discount, adjustment or withholding does not add up.",
     "fields": {
       "client": "Client",
@@ -163,8 +164,8 @@
         "description": "Withholdings the client applies to this invoice."
       },
       "totals": {
-        "title": "Totals",
-        "description": "Calculated live from the lines."
+        "title": "Totals (preview)",
+        "description": "Live estimate from the lines; the saved figures are calculated by the server."
       }
     },
     "installments": {
@@ -211,9 +212,9 @@
   },
   "file": {
     "title": "Invoice PDF",
-    "description": "The PDF of the real invoice, to view it without downloading.",
+    "description": "The PDF of the real invoice.",
     "empty": "No PDF is attached yet.",
-    "previewUnavailable": "The preview turns on with the real storage; for now the registered file is shown.",
+    "open": "Open PDF",
     "uploadLabel": "Upload the invoice PDF",
     "fields": {
       "name": "Name",
@@ -240,5 +241,55 @@
     "issued": "Draft issued",
     "archived": "Invoice archived",
     "voided": "Invoice voided"
+  },
+  "paymentLinks": {
+    "title": "Payment links",
+    "description": "Card payment links (Stripe) for this invoice.",
+    "capacity": "Available to collect",
+    "create": "Create link",
+    "empty": "There are no payment links yet.",
+    "columns": {
+      "amount": "Amount",
+      "status": "Status",
+      "createdAt": "Created",
+      "link": "Link",
+      "payment": "Payment",
+      "reason": "Reason"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed",
+      "SETTLED": "Settled",
+      "DEACTIVATED": "Deactivated"
+    },
+    "reasons": {
+      "LINK_EXPIRED": "The link expired (active for more than 24 hours)",
+      "generic": "Deactivated for another reason"
+    },
+    "open": "Open link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "viewPayment": "View payment",
+    "deactivate": "Deactivate",
+    "dialog": {
+      "title": "Create payment link",
+      "description": "Generates a link for the client to pay this invoice. The amount cannot exceed what is available.",
+      "amount": "Amount",
+      "submit": "Create link",
+      "submitting": "Creating…",
+      "cancel": "Cancel"
+    },
+    "deactivateDialog": {
+      "title": "Deactivate the link",
+      "description": "The client will no longer be able to pay with this link. This cannot be undone.",
+      "confirm": "Deactivate link",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "created": "Payment link created",
+      "deactivated": "Link deactivated",
+      "copied": "Link copied to the clipboard"
+    }
   }
 }

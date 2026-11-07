@@ -171,6 +171,8 @@ const TONES: ToneMap = {
     TAG: "neutral",
     SETTING: "neutral",
     USER: "neutral",
+    PAYMENT_LINK: "neutral",
+    API_TOKEN: "neutral",
   },
   ActivityAction: {
     CREATE: "neutral",

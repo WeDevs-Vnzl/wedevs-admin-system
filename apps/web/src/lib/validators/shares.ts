@@ -5,7 +5,6 @@ import {
   entityRefSchema,
   idSchema,
   listQuerySchema,
-  type Paginated,
 } from "./common";
 import { documentFormatSchema, documentStatusSchema, shareEventSchema } from "./enums";
 import { localeSchema } from "./preferences";
@@ -298,8 +297,6 @@ export const shareCountersSchema = z.object({
   unlockCount: counter,
   failedUnlockCount: counter,
 });
-export type ShareCountersDTO = z.infer<typeof shareCountersSchema>;
-
 /** A document of a link, as the owner sees it. No key, no hash: only whether a key is required. */
 export const shareDocumentSchema = z.object({
   /** `{ id, code, label (title), type: "DOCUMENT" }`. */
@@ -434,8 +431,6 @@ export const portalDocumentSchema = z.object({
   /** `true` while the document requires a key the visitor has not entered. */
   locked: z.boolean(),
 });
-export type PortalDocumentDTO = z.infer<typeof portalDocumentSchema>;
-
 /** Output of `resolveShareToken`: the portal page. */
 export const portalShareSchema = z.object({
   title: z.string(),
@@ -496,53 +491,3 @@ export const portalDownloadSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("markdown"), fileName: z.string(), content: z.string() }),
 ]);
 export type PortalDownloadDTO = z.infer<typeof portalDownloadSchema>;
-
-// ───────────────────────────── Services (PRD §12 `shares`) ─────────────────────────────
-
-/**
- * `shares` services of the back office. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11).
- * `listShareLinks` / `getShareLink` / `listShareAccessLog` are the read counterparts that PRD §12 leaves
- * implicit; `setShareDocumentAccessKey` is the DT-45 addition.
- */
-export type SharesService<Ctx = unknown> = {
-  createShareLink: (ctx: Ctx, input: CreateShareLinkInput) => Promise<ShareLinkMutationResultDTO>;
-  updateShareLink: (ctx: Ctx, input: UpdateShareLinkInput) => Promise<ShareLinkMutationResultDTO>;
-  revokeShareLink: (ctx: Ctx, input: RevokeShareLinkInput) => Promise<ShareLinkDetailDTO>;
-  setShareDocumentAccessKey: (
-    ctx: Ctx,
-    input: SetShareDocumentAccessKeyInput,
-  ) => Promise<SetShareDocumentAccessKeyResultDTO>;
-  listShareLinks: (ctx: Ctx, input: ShareFilter) => Promise<Paginated<ShareLinkListRowDTO>>;
-  getShareLink: (ctx: Ctx, input: ShareIdInput) => Promise<ShareLinkDetailDTO>;
-  listShareAccessLog: (
-    ctx: Ctx,
-    input: ShareAccessLogFilter,
-  ) => Promise<Paginated<ShareAccessLogRowDTO>>;
-};
-
-/**
- * Public portal services. They receive a context whose `user` is `null` and the token as input (C11);
- * they are reachable only through `definePublicAction` / the `/api/s/*` route (C10). Their inputs are the
- * `*ServiceInput` types (client fields + server-only metadata), never the `*ActionInput` ones. Wrong keys answer
- * `ACCESS_KEY_INVALID`, a lockout `ACCESS_KEY_LOCKED`, a locked document `FORBIDDEN`, and a bad token
- * the generic 404 (`NOT_FOUND`, no reason).
- */
-export type PortalSharesService<Ctx = unknown> = {
-  resolveShareToken: (ctx: Ctx, input: ResolveShareTokenServiceInput) => Promise<PortalShareDTO>;
-  recordShareAccess: (
-    ctx: Ctx,
-    input: RecordShareAccessServiceInput,
-  ) => Promise<RecordShareAccessResultDTO>;
-  unlockSharedDocument: (
-    ctx: Ctx,
-    input: UnlockSharedDocumentServiceInput,
-  ) => Promise<UnlockSharedDocumentResultDTO>;
-  getSharedDocument: (
-    ctx: Ctx,
-    input: GetSharedDocumentServiceInput,
-  ) => Promise<PortalDocumentViewDTO>;
-  getSharedDocumentDownload: (
-    ctx: Ctx,
-    input: GetSharedDocumentDownloadServiceInput,
-  ) => Promise<PortalDownloadDTO>;
-};

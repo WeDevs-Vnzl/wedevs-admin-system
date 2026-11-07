@@ -1,5 +1,5 @@
 import { z } from "./zod";
-import { idSchema, listQuerySchema, type Paginated } from "./common";
+import { idSchema, listQuerySchema } from "./common";
 import { userRoleSchema } from "./enums";
 import { localeSchema, themeSchema } from "./preferences";
 import { facetOf, requiredText, timestampSchema, withSortFields } from "./tags";
@@ -59,8 +59,6 @@ export const userRefSchema = z.object({
   name: requiredText(120),
   imageUrl: z.string().nullable(),
 });
-export type UserRefDTO = z.infer<typeof userRefSchema>;
-
 /** Row of Settings → Usuarios. An `INVITED` row is a pending invitation (`id` = the invitation id). */
 export const userListRowSchema = z.object({
   id: idSchema,
@@ -86,20 +84,3 @@ export const userDetailSchema = z.object({
   updatedAt: timestampSchema,
 });
 export type UserDetailDTO = z.infer<typeof userDetailSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Users services (PRD §4.3 "Usuarios y roles", Owner only; PRD §12 does not list them). Every service is
- * `fn(ctx, input) → Promise<DTO>` (C9, C11).
- */
-export type UsersService<Ctx = unknown> = {
-  listUsers: (ctx: Ctx, input: UserFilter) => Promise<Paginated<UserListRowDTO>>;
-  getUser: (ctx: Ctx, input: UserIdInput) => Promise<UserDetailDTO>;
-  inviteUser: (ctx: Ctx, input: InviteUserInput) => Promise<UserListRowDTO>;
-  changeUserRole: (ctx: Ctx, input: ChangeUserRoleInput) => Promise<UserDetailDTO>;
-  revokeUserInvitation: (
-    ctx: Ctx,
-    input: RevokeUserInvitationInput,
-  ) => Promise<RevokeUserInvitationInput>;
-};

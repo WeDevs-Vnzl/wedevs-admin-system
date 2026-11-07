@@ -1,7 +1,7 @@
 import "server-only";
 import type { DocumentDetailDTO } from "@/lib/validators/documents";
 import { idSchema } from "@/lib/validators/common";
-import { ServiceError } from "@/server/context";
+import { ServiceError } from "@/lib/service-error";
 import {
   editorAvailability,
   initialEditorContent,

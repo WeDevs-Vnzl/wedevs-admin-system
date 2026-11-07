@@ -49,6 +49,7 @@ export function DocumentVersionHistory({
         const comparable =
           !version.isCurrent && version.format === "MARKDOWN" && current?.format === "MARKDOWN";
         const external = version.format === "ENLACE";
+        const fileHref = versionFileHref(documentId, version);
         return (
           <li
             key={version.id}
@@ -73,15 +74,17 @@ export function DocumentVersionHistory({
                   <Eye aria-hidden />
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon-sm" asChild>
-                <a
-                  href={versionFileHref(documentId, version, true)}
-                  aria-label={t("download", { number })}
-                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                >
-                  <Download aria-hidden />
-                </a>
-              </Button>
+              {fileHref ? (
+                <Button variant="ghost" size="icon-sm" asChild>
+                  <a
+                    href={fileHref}
+                    aria-label={t("download", { number })}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  >
+                    <Download aria-hidden />
+                  </a>
+                </Button>
+              ) : null}
               {comparable ? (
                 <Button variant="ghost" size="icon-sm" asChild>
                   <Link

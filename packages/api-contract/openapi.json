@@ -40571,6 +40571,18 @@
               "application/json": {
                 "schema": {
                   "discriminator": {
+                    "mapping": {
+                      "ACCOUNT_FLOW": "#/components/schemas/AccountFlowReportDto",
+                      "BILLED_VS_COLLECTED": "#/components/schemas/BilledVsCollectedReportDto",
+                      "COLLECTED_BY_MONTH": "#/components/schemas/CollectedByMonthReportDto",
+                      "COLLECTIONS_BY_METHOD": "#/components/schemas/CollectionsByMethodReportDto",
+                      "EXPENSES_BY_MONTH_CATEGORY": "#/components/schemas/ExpensesByMonthCategoryReportDto",
+                      "NET_RESULT_MONTHLY": "#/components/schemas/NetResultMonthlyReportDto",
+                      "RECEIVABLES_AGING": "#/components/schemas/ReceivablesAgingReportDto",
+                      "REVENUE_BY_CLIENT": "#/components/schemas/RevenueByClientReportDto",
+                      "REVENUE_BY_PROJECT": "#/components/schemas/RevenueByProjectReportDto",
+                      "TAXES_REGISTERED": "#/components/schemas/TaxesRegisteredReportDto"
+                    },
                     "propertyName": "reportId"
                   },
                   "oneOf": [

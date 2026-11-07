@@ -1,4 +1,4 @@
-import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { can, type PermissionSubject } from "@/lib/auth/permissions";
 
 /**
  * What the accounts screens may show (PRD §4.3, resource `account`, Owner and Admin). The pages answer the

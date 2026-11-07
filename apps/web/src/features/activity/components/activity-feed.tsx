@@ -6,7 +6,8 @@ import { useRef, useState } from "react";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { BUSINESS_TIME_ZONE, formatDate, toDateOnly, type DateOnly } from "@/lib/dates";
-import type { ActivityFilterInput, ActivityListRowDTO } from "@/lib/validators/activity";
+import type { ActivityRow } from "@/lib/api/types/activity";
+import type { ActivityFilterInput } from "@/lib/validators/activity";
 import type { Paginated } from "@/lib/validators/common";
 import { listActivityAction } from "../actions";
 import { ActivityDetailSheet } from "./activity-detail-sheet";
@@ -14,10 +15,10 @@ import { ActivityItem } from "./activity-item";
 
 /** Groups entries by their Caracas calendar day, keeping the newest-first order of the input. */
 export function groupActivityByDay(
-  items: readonly ActivityListRowDTO[],
+  items: readonly ActivityRow[],
   timeZone: string = BUSINESS_TIME_ZONE,
-): { day: DateOnly; items: ActivityListRowDTO[] }[] {
-  const groups: { day: DateOnly; items: ActivityListRowDTO[] }[] = [];
+): { day: DateOnly; items: ActivityRow[] }[] {
+  const groups: { day: DateOnly; items: ActivityRow[] }[] = [];
   for (const item of items) {
     const day = toDateOnly(new Date(item.createdAt), timeZone);
     const last = groups.at(-1);
@@ -35,7 +36,7 @@ export function ActivityFeed({
   initial,
   filter,
 }: {
-  initial: Paginated<ActivityListRowDTO>;
+  initial: Paginated<ActivityRow>;
   filter: ActivityFilterInput;
 }) {
   const locale = useLocale();
@@ -45,7 +46,7 @@ export function ActivityFeed({
   const [pageCount, setPageCount] = useState(initial.pageCount);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [selected, setSelected] = useState<ActivityListRowDTO | null>(null);
+  const [selected, setSelected] = useState<ActivityRow | null>(null);
   // The sheet opens programmatically (no Radix trigger), so the opener is remembered to give focus back.
   const triggerRef = useRef<HTMLElement | null>(null);
 

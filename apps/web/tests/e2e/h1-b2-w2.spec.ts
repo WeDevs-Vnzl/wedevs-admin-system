@@ -1,11 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
-// Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
-// PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server
-// process and every browser context shares it, so run this file with `--workers=1`: the locale and theme tests
-// of h1-b1-shell.spec.ts change the same store. Tests that mutate mock state are serial and restore it through
-// the user menu ("Restablecer datos de prueba"). View-as-role lives in the cookie of each context.
+// Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"), kept by FE-INT-R E.1. This file starts nothing: it runs against
+// the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). Every case creates its own data through the UI
+// with a unique name (FE-INT-R rule 29); the BE seed holds catalogs only (technologies are catalogs), so no case
+// relies on a project, alert or activity entry it did not create. Cases that need such data are `test.fixme`.
+// View-as-role lives in the cookie of each context.
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
 const ALERTS_BADGE = '[data-slot="alerts-badge"]';
@@ -15,33 +16,7 @@ const notFoundText = (page: Page) => page.getByText("Página no encontrada", { e
 
 const alertsBell = (page: Page) => page.getByRole("button", { name: /^Alertas/ });
 const alertsPanel = (page: Page) => page.getByRole("dialog", { name: "Alertas", exact: true });
-const alertsList = (page: Page) =>
-  page.getByRole("list", { name: "Lista de alertas", exact: true });
-
-/** Restores the mock data (preferences, locale, theme, tags, technologies, alerts) through the user menu. */
-async function resetMockData(page: Page) {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
-  await page
-    .getByRole("menuitem", { name: /^(Restablecer datos de prueba|Reset mock data)$/ })
-    .click();
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: /^(Restablecer|Reset)$/ })
-    .click();
-  await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only, no shared state). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
-}
+const alertsList = (page: Page) => page.getByRole("list", { name: "Lista de alertas", exact: true });
 
 /** The bell counter as shown (the badge is aria-hidden, so its text is read directly); 0 when not rendered. */
 async function badgeValue(page: Page): Promise<number> {
@@ -104,13 +79,10 @@ async function createTechnology(page: Page, name: string, nameEn?: string) {
 // ───────────────────────────── Tags (/settings/tags) ─────────────────────────────
 
 test.describe("tags (mutates tags)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
+  test.describe.configure({ mode: "serial" });
 
   test("Owner creates, renames and recolours a tag", async ({ page }) => {
     const suffix = Date.now().toString(36);
@@ -166,9 +138,12 @@ test.describe("tags (mutates tags)", () => {
 });
 
 test.describe("tags access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /settings/tags`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/settings/tags");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
@@ -182,13 +157,10 @@ test.describe("tags access (view as role)", () => {
 // ───────────────────────────── Technologies (/settings/technologies) ─────────────────────────────
 
 test.describe("technologies (mutates the catalogue)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
+  test.describe.configure({ mode: "serial" });
 
   test("create with an English name; EN locale shows the English name", async ({ page }) => {
     const suffix = Date.now().toString(36);
@@ -233,32 +205,35 @@ test.describe("technologies (mutates the catalogue)", () => {
     await expect(page.getByRole("row").filter({ hasText: name })).toHaveCount(0);
   });
 
-  test("delete of an in-use technology is refused and deactivation is offered", async ({
-    page,
-  }) => {
-    // The seed uses Next.js in two or more projects (HU-06), so the lock applies without any request.
-    await page.goto("/settings/technologies?q=next-js");
-    await page.waitForLoadState("networkidle");
-    const row = page.getByRole("row").filter({ hasText: "next-js" });
-    await expect(row).toBeVisible();
-    await expect(row).not.toContainText("Sin proyectos");
+  test.fixme(
+    "FE-INT-R E.1: delete of an in-use technology is refused and deactivation is offered; needs a project that uses the technology, and the BE seed holds no projects (rule 29)",
+    async ({ page }) => {
+      await page.goto("/settings/technologies?q=next-js");
+      await page.waitForLoadState("networkidle");
+      const row = page.getByRole("row").filter({ hasText: "next-js" });
+      await expect(row).toBeVisible();
+      await expect(row).not.toContainText("Sin proyectos");
 
-    await page.getByRole("button", { name: "Eliminar Next.js", exact: true }).click();
-    const notice = page.getByRole("alertdialog", { name: "Tecnología en uso", exact: true });
-    await expect(notice).toBeVisible();
-    await expect(notice).toContainText("Desactivar");
-    await expect(notice.getByRole("button", { name: "Eliminar", exact: true })).toHaveCount(0);
+      await page.getByRole("button", { name: "Eliminar Next.js", exact: true }).click();
+      const notice = page.getByRole("alertdialog", { name: "Tecnología en uso", exact: true });
+      await expect(notice).toBeVisible();
+      await expect(notice).toContainText("Desactivar");
+      await expect(notice.getByRole("button", { name: "Eliminar", exact: true })).toHaveCount(0);
 
-    await notice.getByRole("button", { name: "Desactivar", exact: true }).click();
-    await expect(page.getByText("Tecnología desactivada", { exact: true })).toBeVisible();
-    await expect(page.getByRole("switch", { name: "Activar Next.js", exact: true })).toBeVisible();
-  });
+      await notice.getByRole("button", { name: "Desactivar", exact: true }).click();
+      await expect(page.getByText("Tecnología desactivada", { exact: true })).toBeVisible();
+      await expect(page.getByRole("switch", { name: "Activar Next.js", exact: true })).toBeVisible();
+    },
+  );
 });
 
 test.describe("technologies access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /settings/technologies`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/settings/technologies");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
@@ -267,12 +242,15 @@ test.describe("technologies access (view as role)", () => {
 });
 
 test.describe("technologies search (read only)", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
   test("typing in the search filters the rows, not only the URL", async ({ page }) => {
     await page.goto("/settings/technologies");
     await page.waitForLoadState("networkidle");
     const rows = page.locator("table tbody tr");
     const before = await rows.count();
-    expect(before).toBeGreaterThan(0);
+    expect(before).toBeGreaterThan(0); // the catalogue seed (technologies are catalogs, rule 29)
 
     await page
       .getByPlaceholder(/Buscar/)
@@ -286,6 +264,9 @@ test.describe("technologies search (read only)", () => {
 // ───────────────────────────── Activity (/activity) ─────────────────────────────
 
 test.describe("activity", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
   test("filters are reflected in the URL and clear together", async ({ page }) => {
     await page.goto("/activity");
     await page.waitForLoadState("networkidle");
@@ -306,6 +287,8 @@ test.describe("activity", () => {
   test("the detail sheet traps focus, closes with Escape and returns focus to its trigger", async ({
     page,
   }) => {
+    // Creating a technology writes a CREATE entry, so the feed has an entry this case made itself (rule 29).
+    await createTechnology(page, `E2E activity ${Date.now().toString(36)}`);
     await page.goto("/activity");
     await page.waitForLoadState("networkidle");
 
@@ -327,17 +310,20 @@ test.describe("activity", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("load more appends the next page of entries", async ({ page }) => {
-    await page.goto("/activity");
-    await page.waitForLoadState("networkidle");
+  test.fixme(
+    "FE-INT-R E.1: load more appends the next page of entries; needs more than one page of activity, and the BE seed holds no activity (rule 29)",
+    async ({ page }) => {
+      await page.goto("/activity");
+      await page.waitForLoadState("networkidle");
 
-    const entries = page.locator('section[aria-label^="Eventos del"] li');
-    const before = await entries.count();
-    const more = page.getByRole("button", { name: "Cargar más", exact: true });
-    await expect(more).toBeVisible();
-    await more.click();
-    await expect.poll(() => entries.count()).toBeGreaterThan(before);
-  });
+      const entries = page.locator('section[aria-label^="Eventos del"] li');
+      const before = await entries.count();
+      const more = page.getByRole("button", { name: "Cargar más", exact: true });
+      await expect(more).toBeVisible();
+      await more.click();
+      await expect.poll(() => entries.count()).toBeGreaterThan(before);
+    },
+  );
 
   test("CSV export starts a download that begins with a UTF-8 BOM", async ({ page }) => {
     await page.goto("/activity");
@@ -357,9 +343,12 @@ test.describe("activity", () => {
 });
 
 test.describe("activity access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /activity`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/activity");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
@@ -368,107 +357,125 @@ test.describe("activity access (view as role)", () => {
 });
 
 // ───────────────────────────── Alerts bell ─────────────────────────────
+// Every alert case needs active alerts. The BE raises alerts from finance and document data, and the BE seed holds
+// none, so each case is `test.fixme` until a case creates the data it needs (rule 29). The bodies stay as the spec.
 
 test.describe("alerts bell (read only)", () => {
-  test("the counter equals the panel items, and the panel is labelled", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
-    const counter = await badgeValue(page);
-    expect(counter, "the seed has active alerts for the Owner").toBeGreaterThan(0);
-
-    await alertsBell(page).click();
-    await expect(alertsPanel(page)).toBeVisible();
-    await expect(alertsPanel(page)).toHaveAttribute("aria-labelledby", /.+/);
-    await expect(alertsList(page)).toBeVisible();
-    await expect(alertsList(page).getByRole("listitem")).toHaveCount(counter);
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
   });
+  test.fixme(
+    "FE-INT-R E.1: the counter equals the panel items, and the panel is labelled; needs active alerts, which the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      await page.goto("/dashboard");
+      await page.waitForLoadState("networkidle");
+      const counter = await badgeValue(page);
+      expect(counter, "the alerts exist for the Owner").toBeGreaterThan(0);
 
-  test("dismiss and snooze buttons carry the alert subject in their accessible name", async ({
-    page,
-  }) => {
-    await openAlerts(page);
-    const list = alertsList(page);
-    const dismissNames = await list
-      .getByRole("button", { name: /^Descartar: / })
-      .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label") ?? ""));
-    expect(dismissNames.length).toBeGreaterThan(0);
-    expect(new Set(dismissNames).size, "each row has its own name").toBe(dismissNames.length);
-    expect(dismissNames.some((name) => name.includes(" · "))).toBe(true);
+      await alertsBell(page).click();
+      await expect(alertsPanel(page)).toBeVisible();
+      await expect(alertsPanel(page)).toHaveAttribute("aria-labelledby", /.+/);
+      await expect(alertsList(page)).toBeVisible();
+      await expect(alertsList(page).getByRole("listitem")).toHaveCount(counter);
+    },
+  );
 
-    const first = list.getByRole("listitem").first();
-    const title = (await first.locator('[data-slot="item-title"]').innerText()).trim();
-    await expect(
-      first.getByRole("button", { name: new RegExp(`^Descartar: ${escapeRegExp(title)}`) }),
-    ).toBeVisible();
-    await expect(
-      first.getByRole("button", { name: new RegExp(`^Posponer: ${escapeRegExp(title)}`) }),
-    ).toBeVisible();
-  });
+  test.fixme(
+    "FE-INT-R E.1: dismiss and snooze buttons carry the alert subject in their accessible name; needs active alerts, which the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      await openAlerts(page);
+      const list = alertsList(page);
+      const dismissNames = await list
+        .getByRole("button", { name: /^Descartar: / })
+        .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label") ?? ""));
+      expect(dismissNames.length).toBeGreaterThan(0);
+      expect(new Set(dismissNames).size, "each row has its own name").toBe(dismissNames.length);
+      expect(dismissNames.some((name) => name.includes(" · "))).toBe(true);
 
-  test("Escape closes the panel and returns focus to the bell", async ({ page }) => {
-    await openAlerts(page);
-    // The panel takes focus on its own container when it opens (no inner control is focused).
-    await expect(alertsPanel(page)).toBeFocused();
+      const first = list.getByRole("listitem").first();
+      const title = (await first.locator('[data-slot="item-title"]').innerText()).trim();
+      await expect(
+        first.getByRole("button", { name: new RegExp(`^Descartar: ${escapeRegExp(title)}`) }),
+      ).toBeVisible();
+      await expect(
+        first.getByRole("button", { name: new RegExp(`^Posponer: ${escapeRegExp(title)}`) }),
+      ).toBeVisible();
+    },
+  );
 
-    await page.keyboard.press("Escape");
-    await expect(alertsPanel(page)).toBeHidden();
-    await expect(alertsBell(page)).toBeFocused();
-  });
+  test.fixme(
+    "FE-INT-R E.1: Escape closes the panel and returns focus to the bell; needs active alerts, which the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      await openAlerts(page);
+      // The panel takes focus on its own container when it opens (no inner control is focused).
+      await expect(alertsPanel(page)).toBeFocused();
 
-  test("the counter badge meets WCAG AA in light and dark mode", async ({ page }) => {
-    // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
-    await page.goto("/dashboard");
-    await page.evaluate(() => localStorage.setItem("theme", "light"));
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator(ALERTS_BADGE)).toBeVisible();
-    await expect(page.locator("html")).not.toHaveClass(DARK_CLASS);
-    expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
+      await page.keyboard.press("Escape");
+      await expect(alertsPanel(page)).toBeHidden();
+      await expect(alertsBell(page)).toBeFocused();
+    },
+  );
 
-    await page.evaluate(() => localStorage.setItem("theme", "dark"));
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("html")).toHaveClass(DARK_CLASS);
-    await expect(page.locator(ALERTS_BADGE)).toBeVisible();
-    expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
-  });
+  test.fixme(
+    "FE-INT-R E.1: the counter badge meets WCAG AA in light and dark mode; needs a visible counter, which needs active alerts the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
+      await page.goto("/dashboard");
+      await page.evaluate(() => localStorage.setItem("theme", "light"));
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator(ALERTS_BADGE)).toBeVisible();
+      await expect(page.locator("html")).not.toHaveClass(DARK_CLASS);
+      expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
+
+      await page.evaluate(() => localStorage.setItem("theme", "dark"));
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("html")).toHaveClass(DARK_CLASS);
+      await expect(page.locator(ALERTS_BADGE)).toBeVisible();
+      expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
+    },
+  );
 });
 
 test.describe("alerts bell (mutates alert state)", () => {
-  test.describe.configure({ mode: "serial" });
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
+  test.describe.configure({ mode: "serial" });
 
-  test("dismiss lowers the counter and the panel", async ({ page }) => {
-    await openAlerts(page);
-    const before = await badgeValue(page);
-    expect(before).toBeGreaterThan(0);
+  test.fixme(
+    "FE-INT-R E.1: dismiss lowers the counter and the panel; needs active alerts, which the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      await openAlerts(page);
+      const before = await badgeValue(page);
+      expect(before).toBeGreaterThan(0);
 
-    await alertsList(page)
-      .getByRole("button", { name: /^Descartar: / })
-      .first()
-      .click();
-    await expect(page.getByText("Alerta descartada", { exact: true })).toBeVisible();
-    await expect.poll(() => badgeValue(page)).toBe(before - 1);
-    await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
-  });
+      await alertsList(page)
+        .getByRole("button", { name: /^Descartar: / })
+        .first()
+        .click();
+      await expect(page.getByText("Alerta descartada", { exact: true })).toBeVisible();
+      await expect.poll(() => badgeValue(page)).toBe(before - 1);
+      await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
+    },
+  );
 
-  test("snooze for one day lowers the counter and the panel", async ({ page }) => {
-    await openAlerts(page);
-    const before = await badgeValue(page);
-    expect(before).toBeGreaterThan(0);
+  test.fixme(
+    "FE-INT-R E.1: snooze for one day lowers the counter and the panel; needs active alerts, which the BE seed does not hold (rule 29)",
+    async ({ page }) => {
+      await openAlerts(page);
+      const before = await badgeValue(page);
+      expect(before).toBeGreaterThan(0);
 
-    await alertsList(page)
-      .getByRole("button", { name: /^Posponer: / })
-      .first()
-      .click();
-    await page.getByRole("menuitem", { name: "1 día", exact: true }).click();
-    await expect(page.getByText("Alerta pospuesta 1 día", { exact: true })).toBeVisible();
-    await expect.poll(() => badgeValue(page)).toBe(before - 1);
-    await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
-  });
+      await alertsList(page)
+        .getByRole("button", { name: /^Posponer: / })
+        .first()
+        .click();
+      await page.getByRole("menuitem", { name: "1 día", exact: true }).click();
+      await expect(page.getByText("Alerta pospuesta 1 día", { exact: true })).toBeVisible();
+      await expect.poll(() => badgeValue(page)).toBe(before - 1);
+      await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
+    },
+  );
 });

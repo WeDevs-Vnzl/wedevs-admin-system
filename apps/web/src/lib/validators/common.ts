@@ -38,6 +38,9 @@ export const VALIDATION_MESSAGES = {
   fileTooLarge: "validation.file.tooLarge",
   /** `checkUpload` path (uploader): interpolates `{max}` in MB. */
   fileTooLargeMax: "validation.file.tooLargeMax",
+  paymentLinkExceedsCapacity: "validation.paymentLinkExceedsCapacity",
+  paymentLinkBelowMinimum: "validation.paymentLinkBelowMinimum",
+  paymentLinkCurrencyUnsupported: "validation.paymentLinkCurrencyUnsupported",
 } as const;
 
 export type ValidationMessageKey = (typeof VALIDATION_MESSAGES)[keyof typeof VALIDATION_MESSAGES];
@@ -117,7 +120,7 @@ export function zodFieldErrors(error: z.ZodError): FieldErrors {
 
 // ───────────────────────────── Ids, references, dates ─────────────────────────────
 
-/** Entity id: cuid in Hito 2, readable mock ids in Hito 1. Never trusted without a lookup (C14). */
+/** Entity id: a cuid or a readable fixture id. Never trusted without a lookup (C14). */
 export const idSchema = z
   .string()
   .min(1, VALIDATION_MESSAGES.required)

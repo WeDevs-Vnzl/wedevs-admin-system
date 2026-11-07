@@ -10,11 +10,11 @@ import { RelatedMiniTable } from "@/components/patterns/related-mini-table";
 import { StatCard } from "@/components/patterns/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { AccountsOverviewDTO } from "@/lib/validators/accounts";
+import type { AccountsOverviewDto } from "@/lib/api/types/accounts";
 import type { accountScreenPermissions } from "../permissions";
 
 type AccountsOverviewProps = {
-  overview: AccountsOverviewDTO;
+  overview: AccountsOverviewDto;
   permissions: ReturnType<typeof accountScreenPermissions>;
 };
 

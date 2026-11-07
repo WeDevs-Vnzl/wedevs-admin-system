@@ -1,43 +1,38 @@
 "use server";
 
+import { apiAction } from "@/lib/api/action";
 import {
-  changeUserRoleInputSchema,
-  inviteUserInputSchema,
-  revokeUserInvitationInputSchema,
-  userFilterSchema,
+  type ChangeUserRoleInput,
+  type InviteUserInput,
+  type RevokeUserInvitationInput,
+  type UserFilterInput,
 } from "@/lib/validators/users";
-import * as users from "@/mocks/services/users";
-import { defineAction } from "@/server/actions/define-action";
+import { listUsersWithInvitations } from "./list-users";
 
 const SETTINGS_USERS_PATH = "/settings/users";
 
-// Settings → Usuarios (PRD §8.15, HU-02 CA1): Owner only, through the `user` row of the matrix.
+// Settings → Usuarios (PRD §8.15, HU-02): thin proxies to the API. The BE `can()` decides (Owner only, HU-02
+// CA2); a `FORBIDDEN` reaches the UI as a result and nothing changes.
 
-export const listUsersAction = defineAction({
-  permission: { action: "read", resource: "user" },
-  input: userFilterSchema,
-  handler: (ctx, data) => users.listUsers(ctx, data),
+export const listUsersAction = apiAction({
+  call: (input: UserFilterInput, api) => listUsersWithInvitations(api, input),
 });
 
-/** Invitation by e-mail with a role (Clerk in Hito 2). A taken e-mail is `CONFLICT` on `email`. */
-export const inviteUserAction = defineAction({
-  permission: { action: "create", resource: "user" },
-  input: inviteUserInputSchema,
+/** Invitation by e-mail with a role. A taken e-mail is `CONFLICT` on `email`. */
+export const inviteUserAction = apiAction({
+  call: (input: InviteUserInput, api) => api.POST("/api/v1/users/invitations", { body: input }),
   revalidate: [SETTINGS_USERS_PATH],
-  handler: (ctx, data) => users.inviteUser(ctx, data),
 });
 
 /** Changes a role; the last Owner cannot be demoted (`INTEGRITY_LOCK`). */
-export const changeUserRoleAction = defineAction({
-  permission: { action: "update", resource: "user" },
-  input: changeUserRoleInputSchema,
+export const changeUserRoleAction = apiAction({
+  call: ({ userId, role }: ChangeUserRoleInput, api) =>
+    api.PATCH("/api/v1/users/{id}", { params: { path: { id: userId } }, body: { role } }),
   revalidate: [SETTINGS_USERS_PATH],
-  handler: (ctx, data) => users.changeUserRole(ctx, data),
 });
 
-export const revokeUserInvitationAction = defineAction({
-  permission: { action: "delete", resource: "user" },
-  input: revokeUserInvitationInputSchema,
+export const revokeUserInvitationAction = apiAction({
+  call: ({ invitationId }: RevokeUserInvitationInput, api) =>
+    api.POST("/api/v1/users/invitations/{id}/revoke", { params: { path: { id: invitationId } } }),
   revalidate: [SETTINGS_USERS_PATH],
-  handler: (ctx, data) => users.revokeUserInvitation(ctx, data),
 });

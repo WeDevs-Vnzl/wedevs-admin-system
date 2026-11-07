@@ -8,10 +8,10 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/patterns/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { setRecurringExpenseStatusAction } from "@/features/expenses/actions";
-import type { RecurringExpenseDTO } from "@/lib/validators/expenses";
+import type { RecurringExpenseResponseDto } from "@/lib/api/types/expenses";
 
 type RecurringStatusActionsProps = {
-  recurring: RecurringExpenseDTO;
+  recurring: RecurringExpenseResponseDto;
 };
 
 /**

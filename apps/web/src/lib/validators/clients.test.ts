@@ -1,13 +1,9 @@
-import type { ClientsService } from "./clients";
 import { describe, expect, it } from "vitest";
 import { VALIDATION_MESSAGES } from "./common";
 import {
   COUNTRY_CODE_VALUES,
   archiveClientInputSchema,
-  clientDetailSchema,
   clientFilterSchema,
-  clientFinancialsSchema,
-  clientListRowSchema,
   countryCodeSchema,
   createClientInputSchema,
   isValidTaxIdFor,
@@ -178,80 +174,5 @@ describe("client filters and DTOs", () => {
     expect(parsed.hasOverdue).toBe(true);
     expect(clientFilterSchema.safeParse({ sort: "taxId:asc" }).success).toBe(false);
     expect(clientFilterSchema.safeParse({ status: "BORRADOR" }).success).toBe(false);
-  });
-
-  const row = {
-    id: "cli_1",
-    code: "CLI-0001",
-    tradeName: "Kairos Studio",
-    kind: "EMPRESA",
-    country: "VE",
-    status: "ACTIVO",
-    projectCount: 2,
-    totalInvoicedUsd: "12500.00",
-    receivableUsd: "1800.50",
-    tags: [],
-    lastActivityAt: null,
-    archivedAt: null,
-  };
-
-  it("financial metrics are money strings, never numbers (C15)", () => {
-    expect(clientListRowSchema.safeParse(row).success).toBe(true);
-    expect(clientListRowSchema.safeParse({ ...row, totalInvoicedUsd: 12500 }).success).toBe(false);
-    expect(clientListRowSchema.safeParse({ ...row, receivableUsd: "1.234" }).success).toBe(false);
-    expect(
-      clientFinancialsSchema.safeParse({
-        clientId: "cli_1",
-        totalInvoicedUsd: "100.00",
-        totalCollectedUsd: "40.00",
-        receivableUsd: "60.00",
-        overdueUsd: "0",
-        creditBalanceUsd: "0",
-        projectCount: 1,
-      }).success,
-    ).toBe(true);
-  });
-
-  it("detail DTO embeds contacts and financials", () => {
-    const detail = {
-      ...company,
-      id: "cli_1",
-      code: "CLI-0001",
-      email: null,
-      website: null,
-      status: "ACTIVO",
-      activatedAt: null,
-      tags: [],
-      contacts: [],
-      financials: {
-        clientId: "cli_1",
-        totalInvoicedUsd: "0",
-        totalCollectedUsd: "0",
-        receivableUsd: "0",
-        overdueUsd: "0",
-        creditBalanceUsd: "0",
-        projectCount: 0,
-      },
-      createdAt: "2026-10-01T10:00:00.000Z",
-      updatedAt: "2026-10-01T10:00:00.000Z",
-      archivedAt: null,
-    };
-    expect(clientDetailSchema.safeParse(detail).success).toBe(true);
-  });
-});
-
-describe("ClientsService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createClient",
-      "updateClient",
-      "setClientStatus",
-      "archiveClient",
-      "restoreClient",
-      "listClients",
-      "getClient",
-      "getClientFinancials",
-    ] as const satisfies readonly (keyof ClientsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

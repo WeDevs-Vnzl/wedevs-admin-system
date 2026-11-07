@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/patterns/status-badge";
 import { Button } from "@/components/ui/button";
 import { AlertList } from "@/features/alerts/components/alert-list";
 import type { AlertType } from "@/lib/validators/alerts";
-import type { ClientsOverviewDTO } from "@/lib/validators/clients";
+import type { ClientsOverviewDto } from "@/lib/api/types/clients";
 import { CLIENT_STATUS_VALUES } from "@/lib/validators/enums";
 import type { ClientScreenPermissions } from "./client-permissions";
 
@@ -26,7 +26,7 @@ const FINANCE_ALERT_TYPES: readonly AlertType[] = [
 ];
 
 type ClientsOverviewProps = {
-  overview: ClientsOverviewDTO;
+  overview: ClientsOverviewDto;
   permissions: Pick<ClientScreenPermissions, "canCreate" | "canSeeFinancials">;
 };
 

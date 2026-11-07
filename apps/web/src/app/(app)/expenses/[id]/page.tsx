@@ -6,28 +6,25 @@ import { ExpenseDetail } from "@/features/expenses/components/expense-detail";
 import { getExpenseFormOptions } from "@/features/expenses/form-options";
 import { getExpense } from "@/features/expenses/queries";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
+import {
+  notFoundWhenRefused,
+  orNullWhenMissing,
+  orNullWhenUnavailable,
+} from "@/features/expenses/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import type { ExpenseDetailDTO } from "@/lib/validators/expenses";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type ExpenseDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readExpense(id: string): Promise<ExpenseDetailDTO | null> {
-  try {
-    return await getExpense(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// An unknown id is `null`; a `FORBIDDEN` from the BE is the same not-found page (C13).
+const readExpense = (id: string) => orNullWhenMissing(() => getExpense(id));
 
 export async function generateMetadata({ params }: ExpenseDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const t = await getTranslations("expenses.page");
-  const expense = await readExpense(id);
+  const expense = await orNullWhenUnavailable(() => getExpense(id));
   return { title: expense ? expense.description : t("title") };
 }
 
@@ -38,8 +35,7 @@ export default async function ExpenseDetailPage({ params }: ExpenseDetailPagePro
   const user = await requireSessionUser();
   const permissions = expenseScreenPermissions(user);
   if (!permissions.canRead) notFound();
-  const expense = await readExpense(id);
-  if (!expense) notFound();
+  const expense = await notFoundWhenRefused(async () => (await readExpense(id)) ?? notFound());
   const options = await getExpenseFormOptions();
 
   return (

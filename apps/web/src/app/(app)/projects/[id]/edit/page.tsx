@@ -7,8 +7,8 @@ import { loadProjectOr404 } from "@/features/projects/load-project";
 import { getProject } from "@/features/projects/queries";
 import { listActiveTechnologies } from "@/features/technologies/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
-import { requireSessionUser } from "@/server/auth/session";
-import { can } from "@/server/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { can } from "@/lib/auth/permissions";
 
 type EditProjectPageProps = {
   params: Promise<{ id: string }>;

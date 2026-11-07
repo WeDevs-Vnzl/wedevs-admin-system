@@ -8,7 +8,6 @@ import {
   requiredText,
   timestampSchema,
   withSortFields,
-  type Paginated,
 } from "./common";
 
 // Shared helpers live in `common.ts` (one behaviour each); re-exported under their historical names.
@@ -176,21 +175,3 @@ export const tagListRowSchema = tagChipSchema.extend({
 export type TagListRowDTO = z.infer<typeof tagListRowSchema>;
 
 export const tagDetailSchema = tagListRowSchema;
-export type TagDetailDTO = z.infer<typeof tagDetailSchema>;
-
-// ───────────────────────────── Services (PRD §12 `tags`) ─────────────────────────────
-
-/**
- * `tags` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11); `Ctx` is the service
- * context `{ db, user, now }` built by `server/context.ts`. Failures (CONFLICT, NOT_FOUND…) are reported
- * to the action adapter, never returned as DTOs. `listTags` / `getTag` are the read counterparts that
- * PRD §12 ("servicios principales") leaves implicit.
- */
-export type TagsService<Ctx = unknown> = {
-  createTag: (ctx: Ctx, input: CreateTagInput) => Promise<TagDetailDTO>;
-  updateTag: (ctx: Ctx, input: UpdateTagInput) => Promise<TagDetailDTO>;
-  assignTags: (ctx: Ctx, input: AssignTagsInput) => Promise<TagChipDTO[]>;
-  unassignTag: (ctx: Ctx, input: UnassignTagInput) => Promise<TagChipDTO[]>;
-  listTags: (ctx: Ctx, input: TagFilter) => Promise<Paginated<TagListRowDTO>>;
-  getTag: (ctx: Ctx, input: TagIdInput) => Promise<TagDetailDTO>;
-};

@@ -5,23 +5,16 @@ import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { AccountForm } from "@/features/accounts/components/account-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
+import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
 import { listCurrencies } from "@/features/catalogs/queries";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
-import type { AccountDTO } from "@/lib/validators/accounts";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type AccountEditPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readAccount(id: string): Promise<AccountDTO | null> {
-  try {
-    return await getAccount(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// FORBIDDEN from the BE is the same not-found page as an unknown id (C13).
+const readAccount = (id: string) => orNullWhenMissing(() => getAccount(id));
 
 export async function generateMetadata({ params }: AccountEditPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -37,10 +30,9 @@ export default async function AccountEditPage({ params }: AccountEditPageProps) 
   const user = await requireSessionUser();
   const permissions = accountScreenPermissions(user);
   if (!permissions.canUpdate) notFound();
-  const account = await readAccount(id);
-  if (!account) notFound();
+  const account = await notFoundWhenRefused(async () => (await readAccount(id)) ?? notFound());
   const [ledger, currencies] = await Promise.all([
-    getAccountLedger({ accountId: account.id, pageSize: 25 }),
+    notFoundWhenRefused(() => getAccountLedger({ accountId: account.id, pageSize: 25 })),
     listCurrencies(),
   ]);
 

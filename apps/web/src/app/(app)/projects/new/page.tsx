@@ -6,8 +6,8 @@ import { listActiveTechnologies } from "@/features/technologies/queries";
 import { getClient } from "@/features/clients/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import type { EntityRef } from "@/lib/validators/common";
-import { requireSessionUser } from "@/server/auth/session";
-import { can } from "@/server/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { can } from "@/lib/auth/permissions";
 
 type NewProjectPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

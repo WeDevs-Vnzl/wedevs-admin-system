@@ -1,32 +1,43 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/auth/session", () => session);
+// Both the documents reads and the catalogs module read through the API (HTTP double, not a mocked domain layer).
+const server = vi.hoisted(() => ({ api: null as unknown }));
+vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
-// The overview and detail reads of the documents service are stubbed (their mock implementation is another
-// task); every other service function stays the real one over the mock store.
-const service = vi.hoisted(() => ({ getDocumentsOverview: vi.fn(), getDocument: vi.fn() }));
-vi.mock("@/mocks/services/documents", async (importOriginal) => ({
-  ...(await importOriginal<Record<string, unknown>>()),
-  ...service,
-}));
+// The commercial reads are stubbed at the module boundary (their own swaps own their HTTP tests).
+const commercial = vi.hoisted(() => ({ getClient: vi.fn(), getProject: vi.fn() }));
+vi.mock("@/features/clients/queries", () => ({ getClient: commercial.getClient }));
+vi.mock("@/features/projects/queries", () => ({ getProject: commercial.getProject }));
 
-import { getMockStore } from "@/mocks/store";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
+import { ServiceError } from "@/lib/service-error";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   documentLinkPrefill,
   getDocument,
+  getDocumentDetailPermissions,
   getDocumentPermissions,
   getDocumentsOverview,
   listDocumentCategories,
+  listDocumentVersions,
+  listDocuments,
   listEntityDocuments,
+  readDocumentDetail,
+  readDocumentVersion,
 } from "./queries";
+import { wireDetail, wirePage, wireRow, wireVersion } from "./wire-fixtures";
+
+function use(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.api = mocked.api;
+  return mocked;
+}
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  service.getDocumentsOverview.mockReset();
-  service.getDocument.mockReset();
+  session.requireSessionUser.mockReset();
 });
 
 afterEach(() => {
@@ -35,149 +46,262 @@ afterEach(() => {
 
 describe("getDocumentPermissions", () => {
   it.each([
-    ["OWNER", true, true],
-    ["ADMIN", true, true],
-    ["MEMBER", true, true],
-    ["VIEWER", false, false],
-  ] as const)("%s can attach: %s, can unlink: %s", async (role, canCreate, canUpdate) => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
-    expect(await getDocumentPermissions()).toEqual({ canCreate, canUpdate });
+    ["OWNER", true, true, true],
+    ["ADMIN", true, true, true],
+    ["MEMBER", true, true, false],
+    ["VIEWER", false, false, false],
+  ] as const)(
+    "%s can attach: %s, can unlink: %s, can see archived: %s",
+    async (role, canCreate, canUpdate, canRestore) => {
+      session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
+      expect(await getDocumentPermissions()).toEqual({ canCreate, canUpdate, canRestore });
+    },
+  );
+});
+
+describe("listDocuments", () => {
+  it("reads one page through GET /api/v1/documents with the table's filter", async () => {
+    const { calls } = use({ "GET /api/v1/documents": { body: wirePage([wireRow()]) } });
+    const page = await listDocuments({ q: "contrato", status: ["BORRADOR"], page: 2 });
+    expect(page.items[0]).toMatchObject({ id: "doc_1", code: "DOC-0001" });
+    // The wire `null` code of a chip is parsed away.
+    expect(page.items[0]?.links[0]).toEqual({
+      type: "CLIENT",
+      id: "cli_1",
+      label: "Kairos",
+    });
+    expect(calls[0]?.search.get("q")).toBe("contrato");
+    expect(calls[0]?.search.getAll("status")).toEqual(["BORRADOR"]);
+    expect(calls[0]?.search.get("page")).toBe("2");
+  });
+
+  it("throws when the BE answers an error", async () => {
+    use({ "GET /api/v1/documents": errorEnvelope("INTERNAL") });
+    await expect(listDocuments()).rejects.toThrow("GET /api/v1/documents failed with 500");
   });
 });
 
 describe("listEntityDocuments", () => {
-  it("lists the documents of one client and one project", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
-    const store = getMockStore();
-    const client = store.clients.find((row) =>
-      store.documentLinks.some((link) => link.entityType === "CLIENT" && link.entityId === row.id),
-    )!;
-    const clientPage = await listEntityDocuments({
-      type: "CLIENT",
-      id: client.id,
-      label: client.tradeName,
-    });
-    expect(clientPage.total).toBeGreaterThan(0);
-    for (const row of clientPage.items) {
-      expect(row.links.map((ref) => ref.id)).toContain(client.id);
-    }
+  const facets = [
+    ["CLIENT", "clientId"],
+    ["CONTACT", "contactId"],
+    ["PROJECT", "projectId"],
+    ["INVOICE", "invoiceId"],
+    ["PAYMENT", "paymentId"],
+    ["EXPENSE", "expenseId"],
+  ] as const;
 
-    const project = store.projects.find((row) =>
-      store.documentLinks.some((link) => link.entityType === "PROJECT" && link.entityId === row.id),
-    )!;
-    const projectPage = await listEntityDocuments({
-      type: "PROJECT",
-      id: project.id,
-      label: project.name,
-    });
-    expect(projectPage.total).toBeGreaterThan(0);
+  it.each(facets)("filters a %s's documents by its %s facet (HU-20 CA1)", async (type, facet) => {
+    const { calls } = use({ "GET /api/v1/documents": { body: wirePage([wireRow()]) } });
+    const page = await listEntityDocuments({ type, id: "ent_1", label: "x" });
+    expect(page.total).toBe(1);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.search.getAll(facet)).toEqual(["ent_1"]);
+    expect(calls[0]?.search.get("pageSize")).toBe("100");
+    expect(calls[0]?.search.get("archived")).toBe("exclude");
   });
 
   it("returns every linked document past one page of 100, so the tab counts and filters over all of them", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
-    const store = getMockStore();
-    const base = store.documents.find((row) => row.archivedAt === null)!;
-    const baseLink = store.documentLinks[0]!;
-    for (let index = 0; index < 120; index += 1) {
-      const id = `doc_bulk_${index}`;
-      store.documents.push({ ...base, id, code: `DOC-9${String(index).padStart(3, "0")}` });
-      store.documentLinks.push({
-        ...baseLink,
-        id: `dlk_bulk_${index}`,
-        documentId: id,
-        entityType: "CLIENT",
-        entityId: "cli_kairos",
-      });
-    }
-    const page = await listEntityDocuments({ type: "CLIENT", id: "cli_kairos", label: "Kairos" });
-    expect(page.total).toBeGreaterThan(120);
-    expect(page.items).toHaveLength(page.total);
-    expect(new Set(page.items.map((row) => row.id)).size).toBe(page.total);
+    const rows = (from: number, count: number) =>
+      Array.from({ length: count }, (_, index) => wireRow({ id: `doc_${from + index}` }));
+    const { calls } = use({
+      "GET /api/v1/documents": (call) => ({
+        body:
+          call.search.get("page") === "1"
+            ? { ...wirePage(rows(0, 100), 120), pageSize: 100, pageCount: 2 }
+            : { ...wirePage(rows(100, 20), 120), page: 2, pageSize: 100, pageCount: 2 },
+      }),
+    });
+    const page = await listEntityDocuments({ type: "CLIENT", id: "cli_1", label: "Kairos" });
+    expect(page.total).toBe(120);
+    expect(new Set(page.items.map((row) => row.id)).size).toBe(120);
+    expect(calls.map((call) => call.search.get("page"))).toEqual(["1", "2"]);
   });
 
-  it("answers an empty page for an entity the tab does not serve", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
-    const store = getMockStore();
-    const contact = store.contacts[0]!;
-    expect(
-      await listEntityDocuments({ type: "CONTACT", id: contact.id, label: "x" }),
-    ).toMatchObject({
+  it("answers an empty page, with no call, for an entity that has no facet", async () => {
+    const { calls } = use({});
+    expect(await listEntityDocuments({ type: "ACCOUNT", id: "acc_1", label: "x" })).toEqual({
       items: [],
       total: 0,
     });
+    expect(calls).toHaveLength(0);
   });
 });
 
 describe("listDocumentCategories", () => {
   it("returns every category with its types, in catalog order", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    const category = (id: string, order: number) => ({
+      id,
+      name: id,
+      nameEn: null,
+      color: null,
+      order,
+      types: [],
+    });
+    const { calls } = use({
+      "GET /api/v1/document-categories": { body: [category("a", 0), category("b", 1)] },
+    });
     const categories = await listDocumentCategories();
-    expect(categories.length).toBe(getMockStore().documentCategories.length);
-    const orders = categories.map((category) => category.order);
-    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    expect(calls).toHaveLength(1);
+    expect(categories.map((c) => c.id)).toEqual(["a", "b"]);
   });
 });
 
 describe("getDocumentsOverview", () => {
-  it("reads the overview for the signed-in user with the empty overview input", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
-    const overview = { recent: [] };
-    service.getDocumentsOverview.mockResolvedValue(overview);
-    expect(await getDocumentsOverview()).toBe(overview);
-    expect(service.getDocumentsOverview).toHaveBeenCalledWith(
-      expect.objectContaining({ user: expect.objectContaining({ role: "VIEWER" }) }),
-      {},
-    );
+  it("reads GET /api/v1/documents/overview and parses the chips of its lists", async () => {
+    const { calls } = use({
+      "GET /api/v1/documents/overview": {
+        body: {
+          byCategoryAndStatus: [],
+          expiringCounts: { days30: 1, days60: 2, days90: 3 },
+          expiringSoon: [wireRow()],
+          recent: [],
+          staleDrafts: [],
+        },
+      },
+    });
+    const overview = await getDocumentsOverview();
+    expect(calls[0]?.path).toBe("/api/v1/documents/overview");
+    expect(overview.expiringCounts).toEqual({ days30: 1, days60: 2, days90: 3 });
+    expect(overview.expiringSoon[0]?.links[0]).toEqual({
+      type: "CLIENT",
+      id: "cli_1",
+      label: "Kairos",
+    });
   });
 });
 
-describe("getDocument", () => {
+describe("getDocument (frozen cross-module read, rule 11)", () => {
   it("reads one document by id", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
-    service.getDocument.mockResolvedValue({ id: "doc_1" });
-    expect(await getDocument("doc_1")).toEqual({ id: "doc_1" });
-    expect(service.getDocument).toHaveBeenCalledWith(expect.anything(), { id: "doc_1" });
+    const { calls } = use({ "GET /api/v1/documents/{id}": { body: wireDetail() } });
+    const document = await getDocument("doc_1");
+    expect(document).toMatchObject({ id: "doc_1", code: "DOC-0001", title: "Contrato Kairos" });
+    expect(calls[0]?.path).toBe("/api/v1/documents/doc_1");
   });
 
-  it("rejects an empty id before the service runs", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
-    await expect(getDocument("")).rejects.toThrow();
-    expect(service.getDocument).not.toHaveBeenCalled();
+  it("maps a BE 404 to ServiceError NOT_FOUND", async () => {
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("NOT_FOUND") });
+    await expect(getDocument("doc_x")).rejects.toMatchObject({
+      name: "ServiceError",
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("maps a BE 403 to FORBIDDEN and a 422 to VALIDATION, keeping message and field errors", async () => {
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("FORBIDDEN") });
+    await expect(getDocument("doc_1")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    use({
+      "GET /api/v1/documents/{id}": errorEnvelope("VALIDATION", {
+        message: "documents.errors.bad",
+        fieldErrors: { id: ["validation.invalidId"] },
+      }),
+    });
+    await expect(getDocument("doc_1")).rejects.toMatchObject({
+      code: "VALIDATION",
+      message: "documents.errors.bad",
+      fieldErrors: { id: ["validation.invalidId"] },
+    });
+  });
+
+  it("answers a malformed id like an unknown one, without calling the BE", async () => {
+    const { calls } = use({});
+    await expect(getDocument("")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(getDocument("a b/c")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("throws a plain error on a server failure", async () => {
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("INTERNAL") });
+    await expect(getDocument("doc_1")).rejects.not.toBeInstanceOf(ServiceError);
+  });
+});
+
+describe("detail reads", () => {
+  it("readDocumentDetail answers null for an unknown, hidden or malformed id", async () => {
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("NOT_FOUND") });
+    expect(await readDocumentDetail("doc_x")).toBeNull();
+    use({ "GET /api/v1/documents/{id}": errorEnvelope("FORBIDDEN") });
+    expect(await readDocumentDetail("doc_x")).toBeNull();
+    expect(await readDocumentDetail("not valid!")).toBeNull();
+  });
+
+  it("lists the history through GET /documents/{id}/versions, newest first, without content", async () => {
+    const { calls } = use({
+      "GET /api/v1/documents/{id}/versions": {
+        body: [wireVersion(), wireVersion({ id: "ver_1", versionNumber: 1, isCurrent: false })],
+      },
+    });
+    const versions = await listDocumentVersions("doc_1");
+    expect(calls[0]?.path).toBe("/api/v1/documents/doc_1/versions");
+    expect(versions.map((version) => version.versionNumber)).toEqual([2, 1]);
+  });
+
+  it("reads one version with its content, and null when the BE says it is not found", async () => {
+    use({
+      "GET /api/v1/documents/{id}/versions/{versionId}": (call) =>
+        call.path.endsWith("ver_nope")
+          ? errorEnvelope("NOT_FOUND")
+          : { body: wireVersion({ format: "MARKDOWN", file: null, content: "# Hola" }) },
+    });
+    expect(await readDocumentVersion("doc_1", "ver_2")).toMatchObject({ content: "# Hola" });
+    expect(await readDocumentVersion("doc_1", "ver_nope")).toBeNull();
+  });
+});
+
+describe("getDocumentDetailPermissions", () => {
+  it.each([
+    ["OWNER", true, true],
+    ["ADMIN", true, true],
+    ["MEMBER", true, false],
+    ["VIEWER", false, false],
+  ] as const)("%s can update: %s, read activity: %s", async (role, canUpdate, canReadActivity) => {
+    session.requireSessionUser.mockResolvedValue(makeSessionUser(role));
+    expect(await getDocumentDetailPermissions()).toEqual({ canUpdate, canReadActivity });
   });
 });
 
 describe("documentLinkPrefill", () => {
   beforeEach(() => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
+    commercial.getClient.mockReset();
+    commercial.getProject.mockReset();
+    commercial.getClient.mockImplementation(async (id: string) => {
+      if (id === "cli_kairos") {
+        return { id, code: "CLI-0001", tradeName: "Kairos Studio", archivedAt: null };
+      }
+      if (id === "cli_archived") {
+        return { id, code: "CLI-0002", tradeName: "Archivada", archivedAt: "2026-10-01T00:00:00Z" };
+      }
+      throw new ServiceError("NOT_FOUND");
+    });
+    commercial.getProject.mockImplementation(async (id: string) => {
+      if (id === "prj_portal") {
+        return { id, code: "PRJ-0001", name: "Portal web", archivedAt: null };
+      }
+      throw new ServiceError("NOT_FOUND");
+    });
   });
 
   it("prefills the client a document is created from, labelled with its trade name", async () => {
-    const client = getMockStore().clients.find((row) => row.archivedAt === null)!;
-    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([
-      { type: "CLIENT", id: client.id, code: client.code, label: client.tradeName },
+    expect(await documentLinkPrefill("CLIENT", "cli_kairos")).toEqual([
+      { type: "CLIENT", id: "cli_kairos", code: "CLI-0001", label: "Kairos Studio" },
     ]);
   });
 
   it("prefills the project a document is created from, labelled with its name", async () => {
-    const project = getMockStore().projects.find((row) => row.archivedAt === null)!;
-    expect(await documentLinkPrefill("PROJECT", project.id)).toEqual([
-      { type: "PROJECT", id: project.id, code: project.code, label: project.name },
+    expect(await documentLinkPrefill("PROJECT", "prj_portal")).toEqual([
+      { type: "PROJECT", id: "prj_portal", code: "PRJ-0001", label: "Portal web" },
     ]);
   });
 
   it("prefills nothing for a missing, unknown or unsupported record", async () => {
-    const client = getMockStore().clients[0]!;
     expect(await documentLinkPrefill(undefined, undefined)).toEqual([]);
     expect(await documentLinkPrefill("CLIENT", "")).toEqual([]);
     expect(await documentLinkPrefill("CLIENT", "cli_missing")).toEqual([]);
-    expect(await documentLinkPrefill("PROJECT", client.id)).toEqual([]);
-    expect(await documentLinkPrefill("INVOICE", client.id)).toEqual([]);
+    expect(await documentLinkPrefill("PROJECT", "cli_kairos")).toEqual([]);
+    expect(await documentLinkPrefill("INVOICE", "cli_kairos")).toEqual([]);
   });
 
   it("prefills nothing for an archived client", async () => {
-    const store = getMockStore();
-    const client = store.clients.find((row) => row.archivedAt === null)!;
-    client.archivedAt = new Date().toISOString();
-    expect(await documentLinkPrefill("CLIENT", client.id)).toEqual([]);
+    expect(await documentLinkPrefill("CLIENT", "cli_archived")).toEqual([]);
   });
 });

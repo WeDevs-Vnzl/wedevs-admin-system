@@ -13,7 +13,8 @@ import {
   type FacetConfig,
 } from "@/components/ui/data-table";
 import { MoneyText } from "@/components/patterns/money-text";
-import { ACCOUNT_STATUS_FILTER_VALUES, type AccountDTO } from "@/lib/validators/accounts";
+import type { AccountResponseDto } from "@/lib/api/types/accounts";
+import { ACCOUNT_STATUS_FILTER_VALUES } from "@/lib/validators/accounts";
 import type { ListQuery } from "@/lib/validators/common";
 import { ACCOUNT_TYPE_VALUES } from "@/lib/validators/enums";
 import { listAccountsAction } from "../actions";
@@ -21,13 +22,13 @@ import { accountFilterOf } from "./account-table-query";
 
 type AccountsTableProps = {
   /** First page, read on the server for the query in the URL. */
-  initialRows: AccountDTO[];
+  initialRows: AccountResponseDto[];
   initialTotal: number;
   /** Currency codes offered by the currency facet (the currencies catalog). */
   currencies: string[];
 };
 
-const helper = createDataTableColumnHelper<AccountDTO>();
+const helper = createDataTableColumnHelper<AccountResponseDto>();
 
 /**
  * `/accounts/list` (DT-25, S15): every account with its balance in its own currency and in USD, with the type,
@@ -66,7 +67,7 @@ export function AccountsTable({ initialRows, initialTotal, currencies }: Account
     void load(query);
   }, [query, queryKey, load]);
 
-  const columns = useMemo<DataTableColumnDef<AccountDTO>[]>(
+  const columns = useMemo<DataTableColumnDef<AccountResponseDto>[]>(
     () => [
       helper.accessor("name", {
         header: t("table.columns.name"),
@@ -116,7 +117,8 @@ export function AccountsTable({ initialRows, initialTotal, currencies }: Account
           ) : (
             <MoneyText amount={row.original.balanceUsd} currency="USD" />
           ),
-        meta: { label: t("table.columns.balanceUsd"), align: "end", sortable: true },
+        // The BE sorts by `balance`, not by the USD figure (contract gap, reported).
+        meta: { label: t("table.columns.balanceUsd"), align: "end" },
         size: 160,
       }),
       helper.display({
@@ -165,7 +167,7 @@ export function AccountsTable({ initialRows, initialTotal, currencies }: Account
   );
 
   return (
-    <DataTable<AccountDTO>
+    <DataTable<AccountResponseDto>
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

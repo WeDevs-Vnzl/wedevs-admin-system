@@ -6,15 +6,15 @@ import { ClientForm } from "@/features/clients/components/client-form";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { getClient } from "@/features/clients/queries";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
+import { requireSessionUser } from "@/lib/auth/session";
+import { ServiceError } from "@/lib/service-error";
+import type { ClientDetailDto } from "@/lib/api/types/clients";
 
 type ClientEditPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readClient(id: string): Promise<ClientDetailDTO | null> {
+async function readClient(id: string): Promise<ClientDetailDto | null> {
   try {
     return await getClient(id);
   } catch (error) {

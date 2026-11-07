@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { clientScreenPermissions } from "./client-permissions";
 
 describe("clientScreenPermissions", () => {

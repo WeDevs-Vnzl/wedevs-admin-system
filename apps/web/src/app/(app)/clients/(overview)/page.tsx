@@ -4,7 +4,7 @@ import { ClientsOverview } from "@/features/clients/components/clients-overview"
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { getClientsOverview } from "@/features/clients/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("clients.page");

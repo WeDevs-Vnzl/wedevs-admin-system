@@ -22,6 +22,7 @@
   "searchFailed": "La búsqueda falló. Inténtalo de nuevo.",
   "prefixHint": "Filtra con c: clientes · p: proyectos · f: facturas · d: documentos · n: notas",
   "archived": "Archivado",
+  "includeArchived": "Mostrar archivados",
   "types": {
     "CLIENT": "Clientes",
     "CONTACT": "Contactos",

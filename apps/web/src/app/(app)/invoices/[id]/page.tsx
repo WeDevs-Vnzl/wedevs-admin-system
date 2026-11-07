@@ -1,25 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { InvoiceDetail } from "@/features/invoices/components/invoice-detail";
+import { PaymentLinksPanel } from "@/features/invoices/components/payment-links-panel";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
-import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
+import { orNullWhenMissing } from "@/features/invoices/refusal";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readInvoice(id: string) {
-  try {
-    return await getInvoice(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// A missing, hidden or refused (`FORBIDDEN`) invoice answers `null`: the page is the same not-found for all of them.
+const readInvoice = (id: string) => orNullWhenMissing(() => getInvoice(id));
 
 export async function generateMetadata({ params }: InvoiceDetailPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -41,7 +38,22 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
   return (
     <div className="flex flex-col gap-6">
       <BreadcrumbLabel segment={invoice.id} label={invoice.invoiceNumber} />
-      <InvoiceDetail invoice={invoice} canUpdate={permissions.canUpdate} />
+      <InvoiceDetail
+        invoice={invoice}
+        canUpdate={permissions.canUpdate}
+        paymentLinks={
+          // Cosmetic gate (DT-195): the BE decides. The panel hides itself when Stripe is off or its read fails.
+          can(user, "read", "payment") ? (
+            <Suspense fallback={null}>
+              <PaymentLinksPanel
+                invoiceId={invoice.id}
+                currency={invoice.currency}
+                canCreate={can(user, "create", "payment")}
+              />
+            </Suspense>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

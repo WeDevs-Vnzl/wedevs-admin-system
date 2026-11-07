@@ -1,25 +1,38 @@
 import "server-only";
+import { getServerApi } from "@/lib/api/server";
 import {
   noteFilterSchema,
   noteIdInputSchema,
   type NoteFilterInput,
   type NoteIdInput,
 } from "@/lib/validators/notes";
-import * as notes from "@/mocks/services/notes";
-import { getServiceContext } from "@/server/context";
+import { requireSessionUser } from "@/lib/auth/session";
+import { ServiceError } from "@/lib/service-error";
+import { toNoteListQuery } from "./api-query";
+import { toNoteDetail, toNotePage } from "./mappers";
 
-/** Notes of the table or of one record's feed (`entityType` + `entityId`). */
+/** Notes of the table or of one record's feed (`entityType` + `entityId`), through `GET /api/v1/notes`. */
 export async function listNotes(filter: NoteFilterInput = {}) {
-  return notes.listNotes(await getServiceContext(), noteFilterSchema.parse(filter));
+  const api = await getServerApi();
+  const { data, response } = await api.GET("/api/v1/notes", {
+    params: { query: toNoteListQuery(noteFilterSchema.parse(filter)) },
+  });
+  if (!data) throw new Error(`GET /api/v1/notes failed with ${response.status}`);
+  return toNotePage(data);
 }
 
-/** One note; `NOT_FOUND` lets the page call `notFound()`. */
+/** One note through `GET /api/v1/notes/{id}`; a BE `404` throws `ServiceError("NOT_FOUND")` for the page's `notFound()`. */
 export async function getNote(input: NoteIdInput) {
-  return notes.getNote(await getServiceContext(), noteIdInputSchema.parse(input));
+  const { id } = noteIdInputSchema.parse(input);
+  const api = await getServerApi();
+  const { data, response } = await api.GET("/api/v1/notes/{id}", { params: { path: { id } } });
+  if (data) return toNoteDetail(data);
+  if (response.status === 404) throw new ServiceError("NOT_FOUND");
+  throw new Error(`GET /api/v1/notes/${id} failed with ${response.status}`);
 }
 
 /** The signed-in user's id and role, for the `can()` checks that decide which note actions are shown (cosmetic, C13). */
 export async function getNotesViewer() {
-  const { user } = await getServiceContext();
+  const user = await requireSessionUser();
   return { id: user.id, role: user.role };
 }

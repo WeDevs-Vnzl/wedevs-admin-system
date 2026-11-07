@@ -108,6 +108,17 @@
       "notes": "Notas"
     }
   },
+  "snapshot": {
+    "title": "Snapshot de Binance",
+    "description": "Saldos en el exchange según la última sincronización. Solo lectura.",
+    "columns": {
+      "asset": "Activo",
+      "free": "Disponible",
+      "locked": "Bloqueado"
+    },
+    "syncedAt": "Sincronizado",
+    "empty": "No hay saldos en el exchange."
+  },
   "ledger": {
     "title": "Libro de movimientos",
     "description": "Cada movimiento que cambia el saldo, con el saldo corrido después de él.",
@@ -137,12 +148,13 @@
     "readOnly": "Solo lectura: no tienes permiso para conciliar esta cuenta.",
     "date": "Fecha del estado de cuenta",
     "statement": "Saldo del estado de cuenta",
-    "submit": "Calcular diferencia",
+    "submit": "Conciliar",
     "system": "Saldo del sistema",
     "difference": "Diferencia",
     "suggestion": "La diferencia sugiere un ajuste por ese importe.",
     "adjust": "Registrar ajuste",
-    "noDifference": "Sin diferencia: el saldo del sistema coincide con el estado de cuenta."
+    "noDifference": "Sin diferencia: el saldo del sistema coincide con el estado de cuenta.",
+    "recorded": "Conciliación registrada"
   },
   "transfer": {
     "title": "Nueva transferencia",
@@ -208,6 +220,9 @@
     "partnerRequired": "Indica el socio",
     "adjustmentNonZero": "Un ajuste no puede ser cero",
     "inactive": "La cuenta está inactiva",
-    "currencyLocked": "La moneda no se puede cambiar cuando la cuenta tiene movimientos"
+    "currencyLocked": "La moneda no se puede cambiar cuando la cuenta tiene movimientos",
+    "unknownCurrency": "La moneda no existe en el catálogo",
+    "usdRateMustBeOne": "La tasa de una cuenta en USD es 1",
+    "invalidType": "Tipo no válido"
   }
 }

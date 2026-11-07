@@ -1,5 +1,5 @@
 import { z } from "./zod";
-import { VALIDATION_MESSAGES, idSchema, listQuerySchema, type Paginated } from "./common";
+import { VALIDATION_MESSAGES, idSchema, listQuerySchema } from "./common";
 import { techCategorySchema } from "./enums";
 import { facetOf, hexColorSchema, optionalText, requiredText, withSortFields } from "./tags";
 
@@ -80,7 +80,6 @@ export const technologyChipSchema = z.object({
   id: idSchema,
   name: z.string(),
   nameEn: z.string().nullable(),
-  slug: z.string(),
   category: techCategorySchema,
   iconSlug: z.string().nullable(),
   color: z.string().nullable(),
@@ -89,6 +88,7 @@ export type TechnologyChipDTO = z.infer<typeof technologyChipSchema>;
 
 /** Row of Settings → Tecnologías (also the detail DTO). */
 export const technologyListRowSchema = technologyChipSchema.extend({
+  slug: z.string(),
   active: z.boolean(),
   /** Non-archived projects using it. */
   usageCount: z.number().int().nonnegative(),
@@ -96,19 +96,3 @@ export const technologyListRowSchema = technologyChipSchema.extend({
 export type TechnologyListRowDTO = z.infer<typeof technologyListRowSchema>;
 
 export const technologyDetailSchema = technologyListRowSchema;
-export type TechnologyDetailDTO = z.infer<typeof technologyDetailSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Technology catalog services (PRD §12 `settings`: "CRUD de catálogos"). Every service is
- * `fn(ctx, input) → Promise<DTO>` (C9, C11).
- */
-export type TechnologiesService<Ctx = unknown> = {
-  createTechnology: (ctx: Ctx, input: CreateTechnologyInput) => Promise<TechnologyDetailDTO>;
-  updateTechnology: (ctx: Ctx, input: UpdateTechnologyInput) => Promise<TechnologyDetailDTO>;
-  setTechnologyActive: (ctx: Ctx, input: SetTechnologyActiveInput) => Promise<TechnologyDetailDTO>;
-  deleteTechnology: (ctx: Ctx, input: DeleteTechnologyInput) => Promise<TechnologyIdInput>;
-  listTechnologies: (ctx: Ctx, input: TechnologyFilter) => Promise<Paginated<TechnologyListRowDTO>>;
-  getTechnology: (ctx: Ctx, input: TechnologyIdInput) => Promise<TechnologyDetailDTO>;
-};

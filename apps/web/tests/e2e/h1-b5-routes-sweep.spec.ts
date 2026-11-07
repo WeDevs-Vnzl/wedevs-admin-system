@@ -1,27 +1,49 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { appBaseUrl } from "./support/app";
+import { signInAs } from "./support/auth";
+import { assertBackendHealthy } from "./support/backend";
+import {
+  createAccountViaUi,
+  createClientViaUi,
+  createDocumentViaUi,
+  createExpenseViaUi,
+  createInvoiceViaUi,
+  createNoteViaUi,
+  createProjectViaUi,
+  createRecurringExpenseViaUi,
+  createUsdPaymentViaUi,
+  openPage,
+} from "./support/ui-data";
 
-// T9 navigation sweep, H1-B5 (odd/tasks/h1-b5-intelligence-ui.md S10): every route of PRD §11 loads without an
-// error boundary, a 404 or a console error (Hito 1 completeness), plus HU-02 CA1 (only the Owner reaches
-// /settings/users). `[id]` params come from the seed (src/mocks/fixtures). Known gaps (A5): /payments/[id]/edit and
-// /expenses/[id]/edit have no page in H1-B5 (H1-FX items), so they are `test.fixme`. Out of the sweep:
-// `/api/webhooks/clerk` and `/api/files/[id]/download` are Hito 2 only (docs/rules/coverage-matrix.md:107).
-// This file starts nothing: it runs against PLAYWRIGHT_BASE_URL (safeguards.md rule 1). The mock store is one
-// in-memory object per server process, so run it with `--workers=1`; the mock data is reset once before the sweep.
-// Default role: Owner.
+// T9 navigation sweep, H1-B5 (odd/tasks/h1-b5-intelligence-ui.md S10), FE-INT-R E.3: every route of PRD §11 loads
+// without an error boundary, a 404 or a console error (Hito 1 completeness), plus HU-02 CA1 (only the Owner reaches
+// /settings/users). The `[id]` params come from records the sweep creates through the UI (W5 rule 29): one client,
+// project, invoice, account, payment, expense, recurring expense, markdown document with two published versions, a
+// portal share and a note, all with the run's unique names. `/payments/[id]/edit` and `/expenses/[id]/edit` exist
+// (DT-213, closing the A5 gap) and are part of the sweep. Out of the sweep: `/api/webhooks/clerk` and
+// `/api/files/[id]/download` (BE routes). The portal with a real token and its file download are E.2's cases (HU-22
+// CA6); here only the public routes and the generic not-found of an unknown token run, tagged `@unauthenticated`.
+// Runs against PLAYWRIGHT_BASE_URL with the local BE (safeguards.md rule 1); nothing here starts a server.
+// Default role: Owner, through the Clerk test user (DT-204).
 
-const KAIROS_TOKEN = "qB_oM6fupiHqU3EEP1WJdPrUEEVQLSStshw-uBByF7s";
+const RUN = Date.now();
 
-const CLIENT = "cli_kairos";
-const PROJECT = "pry_kairos_web";
-const INVOICE = "inv_kairos_partial";
-const PAYMENT = "pag_kairos_partial";
-const EXPENSE = "exp_landing_kairos";
-const RECURRING_EXPENSE = "rex_suscripcion_ia";
-const ACCOUNT = "acc_zelle";
-const DOCUMENT = "doc_prd_kairos_web";
-const VERSION = "dver_prd_kairos_web_1";
-const SHARE = "shr_kairos_entrega";
-const NOTE = "note_kairos_alcance";
+/** The ids the sweep creates; route templates name them as `{client}`, `{project}`, … */
+interface Ids {
+  client: string;
+  project: string;
+  invoice: string;
+  account: string;
+  payment: string;
+  expense: string;
+  recurring: string;
+  document: string;
+  version: string;
+  share: string;
+  note: string;
+}
+
+let ids: Ids;
 
 const SETTINGS_SECTIONS = [
   "company",
@@ -36,66 +58,70 @@ const SETTINGS_SECTIONS = [
   "expense-categories",
   "tags",
   "trash",
+  "api-tokens",
+  "integrations",
 ];
 
-/** Authenticated routes of PRD §11 (Owner). */
+/** Authenticated routes of PRD §11 (Owner), as templates: `{name}` is replaced by the id the sweep created. */
 const APP_ROUTES = [
   "/dashboard",
   "/clients",
   "/clients/list",
   "/clients/new",
-  `/clients/${CLIENT}`,
-  `/clients/${CLIENT}?tab=contacts`,
-  `/clients/${CLIENT}/edit`,
-  `/clients/${CLIENT}/graph`,
+  "/clients/{client}",
+  "/clients/{client}?tab=contacts",
+  "/clients/{client}/edit",
+  "/clients/{client}/graph",
   "/projects",
   "/projects/list",
   "/projects/new",
-  `/projects/${PROJECT}`,
-  `/projects/${PROJECT}/edit`,
-  `/projects/${PROJECT}/graph`,
-  `/projects/${PROJECT}/billing`,
+  "/projects/{project}",
+  "/projects/{project}/edit",
+  "/projects/{project}/graph",
+  "/projects/{project}/billing",
   "/invoices",
   "/invoices/list",
   "/invoices/new",
-  `/invoices/new?clientId=${CLIENT}`,
-  `/invoices/${INVOICE}`,
-  `/invoices/${INVOICE}/edit`,
-  `/invoices/${INVOICE}/graph`,
+  "/invoices/new?clientId={client}",
+  "/invoices/{invoice}",
+  "/invoices/{invoice}/edit",
+  "/invoices/{invoice}/graph",
   "/payments",
   "/payments/list",
   "/payments/new",
-  `/payments/new?invoiceId=${INVOICE}`,
-  `/payments/${PAYMENT}`,
-  `/payments/${PAYMENT}/graph`,
+  "/payments/new?invoiceId={invoice}",
+  "/payments/{payment}",
+  "/payments/{payment}/edit",
+  "/payments/{payment}/graph",
   "/expenses",
   "/expenses/list",
   "/expenses/new",
   "/expenses/recurring",
   "/expenses/recurring/new",
-  `/expenses/recurring/${RECURRING_EXPENSE}`,
-  `/expenses/${EXPENSE}`,
-  `/expenses/${EXPENSE}/graph`,
+  "/expenses/recurring/{recurring}",
+  "/expenses/{expense}",
+  "/expenses/{expense}/edit",
+  "/expenses/{expense}/graph",
   "/accounts",
   "/accounts/new",
-  `/accounts/${ACCOUNT}`,
-  `/accounts/${ACCOUNT}/edit`,
+  "/accounts/{account}",
+  "/accounts/{account}/edit",
   "/accounts/transfers/new",
   "/accounts/movements/new",
   "/documents",
   "/documents/list",
   "/documents/new",
-  `/documents/${DOCUMENT}`,
-  `/documents/${DOCUMENT}/edit`,
-  `/documents/${DOCUMENT}/graph`,
-  `/documents/${DOCUMENT}/editor`,
-  `/documents/${DOCUMENT}/versions/${VERSION}`,
-  `/documents/${DOCUMENT}/versions/${VERSION}/compare`,
+  "/documents/{document}",
+  "/documents/{document}/edit",
+  "/documents/{document}/graph",
+  "/documents/{document}/editor",
+  "/documents/{document}/versions/{version}",
+  "/documents/{document}/versions/{version}/compare",
   "/documents/shares",
-  `/documents/shares/${SHARE}`,
+  "/documents/shares/{share}",
   "/notes",
   "/notes/new",
-  `/notes/${NOTE}`,
+  "/notes/{note}",
   "/graph",
   "/reports",
   "/reports/billed-vs-collected",
@@ -105,17 +131,13 @@ const APP_ROUTES = [
   ...SETTINGS_SECTIONS.map((section) => `/settings/${section}`),
 ];
 
-/** §11 routes without a page in H1-B5 (A5 → H1-FX). */
-const KNOWN_GAPS = [`/payments/${PAYMENT}/edit`, `/expenses/${EXPENSE}/edit`];
+/** Replaces the `{name}` tokens of a route template with the ids created by `arrange`. */
+function resolve(template: string): string {
+  return template.replace(/\{(\w+)\}/g, (_token, name: keyof Ids) => ids[name]);
+}
 
 const notFound = (page: Page) =>
   page.getByText(/^(Página no encontrada|Page not found)$/, { exact: true });
-
-/**
- * Seed project links point at the reserved `*.example.com` domain (RFC 2606), so the browser logs a DNS failure
- * for each link favicon. That is test-data noise, not an app error: only those resource loads are ignored.
- */
-const RESERVED_HOST = /^https?:\/\/([a-z0-9-]+\.)*example\.com\//;
 
 /** Records uncaught page errors and console errors from the moment it is called. */
 function watchErrors(page: Page): string[] {
@@ -123,9 +145,7 @@ function watchErrors(page: Page): string[] {
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (message) => {
     if (message.type() !== "error") return;
-    const source = message.location().url;
-    if (message.text().startsWith("Failed to load resource") && RESERVED_HOST.test(source)) return;
-    errors.push(`console: ${message.text()} (${source})`);
+    errors.push(`console: ${message.text()} (${message.location().url})`);
   });
   return errors;
 }
@@ -145,80 +165,148 @@ async function expectRouteLoads(page: Page, path: string) {
   expect(errors, `${path} errors`).toEqual([]);
 }
 
-async function resetMockData(browser: Browser) {
-  const page = await browser.newPage();
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
+/** Publishes the next version of a markdown document from its editor (the source textbox, then "Publicar"). */
+async function publishVersion(page: Page, documentId: string, version: number) {
+  await openPage(page, `/documents/${documentId}/editor`);
   await page
-    .getByRole("menuitem", { name: /^(Restablecer datos de prueba|Reset mock data)$/ })
-    .click();
+    .getByRole("textbox", { name: /^(Fuente markdown|Markdown source)$/ })
+    .fill(`# Versión ${version} ${RUN}`);
   await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: /^(Restablecer|Reset)$/ })
+    .getByRole("button", { name: new RegExp(`^(Publicar versión v${version}|Publish version v${version})$`) })
     .click();
-  await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-  await page.close();
+  const publish = page.getByRole("dialog");
+  await publish.locator("#document-editor-changelog").fill(`Cambio E2E v${version}`);
+  await publish.getByRole("button", { name: /^(Publicar|Publish)$/ }).click();
+  await expect(page.getByText(new RegExp(`Versión v${version} publicada|Version v${version} published`))).toBeVisible();
 }
 
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Administrador" | "Miembro" | "Lector") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
+/** The last path segment of the first link on the page whose href matches `pattern`, or throws. */
+async function firstIdFromLinks(page: Page, pattern: RegExp, which: "first" | "last" = "first") {
+  const hrefs = await page.locator("a[href]").evaluateAll((anchors) =>
+    anchors.map((anchor) => anchor.getAttribute("href") ?? ""),
+  );
+  const matches = hrefs.filter((href) => pattern.test(href));
+  const href = which === "first" ? matches[0] : matches.at(-1);
+  if (!href) throw new Error(`No link matching ${pattern} on ${page.url()}`);
+  return href.replace(/[?#].*$/, "").split("/").pop() ?? "";
 }
 
-test.beforeAll(async ({ browser }) => {
-  await resetMockData(browser);
-});
+async function arrange(browser: Browser): Promise<Ids> {
+  const context = await browser.newContext({ baseURL: appBaseUrl() });
+  const page = await context.newPage();
+  try {
+    await signInAs(page, "OWNER");
+    const clientName = `E2E Sweep ${RUN}`;
+    const client = await createClientViaUi(page, clientName, `E2E-SW-${RUN}`);
+    const projectName = `E2E Proyecto sweep ${RUN}`;
+    const project = await createProjectViaUi(page, {
+      name: projectName,
+      clients: [{ clientName, role: "Contratante" }],
+    });
+    const invoice = (
+      await createInvoiceViaUi(page, {
+        clientName,
+        invoiceNumber: `E2E-SW-${RUN}`,
+        price: "100",
+      })
+    ).id;
+    const accountName = `E2E Cuenta sweep ${RUN}`;
+    const account = await createAccountViaUi(page, { name: accountName, currency: "USD" });
+    const payment = await createUsdPaymentViaUi(page, {
+      clientName,
+      accountName,
+      amount: "40",
+      reference: `E2E-SW-${RUN}`,
+    });
+    const expense = await createExpenseViaUi(page, {
+      description: `E2E Gasto sweep ${RUN}`,
+      amount: "20",
+      projectName,
+    });
+    const recurring = await createRecurringExpenseViaUi(page, {
+      name: `E2E Recurrente sweep ${RUN}`,
+      amount: "15",
+    });
+    const note = await createNoteViaUi(page, { clientId: client, title: `E2E Nota sweep ${RUN}` });
+
+    // A markdown document with two published versions, so the version and compare routes have a non-current one.
+    const document = await createDocumentViaUi(page, {
+      title: `E2E PRD sweep ${RUN}`,
+      type: "PRD",
+      clientId: client,
+    });
+    await publishVersion(page, document, 1);
+    await publishVersion(page, document, 2);
+    await openPage(page, `/documents/${document}?tab=versions`);
+    // The history lists the newest first: the last version link is v1.
+    const version = await firstIdFromLinks(page, /\/versions\/[a-z0-9]{20,}(?:[?#].*)?$/, "last");
+
+    // A portal share of that document.
+    await openPage(page, `/documents/${document}?tab=shares`);
+    await page.getByRole("button", { name: "Compartir", exact: true }).first().click();
+    await page
+      .getByRole("dialog", { name: "Compartir en el portal" })
+      .getByRole("button", { name: "Crear enlace", exact: true })
+      .click();
+    await expect(page.getByText("Enlace creado")).toBeVisible();
+    await openPage(page, "/documents/shares");
+    const share = await firstIdFromLinks(page, /^\/documents\/shares\/[a-z0-9]{20,}$/);
+
+    return { client, project, invoice, account, payment, expense, recurring, document, version, share, note };
+  } finally {
+    await context.close();
+  }
+}
 
 test.describe("PRD §11 routes (Owner)", () => {
-  for (const path of APP_ROUTES) {
-    test(`${path} loads`, async ({ page }) => {
-      await expectRouteLoads(page, path);
-    });
-  }
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(300_000);
+    await assertBackendHealthy();
+    ids = await arrange(browser);
+  });
 
-  for (const path of KNOWN_GAPS) {
-    // KNOWN GAP (A5): listed in PRD §11, no page in H1-B5; logged as an H1-FX item.
-    test.fixme(`${path} loads (known gap A5, H1-FX)`, async ({ page }) => {
-      await expectRouteLoads(page, path);
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
+
+  for (const template of APP_ROUTES) {
+    test(`${template} loads`, async ({ page }) => {
+      await expectRouteLoads(page, resolve(template));
     });
   }
 });
 
 test.describe("PRD §11 public routes", () => {
-  test("/sign-in loads", async ({ page }) => {
+  test("@unauthenticated /sign-in loads", async ({ page }) => {
     await expectRouteLoads(page, "/sign-in");
   });
 
-  test("/s/[token] loads the portal", async ({ page }) => {
+  // The portal with a real token and its file download are E.2's cases (HU-22 CA6, DT-224); the sweep only checks
+  // that an unknown token gets the generic "Enlace no disponible" page with status 404 (PRD §8.11, C22).
+  test("@unauthenticated /s/[token] with an unknown token shows the generic not-found page", async ({
+    page,
+  }) => {
     await page.setExtraHTTPHeaders({ "x-forwarded-for": "198.51.100.251" });
-    await expectRouteLoads(page, `/s/${KAIROS_TOKEN}`);
-    await expect(page.getByRole("list", { name: /^(Documentos|Documents)$/ })).toBeVisible();
-  });
-
-  test("/api/s/[token]/files/[documentId] answers a portal document", async ({ page }) => {
-    const response = await page.request.get(
-      `/api/s/${KAIROS_TOKEN}/files/doc_contrato_kairos?download=1`,
-      { headers: { "x-forwarded-for": "198.51.100.252" }, maxRedirects: 0 },
-    );
-    expect(response.status()).toBeLessThan(400);
+    const response = await page.goto(`/s/e2e-sweep-unknown-${RUN}`);
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "Enlace no disponible" })).toBeVisible();
   });
 });
 
 test.describe("HU-02 CA1: only the Owner sees /settings/users", () => {
   test("the Owner opens /settings/users", async ({ page }) => {
+    await signInAs(page, "OWNER");
     await expectRouteLoads(page, "/settings/users");
     await expect(notFound(page)).toHaveCount(0);
   });
 
-  for (const role of ["Administrador", "Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Administrador", "ADMIN"],
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets a 404 on /settings/users`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       const response = await page.goto("/settings/users");
       await page.waitForLoadState("networkidle");
       expect(response?.status()).toBe(404);

@@ -21,20 +21,19 @@ test.describe("FE-INT-0 auth harness", () => {
     await expect(page).toHaveURL(/\/sign-in/);
   });
 
-  test("@unauthenticated portal page and API share route are reachable without a session", async ({
+  test("@unauthenticated portal page is reachable without a session and an unknown token answers 404", async ({
     page,
-    request,
   }) => {
     // An unknown token answers the generic 404 (C22), never a sign-in redirect nor a server error.
     const pageResponse = await page.goto(`/s/${UNKNOWN_PORTAL_TOKEN}`);
     await expect(page).not.toHaveURL(/\/sign-in/);
     expect(pageResponse?.status(), "portal page status").toBe(404);
+  });
 
-    const response = await request.get(
-      `/api/s/${UNKNOWN_PORTAL_TOKEN}/files/${UNKNOWN_DOCUMENT_ID}`,
-      { maxRedirects: 0 },
-    );
-    expect(response.status(), "portal file route status").toBe(404);
+  test("@unauthenticated the retired /api/s file route is protected, not public", async ({ page }) => {
+    // FE-INT-R 4.3 dropped the route and its public pattern: without a session the request goes to sign-in.
+    await page.goto(`/api/s/${UNKNOWN_PORTAL_TOKEN}/files/${UNKNOWN_DOCUMENT_ID}`);
+    await expect(page).toHaveURL(/\/sign-in/);
   });
 
   test("@authenticated Owner signs in and the user menu shows the BE user's name", async ({

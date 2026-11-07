@@ -1,5 +1,5 @@
 import { z } from "./zod";
-import { idSchema, listQuerySchema, type Paginated } from "./common";
+import { idSchema, listQuerySchema } from "./common";
 import { documentFormatSchema } from "./enums";
 import { facetOf, hexColorSchema, optionalText, requiredText, withSortFields } from "./tags";
 
@@ -108,8 +108,6 @@ export const documentCategoryRefSchema = z.object({
   nameEn: z.string().nullable(),
   color: z.string().nullable(),
 });
-export type DocumentCategoryRefDTO = z.infer<typeof documentCategoryRefSchema>;
-
 /** Type as shown inside a document row or a picker; carries the capabilities the form needs. */
 export const documentTypeRefSchema = documentTypeCapabilitiesSchema.extend({
   id: idSchema,
@@ -117,8 +115,6 @@ export const documentTypeRefSchema = documentTypeCapabilitiesSchema.extend({
   nameEn: z.string().nullable(),
   defaultFormat: documentFormatSchema,
 });
-export type DocumentTypeRefDTO = z.infer<typeof documentTypeRefSchema>;
-
 export const documentTypeDetailSchema = documentTypeRefSchema.extend({
   category: documentCategoryRefSchema,
   active: z.boolean(),
@@ -137,44 +133,3 @@ export const documentCategoryDetailSchema = documentCategoryRefSchema.extend({
   types: z.array(documentTypeDetailSchema.omit({ category: true })),
 });
 export type DocumentCategoryDetailDTO = z.infer<typeof documentCategoryDetailSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Document classification services (PRD §12 `settings`: "CRUD de catálogos"). Every service is
- * `fn(ctx, input) → Promise<DTO>` (C9, C11).
- */
-export type DocumentTypesService<Ctx = unknown> = {
-  createDocumentCategory: (
-    ctx: Ctx,
-    input: CreateDocumentCategoryInput,
-  ) => Promise<DocumentCategoryDetailDTO>;
-  updateDocumentCategory: (
-    ctx: Ctx,
-    input: UpdateDocumentCategoryInput,
-  ) => Promise<DocumentCategoryDetailDTO>;
-  reorderDocumentCategories: (
-    ctx: Ctx,
-    input: ReorderDocumentCategoriesInput,
-  ) => Promise<DocumentCategoryDetailDTO[]>;
-  deleteDocumentCategory: (
-    ctx: Ctx,
-    input: DeleteDocumentCategoryInput,
-  ) => Promise<DeleteDocumentCategoryInput>;
-  listDocumentCategories: (ctx: Ctx) => Promise<DocumentCategoryDetailDTO[]>;
-  createDocumentType: (ctx: Ctx, input: CreateDocumentTypeInput) => Promise<DocumentTypeDetailDTO>;
-  updateDocumentType: (ctx: Ctx, input: UpdateDocumentTypeInput) => Promise<DocumentTypeDetailDTO>;
-  setDocumentTypeActive: (
-    ctx: Ctx,
-    input: SetDocumentTypeActiveInput,
-  ) => Promise<DocumentTypeDetailDTO>;
-  deleteDocumentType: (
-    ctx: Ctx,
-    input: DeleteDocumentTypeInput,
-  ) => Promise<DeleteDocumentTypeInput>;
-  listDocumentTypes: (
-    ctx: Ctx,
-    input: DocumentTypeFilter,
-  ) => Promise<Paginated<DocumentTypeListRowDTO>>;
-  getDocumentType: (ctx: Ctx, input: DocumentTypeIdInput) => Promise<DocumentTypeDetailDTO>;
-};

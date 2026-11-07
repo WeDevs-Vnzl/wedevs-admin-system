@@ -6,6 +6,7 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
 import { TaskItem } from "@tiptap/extension-task-item";
 import { TaskList } from "@tiptap/extension-task-list";
 import StarterKit from "@tiptap/starter-kit";
+import { fileDownloadPath } from "@/lib/api/file-url";
 import { isHttpUrl } from "@/lib/validators/tags";
 
 /**
@@ -43,14 +44,18 @@ const RichTextLink = Link.extend({
 });
 
 export interface RichTextImageOptions {
-  /** Label of the placeholder that stands for an image (Hito 1 has no URL to show). */
+  /** Accessible fallback text (`alt`) of an image node that has none. */
   label: (attrs: { fileId: string; alt: string | null }) => string;
 }
 
+/** Outline in pure black/white at low opacity, so inline images keep a crisp edge in both themes. */
+export const RICH_TEXT_IMAGE_CLASS =
+  "my-2 h-auto max-w-full rounded-md outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10";
+
 /**
  * Image node (C4): an uploaded file referenced by `fileId`. It declares only `fileId`, `alt` and `src`
- * (the strict contract of the validator) and never reads `src` from pasted HTML. No `<img>` ever reaches
- * the DOM: the node view is a placeholder with the file name (Hito 1 has no download URL).
+ * (the strict contract of the validator) and never reads `src` from pasted HTML. The displayed `src` is
+ * always `fileDownloadPath(fileId)`, in the editor, the viewer and `getHTML()`: a stored `src` is ignored.
  */
 export const RichTextImage = Image.extend<RichTextImageOptions>({
   inline: false,
@@ -84,24 +89,33 @@ export const RichTextImage = Image.extend<RichTextImageOptions>({
   },
 
   parseHTML() {
-    return [{ tag: "span[data-rich-image][data-file-id]" }];
+    return [{ tag: "img[data-rich-image][data-file-id]" }];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ["span", mergeAttributes({ "data-rich-image": "" }, HTMLAttributes)];
+  renderHTML({ node, HTMLAttributes }) {
+    const fileId = String(node.attrs.fileId ?? "");
+    const alt = typeof node.attrs.alt === "string" ? node.attrs.alt : this.options.label({ fileId, alt: null });
+    return [
+      "img",
+      mergeAttributes(
+        { "data-rich-image": "", class: RICH_TEXT_IMAGE_CLASS, loading: "lazy" },
+        HTMLAttributes,
+        { src: fileDownloadPath(fileId), alt },
+      ),
+    ];
   },
 
   addNodeView() {
     return ({ node }) => {
-      const dom = document.createElement("span");
-      dom.setAttribute("data-rich-image", "");
-      dom.setAttribute("data-file-id", String(node.attrs.fileId ?? ""));
-      dom.className =
-        "my-2 inline-flex items-center gap-2 rounded-md border bg-muted px-3 py-1.5 text-sm text-muted-foreground";
-      dom.contentEditable = "false";
       const fileId = String(node.attrs.fileId ?? "");
       const alt = typeof node.attrs.alt === "string" ? node.attrs.alt : null;
-      dom.textContent = this.options.label({ fileId, alt });
+      const dom = document.createElement("img");
+      dom.setAttribute("data-rich-image", "");
+      dom.setAttribute("data-file-id", fileId);
+      dom.setAttribute("src", fileDownloadPath(fileId));
+      dom.setAttribute("alt", alt ?? this.options.label({ fileId, alt: null }));
+      dom.setAttribute("loading", "lazy");
+      dom.className = RICH_TEXT_IMAGE_CLASS;
       return { dom };
     };
   },
@@ -110,7 +124,7 @@ export const RichTextImage = Image.extend<RichTextImageOptions>({
 export interface RichTextExtensionOptions {
   /** Placeholder shown by an empty editor (already translated). */
   placeholder?: string;
-  /** Translated label of an image placeholder. */
+  /** Translated fallback `alt` of an image without one. */
   imageLabel?: RichTextImageOptions["label"];
 }
 

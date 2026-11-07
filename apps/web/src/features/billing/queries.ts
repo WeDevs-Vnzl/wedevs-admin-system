@@ -1,19 +1,18 @@
 import "server-only";
-import { idSchema } from "@/lib/validators/common";
-import * as billing from "@/mocks/services/billing";
-import { can } from "@/server/auth/permissions";
-import { getServiceContext, ServiceError } from "@/server/context";
+import { unwrapOrBoundary } from "@/features/settings/query-boundary";
+import { toActionResult } from "@/lib/api/errors";
+import { getServerApi } from "@/lib/api/server";
+import type { BillingPageDTO } from "./types";
 
-// Reads for the billing screen of a project (`/projects/[id]/billing`, PRD §8.4). Billing is finance data: the
-// `read` grant on `billing` (Owner and Admin) is checked before the service runs; a missing project is a
-// `NOT_FOUND` that the page turns into `notFound()`.
+// Reads for the billing screen of a project (`/projects/[id]/billing`, PRD §8.4). Billing is finance data and the
+// BE decides the grant (Owner and Admin): `FORBIDDEN` and `NOT_FOUND` are the in-shell not-found page (the
+// "no permission" state), a signed-out caller goes to sign-in, anything else reaches the error boundary.
 
-async function readContext() {
-  const ctx = await getServiceContext();
-  if (!can(ctx.user, "read", "billing")) throw new ServiceError("FORBIDDEN");
-  return ctx;
-}
-
-export async function getBillingPage(projectId: string) {
-  return billing.getBillingPage(await readContext(), idSchema.parse(projectId));
+/** `GET /api/v1/projects/{id}/billing`: the plan with its installments, and the recurring charges. */
+export async function getBillingPage(projectId: string): Promise<BillingPageDTO> {
+  const api = await getServerApi();
+  const { data, error, response } = await api.GET("/api/v1/projects/{id}/billing", {
+    params: { path: { id: projectId } },
+  });
+  return unwrapOrBoundary(toActionResult({ data, error, response }));
 }

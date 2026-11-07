@@ -14,8 +14,9 @@ import { invoiceFilterOf } from "@/features/invoices/components/invoice-table-qu
 import { InvoicesTable } from "@/features/invoices/components/invoices-table";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { listInvoices } from "@/features/invoices/queries";
+import { notFoundWhenRefused } from "@/features/invoices/refusal";
 import { getPreferences } from "@/features/preferences/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);
@@ -37,7 +38,7 @@ export default async function InvoicesListPage({ searchParams }: InvoicesListPag
   if (!permissions.canRead) notFound();
   const query = urlStateToListQuery(loadTableState(await searchParams));
   const [page, currencies, preferences, t] = await Promise.all([
-    listInvoices(invoiceFilterOf(query)),
+    notFoundWhenRefused(() => listInvoices(invoiceFilterOf(query))),
     listCurrencies(),
     getPreferences(),
     getTranslations("invoices.page"),

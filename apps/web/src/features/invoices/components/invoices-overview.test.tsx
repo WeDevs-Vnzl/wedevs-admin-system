@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import esInvoices from "@/i18n/messages/es/invoices.json";
 import esPatterns from "@/i18n/messages/es/patterns.json";
 import esTable from "@/i18n/messages/es/table.json";
-import type { InvoicesOverviewDTO } from "@/lib/validators/invoices";
+import type { InvoicesOverviewDto } from "@/lib/api/types/invoices";
 
 const messages = { invoices: esInvoices, patterns: esPatterns, table: esTable };
 
@@ -21,7 +21,7 @@ vi.mock("@/features/alerts/components/alert-list", () => ({
 
 import { InvoicesOverview } from "./invoices-overview";
 
-const overview: InvoicesOverviewDTO = {
+const overview: InvoicesOverviewDto = {
   billedVsCollected: {
     periods: ["2026-05", "2026-06"],
     series: [
@@ -32,7 +32,7 @@ const overview: InvoicesOverviewDTO = {
   aging: { d0_30: "100.00", d31_60: "200.00", d61_90: "0.00", d90plus: "50.00" },
   overdueCount: 3,
   totalsByCurrency: [{ currency: "USD", total: "4000.00", balance: "1250.00", overdue: "350.00" }],
-} as InvoicesOverviewDTO;
+};
 
 async function renderOverview(canCreate = true) {
   const element = await InvoicesOverview({ overview, canCreate });

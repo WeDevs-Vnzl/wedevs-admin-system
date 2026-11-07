@@ -1,85 +1,130 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
 vi.mock("next-intl/server", () => intl);
 
-import { listQuerySchema, paginated } from "@/lib/validators/common";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
+import { listQuerySchema } from "@/lib/validators/common";
 import type { ExportSource } from "@/lib/validators/export";
-import { makeSessionUser } from "@/mocks/test-helpers";
 import { defineCsvExportAction } from "./define-csv-export-action";
 
 type Row = { name: string };
-const source: ExportSource<Row, never, never> = {
+const source: ExportSource<Row, never> = {
   entity: "CLIENT",
   facets: [],
   filterSchema: listQuerySchema.omit({ filters: true }) as never,
-  list: async (_ctx, filter) => paginated([{ name: "Acme" }], 1, filter as never),
-  columns: { name: { labelKey: "name", value: (r) => r.name } },
+  columns: {
+    name: { labelKey: "name", value: (r) => r.name },
+    email: { labelKey: "email", value: () => "" },
+  },
 };
 
-// The real service is injected by the module; here it echoes the translated source back.
-const exportCsv = vi.fn(
-  async (_ctx: unknown, _input: unknown, src: ExportSource<Row, never, never>) => ({
-    filename: "client-2026-10-09.csv",
-    content: `${src.columns.name!.labelKey}\r\n`,
-    rowCount: 1,
-    truncated: false,
-  }),
-);
-
-function build() {
+function build(entity: string = "CLIENT") {
   return defineCsvExportAction({
-    entity: "CLIENT",
-    permission: { action: "read", resource: "client" },
-    source: source as never,
-    exportCsv: exportCsv as never,
+    entity: entity as "CLIENT",
+    source: { ...source, entity } as never,
     namespace: "clients.table.columns",
-  });
+  }) as (input: unknown) => Promise<unknown>;
 }
 
-const payload = { entity: "CLIENT" as const, query: {}, columns: ["name"] };
+function setup(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.getServerApi.mockResolvedValue(mocked.api);
+  return mocked;
+}
+
+const csvOk = (headers: Record<string, string> = {}) =>
+  new Response("Name\r\nAcme\r\n", {
+    status: 200,
+    headers: {
+      "content-type": "text/csv; charset=utf-8",
+      "X-Export-Row-Count": "1",
+      "X-Export-Truncated": "false",
+      ...headers,
+    },
+  });
+
+const payload = {
+  entity: "CLIENT",
+  query: listQuerySchema.parse({ q: "ac", sort: "name:desc", filters: { status: ["ACTIVE"] } }),
+  columns: ["name", "email"],
+};
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  exportCsv.mockClear();
+  server.getServerApi.mockReset();
 });
 
 describe("defineCsvExportAction", () => {
-  it("translates each column's labelKey with the namespace before calling the service", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-    const result = await build()(payload);
+  it("posts the translated columns and the table query to /exports/{entity}", async () => {
+    const { calls } = setup({ "POST /api/v1/exports/CLIENT": () => csvOk() });
+    await build()(payload);
     expect(intl.getTranslations).toHaveBeenCalledWith("clients.table.columns");
-    expect(result).toMatchObject({
-      ok: true,
-      data: { content: "clients.table.columns:name\r\n", rowCount: 1 },
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.body).toEqual({
+      columns: [
+        { id: "name", label: "clients.table.columns:name" },
+        { id: "email", label: "clients.table.columns:email" },
+      ],
+      query: { archived: "exclude", q: "ac", sort: "name:desc", filters: { status: "ACTIVE" } },
     });
   });
 
-  it("refuses a Member on { read, activity } with FORBIDDEN and never calls the service", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("MEMBER"));
-    const action = defineCsvExportAction({
-      entity: "ACTIVITY",
-      permission: { action: "read", resource: "activity" },
-      source: { ...source, entity: "ACTIVITY" } as never,
-      exportCsv: exportCsv as never,
-      namespace: "activity.table.columns",
+  it("returns the CSV text with row count, truncated flag and the file name from the headers", async () => {
+    setup({
+      "POST /api/v1/exports/CLIENT": () =>
+        csvOk({
+          "X-Export-Row-Count": "10000",
+          "X-Export-Truncated": "true",
+          "Content-Disposition": 'attachment; filename="clients-2026-11-06.csv"',
+        }),
     });
-    expect(await action({ ...payload, entity: "ACTIVITY" as const })).toMatchObject({
-      ok: false,
-      error: { code: "FORBIDDEN" },
+    expect(await build()(payload)).toEqual({
+      ok: true,
+      data: {
+        filename: "clients-2026-11-06.csv",
+        content: "Name\r\nAcme\r\n",
+        rowCount: 10000,
+        truncated: true,
+      },
     });
-    expect(exportCsv).not.toHaveBeenCalled();
+  });
+
+  it("falls back to <entity>-<date>.csv when Content-Disposition is missing", async () => {
+    setup({ "POST /api/v1/exports/CLIENT": () => csvOk() });
+    const result = (await build()(payload)) as { data: { filename: string; truncated: boolean } };
+    expect(result.data.filename).toMatch(/^client-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(result.data.truncated).toBe(false);
+  });
+
+  it("maps an API error envelope to an error result", async () => {
+    setup({ "POST /api/v1/exports/CLIENT": errorEnvelope("FORBIDDEN") });
+    expect(await build()(payload)).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+  });
+
+  it("refuses an entity outside the generated path enum at definition time", () => {
+    expect(() => build("CURRENCY")).toThrow(/CURRENCY/);
+  });
+
+  it("fails fast when the source belongs to another entity", () => {
+    expect(() =>
+      defineCsvExportAction({
+        entity: "PROJECT",
+        source: source as never,
+        namespace: "x",
+      }),
+    ).toThrow(/CLIENT/);
   });
 
   it("narrows the input to its entity and requires columns", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-    const action = build() as (input: unknown) => Promise<unknown>;
+    setup({});
+    const action = build();
     expect(await action({ ...payload, entity: "PROJECT" })).toMatchObject({
       ok: false,
       error: { code: "VALIDATION" },
@@ -88,23 +133,5 @@ describe("defineCsvExportAction", () => {
       ok: false,
       error: { code: "VALIDATION" },
     });
-  });
-
-  it("fails fast when the source belongs to another entity", () => {
-    expect(() =>
-      defineCsvExportAction({
-        entity: "PROJECT",
-        permission: { action: "read", resource: "project" },
-        source: source as never,
-        exportCsv: exportCsv as never,
-        namespace: "x",
-      }),
-    ).toThrow(/CLIENT/);
-  });
-
-  it("never imports the mocks (C9)", async () => {
-    const { readFileSync } = await import("node:fs");
-    const text = readFileSync(new URL("./define-csv-export-action.ts", import.meta.url), "utf8");
-    expect(text).not.toMatch(/from\s+["']@\/mocks/);
   });
 });

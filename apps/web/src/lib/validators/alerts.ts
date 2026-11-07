@@ -1,5 +1,6 @@
 import { z } from "./zod";
-import { VALIDATION_MESSAGES, dateOnlySchema, entityRefSchema } from "./common";
+import { VALIDATION_MESSAGES, dateOnlySchema, idSchema } from "./common";
+import { entityTypeSchema } from "./enums";
 import { moneyDtoSchema } from "./money";
 import { facetOf, timestampSchema } from "./tags";
 
@@ -104,11 +105,23 @@ export type MarkAlertsReadInput = z.infer<typeof markAlertsReadInputSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
+/**
+ * The entity an alert is about. Its `code` is `string | null` on the wire (the contract's `EntityRef`), so
+ * the shared `entityRefSchema` (`code` optional, no null) does not describe it; alerts own this shape.
+ */
+export const alertEntityRefSchema = z.object({
+  id: idSchema,
+  code: z.string().nullable().optional(),
+  label: z.string(),
+  type: entityTypeSchema,
+});
+export type AlertEntityRef = z.infer<typeof alertEntityRefSchema>;
+
 export const alertSchema = z.object({
   alertKey: alertKeySchema,
   type: alertTypeSchema,
   /** The record the alert is about (invoice, installment's project, document, payment…); `null` for `MISSING_RATE`. */
-  entity: entityRefSchema.nullable(),
+  entity: alertEntityRefSchema.nullable(),
   /** Relevant date: due date, expiry date, or the day without a rate. */
   date: dateOnlySchema.nullable(),
   /** Days until (positive) or since (negative) `date`, in `America/Caracas`. */
@@ -151,18 +164,3 @@ export const alertDismissalSchema = z.object({
   active: z.boolean(),
 });
 export type AlertDismissalDTO = z.infer<typeof alertDismissalSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Alert services (PRD §7.9; §12 does not list them). Every service is `fn(ctx, input) → Promise<DTO>`
- * (C9, C11); alerts are computed per user from `ctx.user` and `ctx.now`.
- */
-export type AlertsService<Ctx = unknown> = {
-  listAlerts: (ctx: Ctx, input: ListAlertsInput) => Promise<AlertsSummaryDTO>;
-  dismissAlert: (ctx: Ctx, input: DismissAlertInput) => Promise<AlertDismissalDTO>;
-  snoozeAlert: (ctx: Ctx, input: SnoozeAlertInput) => Promise<AlertDismissalDTO>;
-  restoreAlert: (ctx: Ctx, input: RestoreAlertInput) => Promise<AlertDismissalDTO>;
-  /** A2: per-user read mark; the alert stays listed. */
-  markAlertsRead: (ctx: Ctx, input: MarkAlertsReadInput) => Promise<AlertsReadResultDTO>;
-};

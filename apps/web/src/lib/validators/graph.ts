@@ -166,15 +166,3 @@ export const getGlobalGraphInputSchema = z.object({
   filters: globalGraphFiltersSchema.default({ onlyActive: false, includeArchived: false }),
 });
 export type GetGlobalGraphInput = z.infer<typeof getGlobalGraphInputSchema>;
-
-// ───────────────────────────── Services (PRD §12 `graph`) ─────────────────────────────
-
-/**
- * `graph` services. Every service is `fn(ctx, input) → Promise<GraphResponse>` (C9, C11). Reading is
- * allowed to every role that can read the underlying records; archived nodes need Owner/Admin.
- */
-export type GraphService<Ctx = unknown> = {
-  getEntityGraph: (ctx: Ctx, input: GetEntityGraphInput) => Promise<GraphResponse>;
-  expandNode: (ctx: Ctx, input: ExpandNodeInput) => Promise<GraphResponse>;
-  getGlobalGraph: (ctx: Ctx, input: GetGlobalGraphInput) => Promise<GraphResponse>;
-};

@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertList } from "@/features/alerts/components/alert-list";
 import type { AlertType } from "@/lib/validators/alerts";
-import type { ExpensesOverviewDTO } from "@/lib/validators/expenses";
+import type { ExpensesOverviewDto } from "@/lib/api/types/expenses";
 import { sumMoney, toDecimal } from "@/lib/money";
 import type { expenseScreenPermissions } from "../permissions";
 
@@ -22,7 +22,7 @@ import type { expenseScreenPermissions } from "../permissions";
 const EXPENSE_ALERT_TYPES: readonly AlertType[] = ["RECURRING_EXPENSE_PENDING"];
 
 type ExpensesOverviewProps = {
-  overview: ExpensesOverviewDTO;
+  overview: ExpensesOverviewDto;
   permissions: ReturnType<typeof expenseScreenPermissions>;
 };
 

@@ -17,6 +17,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { voidInvoiceAction } from "@/features/invoices/actions";
+import { useActionErrorMessage } from "./use-action-error";
 
 type VoidInvoiceDialogProps = {
   invoiceId: string;
@@ -29,7 +30,7 @@ type VoidInvoiceDialogProps = {
  */
 export function VoidInvoiceDialog({ invoiceId, invoiceNumber }: VoidInvoiceDialogProps) {
   const t = useTranslations("invoices");
-  const tErrors = useTranslations("common.errors");
+  const errorMessage = useActionErrorMessage();
   const tActions = useTranslations("common.actions");
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ export function VoidInvoiceDialog({ invoiceId, invoiceNumber }: VoidInvoiceDialo
     const result = await voidInvoiceAction({ id: invoiceId, reason: reason.trim() });
     setSaving(false);
     if (!result.ok) {
-      toast.error(tErrors(result.error.code));
+      toast.error(errorMessage(result.error));
       return;
     }
     toast.success(t("toast.voided"));

@@ -1,11 +1,5 @@
 import { z } from "./zod";
-import {
-  entityRefSchema,
-  idSchema,
-  listQuerySchema,
-  dateOnlySchema,
-  type Paginated,
-} from "./common";
+import { entityRefSchema, idSchema, listQuerySchema, dateOnlySchema } from "./common";
 import { entityTypeSchema } from "./enums";
 import { facetOf, timestampSchema, withSortFields } from "./tags";
 import { userRefSchema } from "./users";
@@ -31,8 +25,19 @@ export const TRASHABLE_ENTITY_TYPE_VALUES = [
   "DOCUMENT",
   "NOTE",
 ] as const satisfies readonly z.infer<typeof entityTypeSchema>[];
+/**
+ * The types the trash offers as facets: the contexts that register a restore handler in the BE (platform
+ * trash module). Other trashable types exist in the schema but are not listed.
+ */
+export const RESTORABLE_ENTITY_TYPE_VALUES = [
+  "CLIENT",
+  "CONTACT",
+  "PROJECT",
+  "NOTE",
+  "INVOICE",
+  "DOCUMENT",
+] as const satisfies readonly (typeof TRASHABLE_ENTITY_TYPE_VALUES)[number][];
 export const trashableEntityTypeSchema = z.enum(TRASHABLE_ENTITY_TYPE_VALUES);
-export type TrashableEntityType = z.infer<typeof trashableEntityTypeSchema>;
 
 // ───────────────────────────── Shared archive result ─────────────────────────────
 
@@ -42,15 +47,6 @@ export const archivedRecordSchema = z.object({
   archivedAt: timestampSchema,
 });
 export type ArchivedRecordDTO = z.infer<typeof archivedRecordSchema>;
-
-// ───────────────────────────── Inputs ─────────────────────────────
-
-/** `restoreFromTrash`: clears `deletedAt`. Returns CONFLICT when a unique rule now collides. */
-export const restoreFromTrashInputSchema = z.object({
-  entityType: trashableEntityTypeSchema,
-  entityId: idSchema,
-});
-export type RestoreFromTrashInput = z.infer<typeof restoreFromTrashInputSchema>;
 
 // ───────────────────────────── Filters ─────────────────────────────
 
@@ -65,7 +61,6 @@ export const trashFilterSchema = withSortFields(
   }),
   TRASH_SORT_FIELDS,
 );
-export type TrashFilter = z.infer<typeof trashFilterSchema>;
 export type TrashFilterInput = z.input<typeof trashFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
@@ -80,21 +75,3 @@ export const trashRowSchema = z.object({
   deletedBy: userRefSchema.nullable(),
 });
 export type TrashRowDTO = z.infer<typeof trashRowSchema>;
-
-/** Output of `restoreFromTrash`. */
-export const restoredRecordSchema = z.object({
-  entity: entityRefSchema.extend({ type: trashableEntityTypeSchema }),
-  restoredAt: timestampSchema,
-});
-export type RestoredRecordDTO = z.infer<typeof restoredRecordSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Trash services (Owner/Admin; PRD §12 does not list them). Every service is `fn(ctx, input) →
- * Promise<DTO>` (C9, C11).
- */
-export type TrashService<Ctx = unknown> = {
-  listTrash: (ctx: Ctx, input: TrashFilter) => Promise<Paginated<TrashRowDTO>>;
-  restoreFromTrash: (ctx: Ctx, input: RestoreFromTrashInput) => Promise<RestoredRecordDTO>;
-};

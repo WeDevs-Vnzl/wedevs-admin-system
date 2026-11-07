@@ -67,3 +67,64 @@ export function useApiClient(options: Pick<ApiClientOptions, "baseUrl" | "fetch"
     [getToken, baseUrl, fetch],
   );
 }
+
+export interface PortalApiClientOptions {
+  /** Defaults to `NEXT_PUBLIC_API_BASE_URL`. */
+  baseUrl?: string;
+  /** Injected in tests; defaults to the global `fetch`. */
+  fetch?: (request: Request) => Promise<Response>;
+}
+
+function requireBaseUrl(baseUrl: string | undefined): string {
+  const resolved = baseUrl ?? process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (!resolved) throw new Error("NEXT_PUBLIC_API_BASE_URL is not set");
+  return resolved;
+}
+
+/** Portal mode (additive, F5): the visitor has no Clerk session, so no `Authorization` header ever leaves. */
+const noAuthorization: Middleware = {
+  onRequest({ request }) {
+    request.headers.delete("authorization");
+    return request;
+  },
+};
+
+/**
+ * Client of the public portal `/api/v1/portal/**` (C22): no token middleware, and `credentials: "include"`
+ * so the BE's signed unlock cookie travels cross-origin (the BE CORS allows the FE origin with credentials).
+ */
+export function createPortalApiClient(options: PortalApiClientOptions = {}): ApiClient {
+  const client = createClient<paths>({
+    baseUrl: requireBaseUrl(options.baseUrl),
+    credentials: "include",
+    ...(options.fetch ? { fetch: options.fetch } : {}),
+  });
+  client.use(noAuthorization);
+  return client;
+}
+
+/** Portal client for client components; it never reads the Clerk session. */
+export function usePortalApiClient(options: PortalApiClientOptions = {}): ApiClient {
+  const { baseUrl, fetch } = options;
+  return useMemo(
+    () =>
+      createPortalApiClient({
+        ...(baseUrl ? { baseUrl } : {}),
+        ...(fetch ? { fetch } : {}),
+      }),
+    [baseUrl, fetch],
+  );
+}
+
+/**
+ * Link to `GET /api/v1/portal/{token}/files/{documentId}` on the API origin: the browser follows it with the
+ * BE cookie (the BE answers a 302 to a signed URL). `attachment` is logged by the BE as a `DOWNLOAD`.
+ */
+export function portalFileUrl(
+  token: string,
+  documentId: string,
+  disposition: "inline" | "attachment",
+): string {
+  const base = requireBaseUrl(undefined).replace(/\/+$/, "");
+  return `${base}${PORTAL_PREFIX}/${encodeURIComponent(token)}/files/${encodeURIComponent(documentId)}?disposition=${disposition}`;
+}

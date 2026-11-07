@@ -1,7 +1,7 @@
 import type { TableFacetDescriptor } from "@/lib/table-query";
 import type { CsvColumnType } from "@/lib/csv";
 import { z } from "./zod";
-import { listQuerySchema, VALIDATION_MESSAGES, type Paginated } from "./common";
+import { listQuerySchema, VALIDATION_MESSAGES } from "./common";
 import { columnIdSchema } from "./preferences";
 
 /**
@@ -86,13 +86,11 @@ export interface ExportColumnSpec<Row> {
 
 /**
  * What a module supplies to export its table: the facets of its filter (for `toModuleQuery`), the filter
- * schema, the same list service the table uses, and the cell of every column by id. Context is generic so
- * the contract stays framework-free; Hito 1 binds it to the mock context, Hito 2 to the Prisma one.
+ * schema and the cell of every column by id. The BE builds the file.
  */
-export interface ExportSource<Row, Filter = unknown, Ctx = unknown> {
+export interface ExportSource<Row, Filter = unknown> {
   entity: ExportEntity;
   facets: readonly TableFacetDescriptor[];
   filterSchema: z.ZodType<Filter, unknown>;
-  list: (ctx: Ctx, filter: Filter) => Promise<Paginated<Row>>;
   columns: Record<string, ExportColumnSpec<Row>>;
 }

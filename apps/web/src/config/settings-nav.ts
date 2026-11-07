@@ -6,14 +6,16 @@ import {
   DollarSign,
   FileText,
   FolderTree,
+  KeyRound,
   Percent,
+  Plug,
   SlidersHorizontal,
   Tags,
   Trash2,
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { can, type PermissionAction, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionAction, type PermissionResource } from "@/lib/auth/permissions";
 
 /**
  * The sections of Configuración (PRD §8.15, routes per frontend-patterns §3). The settings layout builds its
@@ -43,6 +45,8 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     permission: { action: "read", resource: "user" },
   },
   { slug: "preferences", labelKey: "preferences", icon: SlidersHorizontal, permission: null },
+  // Personal access tokens: every signed-in user manages their own (DT-189, DT-195).
+  { slug: "api-tokens", labelKey: "apiTokens", icon: KeyRound, permission: null },
   {
     slug: "currencies",
     labelKey: "currencies",
@@ -65,6 +69,12 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     slug: "payment-methods",
     labelKey: "paymentMethods",
     icon: CreditCard,
+    permission: { action: "read", resource: "settings" },
+  },
+  {
+    slug: "integrations",
+    labelKey: "integrations",
+    icon: Plug,
     permission: { action: "read", resource: "settings" },
   },
   {

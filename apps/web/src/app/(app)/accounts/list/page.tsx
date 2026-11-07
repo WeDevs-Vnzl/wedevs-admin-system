@@ -12,8 +12,9 @@ import { accountFilterOf } from "@/features/accounts/components/account-table-qu
 import { AccountsTable } from "@/features/accounts/components/accounts-table";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listAccounts } from "@/features/accounts/queries";
+import { notFoundWhenRefused } from "@/features/accounts/refusal";
 import { listCurrencies } from "@/features/catalogs/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);
@@ -35,7 +36,7 @@ export default async function AccountsListPage({ searchParams }: AccountsListPag
   if (!permissions.canRead) notFound();
   const query = urlStateToListQuery(loadTableState(await searchParams));
   const [page, currencies, t] = await Promise.all([
-    listAccounts(accountFilterOf(query)),
+    notFoundWhenRefused(() => listAccounts(accountFilterOf(query))),
     listCurrencies({ includeInactive: true }),
     getTranslations("accounts"),
   ]);

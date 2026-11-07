@@ -2,12 +2,14 @@
 
 import { Building2Icon, ClockIcon, LockIcon } from "lucide-react";
 import { NextIntlClientProvider, useFormatter, useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/app/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { isLocale, timeZone, type Locale } from "@/i18n/config";
-import type { PortalShareDTO } from "@/lib/validators/shares";
+import { usePortalApiClient } from "@/lib/api/client";
+import type { PortalShareDto } from "@/lib/api/types/portal";
+import { recordPortalView } from "../api";
 import { portalMessages } from "../messages";
 import { PortalDocumentCard } from "./portal-document-card";
 import { PortalViewer } from "./portal-viewer";
@@ -15,7 +17,7 @@ import { UnlockDialog } from "./unlock-dialog";
 
 export interface PortalViewProps {
   token: string;
-  page: PortalShareDTO;
+  page: PortalShareDto;
 }
 
 /**
@@ -45,6 +47,16 @@ function PortalScreen({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [unlockId, setUnlockId] = useState<string | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
+  const api = usePortalApiClient();
+  const openRecorded = useRef(false);
+
+  // One VIEW of the link per open (the page read on the server has no side effect); the ref survives the
+  // StrictMode remount. A failed log never blocks the visitor.
+  useEffect(() => {
+    if (openRecorded.current) return;
+    openRecorded.current = true;
+    recordPortalView(api, token).catch(() => undefined);
+  }, [api, token]);
 
   const documents = page.documents.map((doc) =>
     doc.locked && unlockedIds.has(doc.documentId) ? { ...doc, locked: false } : doc,

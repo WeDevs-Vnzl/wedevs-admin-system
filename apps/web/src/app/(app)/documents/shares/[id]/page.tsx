@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbLabel } from "@/components/app/breadcrumb-label";
 import { ShareDetail } from "@/features/shares/components/share-detail";
-import { loadShareOr404 } from "@/features/shares/load-share";
+import { loadShareOr404, orNotFound } from "@/features/shares/load-share";
 import {
   getShareLink,
   getShareableDocuments,
@@ -34,7 +34,7 @@ export default async function SharePage({ params }: SharePageProps) {
   if (!permissions.canRead) notFound();
   const share = await loadShareOr404(id);
   const [accessLog, shareableDocuments] = await Promise.all([
-    listShareAccessLog({ shareLinkId: share.id, sort: "createdAt:desc" }),
+    orNotFound(listShareAccessLog({ shareLinkId: share.id, sort: "createdAt:desc" })),
     permissions.canUpdate
       ? getShareableDocuments(share.documents.map((doc) => doc.document.id))
       : Promise.resolve([]),

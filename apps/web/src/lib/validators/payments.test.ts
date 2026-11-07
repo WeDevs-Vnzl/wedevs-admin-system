@@ -6,16 +6,11 @@ import { CATALOG_MESSAGES } from "./catalogs";
 import {
   DUPLICATE_PAYMENT_WARNING,
   PAYMENT_MESSAGES,
-  allocatePaymentInputSchema,
   createPaymentInputSchema,
   createPaymentInputSchemaFor,
-  deallocatePaymentInputSchema,
-  detectDuplicatePaymentInputSchema,
   duplicatePaymentWarningDtoSchema,
-  paymentDetailDtoSchema,
   paymentFiltersSchema,
-  paymentListRowSchema,
-  paymentsOverviewDtoSchema,
+  searchPaymentsInputSchema,
   setPaymentStatusInputSchema,
   updatePaymentInputSchema,
   PAYMENT_SORT_FIELDS,
@@ -180,23 +175,6 @@ describe("createPayment input", () => {
 });
 
 describe("allocations and status", () => {
-  it("allocatePayment needs positive amounts in both currencies", () => {
-    const input = {
-      paymentId: "pay1",
-      invoiceId: "inv1",
-      amountPaymentCurrency: "9000.00",
-      amountInvoiceCurrency: "246.30",
-    };
-    expect(allocatePaymentInputSchema.safeParse(input).success).toBe(true);
-    expect(
-      allocatePaymentInputSchema.safeParse({ ...input, amountInvoiceCurrency: "0" }).success,
-    ).toBe(false);
-    expect(
-      allocatePaymentInputSchema.safeParse({ ...input, amountPaymentCurrency: 9000 }).success,
-    ).toBe(false);
-    expect(deallocatePaymentInputSchema.safeParse({ allocationId: "a1" }).success).toBe(true);
-  });
-
   it("setPaymentStatus accepts any status and an optional reason", () => {
     expect(
       setPaymentStatusInputSchema.safeParse({ id: "pay1", status: "ANULADO", reason: "x" }).success,
@@ -211,14 +189,6 @@ describe("allocations and status", () => {
 });
 
 describe("duplicate detection", () => {
-  it("needs method, account and a reference", () => {
-    const input = { methodId: "m1", accountId: "acc1", reference: "0012345" };
-    expect(detectDuplicatePaymentInputSchema.safeParse(input).success).toBe(true);
-    expect(detectDuplicatePaymentInputSchema.safeParse({ ...input, reference: "" }).success).toBe(
-      false,
-    );
-  });
-
   it("warning DTO lists the existing payments", () => {
     const dto = {
       duplicate: true,
@@ -240,60 +210,8 @@ describe("duplicate detection", () => {
   });
 });
 
-describe("payment DTOs", () => {
-  const row = {
-    id: "pay1",
-    code: "PAG-0001",
-    date: "2026-10-09",
-    client: ref("c1", "CLIENT"),
-    method: { id: "m1", code: "ZELLE", name: "Zelle", nameEn: null },
-    account: ref("acc1", "ACCOUNT"),
-    currency: "USD",
-    amount: "500.00",
-    amountUsd: "500.00",
-    allocated: "300.00",
-    unallocated: "200.00",
-    reference: "ABC123",
-    status: "CONFIRMADO",
-  };
-
-  it("list row has the table columns", () => {
-    expect(paymentListRowSchema.safeParse(row).success).toBe(true);
-    expect(paymentListRowSchema.safeParse({ ...row, unallocated: -1 }).success).toBe(false);
-    expect(paymentListRowSchema.safeParse({ ...row, status: "PAGADO" }).success).toBe(false);
-  });
-
-  it("detail adds IGTF, fee, net credited, allocatable and allocations", () => {
-    const detail = {
-      ...row,
-      igtfAmount: "15.00",
-      feeAmount: "5.00",
-      netCredited: "495.00",
-      allocatable: "485.00",
-      usdRate: "1",
-      receiptFileId: null,
-      receipt: null,
-      allocations: [
-        {
-          id: "a1",
-          paymentId: "pay1",
-          invoice: ref("inv1", "INVOICE"),
-          invoiceCurrency: "VES",
-          amountPaymentCurrency: "300.00",
-          amountInvoiceCurrency: "10962.00",
-          amountUsd: "300.00",
-          createdAt: "2026-10-09T10:00:00Z",
-        },
-      ],
-      createdAt: "2026-10-09T10:00:00Z",
-      updatedAt: "2026-10-09T10:00:00Z",
-      createdById: null,
-    };
-    expect(paymentDetailDtoSchema.safeParse(detail).success).toBe(true);
-    expect(paymentDetailDtoSchema.safeParse({ ...detail, netCredited: 495 }).success).toBe(false);
-  });
-
-  it("filters and overview", () => {
+describe("payment filters", () => {
+  it("parses the status, the unallocated flag and the multi-value facets", () => {
     const filters = paymentFiltersSchema.parse({
       status: "PENDIENTE_VERIFICACION",
       hasUnallocated: "true",
@@ -310,15 +228,6 @@ describe("payment DTOs", () => {
       accountId: ["a1"],
       methodId: ["m1", "m2"],
     });
-    const overview = {
-      collectedByMonth: [{ period: "2026-09", value: "1200.00" }],
-      byMethod: [{ key: "ZELLE", label: "Zelle", value: "900.00" }],
-      byAccount: [{ key: "acc1", value: "900.00" }],
-      pendingVerificationCount: 2,
-      unallocatedCount: 1,
-      unallocatedTotalUsd: "200.00",
-    };
-    expect(paymentsOverviewDtoSchema.safeParse(overview).success).toBe(true);
   });
 });
 
@@ -334,5 +243,33 @@ describe("sort whitelist (m2)", () => {
       message: VALIDATION_MESSAGES.invalidSort,
       path: ["sort"],
     });
+  });
+});
+
+describe("searchPaymentsInputSchema (typeahead input)", () => {
+  it("defaults to an empty search and trims the text", () => {
+    expect(searchPaymentsInputSchema.parse({})).toEqual({ q: "" });
+    expect(searchPaymentsInputSchema.parse({ q: "  PAG-0001 " })).toEqual({ q: "PAG-0001" });
+  });
+
+  it("refuses a search longer than 200 characters", () => {
+    expect(searchPaymentsInputSchema.safeParse({ q: "x".repeat(201) }).success).toBe(false);
+  });
+});
+
+describe("BE message keys the screens render (payments.json)", () => {
+  const keys = [
+    ["errors", "voided"],
+    ["errors", "invalidTransition"],
+    ["errors", "clientLocked"],
+    ["errors", "allocatableBelowAllocated"],
+    ["validation", "receiptUnavailable"],
+    ["validation", "providerInvoiceClientMismatch"],
+    ["validation", "allocationAmountRequired"],
+  ];
+
+  it.each(keys)("has payments.%s.%s in both locales", (group, key) => {
+    expect(hasKey(es, [group!, key!])).toBe(true);
+    expect(hasKey(en, [group!, key!])).toBe(true);
   });
 });

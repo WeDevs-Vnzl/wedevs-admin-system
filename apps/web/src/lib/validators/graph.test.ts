@@ -1,5 +1,5 @@
-import type { GraphService } from "./graph";
 import { describe, expect, it } from "vitest";
+import type { GlobalGraphResponseDto, GraphResponseDto } from "@/lib/api/types/graph";
 import {
   GLOBAL_GRAPH_DEFAULT_TYPES,
   GRAPH_NODE_TYPE_VALUES,
@@ -11,7 +11,11 @@ import {
   graphNodeSchema,
   graphResponseSchema,
   parseGraphNodeId,
+  type GraphResponse,
 } from "./graph";
+
+// Compile-time proof (type test): a generated response must stay assignable to the FE graph type, or `tsc` fails.
+type Assignable<From, To> = From extends To ? true : false;
 
 const node = {
   id: "CLIENT:cli_1",
@@ -104,6 +108,14 @@ describe("§8.12.5 data contract", () => {
   });
 });
 
+describe("generated contract vs FE graph type (type test)", () => {
+  it("GraphResponseDto and GlobalGraphResponseDto are assignable to GraphResponse", () => {
+    const entityDto: Assignable<GraphResponseDto, GraphResponse> = true;
+    const globalDto: Assignable<GlobalGraphResponseDto, GraphResponse> = true;
+    expect([entityDto, globalDto]).toEqual([true, true]);
+  });
+});
+
 describe("node id helpers", () => {
   it("parses well-formed ids and rejects the rest", () => {
     expect(parseGraphNodeId("DOCUMENT:doc_1")).toEqual({ type: "DOCUMENT", entityId: "doc_1" });
@@ -162,16 +174,5 @@ describe("service inputs", () => {
     expect(
       getGlobalGraphInputSchema.safeParse({ filters: { dateFrom: "2026-02-30" } }).success,
     ).toBe(false);
-  });
-});
-
-describe("GraphService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "getEntityGraph",
-      "expandNode",
-      "getGlobalGraph",
-    ] as const satisfies readonly (keyof GraphService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

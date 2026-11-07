@@ -324,13 +324,10 @@ const catalogListShape = {
 };
 
 export const currencyListInputSchema = z.object(catalogListShape);
-export type CurrencyListInput = z.infer<typeof currencyListInputSchema>;
 export type CurrencyListInputRaw = z.input<typeof currencyListInputSchema>;
 
 export const paymentMethodListInputSchema = z.object(catalogListShape);
-export type PaymentMethodListInput = z.infer<typeof paymentMethodListInputSchema>;
 export type PaymentMethodListInputRaw = z.input<typeof paymentMethodListInputSchema>;
 
 export const expenseCategoryListInputSchema = z.object(catalogListShape);
-export type ExpenseCategoryListInput = z.infer<typeof expenseCategoryListInputSchema>;
 export type ExpenseCategoryListInputRaw = z.input<typeof expenseCategoryListInputSchema>;

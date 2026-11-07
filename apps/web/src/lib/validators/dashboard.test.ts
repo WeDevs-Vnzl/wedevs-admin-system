@@ -13,7 +13,6 @@ import {
   multiSeriesSchema,
   seriesPointSchema,
   signedDecimalSchema,
-  type DashboardService,
 } from "./dashboard";
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -185,12 +184,5 @@ describe("dashboard DTO", () => {
     expect(dashboardQuerySchema.safeParse({}).success).toBe(true);
     expect(dashboardQuerySchema.safeParse({ month: "2026-10" }).success).toBe(true);
     expect(dashboardQuerySchema.safeParse({ month: "2026-1" }).success).toBe(false);
-  });
-});
-
-describe("DashboardService (A1)", () => {
-  it("declares getDashboard", () => {
-    const names = ["getDashboard"] as const satisfies readonly (keyof DashboardService)[];
-    expect(names).toEqual(["getDashboard"]);
   });
 });

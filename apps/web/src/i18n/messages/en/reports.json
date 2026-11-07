@@ -199,6 +199,7 @@
     "rate": "VAT {rate}%"
   },
   "errors": {
-    "load": "The report data could not be loaded"
+    "load": "The report data could not be loaded",
+    "forbidden": "You do not have permission to view the reports"
   }
 }

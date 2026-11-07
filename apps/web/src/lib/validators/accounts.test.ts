@@ -5,20 +5,13 @@ import { VALIDATION_MESSAGES } from "./common";
 import {
   ACCOUNT_MESSAGES,
   LEDGER_ENTRY_KIND_VALUES,
-  accountBalanceDtoSchema,
-  accountDtoSchema,
   LEDGER_SORT_FIELDS,
   accountLedgerQuerySchema,
-  accountsOverviewDtoSchema,
   createAccountInputSchema,
   createMovementInputSchema,
   createTransferInputSchema,
   ledgerRowSchema,
   maskAccountIdentifier,
-  movementDtoSchema,
-  reconcileAccountInputSchema,
-  reconciliationDtoSchema,
-  transferDtoSchema,
   updateAccountInputSchema,
 } from "./accounts";
 
@@ -33,8 +26,6 @@ function hasKey(catalog: unknown, path: string[]): boolean {
   }
   return typeof node === "string" && node.length > 0;
 }
-
-const ref = (id: string, type: "ACCOUNT" | "USER" | "PAYMENT") => ({ id, label: id, type });
 
 describe("account message keys", () => {
   it("exist in the accounts namespace for es and en", () => {
@@ -141,28 +132,6 @@ describe("account input", () => {
     expect(updateAccountInputSchema.safeParse({ ...account, id: "acc1" }).success).toBe(true);
     expect(updateAccountInputSchema.safeParse(account).success).toBe(false);
   });
-
-  it("DTO exposes only the masked identifier and USD balance with the latest rate", () => {
-    const dto = {
-      id: "acc1",
-      ...account,
-      institution: null,
-      identifierMasked: "•••• 7890",
-      holderName: null,
-      openingBalance: "0.00",
-      active: true,
-      notes: null,
-      balance: "1000.00",
-      balanceUsd: null,
-      createdAt: "2026-01-01T00:00:00Z",
-      updatedAt: "2026-01-01T00:00:00Z",
-    };
-    expect(accountDtoSchema.safeParse(dto).success).toBe(true);
-    expect(Object.keys(accountDtoSchema.shape)).not.toContain("identifier");
-    expect(
-      accountsOverviewDtoSchema.safeParse({ accounts: [dto], totalBalanceUsd: "27.36" }).success,
-    ).toBe(true);
-  });
 });
 
 describe("transfers", () => {
@@ -199,24 +168,6 @@ describe("transfers", () => {
     );
     expect(createTransferInputSchema.safeParse({ ...transfer, usdRate: "0" }).success).toBe(false);
     expect(createTransferInputSchema.safeParse({ ...transfer, rate: "0" }).success).toBe(false);
-  });
-
-  it("DTO", () => {
-    const dto = {
-      id: "t1",
-      date: "2026-10-09",
-      fromAccount: ref("acc1", "ACCOUNT"),
-      toAccount: ref("acc2", "ACCOUNT"),
-      amountFrom: "100.00",
-      amountTo: "3654.00",
-      feeAmount: "1.00",
-      rate: "36.54000000",
-      amountUsd: "100.00",
-      reference: null,
-      notes: null,
-      createdAt: "2026-10-09T10:00:00Z",
-    };
-    expect(transferDtoSchema.safeParse(dto).success).toBe(true);
   });
 });
 
@@ -269,21 +220,6 @@ describe("manual movements", () => {
       false,
     );
   });
-
-  it("DTO carries a signed amount", () => {
-    const dto = {
-      id: "mv1",
-      account: ref("acc1", "ACCOUNT"),
-      type: "RETIRO_SOCIO",
-      date: "2026-10-09",
-      amount: "-200.00",
-      amountUsd: "-200.00",
-      partner: ref("u1", "USER"),
-      description: "Retiro",
-      createdAt: "2026-10-09T10:00:00Z",
-    };
-    expect(movementDtoSchema.safeParse(dto).success).toBe(true);
-  });
 });
 
 describe("ledger, balance and reconciliation", () => {
@@ -313,50 +249,6 @@ describe("ledger, balance and reconciliation", () => {
     };
     expect(ledgerRowSchema.safeParse(row).success).toBe(true);
     expect(ledgerRowSchema.safeParse({ ...row, amount: -20 }).success).toBe(false);
-  });
-
-  it("balance DTO", () => {
-    const dto = {
-      accountId: "acc1",
-      currency: "VES",
-      at: "2026-10-09",
-      balance: "1000.00",
-      balanceUsd: "27.36",
-    };
-    expect(accountBalanceDtoSchema.safeParse(dto).success).toBe(true);
-  });
-
-  it("reconciliation records the real balance and may suggest an adjustment", () => {
-    expect(
-      reconcileAccountInputSchema.safeParse({
-        accountId: "acc1",
-        date: "2026-10-09",
-        statementBalance: "995.50",
-      }).success,
-    ).toBe(true);
-    expect(
-      reconcileAccountInputSchema.safeParse({
-        accountId: "acc1",
-        date: "2026-10-09",
-        statementBalance: 995.5,
-      }).success,
-    ).toBe(false);
-    const dto = {
-      id: "rec1",
-      accountId: "acc1",
-      date: "2026-10-09",
-      statementBalance: "995.50",
-      systemBalance: "1000.00",
-      difference: "-4.50",
-      suggestedAdjustment: "-4.50",
-      notes: null,
-      createdAt: "2026-10-09T10:00:00Z",
-    };
-    expect(reconciliationDtoSchema.safeParse(dto).success).toBe(true);
-    expect(
-      reconciliationDtoSchema.safeParse({ ...dto, difference: "0.00", suggestedAdjustment: null })
-        .success,
-    ).toBe(true);
   });
 });
 

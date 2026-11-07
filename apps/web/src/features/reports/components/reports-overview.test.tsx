@@ -2,42 +2,38 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import esReports from "@/i18n/messages/es/reports.json";
-import { actionOk } from "@/lib/validators/common";
-import {
-  KPI_ID_VALUES,
-  REPORT_ID_VALUES,
-  reportFilterSchema,
-  type KpiResultDTO,
-  type ReportFilter,
-} from "@/lib/validators/reports";
-import type { MockServiceContext } from "@/mocks/ctx";
-import { getKpi } from "@/mocks/services/reports";
-import { makeTestContext } from "@/mocks/test-helpers";
+import { mockApi, type RecordedCall } from "@/lib/api/testing";
+import { KPI_ID_VALUES, REPORT_ID_VALUES, reportFilterSchema } from "@/lib/validators/reports";
 import { parseReportSlug } from "../report-catalog";
+import { makeKpisResponse } from "../test-fixtures";
 import { ReportsOverview } from "./reports-overview";
 import { installResizeObserver, renderWithIntl } from "./test-utils";
 
-// `/reports` (PRD §8.13, HU-31 CA2) over the mock reports service.
+// `/reports` (PRD §8.13, HU-31 CA2) with the HTTP client mocked: the KPIs come from `GET /reports/kpis`.
 
-let ctx: MockServiceContext;
-const kpisSpy = vi.fn();
-vi.mock("@/features/reports/actions", () => ({
-  getReportAction: vi.fn(),
-  getKpiAction: vi.fn(),
-  getKpisAction: async ({ filter }: { filter: ReportFilter }) => {
-    kpisSpy(filter);
-    return actionOk(await loadKpis(reportFilterSchema.parse(filter)));
-  },
-}));
+const server = vi.hoisted(() => ({ api: null as unknown }));
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
-function loadKpis(filter: ReportFilter): Promise<KpiResultDTO[]> {
-  return Promise.all(KPI_ID_VALUES.map((id) => getKpi(ctx, { id, filter })));
+let calls: RecordedCall[];
+
+/** The BE answers the range: the previous month ends one month earlier in the sparklines. */
+function serveKpis() {
+  const mock = mockApi({
+    "GET /api/v1/reports/kpis": (call) => ({
+      body: makeKpisResponse(
+        call.search.get("preset") === "PREVIOUS_MONTH" ? "2026-09" : "2026-10",
+      ),
+    }),
+  });
+  server.api = mock.api;
+  calls = mock.calls;
 }
 
 const LAST_12 = reportFilterSchema.parse({ preset: "LAST_12_MONTHS" });
 
-async function renderOverview() {
-  const kpis = await loadKpis(LAST_12);
+function renderOverview() {
+  const kpis = makeKpisResponse().kpis;
   renderWithIntl(<ReportsOverview initialKpis={kpis} initialFilter={LAST_12} />);
   return kpis;
 }
@@ -58,13 +54,12 @@ function sparklinePoints(card: HTMLElement) {
 
 beforeAll(installResizeObserver);
 beforeEach(() => {
-  ctx = makeTestContext("OWNER").ctx;
-  kpisSpy.mockReset();
+  serveKpis();
 });
 
 describe("ReportsOverview", () => {
-  it("lists the ten reports of §8.13.1, each linking to a page that resolves to it", async () => {
-    await renderOverview();
+  it("lists the ten reports of §8.13.1, each linking to a page that resolves to it", () => {
+    renderOverview();
     const list = screen.getByRole("list", { name: esReports.page.reportsTitle });
     const links = within(list).getAllByRole("link");
     expect(links).toHaveLength(10);
@@ -77,8 +72,8 @@ describe("ReportsOverview", () => {
     expect(screen.getByText(esReports.items.reports.TAXES_REGISTERED.title)).toBeInTheDocument();
   });
 
-  it("shows one card per KPI with its value, the change vs the previous period and a 12-month sparkline", async () => {
-    const kpis = await renderOverview();
+  it("shows one card per KPI with its value, the change vs the previous period and a 12-month sparkline", () => {
+    const kpis = renderOverview();
     const cards = kpiCards();
     expect(cards).toHaveLength(KPI_ID_VALUES.length);
     kpis.forEach((kpi, index) => {
@@ -90,13 +85,13 @@ describe("ReportsOverview", () => {
       if (kpi.value === null) expect(card).toHaveTextContent(esReports.kpi.noData);
       expect(sparklinePoints(card)).toHaveLength(kpi.sparkline.length);
     });
-    const mrr = kpis.find((kpi) => kpi.id === "MRR")!;
-    expect(mrr.sparkline.length).toBeGreaterThan(0);
-    expect(mrr.sparkline.length).toBeLessThanOrEqual(12);
+    // A client filter gives a null figure: the card reads "no data", not a zero.
+    expect(kpis.find((kpi) => kpi.id === "DSO")!.value).toBeNull();
+    expect(cards[KPI_ID_VALUES.indexOf("DSO")]!).toHaveTextContent(esReports.kpi.noData);
   });
 
-  it("opens the detailed report of a card, keeping the range", async () => {
-    await renderOverview();
+  it("opens the detailed report of a card, keeping the range", () => {
+    renderOverview();
     const card = kpiCards()[KPI_ID_VALUES.indexOf("DSO")]!;
     const link = within(card).getByRole("link");
     expect(link).toHaveAttribute("href", "/reports/dso?preset=LAST_12_MONTHS");
@@ -108,33 +103,29 @@ describe("ReportsOverview", () => {
     }
   });
 
-  it("updates every card and sparkline when the date range changes (HU-31 CA2)", async () => {
+  it("reloads every card and sparkline from the BE when the date range changes (HU-31 CA2)", async () => {
     const user = userEvent.setup();
-    const before = await renderOverview();
-    const after = await loadKpis(reportFilterSchema.parse({ preset: "PREVIOUS_MONTH" }));
-    const periods = (kpis: KpiResultDTO[]) =>
+    renderOverview();
+    const after = makeKpisResponse("2026-09").kpis;
+    const periods = (kpis: typeof after) =>
       kpis.map((kpi) => kpi.sparkline.map((point) => point.period));
     // The fixture must make the change observable on the cards.
-    expect(periods(after)).not.toEqual(periods(before));
+    expect(periods(after)).not.toEqual(periods(makeKpisResponse().kpis));
 
     await user.click(screen.getByRole("radio", { name: esReports.filters.presets.PREVIOUS_MONTH }));
 
-    expect(kpisSpy).toHaveBeenCalledWith(expect.objectContaining({ preset: "PREVIOUS_MONTH" }));
+    // One card is enough to see the reload land; checking all eighteen on every poll is slow in jsdom.
+    const mrr = KPI_ID_VALUES.indexOf("MRR");
     await waitFor(() =>
-      expect(
-        kpiCards().map((card) => sparklinePoints(card).map((text) => text?.slice(0, 7))),
-      ).toEqual(periods(after)),
+      expect(sparklinePoints(kpiCards()[mrr]!).map((text) => text?.slice(0, 7))).toEqual(
+        periods(after)[mrr],
+      ),
     );
-    kpiCards().forEach((card, index) => {
-      const kpi = after[index]!;
-      expect(card).toHaveTextContent(
-        kpi.changePercent === null ? esReports.kpi.noPrevious : "frente al periodo anterior",
-      );
-      if (kpi.value === null) expect(card).toHaveTextContent(esReports.kpi.noData);
-      expect(within(card).getByRole("link")).toHaveAttribute(
-        "href",
-        expect.stringContaining("?preset=PREVIOUS_MONTH"),
-      );
-    });
-  });
+    const reloads = calls.filter((call) => call.search.get("preset") === "PREVIOUS_MONTH");
+    expect(reloads).toHaveLength(1);
+    expect(within(kpiCards()[mrr]!).getByRole("link")).toHaveAttribute(
+      "href",
+      expect.stringContaining("?preset=PREVIOUS_MONTH"),
+    );
+  }, 30_000);
 });

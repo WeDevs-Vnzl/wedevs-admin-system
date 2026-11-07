@@ -1,4 +1,3 @@
-import type { TagsService } from "./tags";
 import { describe, expect, it } from "vitest";
 import { z } from "./zod";
 import { VALIDATION_MESSAGES } from "./common";
@@ -170,17 +169,5 @@ describe("tags", () => {
         createdAt: "2026-10-01T10:00:00.000Z",
       }).success,
     ).toBe(true);
-  });
-});
-
-describe("TagsService (PRD §12 service names)", () => {
-  it("declares every service of the module with its exact name", () => {
-    const names = [
-      "createTag",
-      "updateTag",
-      "assignTags",
-      "unassignTag",
-    ] as const satisfies readonly (keyof TagsService)[];
-    expect(new Set(names).size).toBe(names.length);
   });
 });

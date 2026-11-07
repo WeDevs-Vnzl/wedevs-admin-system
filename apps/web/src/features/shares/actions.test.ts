@@ -1,31 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/server", () => server);
+vi.mock("next/cache", () => cache);
 
-// The shares service is another task (T7): it is mocked whole. The documents reads and the status change are
-// stubbed so the `ENVIADO` proposal can be checked without the store.
-const shares = vi.hoisted(() => ({
-  createShareLink: vi.fn(),
-  updateShareLink: vi.fn(),
-  revokeShareLink: vi.fn(),
-  setShareDocumentAccessKey: vi.fn(),
-  listShareLinks: vi.fn(),
-  getShareLink: vi.fn(),
-  listShareAccessLog: vi.fn(),
-}));
-vi.mock("@/mocks/services/shares", () => shares);
-const documents = vi.hoisted(() => ({
-  getDocument: vi.fn(),
-  listDocumentVersions: vi.fn(),
-  setDocumentStatus: vi.fn(),
-}));
-vi.mock("@/mocks/services/documents", () => documents);
-
-import { makeSessionUser } from "@/mocks/test-helpers";
-import { ServiceError } from "@/server/errors";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import {
   createShareLinkAction,
   getShareableDocumentAction,
@@ -36,215 +18,448 @@ import {
   setShareDocumentAccessKeyAction,
   updateShareLinkAction,
 } from "./actions";
+import {
+  WIRE_TOKEN,
+  page,
+  wireDocument,
+  wireLogRow,
+  wireShareDetail,
+  wireShareRow,
+  wireVersions,
+} from "./test-fixtures";
 
-type Role = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
-function asRole(role: Role) {
-  session.getMockSessionUser.mockResolvedValue(makeSessionUser(role));
+function useApi(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.getServerApi.mockResolvedValue(mocked.api);
+  return mocked;
 }
-
-const createInput = {
-  title: "Contract documents",
-  documents: [{ documentId: "doc_0001", versionId: null, requiresAccessKey: true }],
-};
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const fn of Object.values(shares)) fn.mockResolvedValue({ ok: "service" });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
-});
-
-// Every action, with a valid input and the service function it reaches.
-const cases = [
-  ["createShareLinkAction", () => createShareLinkAction(createInput), shares.createShareLink],
-  [
-    "updateShareLinkAction",
-    () => updateShareLinkAction({ id: "shl_0001", ...createInput }),
-    shares.updateShareLink,
-  ],
-  [
-    "revokeShareLinkAction",
-    () => revokeShareLinkAction({ id: "shl_0001" }),
-    shares.revokeShareLink,
-  ],
-  [
-    "setShareDocumentAccessKeyAction",
-    () =>
-      setShareDocumentAccessKeyAction({
-        shareLinkId: "shl_0001",
-        documentId: "doc_0001",
-        action: "regenerate",
-      }),
-    shares.setShareDocumentAccessKey,
-  ],
-  ["listShareLinksAction", () => listShareLinksAction({}), shares.listShareLinks],
-  [
-    "listShareAccessLogAction",
-    () => listShareAccessLogAction({ shareLinkId: "shl_0001" }),
-    shares.listShareAccessLog,
-  ],
-] as const;
-
-describe.each(cases)("%s", (_name, run, service) => {
-  it.each(["MEMBER", "VIEWER"] as const)(
-    "refuses %s with FORBIDDEN before the service",
-    async (role) => {
-      asRole(role);
-      const result = await run();
-      expect(result).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-      expect(service).not.toHaveBeenCalled();
-    },
-  );
-
-  it.each(["OWNER", "ADMIN"] as const)("lets %s through to the service", async (role) => {
-    asRole(role);
-    const result = await run();
-    expect(result).toEqual({ ok: true, data: { ok: "service" } });
-    expect(service).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("input validation (zod)", () => {
-  beforeEach(() => asRole("OWNER"));
-
-  it("rejects a link without documents", async () => {
-    const result = await createShareLinkAction({ ...createInput, documents: [] });
-    expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(shares.createShareLink).not.toHaveBeenCalled();
-  });
-
-  it("rejects a blank title on update", async () => {
-    const result = await updateShareLinkAction({ id: "shl_0001", ...createInput, title: "  " });
-    expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(shares.updateShareLink).not.toHaveBeenCalled();
-  });
-
-  it("rejects an unknown key action", async () => {
-    const result = await setShareDocumentAccessKeyAction({
-      shareLinkId: "shl_0001",
-      documentId: "doc_0001",
-      action: "reveal" as never,
+describe("createShareLinkAction", () => {
+  it("creates a link from a document: pins the version, asks for a key and returns the keys once", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links": {
+        status: 201,
+        body: {
+          share: wireShareDetail(),
+          generatedKeys: [{ documentId: "doc_1", accessKey: "k3y-Only-Once-123" }],
+        },
+      },
     });
-    expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(shares.setShareDocumentAccessKey).not.toHaveBeenCalled();
+
+    const result = await createShareLinkAction({
+      title: "Contract documents",
+      documents: [{ documentId: "doc_1", versionId: "ver_2", requiresAccessKey: true }],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.share).toMatchObject({ id: "shl_1", token: WIRE_TOKEN, status: "ACTIVE" });
+    expect(result.data.share.client).toEqual({
+      type: "CLIENT",
+      id: "cli_1",
+      label: "Kairos Studio",
+    });
+    expect(result.data.generatedKeys).toEqual([
+      { documentId: "doc_1", accessKey: "k3y-Only-Once-123" },
+    ]);
+    expect(calls[0]?.body).toMatchObject({
+      title: "Contract documents",
+      locale: "es",
+      allowDownload: true,
+      documents: [{ documentId: "doc_1", versionId: "ver_2", requiresAccessKey: true }],
+    });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/documents/shares");
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/documents");
   });
 
-  it("rejects a revoke without an id", async () => {
-    const result = await revokeShareLinkAction({} as never);
-    expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(shares.revokeShareLink).not.toHaveBeenCalled();
+  it("creates a link from a client: sends the client id", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links": {
+        status: 201,
+        body: { share: wireShareDetail(), generatedKeys: [] },
+      },
+    });
+
+    await createShareLinkAction({
+      title: "Proposal",
+      clientId: "cli_1",
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+      allowDownload: false,
+      locale: "en",
+      expiresAt: "2026-12-31",
+      message: "Please review",
+    });
+
+    expect(calls[0]?.body).toMatchObject({
+      clientId: "cli_1",
+      allowDownload: false,
+      locale: "en",
+      expiresAt: "2026-12-31",
+      message: "Please review",
+    });
   });
 
-  it("passes the service the parsed defaults (latest version, download allowed, es)", async () => {
-    await createShareLinkAction({ title: "T", documents: [{ documentId: "doc_0001" }] });
-    expect(shares.createShareLink).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        allowDownload: true,
-        locale: "es",
-        documents: [{ documentId: "doc_0001", versionId: null, requiresAccessKey: false }],
+  it("sends an explicit null for 'always the latest' and the id for a pinned version", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links": {
+        status: 201,
+        body: { share: wireShareDetail(), generatedKeys: [] },
+      },
+    });
+
+    await createShareLinkAction({
+      title: "Two documents",
+      documents: [
+        { documentId: "doc_1", versionId: null, requiresAccessKey: false },
+        { documentId: "doc_2", versionId: "ver_9", requiresAccessKey: false },
+      ],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    const documents = (calls[0]?.body as { documents: Record<string, unknown>[] }).documents;
+    expect(documents[0]).toHaveProperty("versionId", null);
+    expect(documents[1]).toHaveProperty("versionId", "ver_9");
+  });
+
+  it("maps a BE refusal to field errors without touching the cache", async () => {
+    useApi({
+      "POST /api/v1/share-links": errorEnvelope("VALIDATION", {
+        fieldErrors: { title: ["validation.required"] },
       }),
-    );
+    });
+
+    const result = await createShareLinkAction({
+      title: "",
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION", fieldErrors: { title: ["validation.required"] } },
+    });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("answers FORBIDDEN for a role without the share grant (the BE decides)", async () => {
+    useApi({ "POST /api/v1/share-links": errorEnvelope("FORBIDDEN") });
+
+    const result = await createShareLinkAction({
+      title: "x",
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    expect(result).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+  });
+});
+
+describe("updateShareLinkAction", () => {
+  it("sends every field, nullable ones as null when cleared (DT-149)", async () => {
+    const { calls } = useApi({
+      "PATCH /api/v1/share-links/{id}": {
+        body: { share: wireShareDetail(), generatedKeys: [] },
+      },
+    });
+
+    await updateShareLinkAction({
+      id: "shl_1",
+      title: "Renamed",
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    expect(calls[0]?.path).toBe("/api/v1/share-links/shl_1");
+    expect(calls[0]?.body).toEqual({
+      title: "Renamed",
+      message: null,
+      clientId: null,
+      expiresAt: null,
+      locale: "es",
+      allowDownload: true,
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+    });
+  });
+
+  it("keeps the client, the pin and the key switch of the form", async () => {
+    const { calls } = useApi({
+      "PATCH /api/v1/share-links/{id}": {
+        body: { share: wireShareDetail(), generatedKeys: [] },
+      },
+    });
+
+    await updateShareLinkAction({
+      id: "shl_1",
+      title: "Keep",
+      clientId: "cli_1",
+      message: "Hi",
+      expiresAt: "2027-01-31",
+      documents: [{ documentId: "doc_1", versionId: "ver_2", requiresAccessKey: true }],
+      allowDownload: false,
+      locale: "en",
+    });
+
+    expect(calls[0]?.body).toMatchObject({
+      clientId: "cli_1",
+      message: "Hi",
+      expiresAt: "2027-01-31",
+      allowDownload: false,
+      documents: [{ documentId: "doc_1", versionId: "ver_2", requiresAccessKey: true }],
+    });
+  });
+
+  it("maps the BE's 422 for an omitted field to field errors", async () => {
+    useApi({
+      "PATCH /api/v1/share-links/{id}": errorEnvelope("VALIDATION", {
+        fieldErrors: { allowDownload: ["validation.required"] },
+      }),
+    });
+
+    const result = await updateShareLinkAction({
+      id: "shl_1",
+      title: "t",
+      documents: [{ documentId: "doc_1", versionId: null, requiresAccessKey: false }],
+      allowDownload: true,
+      locale: "es",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "VALIDATION", fieldErrors: { allowDownload: ["validation.required"] } },
+    });
+  });
+});
+
+describe("revokeShareLinkAction", () => {
+  it("revokes through POST /revoke and refreshes the pages", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links/{id}/revoke": {
+        body: wireShareDetail({ status: "REVOKED", revokedAt: "2026-10-12T10:00:00.000Z" }),
+      },
+    });
+
+    const result = await revokeShareLinkAction({ id: "shl_1" });
+
+    expect(calls[0]?.path).toBe("/api/v1/share-links/shl_1/revoke");
+    expect(result).toMatchObject({ ok: true, data: { status: "REVOKED" } });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/documents/shares");
+  });
+});
+
+describe("setShareDocumentAccessKeyAction", () => {
+  it("generates a key and returns it in the result only", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links/{id}/documents/{documentId}/access-key": {
+        body: {
+          shareLinkId: "shl_1",
+          documentId: "doc_1",
+          action: "generate",
+          requiresAccessKey: true,
+          accessKeyUpdatedAt: "2026-10-12T10:00:00.000Z",
+          accessKey: "Fresh-Key-12345",
+        },
+      },
+    });
+
+    const result = await setShareDocumentAccessKeyAction({
+      shareLinkId: "shl_1",
+      documentId: "doc_1",
+      action: "generate",
+    });
+
+    expect(calls[0]?.path).toBe("/api/v1/share-links/shl_1/documents/doc_1/access-key");
+    expect(calls[0]?.body).toEqual({ action: "generate" });
+    expect(result).toMatchObject({ ok: true, data: { accessKey: "Fresh-Key-12345" } });
+    expect(JSON.stringify(cache.revalidatePath.mock.calls)).not.toContain("Fresh-Key");
+  });
+
+  it("regenerates and removes a key", async () => {
+    const { calls } = useApi({
+      "POST /api/v1/share-links/{id}/documents/{documentId}/access-key": (call) => {
+        const action = (call.body as { action: string }).action;
+        return {
+          body: {
+            shareLinkId: "shl_1",
+            documentId: "doc_1",
+            action,
+            requiresAccessKey: action !== "remove",
+            accessKeyUpdatedAt: action === "remove" ? null : "2026-10-12T10:00:00.000Z",
+            accessKey: action === "remove" ? null : "Another-Key-678",
+          },
+        };
+      },
+    });
+    const input = { shareLinkId: "shl_1", documentId: "doc_1" } as const;
+
+    const regenerated = await setShareDocumentAccessKeyAction({ ...input, action: "regenerate" });
+    const removed = await setShareDocumentAccessKeyAction({ ...input, action: "remove" });
+
+    expect(regenerated).toMatchObject({ ok: true, data: { accessKey: "Another-Key-678" } });
+    expect(removed).toMatchObject({
+      ok: true,
+      data: { accessKey: null, requiresAccessKey: false },
+    });
+    expect(calls.map((call) => (call.body as { action: string }).action)).toEqual([
+      "regenerate",
+      "remove",
+    ]);
+  });
+});
+
+describe("listShareLinksAction", () => {
+  it("sends the table's filter as flat query parameters and returns the page", async () => {
+    const { calls } = useApi({
+      "GET /api/v1/share-links": { body: page([wireShareRow()]) },
+    });
+
+    const result = await listShareLinksAction({
+      status: ["ACTIVE", "EXPIRED"],
+      clientId: "cli_1",
+      documentId: "doc_1",
+      hasAccessKeys: true,
+      sort: "viewCount:desc",
+      pageSize: 50,
+      q: "contract",
+    });
+
+    expect(result).toMatchObject({ ok: true, data: { total: 1 } });
+    const search = calls[0]?.search;
+    expect(search?.getAll("status")).toEqual(["ACTIVE", "EXPIRED"]);
+    expect(search?.get("clientId")).toBe("cli_1");
+    expect(search?.get("documentId")).toBe("doc_1");
+    expect(search?.get("hasAccessKeys")).toBe("true");
+    expect(search?.get("sort")).toBe("viewCount:desc");
+    expect(search?.get("pageSize")).toBe("50");
+    expect(search?.get("q")).toBe("contract");
+  });
+
+  it("answers FORBIDDEN for a Member", async () => {
+    useApi({ "GET /api/v1/share-links": errorEnvelope("FORBIDDEN") });
+
+    expect(await listShareLinksAction({})).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
+    });
+  });
+});
+
+describe("listShareAccessLogAction", () => {
+  it("reads the access log of one link, failed unlocks included", async () => {
+    const { calls } = useApi({
+      "GET /api/v1/share-links/{id}/access-log": {
+        body: page([wireLogRow(), wireLogRow({ id: "sal_2", event: "VIEW", documentId: null })]),
+      },
+    });
+
+    const result = await listShareAccessLogAction({
+      shareLinkId: "shl_1",
+      event: ["UNLOCK_FAILED", "VIEW"],
+      sort: "createdAt:desc",
+    });
+
+    expect(calls[0]?.path).toBe("/api/v1/share-links/shl_1/access-log");
+    expect(calls[0]?.search.getAll("event")).toEqual(["UNLOCK_FAILED", "VIEW"]);
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) return;
+    expect(result.data.items.map((row) => row.event)).toEqual(["UNLOCK_FAILED", "VIEW"]);
   });
 });
 
 describe("getShareableDocumentAction", () => {
-  it("refuses MEMBER", async () => {
-    asRole("MEMBER");
-    const result = await getShareableDocumentAction({ id: "doc_0001" });
-    expect(result).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-    expect(documents.getDocument).not.toHaveBeenCalled();
-  });
-
-  it("rejects a malformed id", async () => {
-    asRole("OWNER");
-    const result = await getShareableDocumentAction({ id: "" });
-    expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-  });
-
   it("returns the document with its versions newest first", async () => {
-    asRole("ADMIN");
-    documents.getDocument.mockResolvedValue({
-      id: "doc_0001",
-      code: "DOC-0001",
-      title: "Contract",
-      status: "APROBADO",
-      archivedAt: null,
-      currentVersion: { id: "ver_2" },
+    useApi({
+      "GET /api/v1/documents/{id}": { body: wireDocument("doc_1") },
+      "GET /api/v1/documents/{id}/versions": { body: wireVersions("doc_1") },
     });
-    documents.listDocumentVersions.mockResolvedValue([
-      { id: "ver_1", versionNumber: 1 },
-      { id: "ver_2", versionNumber: 2 },
-    ]);
-    const result = await getShareableDocumentAction({ id: "doc_0001" });
-    expect(result).toEqual({
+
+    const result = await getShareableDocumentAction({ id: "doc_1" });
+
+    expect(result).toMatchObject({
       ok: true,
       data: {
-        id: "doc_0001",
-        code: "DOC-0001",
-        title: "Contract",
+        id: "doc_1",
+        code: "DOC_1",
         status: "APROBADO",
-        currentVersionId: "ver_2",
+        currentVersionId: "doc_1_v2",
         versions: [
-          { id: "ver_2", versionNumber: 2 },
-          { id: "ver_1", versionNumber: 1 },
+          { id: "doc_1_v3", versionNumber: 3 },
+          { id: "doc_1_v2", versionNumber: 2 },
+          { id: "doc_1_v1", versionNumber: 1 },
         ],
       },
+    });
+  });
+
+  it("answers NOT_FOUND for an unknown or archived document", async () => {
+    useApi({
+      "GET /api/v1/documents/{id}": (call) =>
+        call.path.endsWith("doc_gone")
+          ? errorEnvelope("NOT_FOUND")
+          : { body: wireDocument("doc_old", { archivedAt: "2026-10-01T00:00:00.000Z" }) },
+      "GET /api/v1/documents/{id}/versions": { body: [] },
+    });
+
+    expect(await getShareableDocumentAction({ id: "doc_gone" })).toMatchObject({
+      ok: false,
+      error: { code: "NOT_FOUND" },
+    });
+    expect(await getShareableDocumentAction({ id: "doc_old" })).toMatchObject({
+      ok: false,
+      error: { code: "NOT_FOUND" },
     });
   });
 });
 
 describe("markDocumentsSentAction", () => {
-  it("refuses VIEWER before touching any document", async () => {
-    asRole("VIEWER");
-    const result = await markDocumentsSentAction({ documentIds: ["doc_0001"] });
-    expect(result).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-    expect(documents.setDocumentStatus).not.toHaveBeenCalled();
-  });
-
-  it("rejects an empty or repeated list", async () => {
-    asRole("OWNER");
-    expect(await markDocumentsSentAction({ documentIds: [] })).toMatchObject({
-      ok: false,
-      error: { code: "VALIDATION" },
-    });
-    expect(await markDocumentsSentAction({ documentIds: ["doc_0001", "doc_0001"] })).toMatchObject({
-      ok: false,
-      error: { code: "VALIDATION" },
-    });
-    expect(documents.setDocumentStatus).not.toHaveBeenCalled();
-  });
-
-  it("moves only the documents that are APROBADO to ENVIADO", async () => {
-    asRole("OWNER");
-    const statuses: Record<string, string> = {
-      doc_0001: "APROBADO",
-      doc_0002: "BORRADOR",
-      doc_0003: "APROBADO",
-    };
-    documents.getDocument.mockImplementation(async (_ctx, { id }: { id: string }) => ({
-      id,
-      status: statuses[id],
-    }));
-    documents.setDocumentStatus.mockImplementation(async (_ctx, { id }: { id: string }) => {
-      if (id === "doc_0003") throw new ServiceError("VALIDATION");
-      return { id };
+  it("moves only the APROBADO documents to ENVIADO; the rest are skipped or failed", async () => {
+    const { calls } = useApi({
+      "GET /api/v1/documents/{id}": (call) => {
+        if (call.path.endsWith("doc_gone")) return errorEnvelope("NOT_FOUND");
+        const status = call.path.endsWith("doc_draft") ? "BORRADOR" : "APROBADO";
+        return { body: wireDocument(call.path.split("/").pop() ?? "", { status }) };
+      },
+      "POST /api/v1/documents/{id}/status": (call) =>
+        call.path.includes("doc_locked")
+          ? errorEnvelope("INTEGRITY_LOCK")
+          : { body: wireDocument("x", { status: "ENVIADO" }) },
     });
 
     const result = await markDocumentsSentAction({
-      documentIds: ["doc_0001", "doc_0002", "doc_0003"],
+      documentIds: ["doc_ok", "doc_draft", "doc_gone", "doc_locked"],
     });
 
     expect(result).toEqual({
       ok: true,
-      data: { sent: ["doc_0001"], skipped: ["doc_0002"], failed: ["doc_0003"] },
+      data: { sent: ["doc_ok"], skipped: ["doc_draft"], failed: ["doc_gone", "doc_locked"] },
     });
-    expect(documents.setDocumentStatus).toHaveBeenCalledTimes(2);
-    expect(documents.setDocumentStatus).toHaveBeenCalledWith(expect.anything(), {
-      id: "doc_0001",
-      status: "ENVIADO",
+    const posts = calls.filter((call) => call.method === "POST");
+    expect(posts.map((call) => call.path)).toEqual([
+      "/api/v1/documents/doc_ok/status",
+      "/api/v1/documents/doc_locked/status",
+    ]);
+    expect(posts.every((call) => (call.body as { status: string }).status === "ENVIADO")).toBe(
+      true,
+    );
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/documents");
+  });
+
+  it("surfaces a signed-out caller instead of reporting every document as failed", async () => {
+    useApi({ "GET /api/v1/documents/{id}": errorEnvelope("UNAUTHENTICATED") });
+
+    expect(await markDocumentsSentAction({ documentIds: ["doc_ok"] })).toMatchObject({
+      ok: false,
+      error: { code: "UNAUTHENTICATED" },
     });
   });
 });

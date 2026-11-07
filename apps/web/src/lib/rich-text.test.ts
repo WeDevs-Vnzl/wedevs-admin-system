@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { richTextDocSchema } from "@/lib/validators/notes";
-import { resolveEntityRef, richTextToPlainText as mockPlain } from "@/mocks/entity-refs";
-import { makeTestContext } from "@/mocks/test-helpers";
 import { firstWords, noteDisplayTitle, richTextExcerpt, richTextToPlainText } from "./rich-text";
 
 const doc = {
@@ -22,10 +20,6 @@ const doc = {
 describe("richTextToPlainText", () => {
   it("joins text nodes of a block and blocks with one space", () => {
     expect(richTextToPlainText(doc)).toBe("Alcance uno dos tres  cuatro  cinco seis siete ocho");
-  });
-
-  it("matches the mock copy", () => {
-    expect(richTextToPlainText(doc)).toBe(mockPlain(doc));
   });
 
   it("is empty for an empty document", () => {
@@ -62,12 +56,6 @@ describe("noteDisplayTitle", () => {
     expect(firstWords("a b c", 2)).toBe("a b");
   });
 
-  it("agrees with the EntityRef label of an untitled note", () => {
-    const { db } = makeTestContext();
-    const note = db.notes[0]!;
-    note.title = null;
-    expect(resolveEntityRef(db, "NOTE", note.id)?.label).toBe(noteDisplayTitle(null, note.content));
-  });
 });
 
 describe("editor JSON → richTextDocSchema", () => {

@@ -1,77 +1,95 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+const nav = vi.hoisted(() => ({
+  notFound: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  }),
+  redirect: vi.fn((to: string) => {
+    throw new Error(`NEXT_REDIRECT:${to}`);
+  }),
+}));
 vi.mock("server-only", () => ({}));
-vi.mock("@/mocks/session", () => session);
+vi.mock("@/lib/api/server", () => server);
+vi.mock("next/navigation", () => nav);
 
-import { getMockStore } from "@/mocks/store";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
+import { wireDetail, wireVersion } from "@/features/documents/wire-fixtures";
 import { GET } from "./route";
 
-function get(id: string, versionId: string, query = "") {
-  return GET(new Request(`http://localhost/documents/${id}/versions/${versionId}/file${query}`), {
+function use(routes: RouteTable) {
+  const mocked = mockApi(routes);
+  server.getServerApi.mockResolvedValue(mocked.api);
+  return mocked;
+}
+const get = (id = "doc_1", versionId = "ver_2") =>
+  GET(new Request(`http://localhost/documents/${id}/versions/${versionId}/file`), {
     params: Promise.resolve({ id, versionId }),
   });
-}
+
+const markdownVersion = wireVersion({
+  format: "MARKDOWN",
+  file: null,
+  content: "# Título\n\nCuerpo",
+});
 
 beforeEach(() => {
-  session.getMockSessionUser.mockReset();
-  session.getMockSessionUser.mockResolvedValue(
-    makeSessionUser("VIEWER", { id: getMockStore().users[0]!.id }),
-  );
+  server.getServerApi.mockReset();
+  nav.notFound.mockClear();
+  nav.redirect.mockClear();
 });
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>).__wedevsMockState;
-});
-
-describe("GET /documents/[id]/versions/[versionId]/file", () => {
-  it("serves a real PDF inline for a PDF file version, never cached", async () => {
-    const response = await get("doc_contrato_kairos", "dver_contrato_kairos_2");
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("application/pdf");
-    expect(response.headers.get("content-disposition")).toMatch(/^inline; filename=/);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-    const text = new TextDecoder("latin1").decode(await response.arrayBuffer());
-    expect(text.startsWith("%PDF-1.4")).toBe(true);
-    expect(text.trimEnd().endsWith("%%EOF")).toBe(true);
-    expect(text).toContain("/Type /Page");
-  });
-
-  it("downloads as an attachment with the stored file name", async () => {
-    const response = await get("doc_contrato_kairos", "dver_contrato_kairos_2", "?download=1");
-    expect(response.headers.get("content-disposition")).toBe(
-      `attachment; filename="contrato-kairos-firmado.pdf"; filename*=UTF-8''contrato-kairos-firmado.pdf`,
-    );
-  });
-
-  it("serves a markdown version as a sandboxed .md", async () => {
-    const response = await get("doc_prd_kairos_web", "dver_prd_kairos_web_1", "?download=1");
+describe("GET /documents/[id]/versions/[versionId]/file (markdown attachment only)", () => {
+  it("answers the stored markdown as an attachment named <code>-v<n>.md, never cached or sniffed", async () => {
+    const { calls } = use({
+      "GET /api/v1/documents/{id}/versions/{versionId}": { body: markdownVersion },
+      "GET /api/v1/documents/{id}": { body: wireDetail() },
+    });
+    const response = await get();
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
-    expect(response.headers.get("content-security-policy")).toContain("sandbox");
-    expect(response.headers.get("content-disposition")).toMatch(/filename="DOC-\d{4}-v1\.md"/);
-    const version = getMockStore().documentVersions.find((v) => v.id === "dver_prd_kairos_web_1")!;
-    expect(await response.text()).toBe(version.content);
+    expect(response.headers.get("content-disposition")).toBe(
+      'attachment; filename="DOC-0001-v2.md"',
+    );
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.text()).toBe("# Título\n\nCuerpo");
+    expect(calls.map((call) => call.path).sort()).toEqual([
+      "/api/v1/documents/doc_1",
+      "/api/v1/documents/doc_1/versions/ver_2",
+    ]);
   });
 
-  it("redirects a link version to its URL", async () => {
-    const doc = getMockStore().documents.find((row) => row.id === "doc_credenciales_kairos")!;
-    const version = getMockStore().documentVersions.find((v) => v.id === doc.currentVersionId)!;
-    const response = await get(doc.id, version.id);
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(version.url);
+  it("renders the in-shell not-found for the BE's 404 and 403", async () => {
+    use({ "GET /api/v1/documents/{id}/versions/{versionId}": errorEnvelope("NOT_FOUND") });
+    await expect(get()).rejects.toThrow("NEXT_NOT_FOUND");
+    use({ "GET /api/v1/documents/{id}/versions/{versionId}": errorEnvelope("FORBIDDEN") });
+    await expect(get()).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(nav.notFound).toHaveBeenCalledTimes(2);
   });
 
-  it("answers 404 for an unknown version, a version of another document or a malformed id", async () => {
-    expect((await get("doc_prd_kairos_web", "dver_nope")).status).toBe(404);
-    expect((await get("doc_prd_kairos_web", "dver_contrato_kairos_1")).status).toBe(404);
-    expect((await get("doc prd", "dver_prd_kairos_web_1")).status).toBe(404);
+  it("sends an unauthenticated caller to sign-in", async () => {
+    use({ "GET /api/v1/documents/{id}/versions/{versionId}": errorEnvelope("UNAUTHENTICATED") });
+    await expect(get()).rejects.toThrow("NEXT_REDIRECT:/sign-in");
   });
 
-  it("answers 401 without a session", async () => {
-    session.getMockSessionUser.mockResolvedValue(null);
-    expect((await get("doc_contrato_kairos", "dver_contrato_kairos_2")).status).toBe(401);
+  it("is not-found for an ARCHIVO or ENLACE version: files go through the file route, links are external", async () => {
+    use({
+      "GET /api/v1/documents/{id}/versions/{versionId}": { body: wireVersion() },
+      "GET /api/v1/documents/{id}": { body: wireDetail() },
+    });
+    await expect(get()).rejects.toThrow("NEXT_NOT_FOUND");
+    use({
+      "GET /api/v1/documents/{id}/versions/{versionId}": {
+        body: wireVersion({ format: "ENLACE", file: null, url: "https://example.com" }),
+      },
+      "GET /api/v1/documents/{id}": { body: wireDetail() },
+    });
+    await expect(get()).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("answers 502 when the BE fails", async () => {
+    use({ "GET /api/v1/documents/{id}/versions/{versionId}": errorEnvelope("INTERNAL") });
+    expect((await get()).status).toBe(502);
   });
 });

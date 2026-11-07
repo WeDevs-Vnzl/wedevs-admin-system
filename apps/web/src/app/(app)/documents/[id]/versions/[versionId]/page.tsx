@@ -58,6 +58,7 @@ export default async function DocumentVersionPage({ params }: VersionPageProps) 
     getLocale(),
   ]);
   const number = version.versionNumber;
+  const fileHref = versionFileHref(document.id, version);
   const documentHref = `/documents/${encodeURIComponent(document.id)}?tab=versions`;
   const canRestore =
     permissions.canUpdate &&
@@ -92,17 +93,19 @@ export default async function DocumentVersionPage({ params }: VersionPageProps) 
         description={version.isCurrent ? `${viewing} ${t("page.currentNotice")}` : viewing}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild>
-              <a
-                href={versionFileHref(document.id, version, true)}
-                {...(version.format === "ENLACE"
-                  ? { target: "_blank", rel: "noopener noreferrer" }
-                  : {})}
-              >
-                <Download aria-hidden />
-                {t("download", { number })}
-              </a>
-            </Button>
+            {fileHref ? (
+              <Button variant="outline" asChild>
+                <a
+                  href={fileHref}
+                  {...(version.format === "ENLACE"
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
+                  <Download aria-hidden />
+                  {t("download", { number })}
+                </a>
+              </Button>
+            ) : null}
             {comparable ? (
               <Button variant="outline" asChild>
                 <Link href={versionHref(document.id, version.id, "/compare")}>

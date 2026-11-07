@@ -1,14 +1,14 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { getProject } from "./queries";
-import { ServiceError } from "@/server/errors";
-import type { ProjectDetailDTO } from "@/lib/validators/projects";
+import { ServiceError } from "@/lib/service-error";
+import type { ProjectDetailDto } from "@/lib/api/types/projects";
 
 /**
  * The project of a detail or edit page. Unknown, archived (for roles that may not restore) and malformed ids
  * render the in-shell not-found page (`notFound()`); other errors propagate.
  */
-export async function loadProjectOr404(id: string): Promise<ProjectDetailDTO> {
+export async function loadProjectOr404(id: string): Promise<ProjectDetailDto> {
   try {
     return await getProject(id);
   } catch (error) {

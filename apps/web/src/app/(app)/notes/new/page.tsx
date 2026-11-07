@@ -8,8 +8,8 @@ import type { NoteLinkRef } from "@/features/notes/components/note-link-picker";
 import { getNotesViewer } from "@/features/notes/queries";
 import { getProject } from "@/features/projects/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
-import { ServiceError } from "@/server/context";
-import { can } from "@/server/auth/permissions";
+import { ServiceError } from "@/lib/service-error";
+import { can } from "@/lib/auth/permissions";
 
 type NewNotePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

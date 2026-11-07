@@ -49,6 +49,7 @@ import {
   type RichTextDoc,
 } from "@/lib/validators/notes";
 import type { TagChipDTO } from "@/lib/validators/tags";
+import { mergeAttachmentIds } from "../image-files";
 import { NoteLinkPicker, toNoteLinkRef, type NoteLinkRef } from "./note-link-picker";
 
 export type { NoteLinkRef };
@@ -155,12 +156,26 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
   }
 
   /**
-   * Saves an edit: the update, then the uploader's new files and the pin. A step that fails shows its error and
-   * no success toast; the note still reports what was saved, so the screen shows the stored state.
+   * Saves an edit: the new files first (the uploader's and every image of the content, since the BE refuses a
+   * document whose image is not an attachment of the note), then the update and the pin. A step that fails shows
+   * its error and no success toast; the note still reports what was saved, so the screen shows the stored state.
    */
   async function saveEdit(current: NoteDetailDTO, tagIds: string[]) {
     // The edit schema strips the pin and the files, and reads a cleared title as unset: both come from the raw form.
     const raw = form.getValues();
+    let saved = current;
+    for (const fileId of mergeAttachmentIds(
+      raw.attachmentFileIds ?? [],
+      raw.content as RichTextDoc,
+      current.attachments.map((file) => file.id),
+    )) {
+      const attached = await attachFileAction({ noteId: current.id, fileId });
+      if (attached.ok) saved = attached.data;
+      else {
+        toast.error(tToast("error"));
+        return;
+      }
+    }
     const updated = await updateNoteAction({
       id: current.id,
       title: raw.title?.trim() || null,
@@ -171,17 +186,8 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
       toast.error(tToast("error"));
       return;
     }
-    let saved = updated.data;
+    saved = updated.data;
     let failed = false;
-    // New files of the uploader are attached to the existing note one by one.
-    for (const fileId of raw.attachmentFileIds ?? []) {
-      const attached = await attachFileAction({ noteId: current.id, fileId });
-      if (attached.ok) saved = attached.data;
-      else {
-        failed = true;
-        toast.error(tToast("error"));
-      }
-    }
     if (raw.pinned !== undefined && raw.pinned !== current.pinned) {
       const pinned = await pinNoteAction({ id: current.id, pinned: raw.pinned });
       if (pinned.ok) saved = pinned.data;
@@ -210,6 +216,11 @@ function useNoteForm({ note, initialLinks = [], onSaved }: NoteFormOptions): Not
       links: links.map(toTarget),
       ...(title ? { title } : { title: undefined }),
       tagIds,
+      // Pasted images are uploaded files: they travel as attachments next to the uploader's.
+      attachmentFileIds: mergeAttachmentIds(
+        values.attachmentFileIds ?? [],
+        values.content as RichTextDoc,
+      ),
     });
     if (!result.ok) {
       toast.error(tToast("error"));

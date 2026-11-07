@@ -5,7 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const clerk = vi.hoisted(() => ({ getToken: vi.fn() }));
 vi.mock("@clerk/nextjs", () => ({ useAuth: () => ({ getToken: clerk.getToken }) }));
 
-import { createApiClient, isPortalPath, useApiClient } from "./client";
+import {
+  createApiClient,
+  createPortalApiClient,
+  isPortalPath,
+  portalFileUrl,
+  useApiClient,
+  usePortalApiClient,
+} from "./client";
 
 function recorder() {
   const requests: Request[] = [];
@@ -100,5 +107,59 @@ describe("useApiClient", () => {
     renderToString(createElement(Probe));
     await client!.GET("/api/v1/health" as never);
     expect(requests[0]?.headers.get("authorization")).toBe("Bearer clerk-tok");
+  });
+});
+
+describe("createPortalApiClient", () => {
+  it("sends credentials and never an Authorization header", async () => {
+    const { requests, fetchMock } = recorder();
+    const api = createPortalApiClient({ baseUrl: "http://api.test", fetch: fetchMock });
+    await api.GET("/api/v1/portal/abc" as never);
+    expect(requests[0]?.credentials).toBe("include");
+    expect(requests[0]?.headers.has("authorization")).toBe(false);
+    expect(requests[0]?.url).toBe("http://api.test/api/v1/portal/abc");
+  });
+
+  it("drops an Authorization header a caller sets", async () => {
+    const { requests, fetchMock } = recorder();
+    const api = createPortalApiClient({ baseUrl: "http://api.test", fetch: fetchMock });
+    await api.GET(
+      "/api/v1/portal/abc" as never,
+      { headers: { Authorization: "Bearer x" } } as never,
+    );
+    expect(requests[0]?.headers.has("authorization")).toBe(false);
+  });
+
+  it("throws when no base URL is configured", () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
+    expect(() => createPortalApiClient()).toThrow(/NEXT_PUBLIC_API_BASE_URL/);
+    vi.unstubAllEnvs();
+  });
+
+  it("is built by usePortalApiClient without touching Clerk", async () => {
+    clerk.getToken.mockReset();
+    const { requests, fetchMock } = recorder();
+    let client: ReturnType<typeof usePortalApiClient> | undefined;
+    function Probe() {
+      client = usePortalApiClient({ baseUrl: "http://api.test", fetch: fetchMock });
+      return null;
+    }
+    renderToString(createElement(Probe));
+    await client!.GET("/api/v1/portal/abc" as never);
+    expect(requests[0]?.headers.has("authorization")).toBe(false);
+    expect(clerk.getToken).not.toHaveBeenCalled();
+  });
+});
+
+describe("portalFileUrl", () => {
+  it("points at the API origin file route with the disposition", () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://api.test/");
+    expect(portalFileUrl("tok_1", "doc 1", "attachment")).toBe(
+      "http://api.test/api/v1/portal/tok_1/files/doc%201?disposition=attachment",
+    );
+    expect(portalFileUrl("tok_1", "d1", "inline")).toBe(
+      "http://api.test/api/v1/portal/tok_1/files/d1?disposition=inline",
+    );
+    vi.unstubAllEnvs();
   });
 });

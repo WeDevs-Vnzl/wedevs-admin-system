@@ -5,7 +5,6 @@ import {
   entityRefSchema,
   idSchema,
   listQuerySchema,
-  type Paginated,
 } from "./common";
 import { projectLinkGroupSchema, projectStatusSchema, type ProjectStatus } from "./enums";
 import { moneyAmountSchema } from "./money";
@@ -22,7 +21,6 @@ import {
   uniqueIds,
   withSortFields,
 } from "./tags";
-import type { ArchivedRecordDTO } from "./trash";
 
 /**
  * Projects (PRD §8.3). Rules: at least one client (no principal client), each link with an optional
@@ -272,17 +270,6 @@ export const projectClientSchema = z.object({
   client: entityRefSchema,
   role: z.string().nullable(),
 });
-export type ProjectClientDTO = z.infer<typeof projectClientSchema>;
-
-export const projectLinkSchema = z.object({
-  id: idSchema,
-  group: projectLinkGroupSchema,
-  label: z.string(),
-  url: z.string(),
-  order: z.number().int().nonnegative(),
-});
-export type ProjectLinkDTO = z.infer<typeof projectLinkSchema>;
-
 /** Financial headline of a project (side panel and table columns), USD decimal strings. */
 export const projectFinancialHeadlineSchema = z.object({
   contractedValueUsd: usdTotalSchema,
@@ -290,8 +277,6 @@ export const projectFinancialHeadlineSchema = z.object({
   collectedUsd: usdTotalSchema,
   toInvoiceUsd: usdTotalSchema,
 });
-export type ProjectFinancialHeadlineDTO = z.infer<typeof projectFinancialHeadlineSchema>;
-
 /** Row of the projects table (PRD §8.3 "Tabla"). */
 export const projectListRowSchema = projectFinancialHeadlineSchema.extend({
   id: idSchema,
@@ -306,81 +291,3 @@ export const projectListRowSchema = projectFinancialHeadlineSchema.extend({
   archivedAt: timestampSchema.nullable(),
 });
 export type ProjectListRowDTO = z.infer<typeof projectListRowSchema>;
-
-export const projectDetailSchema = projectFinancialHeadlineSchema.extend({
-  id: idSchema,
-  code: z.string(),
-  name: z.string(),
-  summary: z.string(),
-  description: richTextDocSchema.nullable(),
-  status: projectStatusSchema,
-  startDate: dateOnlySchema.nullable(),
-  targetEndDate: dateOnlySchema.nullable(),
-  endDate: dateOnlySchema.nullable(),
-  clients: z.array(projectClientSchema),
-  stack: z.array(technologyChipSchema),
-  links: z.array(projectLinkSchema),
-  tags: z.array(tagChipSchema),
-  /** Whether a billing plan exists (warning on `EN_CURSO` without one). */
-  hasBillingPlan: z.boolean(),
-  createdAt: timestampSchema,
-  updatedAt: timestampSchema,
-  archivedAt: timestampSchema.nullable(),
-});
-export type ProjectDetailDTO = z.infer<typeof projectDetailSchema>;
-
-/** Output of `setProjectStatus`: the project plus the non-blocking hints (PRD §8.3). */
-export const projectStatusChangeResultSchema = z.object({
-  project: projectDetailSchema,
-  hints: z.array(projectStatusHintSchema),
-});
-export type ProjectStatusChangeResultDTO = z.infer<typeof projectStatusChangeResultSchema>;
-
-/** `/projects` overview (PRD §8.3 "Overview"). */
-export const projectsOverviewSchema = z.object({
-  countByStatus: z.record(projectStatusSchema, z.number().int().nonnegative()),
-  upcomingDeliveries: z.array(projectListRowSchema),
-  withoutBillingPlan: z.array(projectListRowSchema),
-  topTechnologies: z.array(
-    z.object({ technology: technologyChipSchema, projectCount: z.number().int().positive() }),
-  ),
-  highestToInvoice: z.array(projectListRowSchema),
-});
-export type ProjectsOverviewDTO = z.infer<typeof projectsOverviewSchema>;
-
-export const getProjectsOverviewInputSchema = z.object({}).strict();
-export type GetProjectsOverviewInput = z.infer<typeof getProjectsOverviewInputSchema>;
-
-// ───────────────────────────── Services (PRD §12 `projects`) ─────────────────────────────
-
-/**
- * `projects` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). The summary DTO of
- * `getProjectFinancials` (PRD §8.4.4) belongs to the billing contract, so it is a type parameter here
- * (`ProjectFinancialsDTO`) instead of an import. `listProjects` / `getProject` / `getProjectsOverview`
- * / `removeProjectLink` / `archiveProjects` are the screen counterparts that PRD §12 leaves implicit.
- */
-export type ProjectsService<Ctx = unknown, ProjectFinancialsDTO = unknown> = {
-  createProject: (ctx: Ctx, input: CreateProjectInput) => Promise<ProjectDetailDTO>;
-  updateProject: (ctx: Ctx, input: UpdateProjectInput) => Promise<ProjectDetailDTO>;
-  setProjectStatus: (
-    ctx: Ctx,
-    input: SetProjectStatusInput,
-  ) => Promise<ProjectStatusChangeResultDTO>;
-  setProjectClients: (ctx: Ctx, input: SetProjectClientsInput) => Promise<ProjectDetailDTO>;
-  setProjectTechnologies: (
-    ctx: Ctx,
-    input: SetProjectTechnologiesInput,
-  ) => Promise<ProjectDetailDTO>;
-  upsertProjectLinks: (ctx: Ctx, input: UpsertProjectLinksInput) => Promise<ProjectLinkDTO[]>;
-  reorderProjectLinks: (ctx: Ctx, input: ReorderProjectLinksInput) => Promise<ProjectLinkDTO[]>;
-  removeProjectLink: (ctx: Ctx, input: RemoveProjectLinkInput) => Promise<ProjectLinkDTO[]>;
-  archiveProject: (ctx: Ctx, input: ArchiveProjectInput) => Promise<ArchivedRecordDTO>;
-  archiveProjects: (
-    ctx: Ctx,
-    input: ArchiveProjectsInput,
-  ) => Promise<{ archived: ArchivedRecordDTO[] }>;
-  listProjects: (ctx: Ctx, input: ProjectFilter) => Promise<Paginated<ProjectListRowDTO>>;
-  getProject: (ctx: Ctx, input: ProjectIdInput) => Promise<ProjectDetailDTO>;
-  getProjectFinancials: (ctx: Ctx, input: ProjectIdInput) => Promise<ProjectFinancialsDTO>;
-  getProjectsOverview: (ctx: Ctx, input: GetProjectsOverviewInput) => Promise<ProjectsOverviewDTO>;
-};

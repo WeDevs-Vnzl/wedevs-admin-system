@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { MoneyText } from "@/components/patterns/money-text";
 import { SectionCard } from "@/components/patterns/section-card";
@@ -20,7 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { splitByTemplate } from "@/lib/finance/installments";
 import { formatMoney } from "@/lib/money";
+import { moneyAmountSchema } from "@/lib/validators/money";
 import { BILLING_MODEL_VALUES, type BillingModel } from "@/lib/validators/enums";
 import { applyInstallmentTemplateAction, upsertBillingPlanAction } from "../actions";
 import type { BillingPlanRow } from "../types";
@@ -52,6 +54,8 @@ type FormValues = {
 
 const FIELDS = ["model", "currency", "contractAmount", "notes"] as const;
 
+const positiveAmount = moneyAmountSchema({ sign: "positive" });
+
 // HU-09: the billing plan of the project (model, contract, currency and its USD snapshot, D1), the quick template
 // that splits the contract into installments, and the persistent warning when the installments do not add up.
 export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps) {
@@ -74,6 +78,12 @@ export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps
     },
   });
   const errors = form.formState.errors;
+  const typedContract = useWatch({ control: form.control, name: "contractAmount" });
+  const typedCurrency = useWatch({ control: form.control, name: "currency" });
+  // Display-only estimate of the template split from what the user typed (C17 FE half): the saved amounts are
+  // the BE's and replace this on the next render.
+  const parsedContract = positiveAmount.safeParse(typedContract.trim());
+  const estimate = parsedContract.success ? splitByTemplate(template, parsedContract.data) : [];
   const message = (key: string | undefined) => (key ? tRoot(key as never) : undefined);
 
   async function onSubmit(values: FormValues) {
@@ -122,6 +132,7 @@ export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps
             type="submit"
             form="billing-plan-form"
             size="sm"
+            className="transition-transform active:scale-[0.96]"
             disabled={form.formState.isSubmitting}
           >
             {plan ? t("save") : t("create")}
@@ -172,14 +183,18 @@ export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps
           <FieldError>{message(errors.model?.message)}</FieldError>
         </Field>
 
-        <Field>
+        <Field data-invalid={errors.currency ? true : undefined}>
           <FieldLabel htmlFor="plan-currency">{t("fields.currency")}</FieldLabel>
           <Controller
             control={form.control}
             name="currency"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
-                <SelectTrigger id="plan-currency" className="w-full">
+                <SelectTrigger
+                  id="plan-currency"
+                  className="w-full"
+                  aria-invalid={errors.currency ? true : undefined}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,6 +207,7 @@ export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps
               </Select>
             )}
           />
+          <FieldError>{message(errors.currency?.message)}</FieldError>
         </Field>
 
         <Field data-invalid={errors.contractAmount ? true : undefined}>
@@ -256,11 +272,26 @@ export function PlanCard({ projectId, plan, currencies, canEdit }: PlanCardProps
           type="button"
           variant="outline"
           disabled={!canApplyTemplate || pending}
+          className="transition-transform active:scale-[0.96]"
           onClick={applyTemplate}
         >
           {tTemplates("apply")}
         </Button>
       </div>
+      {estimate.length > 0 ? (
+        <div className="flex flex-col gap-1 text-sm">
+          <p id="plan-estimate-label" className="text-muted-foreground">
+            {tTemplates("estimate")}
+          </p>
+          <ul aria-labelledby="plan-estimate-label" className="flex flex-wrap gap-x-4 gap-y-1">
+            {estimate.map((item, index) => (
+              <li key={index} className="tabular-nums">
+                {`${item.percentage} % · ${formatMoney(item.amount, typedCurrency, locale)}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {plan === null ? <FieldDescription>{t("empty")}</FieldDescription> : null}
     </SectionCard>
   );

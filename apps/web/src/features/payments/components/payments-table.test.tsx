@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PaymentListRow } from "@/lib/validators/payments";
+import type { PaymentListRowDto } from "@/lib/api/types/payments";
 import { listPaymentsAction } from "../actions";
 import { PaymentsTable } from "./payments-table";
 import { installResizeObserver, renderWithIntl } from "./test-utils";
@@ -25,7 +25,7 @@ const row = {
   unallocated: "200.00",
   reference: "REF-1",
   status: "CONFIRMADO",
-} as unknown as PaymentListRow;
+} as unknown as PaymentListRowDto;
 
 const facetSources = {
   accounts: [{ id: "acc_1", name: "Banesco USD" }],

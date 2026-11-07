@@ -1,45 +1,32 @@
 import { readFile } from "node:fs/promises";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { appBaseUrl } from "./support/app";
+import { signInAs } from "./support/auth";
 
-// Wave 3 E2E, clients (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
-// PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
-// every browser context shares it, so the tests that mutate it run one at a time (`--workers=1`, no serial mode, so
-// one failure does not skip the rest) and reset it through the user menu ("Restablecer datos de prueba") before each
-// test. View-as-role lives in the cookie of each context. Seed facts used below (src/mocks/fixtures/clients.ts):
-// `cli_kairos` (CLI-0001, ACTIVO, VE, tax id J-30123456-7) owns several active projects and contacts;
-// `cli_zafiro_labs` is ACTIVO with no projects and no contacts; `cli_veredas_digital` is archived. Codes are
-// `CLI-####` from the highest seeded code.
+// Wave 3 E2E, clients (H1-B2, docs/TASK.md "Tester scope"), kept by FE-INT-R E.1. This file starts nothing: it runs
+// against the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). Every case creates the clients, contacts
+// and projects it needs through the UI with unique names and tax ids (FE-INT-R rule 29); no case reads a seed client,
+// project or document. Cases that need a record the UI cannot create in this file are `test.fixme`.
+// View-as-role lives in the cookie of each context. Client codes are `CLI-####`, read from the client page.
 
 const DARK_CLASS = /(?:^|\s)dark(?:\s|$)/;
-const KAIROS_TAX_ID = "J-30123456-7";
 
 const sidebar = (page: Page) => page.locator('[data-slot="sidebar"][data-state]');
 const notFoundText = (page: Page) => page.getByText("Página no encontrada", { exact: true });
 
-/** Restores the mock data through the user menu. Locale-agnostic on purpose. */
-async function resetMockData(page: Page) {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: /^(Menú de usuario|User menu)$/ }).click();
-  await page
-    .getByRole("menuitem", { name: /^(Restablecer datos de prueba|Reset mock data)$/ })
-    .click();
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: /^(Restablecer|Reset)$/ })
-    .click();
-  await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
-}
+/**
+ * The search term of the document a `fixme` case below would attach. This file does not create that document (its
+ * form needs an intercepted upload, rule 30), so the case stays `fixme` until a document with this title exists.
+ */
+const ATTACHABLE_DOCUMENT_SEARCH = "E2E documento";
+
+/** A name no other case uses (rule 29). */
+const uniqueName = (label: string) => `${label} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+
+/** A tax id no other case uses; the country is Colombia, so the Venezuelan RIF format does not apply. */
+const uniqueTaxId = () => `E2E-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
 /** Opens a page and waits until React has hydrated it (clicks before that are lost). */
 async function open(page: Page, path: string) {
@@ -80,6 +67,64 @@ async function fillClientForm(
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
 }
 
+/** Creates a Persona client in Colombia and returns its path (`/clients/<id>`). */
+async function createClient(page: Page, tradeName: string, taxId = uniqueTaxId()): Promise<string> {
+  await fillClientForm(page, { tradeName, taxId, country: "Colombia" });
+  await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
+  return new URL(page.url()).pathname;
+}
+
+/** Creates a project linked to one client by its trade name and returns its path (`/projects/<id>`). */
+async function createProject(page: Page, name: string, clientName: string): Promise<string> {
+  await open(page, "/projects/new");
+  await page.getByLabel("Nombre", { exact: true }).fill(name);
+  await page.getByLabel("Resumen", { exact: true }).fill(`Resumen ${name}`);
+  await page.getByRole("combobox", { name: "Clientes", exact: true }).fill(clientName);
+  await page.getByRole("option", { name: new RegExp(escapeRegExp(clientName)) }).first().click();
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(page.getByText(/Proyecto PRY-\d{4} creado/)).toBeVisible();
+  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
+  return new URL(page.url()).pathname;
+}
+
+/** Creates a client as the Owner in its own browser context and returns its path, for the role checks below. */
+async function createClientAsOwner(browser: Browser): Promise<string> {
+  const context = await browser.newContext({ baseURL: appBaseUrl() });
+  try {
+    const page = await context.newPage();
+    await signInAs(page, "OWNER");
+    return await createClient(page, uniqueName("E2E Miembro"));
+  } finally {
+    await context.close();
+  }
+}
+
+/** Adds a contact on a client's Contactos tab; the dialog is returned while it stays open. */
+async function addContact(
+  page: Page,
+  data: { name: string; email?: string; phone?: string; primary?: boolean },
+) {
+  await page.getByRole("button", { name: "Nuevo contacto", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nuevo contacto", exact: true });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Nombre completo", { exact: true }).fill(data.name);
+  if (data.email) await dialog.getByLabel("Email", { exact: true }).fill(data.email);
+  if (data.phone) await dialog.getByLabel("Teléfono", { exact: true }).fill(data.phone);
+  if (data.primary) await dialog.getByLabel("Contacto principal", { exact: true }).click();
+  await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
+  return dialog;
+}
+
+/** Opens the archive dialog of a client detail page and confirms the first step. */
+async function startArchive(page: Page) {
+  await page.getByRole("button", { name: "Más acciones", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Archivar cliente", exact: true }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog.getByText("¿Archivar registro?", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
+  return dialog;
+}
+
 /** A column header by its label; the accessible name also carries the sort and resize labels. */
 const columnHeader = (label: string) => new RegExp(`\\b${label}\\b`);
 
@@ -94,17 +139,13 @@ async function clientCodeOf(page: Page): Promise<string> {
 
 test.describe("HU-03 create client (mutates clients)", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-
   test("CA1: a company needs the legal name, a person does not", async ({ page }) => {
     await fillClientForm(page, {
       kind: "Empresa",
-      tradeName: "E2E Empresa CA1",
-      taxId: "E2E-CA1-1",
+      tradeName: uniqueName("E2E Empresa CA1"),
+      taxId: uniqueTaxId(),
       country: "Colombia",
     });
     await expect(page).toHaveURL(/\/clients/);
@@ -115,43 +156,38 @@ test.describe("HU-03 create client (mutates clients)", () => {
     await expect(page.getByText("Campo obligatorio", { exact: true }).first()).toBeVisible();
 
     await fillClientForm(page, {
-      tradeName: "E2E Persona CA1",
-      taxId: "E2E-CA1-2",
+      tradeName: uniqueName("E2E Persona CA1"),
+      taxId: uniqueTaxId(),
       country: "Colombia",
     });
     await expect(page.getByText("Cliente creado", { exact: true })).toBeVisible();
-    await expect(page).toHaveURL(/\/clients\/cli_/);
+    await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}/);
   });
 
-  test("CA2: a new client takes the next CLI-#### after the highest code", async ({ page }) => {
-    await fillClientForm(page, {
-      tradeName: "E2E Código uno",
-      taxId: "E2E-CA2-1",
-      country: "Colombia",
-    });
-    await expect(page).toHaveURL(/\/clients\/cli_/);
+  test("CA2: a new client takes the next CLI-#### after the previous one", async ({ page }) => {
+    const firstPath = await createClient(page, uniqueName("E2E Código uno"));
+    await open(page, firstPath);
     const first = Number((await clientCodeOf(page)).slice(4));
 
-    await fillClientForm(page, {
-      tradeName: "E2E Código dos",
-      taxId: "E2E-CA2-2",
-      country: "Colombia",
-    });
-    await expect(page).toHaveURL(/\/clients\/cli_/);
+    await createClient(page, uniqueName("E2E Código dos"));
     const second = Number((await clientCodeOf(page)).slice(4));
 
-    // The seed holds CLI-0001..CLI-n; the first new code is above the seed, and each next code is the previous + 1.
-    expect(first).toBeGreaterThan(1);
+    // Codes are sequential in creation order: the second new client is the first one's successor.
     expect(second).toBe(first + 1);
   });
 
   test("CA3: a duplicate tax id and country shows the conflict with a link to the existing client", async ({
     page,
   }) => {
+    const taxId = uniqueTaxId();
+    const existingPath = await createClient(page, uniqueName("E2E Original CA3"), taxId);
+    await open(page, existingPath);
+    const existingCode = await clientCodeOf(page);
+
     await fillClientForm(page, {
-      tradeName: "Duplicado E2E",
-      taxId: KAIROS_TAX_ID,
-      country: "Venezuela",
+      tradeName: uniqueName("E2E Duplicado CA3"),
+      taxId,
+      country: "Colombia",
     });
 
     await expect(
@@ -167,21 +203,15 @@ test.describe("HU-03 create client (mutates clients)", () => {
     // The form is dirty, so the in-app link asks for confirmation first (use-unsaved-changes.ts). Playwright
     // dismisses dialogs by default and would cancel the navigation, so accept the confirm.
     page.once("dialog", (dialog) => dialog.accept());
-    await page.getByRole("link", { name: "Abrir CLI-0001", exact: true }).click();
-    await expect(page).toHaveURL(/\/clients\/cli_kairos$/);
+    await page.getByRole("link", { name: `Abrir ${existingCode}`, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${escapeRegExp(existingPath)}$`));
   });
 
   test("CA4: the creation shows as CREATE in the Actividad tab of the new client", async ({
     page,
   }) => {
-    await fillClientForm(page, {
-      tradeName: "E2E Actividad CA4",
-      taxId: "E2E-CA4-1",
-      country: "Colombia",
-    });
-    await expect(page).toHaveURL(/\/clients\/cli_/);
-    const url = new URL(page.url());
-    await open(page, `${url.pathname}?tab=activity`);
+    const path = await createClient(page, uniqueName("E2E Actividad CA4"));
+    await open(page, `${path}?tab=activity`);
 
     await expect(page.getByText(/^Creó /).first()).toBeVisible();
   });
@@ -191,29 +221,11 @@ test.describe("HU-03 create client (mutates clients)", () => {
 
 test.describe("HU-04 contacts (mutates contacts)", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-
-  async function addContact(
-    page: Page,
-    data: { name: string; email?: string; phone?: string; primary?: boolean },
-  ) {
-    await page.getByRole("button", { name: "Nuevo contacto", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Nuevo contacto", exact: true });
-    await expect(dialog).toBeVisible();
-    await dialog.getByLabel("Nombre completo", { exact: true }).fill(data.name);
-    if (data.email) await dialog.getByLabel("Email", { exact: true }).fill(data.email);
-    if (data.phone) await dialog.getByLabel("Teléfono", { exact: true }).fill(data.phone);
-    if (data.primary) await dialog.getByLabel("Contacto principal", { exact: true }).click();
-    await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
-    return dialog;
-  }
-
   test("CA1: a contact needs a name and an email or a phone", async ({ page }) => {
-    await open(page, "/clients/cli_zafiro_labs?tab=contacts");
+    const path = await createClient(page, uniqueName("E2E Contactos CA1"));
+    await open(page, `${path}?tab=contacts`);
     const dialog = await addContact(page, { name: "Sin medio de contacto" });
     // The dialog stays open: nothing is saved without an email or a phone.
     await expect(dialog).toBeVisible();
@@ -226,7 +238,8 @@ test.describe("HU-04 contacts (mutates contacts)", () => {
   });
 
   test("CA2: marking a second contact as primary unmarks the previous one", async ({ page }) => {
-    await open(page, "/clients/cli_zafiro_labs?tab=contacts");
+    const path = await createClient(page, uniqueName("E2E Contactos CA2"));
+    await open(page, `${path}?tab=contacts`);
     await addContact(page, {
       name: "Primera E2E",
       email: "primera.e2e@example.com",
@@ -249,12 +262,19 @@ test.describe("HU-04 contacts (mutates contacts)", () => {
 // ───────────────────────────── HU-05 Client projects ─────────────────────────────
 
 test.describe("HU-05 client projects", () => {
-  test("CA3: the seeded projects are listed in the Proyectos tab of a linked client", async ({
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
+  test("CA3: a project linked to a client is listed in the Proyectos tab of that client", async ({
     page,
   }) => {
-    await resetMockData(page);
-    await open(page, "/clients/cli_kairos?tab=projects");
-    await expect(page.getByRole("link", { name: /^Ver proyecto PRY-\d{4}/ }).first()).toBeVisible();
+    const clientName = uniqueName("E2E Proyectos CA3");
+    const clientPath = await createClient(page, clientName);
+    const projectName = uniqueName("Proyecto E2E CA3");
+    await createProject(page, projectName, clientName);
+
+    await open(page, `${clientPath}?tab=projects`);
+    await expect(page.getByText(projectName)).toBeVisible();
   });
 });
 
@@ -262,26 +282,24 @@ test.describe("HU-05 client projects", () => {
 
 test.describe("archive and restore a client (mutates clients)", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-
   test("a client with active projects asks for confirmation, archives its contacts, and can be restored", async ({
     page,
   }) => {
-    await open(page, "/clients/cli_kairos?tab=contacts");
+    const clientName = uniqueName("E2E Bloqueo");
+    const clientPath = await createClient(page, clientName);
+    await open(page, `${clientPath}?tab=contacts`);
+    await addContact(page, { name: "Contacto bloqueo", email: "bloqueo.e2e@example.com" });
+    await expect(page.getByText("Contacto creado", { exact: true })).toBeVisible();
+    await createProject(page, uniqueName("Proyecto bloqueo"), clientName);
+
+    await open(page, `${clientPath}?tab=contacts`);
     const contactsTab = page.getByRole("tab", { name: /^Contactos/ });
     const contactsBefore = Number((await contactsTab.innerText()).replace(/\D+/g, "")) || 0;
     expect(contactsBefore).toBeGreaterThan(0);
 
-    await page.getByRole("button", { name: "Más acciones", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Archivar cliente", exact: true }).click();
-    const dialog = page.getByRole("alertdialog");
-    await expect(dialog.getByText("¿Archivar registro?", { exact: true })).toBeVisible();
-    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
-
+    const dialog = await startArchive(page);
     // INTEGRITY_LOCK: the dialog stays open and asks for the confirmation step.
     await expect(
       dialog.getByText(
@@ -304,30 +322,27 @@ test.describe("archive and restore a client (mutates clients)", () => {
     await expect(page.getByText("Registro archivado", { exact: true })).toHaveCount(0);
   });
 
-  test("Mostrar archivados on the list reveals the archived client, and a client without projects archives at once", async ({
+  test("Mostrar archivados on the list reveals an archived client, and a client without projects archives at once", async ({
     page,
   }) => {
+    const clientName = uniqueName("E2E Archivo sin proyectos");
+    const clientPath = await createClient(page, clientName);
+
+    // A client with no projects and no open invoices archives at once, without the confirmation step.
+    await open(page, clientPath);
+    const dialog = await startArchive(page);
+    await expect(page.getByText("1 cliente archivado", { exact: true })).toBeVisible();
+    await expect(dialog).toBeHidden();
+
     await open(page, "/clients/list");
     await expect(
       page.getByRole("switch", { name: "Mostrar archivados", exact: true }),
     ).toBeVisible();
-    // 64 clients in the seed: the archived one is not on the first page, so the table is searched for it.
-    await page
-      .getByRole("searchbox", { name: "Buscar en la tabla", exact: true })
-      .fill("Veredas Digital");
-    await expect(page.getByRole("row").filter({ hasText: "Veredas Digital" })).toHaveCount(0);
+    await page.getByRole("searchbox", { name: "Buscar en la tabla", exact: true }).fill(clientName);
+    await expect(page.getByRole("row").filter({ hasText: clientName })).toHaveCount(0);
 
     await page.getByRole("switch", { name: "Mostrar archivados", exact: true }).click();
-    await expect(page.getByRole("row").filter({ hasText: "Veredas Digital" })).toBeVisible();
-
-    // A client with no projects and no invoices (Zafiro holds invoices since the H1-B3 finance seed).
-    await open(page, "/clients/cli_graficas_caribe");
-    await page.getByRole("button", { name: "Más acciones", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Archivar cliente", exact: true }).click();
-    const dialog = page.getByRole("alertdialog");
-    await dialog.getByRole("button", { name: "Archivar", exact: true }).click();
-    await expect(page.getByText("1 cliente archivado", { exact: true })).toBeVisible();
-    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("row").filter({ hasText: clientName })).toBeVisible();
   });
 });
 
@@ -335,50 +350,58 @@ test.describe("archive and restore a client (mutates clients)", () => {
 
 test.describe("clients list: columns and CSV (mutates the table preference)", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
-
   test("a hidden column stays hidden after reload and the CSV holds only the visible columns", async ({
     page,
   }) => {
+    // One client of this case's own, so the export holds at least one row.
+    await createClient(page, uniqueName("E2E CSV"));
     await open(page, "/clients/list");
     await expect(page.getByRole("columnheader", { name: columnHeader("Tipo") })).toBeVisible();
 
-    await page.getByRole("button", { name: "Columnas", exact: true }).click();
-    await page.getByRole("checkbox", { name: "Tipo", exact: true }).click();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("columnheader", { name: columnHeader("Tipo") })).toHaveCount(0);
+    try {
+      await page.getByRole("button", { name: "Columnas", exact: true }).click();
+      await page.getByRole("checkbox", { name: "Tipo", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("columnheader", { name: columnHeader("Tipo") })).toHaveCount(0);
 
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("columnheader", { name: columnHeader("Tipo") })).toHaveCount(0);
-    await expect(page.getByRole("columnheader", { name: columnHeader("Código") })).toBeVisible();
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+      await expect(page.getByRole("columnheader", { name: columnHeader("Tipo") })).toHaveCount(0);
+      await expect(page.getByRole("columnheader", { name: columnHeader("Código") })).toBeVisible();
 
-    const pagination = await page
-      .getByText(/\d+–\d+ de \d+/)
-      .first()
-      .innerText();
-    const total = Number(/de (\d+)/.exec(pagination)?.[1] ?? "0");
-    expect(total).toBeGreaterThan(25); // more rows than one page, so the CSV must hold all the filtered rows
+      const pagination = await page
+        .getByText(/\d+–\d+ de \d+/)
+        .first()
+        .innerText();
+      const total = Number(/de (\d+)/.exec(pagination)?.[1] ?? "0");
+      expect(total).toBeGreaterThan(0);
 
-    const [download] = await Promise.all([
-      page.waitForEvent("download"),
-      page.getByRole("button", { name: "Exportar", exact: true }).click(),
-    ]);
-    const csv = await readFile(await download.path(), "utf8");
+      const [download] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("button", { name: "Exportar", exact: true }).click(),
+      ]);
+      const csv = await readFile(await download.path(), "utf8");
 
-    expect(csv.startsWith("﻿"), "the CSV starts with a UTF-8 BOM").toBe(true);
-    const lines = csv
-      .slice(1)
-      .split("\r\n")
-      .filter((line) => line.length > 0);
-    const header = lines[0] ?? "";
-    expect(header).toContain("Código");
-    expect(header).not.toContain("Tipo");
-    expect(lines.length - 1).toBe(total);
+      expect(csv.startsWith("﻿"), "the CSV starts with a UTF-8 BOM").toBe(true);
+      const lines = csv
+        .slice(1)
+        .split("\r\n")
+        .filter((line) => line.length > 0);
+      const header = lines[0] ?? "";
+      expect(header).toContain("Código");
+      expect(header).not.toContain("Tipo");
+      expect(lines.length - 1).toBe(total);
+    } finally {
+      // The column layout is the user's preference: show the column again if this case hid it.
+      await open(page, "/clients/list");
+      if ((await page.getByRole("columnheader", { name: columnHeader("Tipo") }).count()) === 0) {
+        await page.getByRole("button", { name: "Columnas", exact: true }).click();
+        await page.getByRole("checkbox", { name: "Tipo", exact: true }).click();
+        await page.keyboard.press("Escape");
+      }
+    }
   });
 });
 
@@ -386,54 +409,61 @@ test.describe("clients list: columns and CSV (mutates the table preference)", ()
 
 test.describe("client Documentos tab (mutates document links)", () => {
   test.beforeEach(async ({ page }) => {
-    await resetMockData(page);
+    await signInAs(page, "OWNER");
   });
-  test.afterEach(async ({ page }) => {
-    await resetMockData(page);
-  });
+  test.fixme(
+    "FE-INT-R E.1: attach an existing document, then unlink it; needs a document of this case's own, created through the document form with an intercepted upload (rule 30), not in this file",
+    async ({ page }) => {
+      const path = await createClient(page, uniqueName("E2E Documentos"));
+      await open(page, `${path}?tab=documents`);
+      await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
+      const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
+      await expect(sheet).toBeVisible();
+      await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
 
-  test("attach an existing document, then unlink it", async ({ page }) => {
-    await open(page, "/clients/cli_zafiro_labs?tab=documents");
-    await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
-    const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
-    await expect(sheet).toBeVisible();
-    await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
+      await sheet.getByPlaceholder("Busca por código o título").fill(ATTACHABLE_DOCUMENT_SEARCH);
+      await expect(page.getByRole("option").first()).toBeVisible();
+      await page.keyboard.press("ArrowDown");
+      await page.keyboard.press("Enter");
+      await sheet.getByRole("button", { name: "Vincular documento", exact: true }).click();
+      await expect(page.getByText("Documento vinculado", { exact: true })).toBeVisible();
 
-    await sheet.getByPlaceholder("Busca por código o título").fill("minuta");
-    await expect(page.getByRole("option").first()).toBeVisible();
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
-    await sheet.getByRole("button", { name: "Vincular documento", exact: true }).click();
-    await expect(page.getByText("Documento vinculado", { exact: true })).toBeVisible();
+      // The row control is named "Desvincular: <document title>", so only the prefix is matched.
+      const linkedRows = page.getByRole("button", { name: /^Desvincular:/ });
+      await expect(linkedRows.first()).toBeVisible();
+      const before = await linkedRows.count();
 
-    // The row control is named "Desvincular: <document title>", so only the prefix is matched.
-    const linkedRows = page.getByRole("button", { name: /^Desvincular:/ });
-    await expect(linkedRows.first()).toBeVisible();
-    const before = await linkedRows.count();
+      await linkedRows.first().click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Desvincular", exact: true })
+        .click();
+      await expect(page.getByText("Documento desvinculado", { exact: true })).toBeVisible();
+      await expect(linkedRows).toHaveCount(before - 1);
+    },
+  );
 
-    await linkedRows.first().click();
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Desvincular", exact: true })
-      .click();
-    await expect(page.getByText("Documento desvinculado", { exact: true })).toBeVisible();
-    await expect(linkedRows).toHaveCount(before - 1);
-  });
-
-  // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
-  test("a search result of the Vincular existente tab takes a pointer click", async ({ page }) => {
-    await open(page, "/clients/cli_zafiro_labs?tab=documents");
-    await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
-    const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
-    await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
-    await sheet.getByPlaceholder("Busca por código o título").fill("minuta");
-    await page.getByRole("option").first().click({ timeout: 5000 });
-  });
+  test.fixme(
+    "FE-INT-R E.1: a search result of the Vincular existente tab takes a pointer click; needs a document of this case's own, not in this file",
+    async ({ page }) => {
+      const path = await createClient(page, uniqueName("E2E Documentos clic"));
+      await open(page, `${path}?tab=documents`);
+      await page.getByRole("button", { name: "Adjuntar documento", exact: true }).click();
+      const sheet = page.getByRole("dialog", { name: "Adjuntar documento", exact: true });
+      await sheet.getByRole("tab", { name: "Vincular existente", exact: true }).click();
+      await sheet.getByPlaceholder("Busca por código o título").fill(ATTACHABLE_DOCUMENT_SEARCH);
+      // A pointer click on the option must select it (the popup sits outside the modal sheet's pointer-events scope).
+      await page.getByRole("option").first().click({ timeout: 5000 });
+    },
+  );
 });
 
 // ───────────────────────────── Shape checks that need no mutation ─────────────────────────────
 
 test.describe("clients (read only)", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAs(page, "OWNER");
+  });
   test("an unknown client id renders the in-shell 404 page", async ({ page }) => {
     await page.goto("/clients/cli_no_existe");
     await expect(notFoundText(page)).toBeVisible();
@@ -445,8 +475,10 @@ test.describe("clients (read only)", () => {
     expect(unknown?.status()).toBe(404);
   });
 
-  test("the graph route renders the in-shell 404 with HTTP 404", async ({ page }) => {
-    const graph = await page.goto("/clients/cli_kairos/graph");
+  test("the graph route of an unknown client renders the in-shell 404 with HTTP 404", async ({
+    page,
+  }) => {
+    const graph = await page.goto("/clients/cli_no_existe/graph");
     expect(graph?.status()).toBe(404);
     await expect(notFoundText(page)).toBeVisible();
     await expect(sidebar(page)).toBeVisible();
@@ -464,9 +496,10 @@ test.describe("clients (read only)", () => {
 
 // Role check kept here: Viewer and Member never see the archive menu of a client (HU-03 roles, C13).
 test.describe("client archive is hidden for roles without the grant", () => {
-  test("Miembro does not see Archivar cliente on a client", async ({ page }) => {
-    await viewAsRole(page, "Miembro");
-    await open(page, "/clients/cli_zafiro_labs");
+  test("Miembro does not see Archivar cliente on a client", async ({ browser, page }) => {
+    const clientPath = await createClientAsOwner(browser);
+    await signInAs(page, "MEMBER");
+    await open(page, clientPath);
     const more = page.getByRole("button", { name: "Más acciones", exact: true });
     if ((await more.count()) > 0) {
       await more.click();

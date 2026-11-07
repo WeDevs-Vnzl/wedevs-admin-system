@@ -17,7 +17,12 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { MAX_RATE_CSV_ROWS, type ImportRatesCsvResult } from "@/lib/validators/catalogs";
 import { importRatesCsvAction } from "../actions";
-import { mergeImportErrors, parseRatesCsv, type ParsedRatesCsv } from "../rates-csv";
+import {
+  mergeImportErrors,
+  parseRatesCsv,
+  rowErrorsFromFieldErrors,
+  type ParsedRatesCsv,
+} from "../rates-csv";
 
 type ImportRatesDialogProps = {
   open: boolean;
@@ -68,6 +73,9 @@ function ImportRatesForm({ onOpenChange, onImported }: ImportRatesDialogProps) {
     const result = await importRatesCsvAction({ rows: ready.rows, overwrite });
     setSubmitting(false);
     if (!result.ok) {
+      // A 422 may name the rejected rows (`rows.<i>.<field>`): show them on their CSV rows.
+      const rejected = rowErrorsFromFieldErrors(result.error.fieldErrors);
+      if (rejected.length > 0) setErrors(mergeImportErrors(ready.errors, ready.lines, rejected));
       toast.error(tErrors(result.error.code));
       return;
     }

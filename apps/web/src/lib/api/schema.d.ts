@@ -2966,7 +2966,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "AccountFlowReportDto";
+            reportId: "ACCOUNT_FLOW";
             rows: {
                 account: components["schemas"]["EntityRef"];
                 inflow: string;
@@ -3281,7 +3281,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "BilledVsCollectedReportDto";
+            reportId: "BILLED_VS_COLLECTED";
         };
         BillingPageResponseDto: {
             installments: {
@@ -3571,7 +3571,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "CollectedByMonthReportDto";
+            reportId: "COLLECTED_BY_MONTH";
         };
         CollectionsByMethodReportDto: {
             /** @constant */
@@ -3584,7 +3584,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "CollectionsByMethodReportDto";
+            reportId: "COLLECTIONS_BY_METHOD";
             rows: {
                 collected: string;
                 methodCode: string;
@@ -4682,7 +4682,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "ExpensesByMonthCategoryReportDto";
+            reportId: "EXPENSES_BY_MONTH_CATEGORY";
         };
         ExpensesOverviewDto: {
             byCategory: {
@@ -5247,7 +5247,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "NetResultMonthlyReportDto";
+            reportId: "NET_RESULT_MONTHLY";
         };
         NoteDetailDto: {
             archivedAt: string | null;
@@ -5882,7 +5882,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "ReceivablesAgingReportDto";
+            reportId: "RECEIVABLES_AGING";
             rows: {
                 buckets: {
                     d0_30: string;
@@ -6083,7 +6083,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "RevenueByClientReportDto";
+            reportId: "REVENUE_BY_CLIENT";
             rows: {
                 billed: string;
                 client: components["schemas"]["EntityRef"];
@@ -6101,7 +6101,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "RevenueByProjectReportDto";
+            reportId: "REVENUE_BY_PROJECT";
             rows: {
                 collected: string;
                 margin: string | null;
@@ -6466,7 +6466,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            reportId: "TaxesRegisteredReportDto";
+            reportId: "TAXES_REGISTERED";
             totals: {
                 igtf: string;
                 islrWithheld: string;

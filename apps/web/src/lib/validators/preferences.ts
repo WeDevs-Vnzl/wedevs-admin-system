@@ -139,15 +139,3 @@ export const userPreferencesSchema = z.object({
   tableColumns: z.record(tableIdSchema, tableColumnsPreferenceSchema),
 });
 export type UserPreferencesDTO = z.infer<typeof userPreferencesSchema>;
-
-// ───────────────────────────── Services ─────────────────────────────
-
-/**
- * Preference services (Settings → Preferencias and the data-table column menu). Every service is
- * `fn(ctx, input) → Promise<DTO>` (C9, C11). They only ever touch the acting user's own rows.
- */
-export type PreferencesService<Ctx = unknown> = {
-  getPreferences: (ctx: Ctx, input: GetPreferencesInput) => Promise<UserPreferencesDTO>;
-  setPreference: (ctx: Ctx, input: SetPreferenceInput) => Promise<UserPreferencesDTO>;
-  resetPreference: (ctx: Ctx, input: ResetPreferenceInput) => Promise<UserPreferencesDTO>;
-};

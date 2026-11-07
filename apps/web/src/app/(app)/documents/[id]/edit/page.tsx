@@ -9,7 +9,7 @@ import {
   listDocumentCategories,
 } from "@/features/documents/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
-import { ServiceError } from "@/server/context";
+import { ServiceError } from "@/lib/service-error";
 
 type EditDocumentPageProps = {
   params: Promise<{ id: string }>;
