@@ -31,6 +31,18 @@ export const TRASHABLE_ENTITY_TYPE_VALUES = [
   "DOCUMENT",
   "NOTE",
 ] as const satisfies readonly z.infer<typeof entityTypeSchema>[];
+/**
+ * The types the trash offers as facets: the contexts that register a restore handler in the BE (platform
+ * trash module). Other trashable types exist in the schema but are not listed.
+ */
+export const RESTORABLE_ENTITY_TYPE_VALUES = [
+  "CLIENT",
+  "CONTACT",
+  "PROJECT",
+  "NOTE",
+  "INVOICE",
+  "DOCUMENT",
+] as const satisfies readonly (typeof TRASHABLE_ENTITY_TYPE_VALUES)[number][];
 export const trashableEntityTypeSchema = z.enum(TRASHABLE_ENTITY_TYPE_VALUES);
 export type TrashableEntityType = z.infer<typeof trashableEntityTypeSchema>; // MOCK — until cleanup
 

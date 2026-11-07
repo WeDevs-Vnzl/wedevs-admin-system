@@ -14,7 +14,7 @@ import {
   type FacetConfig,
 } from "@/components/ui/data-table";
 import type { ListQuery } from "@/lib/validators/common";
-import { TRASHABLE_ENTITY_TYPE_VALUES, type TrashRowDTO } from "@/lib/validators/trash";
+import { RESTORABLE_ENTITY_TYPE_VALUES, type TrashRowDTO } from "@/lib/validators/trash";
 import { listTrashAction, restoreFromTrashAction } from "../actions";
 import { trashFilterOf } from "./trash-table-query";
 
@@ -160,7 +160,7 @@ export function TrashTable({ initialRows, initialTotal }: TrashTableProps) {
         id: "entityType",
         label: t("facets.entityType"),
         kind: "options",
-        options: TRASHABLE_ENTITY_TYPE_VALUES.map((value) => ({ value, label: tTypes(value) })),
+        options: RESTORABLE_ENTITY_TYPE_VALUES.map((value) => ({ value, label: tTypes(value) })),
       },
       {
         id: "deleted",
