@@ -50,7 +50,8 @@ async function createPublishedPrd(page: Page, title: string, versions: number): 
   await page.getByRole("combobox", { name: "Tipo de documento", exact: true }).click();
   await page.getByRole("option", { name: /^PRD$/ }).click();
   await page.getByRole("button", { name: "Crear documento", exact: true }).click();
-  await expect(page).toHaveURL(/\/documents\/(?!new$)[^/?#]+$/);
+  // A new document opens its editor (`/documents/<id>/editor`), as `support/ui-data.ts` accepts.
+  await expect(page).toHaveURL(/\/documents\/(?!new$)[^/?#]+(?:\/editor)?$/);
   const id = idFromUrl(page.url(), "documents");
   for (let version = 1; version <= versions; version += 1) {
     await page.goto(`/documents/${id}/editor`);

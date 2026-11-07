@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { appBaseUrl } from "./support/app";
+import { namePrefix } from "./support/accessible-names";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import {
@@ -63,8 +64,8 @@ async function newInvoice(page: Page, tag: string, price = "100") {
 }
 
 async function pickClient(page: Page) {
-  await page.locator("#payment-client").click();
-  await page.getByRole("option", { name: fixture.clientName }).click();
+  await page.locator("#payment-client").fill(fixture.clientName);
+  await page.getByRole("option", { name: namePrefix(fixture.clientName) }).click();
 }
 
 async function pickAccountAndMethod(page: Page, account: string, currency: string, method: string) {
@@ -119,9 +120,7 @@ test.describe("FE-INT-3 payments", () => {
     await pickClient(page);
     await pickAccountAndMethod(page, fixture.usdAccount, "USD", "Zelle");
     await page.locator("#payment-amount").fill("10");
-    await expect(
-      page.getByText("Este método exige la referencia de la operación."),
-    ).toBeVisible();
+    await expect(page.getByText("Este método exige la referencia de la operación.")).toBeVisible();
     await submit(page).click();
     await expect(
       page.getByText("La referencia es obligatoria para este método de pago"),
@@ -227,10 +226,7 @@ test.describe("FE-INT-3 payments", () => {
     await expect(page.getByText("Este pago no está asignado a ninguna factura.")).toBeVisible();
   });
 
-  test.fixme(
-    "FE-INT-R E.3: confirming a payment needs a PENDIENTE_VERIFICACION payment, which only the Stripe/Binance webhooks create (live third-party service); covered by the BE e2e and the batch-close manual check",
-    async () => {},
-  );
+  test.fixme("FE-INT-R E.3: confirming a payment needs a PENDIENTE_VERIFICACION payment, which only the Stripe/Binance webhooks create (live third-party service); covered by the BE e2e and the batch-close manual check", async () => {});
 
   test("@authenticated HU-13: voiding asks for a reason; the voided payment's edit route goes back to its detail", async ({
     page,

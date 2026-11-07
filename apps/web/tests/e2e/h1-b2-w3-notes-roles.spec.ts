@@ -151,8 +151,10 @@ test.describe("HU-23 notes (read only)", () => {
         clientId: clientPath.split("/").pop() ?? "",
         title: uniqueName("Nota autor"),
       });
-      await expect(page.getByText("Autor", { exact: true }).first()).toBeVisible();
-      await expect(page.getByText("Creada", { exact: true }).first()).toBeVisible();
+      // The note page has no "Autor"/"Creada" labels: its byline is "<author> · <creation date>" (a time element).
+      const byline = page.locator("main").getByRole("paragraph").filter({ has: page.locator("time") }).first();
+      await expect(byline).toHaveText(/\S.*·\s*\S/);
+      await expect(byline.locator("time")).toBeVisible();
     },
   );
 

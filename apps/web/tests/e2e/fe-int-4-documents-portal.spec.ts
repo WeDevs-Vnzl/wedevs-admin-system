@@ -2,7 +2,12 @@ import { randomBytes } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
-import { namePrefix } from "./support/accessible-names";
+import {
+  caracasToday,
+  createClientViaUi,
+  createProjectViaUi,
+  pickDateViaUi,
+} from "./support/ui-data";
 
 // FE-INT-R E.2 documents and portal E2E (old 4.5). Back office (`@authenticated`): HU-18 CA1–CA4, HU-19 CA1 and CA4,
 // HU-20 CA1–CA2, HU-21 CA1–CA2, HU-22 CA1–CA2 (create a link; a key-protected document), HU-28 for a document.
@@ -75,28 +80,20 @@ async function publishMarkdown(page: Page, id: string, source: string, version: 
 
 /** A client and a project of this run, created through the UI. Returns their names and ids. */
 async function createClientAndProject(page: Page) {
+  // The shared helpers wait for hydration and for a record URL (a `/clients/new` URL is not a saved client).
   const clientName = uniq("cliente");
-  await page.goto("/clients/new");
-  await page.getByLabel("Nombre comercial", { exact: true }).fill(clientName);
-  await page
-    .getByLabel("Identificador fiscal", { exact: true })
-    .fill(`J-${Math.floor(10_000_000 + Math.random() * 89_999_999)}-1`);
-  await page.getByLabel("Dirección", { exact: true }).fill("Calle E2E 1");
-  await page.locator("#client-phone").fill("+57 300 123 4567");
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/clients\/[^/?#]+$/);
-  const clientId = idFromUrl(page.url(), "clients");
+  const clientId = await createClientViaUi(
+    page,
+    clientName,
+    `J-${Math.floor(10_000_000 + Math.random() * 89_999_999)}-1`,
+  );
 
   const projectName = uniq("proyecto");
-  await page.goto("/projects/new");
-  await page.getByLabel("Nombre", { exact: true }).fill(projectName);
-  await page.getByLabel("Resumen", { exact: true }).fill("Proyecto E2E de documentos");
-  await page.getByRole("combobox", { name: "Clientes", exact: true }).fill(clientName);
-  await page.getByRole("option", { name: namePrefix(clientName) }).click();
-  await page.getByRole("textbox", { name: `Rol: ${clientName}`, exact: true }).fill("Contratante");
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/projects\/[a-z0-9]{20,}/);
-  const projectId = idFromUrl(page.url(), "projects");
+  const projectId = await createProjectViaUi(page, {
+    name: projectName,
+    summary: "Proyecto E2E de documentos",
+    clients: [{ clientName, role: "Contratante" }],
+  });
   return { clientName, clientId, projectName, projectId };
 }
 
@@ -212,9 +209,9 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     await dialog.getByRole("radio", { name: oneOf("Firmado", "Signed") }).click();
     await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel(oneOf("Fecha de firma", "Signing date"), { exact: true }).fill(
-      new Date().toISOString().slice(0, 10),
-    );
+    // The signing date is a DateField (a button that opens a calendar), not a text input: `fill` cannot set it.
+    const signedAt = dialog.getByLabel(oneOf("Fecha de firma", "Signing date"), { exact: true });
+    await pickDateViaUi(page, signedAt, caracasToday());
     await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     await expect(page.getByText(oneOf("Estado actualizado", "Status updated"))).toBeVisible();
 
@@ -301,7 +298,8 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     page,
   }) => {
     await signInAs(page, "OWNER");
-    const id = await createDocument(page, uniq("compartido"), /^PRD$/);
+    const title = uniq("compartido");
+    const id = await createDocument(page, title, /^PRD$/);
     await publishMarkdown(page, id, "# Documento compartido", 1);
 
     await page.goto(`/documents/${id}?tab=shares`);
@@ -315,9 +313,11 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     // The one-time keys dialog shows the key once.
     await expect(page.getByText("Copie ahora las claves de acceso")).toBeVisible();
     await page.getByRole("button", { name: "Ya copié las claves", exact: true }).click();
-    // CA1: the open link points at /s/<token>, a token of 43 characters.
-    await expect(page.getByRole("link", { name: "Abrir enlace", exact: true })).toHaveAttribute(
-      "href",
+    // CA1: the created link is /s/<token>, 43 characters. Its "Abrir enlace" is a toast button that only lives a few
+    // seconds, so the share's detail page (reached from the document's Enlaces del portal list) shows the URL instead.
+    await page.goto(`/documents/${id}?tab=shares`);
+    await page.getByRole("link", { name: title, exact: true }).click();
+    await expect(page.getByLabel(oneOf("URL pública", "Public URL"), { exact: true })).toHaveValue(
       /\/s\/[A-Za-z0-9_-]{43}$/,
     );
   });

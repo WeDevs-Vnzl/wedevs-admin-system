@@ -1,10 +1,8 @@
 import "server-only";
 import { listAccounts } from "@/features/accounts/queries";
 import { getFiscalSettings, listPaymentMethods } from "@/features/catalogs/queries";
-import { listClients } from "@/features/clients/queries";
 import type {
   PaymentFormAccount,
-  PaymentFormClient,
   PaymentFormMethod,
   PaymentFormProps,
 } from "./components/payment-form";
@@ -14,7 +12,6 @@ import type {
 // reads the inactive ones so the payment's own account or method is not blanked (rule 23).
 
 export type PaymentFormOptions = {
-  clients: PaymentFormClient[];
   accounts: PaymentFormAccount[];
   methods: PaymentFormMethod[];
   fiscal: PaymentFormProps["fiscal"];
@@ -24,14 +21,12 @@ export async function getPaymentFormOptions(
   options: { includeInactive?: boolean } = {},
 ): Promise<PaymentFormOptions> {
   const includeInactive = options.includeInactive ?? false;
-  const [clients, accounts, methods, fiscal] = await Promise.all([
-    listClients({ pageSize: 100 }),
+  const [accounts, methods, fiscal] = await Promise.all([
     listAccounts({ pageSize: 100 }),
     listPaymentMethods(includeInactive ? { includeInactive: true } : {}),
     getFiscalSettings(),
   ]);
   return {
-    clients: clients.items.map((client) => ({ id: client.id, name: client.tradeName })),
     accounts: accounts.items
       .filter((account) => includeInactive || account.active)
       .map(({ id, name, currency, active }) => ({ id, name, currency, active })),

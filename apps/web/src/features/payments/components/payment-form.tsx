@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Uploader } from "@/components/ui/uploader";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
+import { ClientPicker, type ClientPickerValue } from "@/features/clients/components/client-picker";
 import { lookupRateAction } from "@/features/catalogs/actions";
 import { uploadAdapter } from "@/features/files/upload-adapter";
 import {
@@ -80,7 +81,6 @@ export type PaymentFormMethod = {
 };
 
 export type PaymentFormProps = {
-  clients: PaymentFormClient[];
   /** Active accounts only: a payment enters an active account. */
   accounts: PaymentFormAccount[];
   /** Active methods, with their reference and IGTF rules. */
@@ -88,8 +88,8 @@ export type PaymentFormProps = {
   fiscal: { igtfRate: MoneyString; igtfCurrencies: string[] };
   /** Business "today" (America/Caracas), computed on the server. */
   today: DateOnly;
-  /** Client preselected from `?invoiceId=`, with its open invoices. */
-  initialClientId?: string;
+  /** Client preselected from `?invoiceId=` (named by the page), with its open invoices. */
+  initialClient?: PaymentFormClient | null;
   initialOpenInvoices?: OpenInvoiceOption[];
   /** Invoice preselected by `?invoiceId=`: it is ticked, with its balance as the amount. */
   initialInvoiceId?: string;
@@ -142,12 +142,11 @@ function pickerOptions<T extends { id: string; active?: boolean }>(
  * (DT-213) without the allocations section.
  */
 export function PaymentForm({
-  clients,
   accounts,
   methods,
   fiscal,
   today,
-  initialClientId,
+  initialClient = null,
   initialOpenInvoices = [],
   initialInvoiceId,
   payment,
@@ -162,6 +161,9 @@ export function PaymentForm({
   const [saving, setSaving] = useState(false);
   const [openInvoices, setOpenInvoices] = useState<OpenInvoiceOption[]>(initialOpenInvoices);
   const [igtfEdited, setIgtfEdited] = useState(editing);
+  const [client, setClient] = useState<ClientPickerValue | null>(
+    payment ? { id: payment.client.id, name: payment.client.label } : initialClient,
+  );
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   const [allocationsError, setAllocationsError] = useState<string | undefined>();
   const [duplicateResult, setDuplicateResult] = useState<{
@@ -202,7 +204,7 @@ export function PaymentForm({
           receiptFileId: payment.receiptFileId ?? undefined,
         }
       : {
-          clientId: initialClientId ?? clients[0]?.id ?? "",
+          clientId: initialClient?.id ?? "",
           date: today,
           accountId: initialAccount?.id ?? "",
           methodId: methods[0]?.id ?? "",
@@ -231,11 +233,6 @@ export function PaymentForm({
   const reference = useWatch({ control: form.control, name: "reference" });
 
   const hint = ` · ${t("form.inactiveHint")}`;
-  const clientOptions = pickerOptions(
-    clients,
-    (item) => item.name,
-    payment ? { id: payment.client.id, label: payment.client.label } : undefined,
-  );
   const accountOptions = pickerOptions(
     accounts,
     (item) => `${item.name} (${item.currency})`,
@@ -318,11 +315,17 @@ export function PaymentForm({
     });
   }, [amount, igtfAmount, feeAmount, applied, editing, payment]);
 
-  async function changeClient(nextClientId: string) {
+  async function changeClient(next: ClientPickerValue | null) {
+    setClient(next);
+    const nextClientId = next?.id ?? "";
     form.setValue("clientId", nextClientId, { shouldValidate: true });
     if (editing) return;
     setApplied({});
     setRowErrors({});
+    if (!nextClientId) {
+      setOpenInvoices([]);
+      return;
+    }
     const result = await listOpenInvoicesAction({ clientId: nextClientId });
     setOpenInvoices(result.ok ? result.data : []);
   }
@@ -501,22 +504,14 @@ export function PaymentForm({
           <div className="grid items-start gap-x-4 gap-y-5 @lg:grid-cols-2">
             <Field data-invalid={errors.clientId ? true : undefined}>
               <FieldLabel htmlFor="payment-client">{t("form.fields.client")}</FieldLabel>
-              <Select value={clientId} onValueChange={changeClient} disabled={locked}>
-                <SelectTrigger
-                  id="payment-client"
-                  className="w-full"
-                  aria-invalid={errors.clientId ? true : undefined}
-                >
-                  <SelectValue placeholder={t("form.fields.clientPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientOptions.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.label + (client.inactive ? hint : "")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ClientPicker
+                id="payment-client"
+                value={client}
+                onChange={(next) => void changeClient(next)}
+                disabled={locked}
+                placeholder={t("form.fields.clientPlaceholder")}
+                aria-invalid={errors.clientId ? true : undefined}
+              />
               <FieldError>{fieldMessage(errors.clientId?.message)}</FieldError>
             </Field>
             <Field data-invalid={errors.date ? true : undefined}>

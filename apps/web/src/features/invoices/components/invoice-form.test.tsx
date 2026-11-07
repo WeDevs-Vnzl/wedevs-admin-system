@@ -8,7 +8,12 @@ import enInvoices from "@/i18n/messages/en/invoices.json";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import enTable from "@/i18n/messages/en/table.json";
 import enValidation from "@/i18n/messages/en/validation.json";
-import { createInvoiceAction, updateInvoiceAction } from "@/features/invoices/actions";
+import { searchClientsAction } from "@/features/clients/actions";
+import {
+  createInvoiceAction,
+  listBillableInstallmentsAction,
+  updateInvoiceAction,
+} from "@/features/invoices/actions";
 import type { BillableInstallmentRow } from "@/lib/validators/invoices";
 import { multiRateInvoice } from "../test-data";
 import { InvoiceForm, type InvoiceFormProps } from "./invoice-form";
@@ -27,6 +32,7 @@ vi.mock("@/features/invoices/actions", () => ({
   updateInvoiceAction: vi.fn(),
   listBillableInstallmentsAction: vi.fn(),
 }));
+vi.mock("@/features/clients/actions", () => ({ searchClientsAction: vi.fn() }));
 
 const messages = {
   common: enCommon,
@@ -50,13 +56,12 @@ beforeEach(() => {
 });
 
 const baseProps: InvoiceFormProps = {
-  clients: [{ id: "cli_1", name: "Kairos Studio" }],
+  initialClient: { id: "cli_1", name: "Kairos Studio" },
   currencies: [{ code: "USD", name: "US dollar" }],
   ivaRates: ["16", "8", "0"],
   defaultIvaRate: "16",
   today: "2026-10-09",
   defaultDueDays: 15,
-  initialClientId: "cli_1",
   billable: [],
   preselected: [],
 };
@@ -176,5 +181,31 @@ describe("InvoiceForm create", () => {
     expect(
       screen.getByRole("checkbox", { name: "Bill the installment Anticipo 40 %" }),
     ).toBeChecked();
+  });
+});
+
+describe("InvoiceForm client picker", () => {
+  it("names the preselected client even when it is in no search page (B4)", () => {
+    renderForm({ initialClient: { id: "cli_9", name: "Nimbus Atelier" } });
+
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveValue("Nimbus Atelier");
+  });
+
+  it("searches clients by name and, on pick, loads that client's billable installments (S3)", async () => {
+    vi.mocked(searchClientsAction).mockResolvedValue({
+      ok: true,
+      data: [{ type: "CLIENT", id: "cli_2", code: "CLI-0002", label: "Nimbus Atelier" }],
+    });
+    vi.mocked(listBillableInstallmentsAction).mockResolvedValue({ ok: true, data: [] });
+    const user = userEvent.setup();
+    renderForm({ initialClient: null });
+
+    await user.type(screen.getByRole("combobox", { name: "Client" }), "Nim");
+    await user.click(await screen.findByRole("option", { name: /Nimbus Atelier/ }));
+
+    await waitFor(() =>
+      expect(listBillableInstallmentsAction).toHaveBeenCalledWith({ clientId: "cli_2" }),
+    );
+    expect(screen.getByRole("combobox", { name: "Client" })).toHaveValue("Nimbus Atelier");
   });
 });

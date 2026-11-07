@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireSessionUser: vi.fn(),
   getServerApi: vi.fn(),
-  listClients: vi.fn(),
   listAccounts: vi.fn(),
   listPaymentMethods: vi.fn(),
   getFiscalSettings: vi.fn(),
@@ -18,7 +17,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
-vi.mock("@/features/clients/queries", () => ({ listClients: mocks.listClients }));
 vi.mock("@/features/accounts/queries", () => ({ listAccounts: mocks.listAccounts }));
 vi.mock("@/features/catalogs/queries", () => ({
   listPaymentMethods: mocks.listPaymentMethods,
@@ -37,7 +35,6 @@ const render = (searchParams: Record<string, string | undefined> = {}) =>
 beforeEach(() => {
   for (const mock of Object.values(mocks)) mock.mockReset();
   mocks.requireSessionUser.mockResolvedValue(makeSessionUser("OWNER"));
-  mocks.listClients.mockResolvedValue({ items: [{ id: "cli_1", tradeName: "Kairos Studio" }] });
   mocks.listAccounts.mockResolvedValue({
     items: [
       { id: "acc_usd", name: "Zelle USD", currency: "USD", active: true },
@@ -72,7 +69,7 @@ describe("/payments/new (HU-13)", () => {
       initialOpenInvoices: [],
     });
     expect(Object.keys(element.props.fiscal).sort()).toEqual(["igtfCurrencies", "igtfRate"]);
-    expect(element.props.initialClientId).toBeUndefined();
+    expect(element.props.initialClient).toBeNull();
   });
 
   it("preselects the client and the invoice of ?invoiceId=", async () => {
@@ -88,7 +85,7 @@ describe("/payments/new (HU-13)", () => {
     mocks.getServerApi.mockResolvedValue(api);
     const element = await render({ invoiceId: "inv_1" });
     expect(element.props).toMatchObject({
-      initialClientId: "cli_1",
+      initialClient: { id: "cli_1", name: "Kairos Studio" },
       initialInvoiceId: "inv_1",
       initialOpenInvoices: [{ id: "inv_1", balance: "300.00" }],
     });
@@ -101,7 +98,7 @@ describe("/payments/new (HU-13)", () => {
     });
     mocks.getServerApi.mockResolvedValue(api);
     const element = await render({ invoiceId: "inv_paid" });
-    expect(element.props.initialClientId).toBeUndefined();
+    expect(element.props.initialClient).toBeNull();
     expect(element.props.initialInvoiceId).toBeUndefined();
     expect(element.props.initialOpenInvoices).toEqual([]);
     expect(calls.map((call) => call.path)).not.toContain("/api/v1/clients/cli_1/open-invoices");

@@ -41,13 +41,14 @@ export default async function EditInvoicePage({ params }: EditInvoicePageProps) 
       <BreadcrumbLabel segment={invoice.id} label={invoice.invoiceNumber} />
       <InvoiceForm
         invoice={invoice}
-        clients={options.clients}
         currencies={options.currencies}
         ivaRates={options.ivaRates}
         defaultIvaRate={options.defaultIvaRate}
         today={options.today}
         defaultDueDays={options.defaultDueDays}
-        initialClientId={invoice.client.id}
+        initialClient={
+          options.initialClient ?? { id: invoice.client.id, name: invoice.client.label }
+        }
         billable={options.billable}
         preselected={[]}
       />

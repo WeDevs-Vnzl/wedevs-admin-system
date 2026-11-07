@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { FormPage } from "@/components/patterns/form-page";
+import { ClientPicker, type ClientPickerValue } from "@/features/clients/components/client-picker";
 import { MoneyText } from "@/components/patterns/money-text";
 import { SectionCard } from "@/components/patterns/section-card";
 import { Button } from "@/components/ui/button";
@@ -67,12 +68,11 @@ const FIELD_NAMES = [
 ] as const;
 
 type Option = { code: string; name: string };
-type ClientOption = { id: string; name: string };
-
 export type InvoiceFormProps = {
   /** Present on `/invoices/[id]/edit`; absent on `/invoices/new`. */
   invoice?: InvoiceResponseDto;
-  clients: ClientOption[];
+  /** The client preselected from the URL (or the invoice's own), named by the server; `null` when none. */
+  initialClient: ClientPickerValue | null;
   currencies: Option[];
   /** Allowed VAT rates of the fiscal settings, and the default one for a new line. */
   ivaRates: readonly string[];
@@ -80,7 +80,6 @@ export type InvoiceFormProps = {
   today: DateOnly;
   defaultDueDays: number;
   /** "Facturar cuotas": the client's pending installments, and the ones preselected from the URL. */
-  initialClientId: string;
   billable: BillableInstallmentRow[];
   preselected: BillableInstallmentRow[];
 };
@@ -154,13 +153,12 @@ function previewTotals(
  */
 export function InvoiceForm({
   invoice,
-  clients,
+  initialClient,
   currencies,
   ivaRates,
   defaultIvaRate,
   today,
   defaultDueDays,
-  initialClientId,
   billable: initialBillable,
   preselected,
 }: InvoiceFormProps) {
@@ -171,6 +169,7 @@ export function InvoiceForm({
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [billable, setBillable] = useState(initialBillable);
+  const [client, setClient] = useState<ClientPickerValue | null>(initialClient);
   // BE errors of the adjustments (by rate, they are not form fields) and the invoice that holds a taken number.
   const [adjustmentErrors, setAdjustmentErrors] = useState<Record<string, string>>({});
   const [takenBy, setTakenBy] = useState<EntityRef | undefined>();
@@ -215,7 +214,7 @@ export function InvoiceForm({
           otherWithheldNote: invoice.totals.otherWithheldNote ?? "",
         }
       : {
-          clientId: initialClientId,
+          clientId: initialClient?.id ?? "",
           invoiceNumber: "",
           controlNumber: "",
           issueDate: today,
@@ -255,11 +254,17 @@ export function InvoiceForm({
   const fieldMessage = (message: string | undefined) =>
     message ? tRoot(message as never) : undefined;
 
-  async function onClientChange(clientId: string) {
+  async function onClientChange(next: ClientPickerValue | null) {
+    setClient(next);
+    const clientId = next?.id ?? "";
     form.setValue("clientId", clientId, { shouldDirty: true });
     // Installment lines belong to the previous client: they go, and the new client's options come in.
     for (let index = lines.fields.length - 1; index >= 0; index -= 1) {
       if (lines.fields[index]?.installmentId) lines.remove(index);
+    }
+    if (!clientId) {
+      setBillable([]);
+      return;
     }
     const result = await listBillableInstallmentsAction({ clientId });
     setBillable(result.ok ? result.data : []);
@@ -322,8 +327,6 @@ export function InvoiceForm({
   }
 
   const backHref = invoice ? `/invoices/${invoice.id}` : "/invoices/list";
-  const clientName = (id: string) => clients.find((client) => client.id === id)?.name;
-
   return (
     <form id="invoice-form" noValidate onSubmit={form.handleSubmit(onSubmit)}>
       <FormPage
@@ -354,25 +357,15 @@ export function InvoiceForm({
               <Controller
                 control={form.control}
                 name="clientId"
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => void onClientChange(value)}
+                render={() => (
+                  <ClientPicker
+                    id="invoice-client"
+                    value={client}
+                    onChange={(next) => void onClientChange(next)}
                     disabled={Boolean(invoice)}
-                  >
-                    <SelectTrigger id="invoice-client" className="w-full">
-                      <SelectValue placeholder={t("form.fields.clientPlaceholder")}>
-                        {clientName(field.value)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={t("form.fields.clientPlaceholder")}
+                    aria-invalid={errors.clientId ? true : undefined}
+                  />
                 )}
               />
               <FieldError>{fieldMessage(form.formState.errors.clientId?.message)}</FieldError>

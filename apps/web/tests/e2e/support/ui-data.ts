@@ -34,7 +34,11 @@ function idFromUrl(page: Page, prefix: string): string {
  * Creates a person client in Colombia through /clients/new (address and E.164 phone are required) and returns its id.
  * `taxId` must be unique per run (use `Date.now()` in the caller).
  */
-export async function createClientViaUi(page: Page, tradeName: string, taxId: string): Promise<string> {
+export async function createClientViaUi(
+  page: Page,
+  tradeName: string,
+  taxId: string,
+): Promise<string> {
   await openPage(page, "/clients/new");
   await page.getByLabel("Nombre comercial", { exact: true }).fill(tradeName);
   await page.getByLabel("Identificador fiscal", { exact: true }).fill(taxId);
@@ -107,7 +111,10 @@ export async function pickDateViaUi(page: Page, trigger: Locator, isoDate: strin
   const day = page.locator(`[role="gridcell"][data-day="${isoDate}"] button`);
   for (let step = 0; step < 24 && (await day.count()) === 0; step += 1) {
     // A day in the middle of the grid always belongs to the shown month: its month tells the direction to step.
-    const shown = await page.locator('[role="gridcell"][data-day]').nth(21).getAttribute("data-day");
+    const shown = await page
+      .locator('[role="gridcell"][data-day]')
+      .nth(21)
+      .getAttribute("data-day");
     const forward = shown !== null && shown.slice(0, 7) < isoDate.slice(0, 7);
     await page.getByRole("button", { name: forward ? NEXT_MONTH : PREVIOUS_MONTH }).click();
   }
@@ -169,8 +176,8 @@ export async function createInvoiceViaUi(
   options: { clientName: string; invoiceNumber: string; price: string; description?: string },
 ): Promise<CreatedInvoice> {
   await openPage(page, "/invoices/new");
-  await page.locator("#invoice-client").click();
-  await page.getByRole("option", { name: options.clientName }).click();
+  await page.locator("#invoice-client").fill(options.clientName);
+  await page.getByRole("option", { name: namePrefix(options.clientName) }).click();
   await page.locator("#invoice-number").fill(options.invoiceNumber);
   await page.locator("#line-0-description").fill(options.description ?? "Servicio E2E");
   await page.locator("#line-0-price").fill(options.price);
@@ -236,8 +243,8 @@ export async function createUsdPaymentViaUi(
   options: { clientName: string; accountName: string; amount: string; reference: string },
 ): Promise<string> {
   await openPage(page, "/payments/new");
-  await page.locator("#payment-client").click();
-  await page.getByRole("option", { name: options.clientName }).click();
+  await page.locator("#payment-client").fill(options.clientName);
+  await page.getByRole("option", { name: namePrefix(options.clientName) }).click();
   await page.locator("#payment-account").click();
   await page.getByRole("option", { name: `${options.accountName} (USD)`, exact: true }).click();
   await page.locator("#payment-method").click();
