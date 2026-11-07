@@ -343,6 +343,35 @@ describe("CommandMenu", () => {
       );
     });
 
+    it("keeps archived records out until the user shows them (HU-28 CA1)", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.type(await screen.findByRole("combobox"), "garcia");
+      await screen.findByRole("option", { name: /Talleres García/ });
+      expect(screen.queryByRole("option", { name: /Talleres García Norte/ })).not.toBeInTheDocument();
+      expect(searchCalls().at(-1)?.search.has("includeArchived")).toBe(false);
+
+      await user.click(screen.getByRole("switch", { name: enSearch.includeArchived }));
+
+      expect(await screen.findByRole("option", { name: /Talleres García Norte/ })).toBeInTheDocument();
+      expect(searchCalls().at(-1)?.search.get("includeArchived")).toBe("true");
+    });
+
+    it("hides archived records again when the menu opens next time", async () => {
+      const user = userEvent.setup();
+      renderMenu("OWNER");
+      openWithShortcut();
+      await user.click(await screen.findByRole("switch", { name: enSearch.includeArchived }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      openWithShortcut();
+      expect(
+        await screen.findByRole("switch", { name: enSearch.includeArchived }),
+      ).not.toBeChecked();
+    });
+
     it("does not search while the query is empty or only a prefix", async () => {
       const user = userEvent.setup();
       renderMenu("OWNER");

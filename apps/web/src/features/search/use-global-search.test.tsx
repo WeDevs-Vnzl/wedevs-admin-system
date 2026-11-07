@@ -25,7 +25,7 @@ describe("useGlobalSearch", () => {
   it("does not call the API for an empty query or a prefix alone", async () => {
     const http = stubSearchApi({ body: { query: "", entityType: null, groups: [] } });
 
-    const { result } = renderHook(() => useGlobalSearch("c:"));
+    const { result } = renderHook(() => useGlobalSearch("c:", false));
     await act(() => new Promise((resolve) => setTimeout(resolve, 300)));
 
     expect(result.current).toEqual({ status: "idle" });
@@ -37,7 +37,7 @@ describe("useGlobalSearch", () => {
       body: { query: "garcia", entityType: "CLIENT", groups: [] },
     });
 
-    const { result } = renderHook(() => useGlobalSearch("c: garcia"));
+    const { result } = renderHook(() => useGlobalSearch("c: garcia", false));
 
     await waitFor(() => expect(result.current.status).toBe("ready"));
     expect(http.calls).toHaveLength(1);
@@ -49,7 +49,7 @@ describe("useGlobalSearch", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     stubSearchApi(errorEnvelope("INTERNAL"));
 
-    const { result } = renderHook(() => useGlobalSearch("garcia"));
+    const { result } = renderHook(() => useGlobalSearch("garcia", false));
 
     await waitFor(() => expect(result.current).toEqual({ status: "error" }));
   });
@@ -65,7 +65,7 @@ describe("useGlobalSearch", () => {
       return { body: { query: q, entityType: null, groups: [] } };
     });
 
-    const { result, rerender } = renderHook(({ q }) => useGlobalSearch(q), {
+    const { result, rerender } = renderHook(({ q }) => useGlobalSearch(q, false), {
       initialProps: { q: "slow" },
     });
     await waitFor(() => expect(result.current.status).toBe("loading"));
@@ -85,5 +85,22 @@ describe("useGlobalSearch", () => {
       status: "ready",
       results: { query: "fast", entityType: null, groups: [] },
     });
+  });
+
+  it("asks the API for archived records only when the caller asks (HU-28 CA1)", async () => {
+    const http = stubSearchApi({ body: { query: "garcia", entityType: null, groups: [] } });
+
+    const { result, rerender } = renderHook(
+      ({ archived }) => useGlobalSearch("garcia", archived),
+      { initialProps: { archived: false } },
+    );
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(http.calls[0]?.search.has("includeArchived")).toBe(false);
+
+    rerender({ archived: true });
+
+    await waitFor(() => expect(http.calls).toHaveLength(2));
+    expect(http.calls[1]?.search.get("includeArchived")).toBe("true");
+    await waitFor(() => expect(result.current.status).toBe("ready"));
   });
 });

@@ -22,6 +22,7 @@
   "searchFailed": "The search failed. Try again.",
   "prefixHint": "Narrow with c: clients · p: projects · f: invoices · d: documents · n: notes",
   "archived": "Archived",
+  "includeArchived": "Show archived",
   "types": {
     "CLIENT": "Clients",
     "CONTACT": "Contacts",
