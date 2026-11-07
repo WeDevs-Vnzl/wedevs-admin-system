@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
+import { restorePreferences, switchLocaleViaTopbar } from "./support/preferences";
 import { addInstallmentViaUi, createClientViaUi, createProjectViaUi } from "./support/ui-data";
 
 // Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"), kept by FE-INT-R E.1. This file starts nothing: it runs against
@@ -178,13 +179,15 @@ test.describe("technologies (mutates the catalogue)", () => {
     await expect(row).toContainText(nameEn); // the "Nombre en inglés" column, in both locales
     await expect(row.locator(".font-medium").first()).toHaveText(name); // Spanish locale: `name`
 
-    await page.getByRole("button", { name: "Idioma", exact: true }).click();
-    await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Language", exact: true })).toBeVisible();
-
-    const enRow = page.getByRole("row").filter({ hasText: nameEn });
-    await expect(enRow).toBeVisible();
-    await expect(enRow.locator(".font-medium").first()).toHaveText(nameEn); // EN locale: `nameEn`
+    try {
+      await switchLocaleViaTopbar(page, "Idioma", "English");
+      const enRow = page.getByRole("row").filter({ hasText: nameEn });
+      await expect(enRow).toBeVisible();
+      await expect(enRow.locator(".font-medium").first()).toHaveText(nameEn); // EN locale: `nameEn`
+    } finally {
+      // The locale is the Owner's preference: restore Español for the specs that follow.
+      await restorePreferences(page);
+    }
   });
 
   test("delete of an unused technology works", async ({ page }) => {

@@ -42,8 +42,20 @@ async function createDocument(page: Page, title: string, typeName: RegExp): Prom
   await page.getByRole("option", { name: typeName }).click();
   await page.getByRole("button", { name: "Crear documento", exact: true }).click();
   await expect(page.getByText("Documento creado")).toBeVisible();
-  await expect(page).toHaveURL(/\/documents\/(?!new$)[^/?#]+$/);
+  // A new document opens its editor (`/documents/<id>/editor`), as `support/ui-data.ts` accepts.
+  await expect(page).toHaveURL(/\/documents\/(?!new$)[^/?#]+(?:\/editor)?$/);
   return idFromUrl(page.url(), "documents");
+}
+
+/** Moves a document to `status` through the detail page's "Cambiar estado" dialog: one legal step of the flow. */
+async function moveDocumentStatus(page: Page, id: string, status: RegExp) {
+  await page.goto(`/documents/${id}`);
+  await page.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
+  const dialog = page.getByRole("dialog");
+  // The status is a radio group of the statuses allowed from the current one, not a select.
+  await dialog.getByRole("radio", { name: status }).click();
+  await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
+  await expect(page.getByText(oneOf("Estado actualizado", "Status updated"))).toBeVisible();
 }
 
 /** Saves the markdown source and publishes it as version `version` (the first publish is v1). */
@@ -188,12 +200,16 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     await signInAs(page, "OWNER");
     const id = await createDocument(page, uniq("contrato"), /^Contrato de servicios$/);
 
+    // The PRD flow is BORRADOR ⇄ EN REVISIÓN → APROBADO → ENVIADO → FIRMADO (PRD §8.9.4): a draft cannot jump to FIRMADO.
+    await moveDocumentStatus(page, id, oneOf("En revisión", "In review"));
+    await moveDocumentStatus(page, id, oneOf("Aprobado", "Approved"));
+    await moveDocumentStatus(page, id, oneOf("Enviado", "Sent"));
+
     // CA1: marking it FIRMADO without the signing date is refused; with the date it is accepted.
     await page.goto(`/documents/${id}`);
     await page.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("combobox", { name: oneOf("Nuevo estado", "New status") }).click();
-    await page.getByRole("option", { name: oneOf("Firmado", "Signed") }).click();
+    await dialog.getByRole("radio", { name: oneOf("Firmado", "Signed") }).click();
     await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     await expect(dialog).toBeVisible();
     await dialog.getByLabel(oneOf("Fecha de firma", "Signing date"), { exact: true }).fill(

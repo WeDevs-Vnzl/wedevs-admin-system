@@ -10,3 +10,8 @@ function escapeRegExp(value: string): string {
 export function namePrefix(name: string): RegExp {
   return new RegExp(`^${escapeRegExp(name)}`);
 }
+
+/** Matches an accessible name that is exactly one of `labels` (the Spanish and the English copy of one control). */
+export function oneOf(...labels: string[]): RegExp {
+  return new RegExp(`^(${labels.map(escapeRegExp).join("|")})$`);
+}

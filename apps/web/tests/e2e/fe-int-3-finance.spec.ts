@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import { namePrefix } from "./support/accessible-names";
+import { pickDateViaUi } from "./support/ui-data";
 
 // FE-INT-R E.2 finance E2E (old 3.8 without HU-13; HU-13 is E.3's `fe-int-3-payments.spec.ts`). HU-09 CA1–CA3,
 // HU-10 CA1–CA3, HU-11 CA1–CA5, HU-12 CA1–CA3 and CA5, HU-14, HU-15 CA1–CA3, HU-16 CA1–CA2, HU-17 CA1–CA3, HU-28 for
@@ -76,7 +77,8 @@ async function createAccount(page: Page, name: string, currency: string, opening
   await page.getByLabel("Nombre", { exact: true }).fill(name);
   await page.getByRole("combobox", { name: "Moneda", exact: true }).click();
   await page.getByRole("option", { name: namePrefix(`${currency} ·`) }).click();
-  await page.getByLabel("Saldo inicial", { exact: true }).fill(opening);
+  // The label also names the balance card group: target the input (the card group has the same accessible name).
+  await page.getByRole("textbox", { name: "Saldo inicial", exact: true }).fill(opening);
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText("Cuenta creada")).toBeVisible();
   await expect(page).toHaveURL(/\/accounts\/[^/?#]+$/);
@@ -171,7 +173,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Nombre", { exact: true }).fill(chargeName);
     await dialog.getByLabel("Monto por periodo", { exact: true }).fill("100");
-    await dialog.getByLabel("Inicio", { exact: true }).fill(startDate);
+    await pickDateViaUi(page, dialog.getByLabel("Inicio", { exact: true }), startDate);
     await dialog.getByLabel("Día de cobro", { exact: true }).fill("5");
     await dialog.getByLabel("Días de anticipación", { exact: true }).fill("7");
     await dialog.getByRole("button", { name: "Crear cobro", exact: true }).click();
@@ -193,7 +195,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     const second = page.getByRole("dialog");
     await second.getByLabel("Nombre", { exact: true }).fill(pausedName);
     await second.getByLabel("Monto por periodo", { exact: true }).fill("50");
-    await second.getByLabel("Inicio", { exact: true }).fill(startDate);
+    await pickDateViaUi(page, second.getByLabel("Inicio", { exact: true }), startDate);
     await second.getByLabel("Día de cobro", { exact: true }).fill("5");
     await second.getByLabel("Días de anticipación", { exact: true }).fill("7");
     await second.getByRole("button", { name: "Crear cobro", exact: true }).click();
