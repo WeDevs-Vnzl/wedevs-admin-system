@@ -7,7 +7,7 @@ import i18next from "eslint-plugin-i18next";
 const mocksImports = {
   group: ["@/mocks", "@/mocks/**"],
   message:
-    "Mock code is isolated (C9): only features/*/queries.ts, features/*/actions.ts, server/context.ts, server/auth/session.ts, src/mocks/** and tests may import @/mocks.",
+    "Mock code is isolated (C9): only features/*/queries.ts, features/*/actions.ts, server/context.ts, lib/auth/session.ts, src/mocks/** and tests may import @/mocks.",
 };
 
 const prismaImports = {
@@ -33,7 +33,7 @@ const apiImports = [openapiFetchImports, apiSchemaImports];
 const clerkServerImports = {
   group: ["@clerk/nextjs/server"],
   message:
-    "@clerk/nextjs/server is only allowed in src/proxy.ts, src/lib/api/server.ts and src/server/auth/session.ts (C26).",
+    "@clerk/nextjs/server is only allowed in src/proxy.ts, src/lib/api/server.ts and src/lib/auth/session.ts (C26).",
 };
 
 const zodMessage =
@@ -158,7 +158,7 @@ export default defineConfig([
     rules: restrict(mocksImports, prismaImports, zodImports, zodSubpathImports, ...apiImports),
   },
   {
-    files: ["src/server/auth/session.ts"],
+    files: ["src/lib/auth/session.ts"],
     rules: restrict(zodImports, zodSubpathImports, ...apiImports),
   },
 

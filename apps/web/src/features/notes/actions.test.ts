@@ -15,7 +15,7 @@ vi.mock("next-intl/server", () => intl);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { RichTextDoc } from "@/lib/validators/notes";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   archiveNoteAction,
   attachFileAction,

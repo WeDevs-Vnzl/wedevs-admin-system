@@ -6,9 +6,9 @@ import { ClientForm } from "@/features/clients/components/client-form";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { getClient } from "@/features/clients/queries";
-import { requireSessionUser } from "@/server/auth/session";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+import { requireSessionUser } from "@/lib/auth/session";
+// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
+import { ServiceError } from "@/lib/service-error";
 import type { ClientDetailDto } from "@/lib/api/types/clients";
 
 type ClientEditPageProps = {

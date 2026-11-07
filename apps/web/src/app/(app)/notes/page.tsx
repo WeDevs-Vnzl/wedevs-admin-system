@@ -10,7 +10,7 @@ import { getNotesViewer, listNotes } from "@/features/notes/queries";
 import { NotesTable } from "@/features/notes/components/notes-table";
 import { toNoteFilter } from "@/features/notes/components/note-table-query";
 import { canCreateTagsInline } from "@/features/tags/queries";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

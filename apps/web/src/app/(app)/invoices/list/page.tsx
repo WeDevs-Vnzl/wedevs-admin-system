@@ -16,7 +16,7 @@ import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { listInvoices } from "@/features/invoices/queries";
 import { notFoundWhenRefused } from "@/features/invoices/refusal";
 import { getPreferences } from "@/features/preferences/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

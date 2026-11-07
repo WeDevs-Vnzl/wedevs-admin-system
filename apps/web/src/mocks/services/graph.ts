@@ -32,7 +32,7 @@ import {
   type GraphResponse,
   type GraphTruncated,
 } from "@/lib/validators/graph";
-import { can, canSeeFinancials, type PermissionResource } from "@/server/auth/permissions";
+import { can, canSeeFinancials, type PermissionResource } from "@/lib/auth/permissions";
 import { ServiceError, type MockServiceContext } from "../ctx";
 import { firstWords, richTextToPlainText } from "../entity-refs";
 import type { MockStore } from "../store";

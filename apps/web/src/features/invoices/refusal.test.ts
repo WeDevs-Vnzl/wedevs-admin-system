@@ -7,7 +7,7 @@ const nav = vi.hoisted(() => ({
 }));
 vi.mock("next/navigation", () => nav);
 
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { notFoundWhenRefused, orNullWhenMissing } from "./refusal";
 
 describe("notFoundWhenRefused", () => {

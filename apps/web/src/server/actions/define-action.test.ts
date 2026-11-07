@@ -6,10 +6,10 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 vi.mock("next/cache", () => cache);
 
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { z } from "@/lib/validators/zod";
 import type { UserRole } from "@/lib/validators/enums";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { defineAction, toActionError } from "./define-action";
 
 const schema = z.object({ name: z.string().trim().min(1, "validation.required") });

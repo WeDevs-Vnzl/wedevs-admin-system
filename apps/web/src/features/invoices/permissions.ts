@@ -1,4 +1,4 @@
-import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { can, type PermissionSubject } from "@/lib/auth/permissions";
 
 /**
  * What the invoice screens may show (PRD §4.3, resource `invoice`, Owner and Admin). The pages answer the

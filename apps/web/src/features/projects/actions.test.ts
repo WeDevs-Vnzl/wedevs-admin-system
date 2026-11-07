@@ -15,7 +15,7 @@ vi.mock("next-intl/server", () => ({
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { ActionResult, EntityRef } from "@/lib/validators/common";
 import type { UserRole } from "@/lib/validators/enums";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   archiveProjectAction,
   archiveProjectsAction,

@@ -4,8 +4,8 @@ import { DashboardView, type DayPart } from "@/features/dashboard/components/das
 import { parseDashboardPeriod } from "@/features/dashboard/period";
 import { getDashboardForPeriod } from "@/features/dashboard/queries";
 import { BUSINESS_TIME_ZONE, todayInCaracas } from "@/lib/dates";
-import { canSeeFinancials } from "@/server/auth/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { canSeeFinancials } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type DashboardPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

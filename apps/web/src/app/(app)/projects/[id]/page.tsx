@@ -22,8 +22,8 @@ import {
   ProjectFinancialCard,
   ProjectStackCard,
 } from "@/features/projects/components/project-key-data";
-import { requireSessionUser } from "@/server/auth/session";
-import { can, canSeeFinancials } from "@/server/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { can, canSeeFinancials } from "@/lib/auth/permissions";
 import type { EntityRef } from "@/lib/validators/common";
 import { richTextDocSchema } from "@/lib/validators/notes";
 

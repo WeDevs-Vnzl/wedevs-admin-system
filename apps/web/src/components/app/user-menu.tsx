@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { initialsOf } from "@/components/app/app-sidebar";
 import { resetMockDataAction } from "@/features/session/actions";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 
 // The user menu of the topbar. Sign-out goes through Clerk. MOCK part — until cleanup: "Reset mock data"
 // calls the session action and goes away with the mock layer.

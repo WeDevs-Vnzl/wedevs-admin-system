@@ -18,8 +18,8 @@ import { formatDate } from "@/lib/dates";
 import { isLocale, type Locale } from "@/i18n/config";
 import { PROJECT_STATUS_VALUES } from "@/lib/validators/enums";
 import type { ProjectListRowDto } from "@/lib/api/types/projects";
-import { requireSessionUser } from "@/server/auth/session";
-import { can, canSeeFinancials } from "@/server/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
+import { can, canSeeFinancials } from "@/lib/auth/permissions";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("projects.page");

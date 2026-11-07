@@ -3,7 +3,7 @@ import { toActionResult, type ApiResponseLike } from "@/lib/api/errors";
 import { getServerApi } from "@/lib/api/server";
 import { idSchema } from "@/lib/validators/common";
 import { paymentFiltersSchema, type PaymentFilters } from "@/lib/validators/payments";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toPaymentListQuery } from "./api-query";
 import { toOpenInvoiceOption } from "./open-invoice";
 import type { OpenInvoiceOption } from "./types";
@@ -15,7 +15,7 @@ import type { OpenInvoiceOption } from "./types";
 function unwrap<T>(response: ApiResponseLike<T>): T {
   const result = toActionResult(response);
   if (result.ok) return result.data;
-  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/server/errors`.
+  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/lib/service-error`.
   throw new ServiceError(result.error.code, {
     message: result.error.message,
     ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),

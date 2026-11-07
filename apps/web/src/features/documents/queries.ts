@@ -15,10 +15,10 @@ import {
   type DocumentVersionDetailDTO,
   type DocumentVersionRowDTO,
 } from "@/lib/validators/documents";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { getServiceContext } from "@/server/context";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
+import { ServiceError } from "@/lib/service-error";
 import { toDocumentListQuery } from "./api-query";
 import { toDocumentDetail, toDocumentPage, toDocumentsOverview } from "./mappers";
 
@@ -27,7 +27,7 @@ const ENTITY_TAB_PAGE_SIZE = 100;
 
 /**
  * Unwraps a read. A BE `404` throws `ServiceError("NOT_FOUND")`, `403` `FORBIDDEN` and `422` `VALIDATION` (message and
- * field errors kept): notes and the pages catch these until CLEAN replaces `@/server/errors` and its consumers.
+ * field errors kept): notes and the pages catch these until CLEAN replaces `@/lib/service-error` and its consumers.
  */
 function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   const mapped = toActionResult(result);

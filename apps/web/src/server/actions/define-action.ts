@@ -9,9 +9,9 @@ import {
   type ErrorCode,
 } from "@/lib/validators/common";
 import { z } from "@/lib/validators/zod";
-import { can, type PermissionAction, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionAction, type PermissionResource } from "@/lib/auth/permissions";
 import { getServiceContext, type ServiceContext } from "@/server/context";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 
 /**
  * The action adapter (C10, DT-37): every Server Action is built with `defineAction`, which enforces the

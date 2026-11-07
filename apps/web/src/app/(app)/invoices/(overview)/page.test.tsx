@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/features/invoices/components/invoices-overview", () => ({
   InvoicesOverview: ({ overview }: { overview: { overdueCount: number } }) => (
     <p>{`overdue:${overview.overdueCount}`}</p>

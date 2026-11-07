@@ -9,7 +9,7 @@ import type { ExchangeSnapshotResponseDto } from "@/lib/api/types/exchange-snaps
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { ActionResult } from "@/lib/validators/common";
 import type { AccountFilterInput } from "@/lib/validators/accounts";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { listAccountsAction } from "./actions";
 import {
   getAccount,

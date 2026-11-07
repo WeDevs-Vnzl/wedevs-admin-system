@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ClientForm } from "@/features/clients/components/client-form";
 import { clientScreenPermissions } from "@/features/clients/components/client-permissions";
 import { canCreateTagsInline } from "@/features/tags/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("clients.page");

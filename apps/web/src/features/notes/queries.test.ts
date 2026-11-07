@@ -7,7 +7,7 @@ vi.mock("@/mocks/session", () => session);
 vi.mock("@/lib/api/server", () => server);
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { getNote, getNotesViewer, listNotes } from "./queries";
 
 const row = {

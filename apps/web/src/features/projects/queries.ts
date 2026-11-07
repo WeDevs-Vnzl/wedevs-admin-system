@@ -7,8 +7,8 @@ import {
   type ProjectFilterInput,
 } from "@/lib/validators/projects";
 // MOCK — until cleanup: other modules still catch `ServiceError` from these reads (documents/notes prefill,
-// `loadProjectOr404`); CLEAN replaces `@/server/errors` and those consumers.
-import { ServiceError } from "@/server/errors";
+// `loadProjectOr404`); CLEAN replaces `@/lib/service-error` and those consumers.
+import { ServiceError } from "@/lib/service-error";
 import { toProjectListQuery } from "./api-query";
 
 // Reads for the project screens (RSC): one BE call each, through the typed client. Authorization is the BE's

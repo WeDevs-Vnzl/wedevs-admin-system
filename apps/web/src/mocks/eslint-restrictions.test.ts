@@ -26,7 +26,7 @@ describe("C9: only these files may import @/mocks/**", () => {
     "src/features/clients/queries.ts",
     "src/features/clients/actions.ts",
     "src/server/context.ts",
-    "src/server/auth/session.ts",
+    "src/lib/auth/session.ts",
     "src/mocks/services/clients.ts",
     "src/mocks/fixtures/clients.ts",
     "src/features/clients/queries.test.ts",
@@ -134,7 +134,7 @@ describe("C7/C8: openapi-fetch and the generated schema stay under src/lib/api",
     "src/features/clients/components/client-form.ts",
     "src/app/page.ts",
     "src/server/context.ts",
-    "src/server/auth/session.ts",
+    "src/lib/auth/session.ts",
     "src/proxy.ts",
   ])("%s may not", async (filePath) => {
     for (const source of sources) {
@@ -155,7 +155,7 @@ describe("C7/C8: openapi-fetch and the generated schema stay under src/lib/api",
 describe("C26: @clerk/nextjs/server is limited to three files", () => {
   const source = 'import { auth } from "@clerk/nextjs/server";\nexport const a = auth;\n';
 
-  it.each(["src/proxy.ts", "src/lib/api/server.ts", "src/server/auth/session.ts"])(
+  it.each(["src/proxy.ts", "src/lib/api/server.ts", "src/lib/auth/session.ts"])(
     "%s may",
     async (filePath) => {
       expect(await restrictedImports(filePath, source)).toEqual([]);

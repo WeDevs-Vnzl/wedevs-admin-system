@@ -3,7 +3,7 @@
 // non-archived records. Replaced by `src/server/services/tags.service.ts` in Hito 2 (C9).
 import { diffFields } from "@/lib/activity-diff";
 import type { Paginated } from "@/lib/validators/common";
-import { can, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionResource } from "@/lib/auth/permissions";
 import type {
   AssignTagsInput,
   CreateTagInput,

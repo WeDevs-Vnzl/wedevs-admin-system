@@ -27,7 +27,7 @@ import {
   type ShareLinkListRowDTO,
   type SharesService,
 } from "@/lib/validators/shares";
-import { can, type PermissionAction } from "@/server/auth/permissions";
+import { can, type PermissionAction } from "@/lib/auth/permissions";
 import type { z } from "@/lib/validators/zod";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";

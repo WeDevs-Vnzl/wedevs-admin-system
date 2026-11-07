@@ -3,7 +3,7 @@
 // modules keep their role demos. Deleted with `src/mocks/` at the close of the FE integration (C9).
 import { cookies } from "next/headers";
 import { userRoleSchema, type UserRole } from "@/lib/validators/enums";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 
 /** MOCK-only "View as role" override (DT-40). Holds a `UserRole` value; anything else is ignored. */
 export const MOCK_ROLE_COOKIE = "wd_mock_role";
@@ -58,7 +58,7 @@ export function applyMockRoleOverride(
 export async function getMockSessionUser(): Promise<SessionUser | null> {
   // Imported lazily: this module is also loaded by fixture code and tests, which must not pull the
   // server-only BE session at load time.
-  const { getSessionUserOrRedirect } = await import("@/server/auth/session");
+  const { getSessionUserOrRedirect } = await import("@/lib/auth/session");
   const user = await getSessionUserOrRedirect();
   if (!user) return null;
   const store = await cookies();

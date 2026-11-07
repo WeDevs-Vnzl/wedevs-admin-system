@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { AccountForm } from "@/features/accounts/components/account-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listCurrencies } from "@/features/catalogs/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("accounts.page");

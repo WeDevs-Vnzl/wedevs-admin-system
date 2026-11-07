@@ -8,8 +8,8 @@ vi.mock("@/mocks/session", () => session);
 vi.mock("@/lib/api/server", () => server);
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
-import { ServiceError } from "@/server/errors";
+import { makeSessionUser } from "@/lib/auth/testing";
+import { ServiceError } from "@/lib/service-error";
 import {
   getShareLink,
   getShareableDocuments,

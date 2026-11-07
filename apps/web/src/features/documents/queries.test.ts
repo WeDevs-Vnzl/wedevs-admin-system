@@ -13,8 +13,8 @@ vi.mock("@/features/clients/queries", () => ({ getClient: commercial.getClient }
 vi.mock("@/features/projects/queries", () => ({ getProject: commercial.getProject }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { ServiceError } from "@/server/errors";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { ServiceError } from "@/lib/service-error";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   documentLinkPrefill,
   getDocument,

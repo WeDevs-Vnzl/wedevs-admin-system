@@ -15,7 +15,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { can, type PermissionAction, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionAction, type PermissionResource } from "@/lib/auth/permissions";
 
 /**
  * The sections of Configuración (PRD §8.15, routes per frontend-patterns §3). The settings layout builds its

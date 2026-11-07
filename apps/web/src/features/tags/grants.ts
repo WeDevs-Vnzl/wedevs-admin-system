@@ -1,4 +1,4 @@
-import type { PermissionAction, PermissionResource } from "@/server/auth/permissions";
+import type { PermissionAction, PermissionResource } from "@/lib/auth/permissions";
 
 /**
  * The grants that let a user create a tag (any one of them). They only decide whether `canCreateTagsInline()`

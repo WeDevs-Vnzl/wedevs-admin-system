@@ -9,7 +9,7 @@ import {
   type CompanySettings,
   type UpdateCompanySettingsInput,
 } from "@/lib/validators/settings";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { ServiceError, type MockServiceContext } from "../ctx";
 import { logActivity, mockTx } from "./activity";
 

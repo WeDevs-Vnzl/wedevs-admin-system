@@ -19,7 +19,7 @@ import type {
   TrashableEntityType,
 } from "@/lib/validators/trash";
 import type { UserRefDTO } from "@/lib/validators/users";
-import { can, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionResource } from "@/lib/auth/permissions";
 import { ServiceError, type MockServiceContext } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";
 import { deriveMockStore, type MockStore } from "../store";

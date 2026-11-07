@@ -8,7 +8,7 @@ import { expenseScreenPermissions } from "@/features/expenses/permissions";
 import { getExpense } from "@/features/expenses/queries";
 import { notFoundWhenRefused, orNullWhenMissing } from "@/features/expenses/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type ExpenseEditPageProps = {
   params: Promise<{ id: string }>;

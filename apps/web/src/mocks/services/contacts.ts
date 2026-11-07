@@ -5,7 +5,7 @@
 // `archivedAt` (see `clients.ts`). Mutations append activity on `CONTACT` (C12 form). Replaced by
 // `src/server/services/contacts.service.ts` in Hito 2 (C9).
 import { diffFields } from "@/lib/activity-diff";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import type { EntityRef, Paginated } from "@/lib/validators/common";
 import { VALIDATION_MESSAGES } from "@/lib/validators/common";
 import type {

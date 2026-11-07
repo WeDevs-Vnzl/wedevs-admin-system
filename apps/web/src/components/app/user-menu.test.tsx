@@ -7,7 +7,7 @@ import enCommon from "@/i18n/messages/en/common.json";
 import enEnums from "@/i18n/messages/en/enums.json";
 import enMock from "@/i18n/messages/en/mock.json";
 import enShell from "@/i18n/messages/en/shell.json";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import { UserMenu } from "./user-menu";
 
 const mocks = vi.hoisted(() => ({

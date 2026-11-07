@@ -18,7 +18,7 @@ import {
   orNullWhenUnavailable,
 } from "@/features/expenses/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type RecurringExpenseDetailPageProps = {
   params: Promise<{ id: string }>;

@@ -19,7 +19,7 @@ import { getNoteAction } from "@/features/notes/actions";
 import { TagChips } from "@/features/tags/components/tag-chips";
 import { entityHref } from "@/lib/entity-routes";
 import type { NoteDetailDTO, NoteListRowDTO } from "@/lib/validators/notes";
-import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { can, type PermissionSubject } from "@/lib/auth/permissions";
 import { noteRowTitle } from "../columns";
 import { NoteAttachments } from "./note-attachments";
 

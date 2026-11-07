@@ -42,7 +42,7 @@ import type { DocumentStatus } from "@/lib/validators/enums";
 import { httpUrlSchema } from "@/lib/validators/tags";
 import type { ArchivedRecordDTO } from "@/lib/validators/trash";
 import { VALIDATION_MESSAGES, zodFieldErrors, type Paginated } from "@/lib/validators/common";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import type { UserRefDTO } from "@/lib/validators/users";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";

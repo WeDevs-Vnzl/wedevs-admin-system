@@ -21,7 +21,7 @@ import {
   type PermissionAction,
   type PermissionResource,
   type PermissionSubject,
-} from "@/server/auth/permissions";
+} from "@/lib/auth/permissions";
 
 // Single source of the navigation (PRD §7.1, frontend-patterns §2): sidebar, breadcrumbs and the Cmd+K
 // dialog all read from here. Labels are i18n keys (`nav.items.<key>`, `search.actions.<key>`), icons follow

@@ -6,7 +6,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { notFoundWhenRefused, orNullWhenMissing } from "./refusal";
 
 describe("notFoundWhenRefused", () => {

@@ -5,7 +5,7 @@ import { RecurringExpenseForm } from "@/features/expenses/components/recurring-e
 import { getExpenseFormOptions } from "@/features/expenses/form-options";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("expenses.page");

@@ -7,7 +7,7 @@ import { loadInvoiceFormOptions } from "@/features/invoices/form-options";
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
 import { orNullWhenMissing } from "@/features/invoices/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type EditInvoicePageProps = {
   params: Promise<{ id: string }>;

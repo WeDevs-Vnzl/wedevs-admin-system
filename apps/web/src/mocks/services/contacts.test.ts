@@ -1,6 +1,6 @@
 // MOCK — tests for the contacts service (HU-04).
 import { describe, expect, it } from "vitest";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import {
   contactFilterSchema,
   createContactInputSchema,

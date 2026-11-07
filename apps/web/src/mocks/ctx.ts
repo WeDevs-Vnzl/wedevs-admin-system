@@ -2,8 +2,8 @@
 // the in-memory store, in Hito 2 the Prisma client or transaction. Only `src/server/context.ts` builds it
 // for the app; services receive it and never create one. Framework-free: no `next/*`, `react`,
 // `next-intl` or `@clerk/*`. Deleted with `src/mocks/` at the close of Hito 2 (C9).
-import { ServiceError } from "@/server/errors";
-import type { SessionUser } from "@/server/auth/types";
+import { ServiceError } from "@/lib/service-error";
+import type { SessionUser } from "@/lib/auth/types";
 import { getMockStore, type MockStore } from "./store";
 
 /** Context of an authenticated service call. `now` is the only clock a service may read. */

@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: reads.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: reads.requireSessionUser }));
 vi.mock("@/features/clients/queries", () => ({
   getClient: reads.getClient,
   getClientFinancials: reads.getClientFinancials,
@@ -50,7 +50,7 @@ vi.mock("@/features/payments/components/client-payments-tab", () => ({
   ClientPaymentsTab: () => null,
 }));
 
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import ClientDetailPage from "./page";
 
 const client = {

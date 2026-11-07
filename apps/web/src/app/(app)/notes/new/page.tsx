@@ -9,7 +9,7 @@ import { getNotesViewer } from "@/features/notes/queries";
 import { getProject } from "@/features/projects/queries";
 import { canCreateTagsInline } from "@/features/tags/queries";
 import { ServiceError } from "@/server/context";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 
 type NewNotePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

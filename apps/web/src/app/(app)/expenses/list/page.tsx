@@ -14,7 +14,7 @@ import { getExpenseFormOptions } from "@/features/expenses/form-options";
 import { listExpenses } from "@/features/expenses/queries";
 import { expenseScreenPermissions } from "@/features/expenses/permissions";
 import { notFoundWhenRefused } from "@/features/expenses/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 // The table's URL keys (the same names as the client table state), read on the server for the first page.
 const loadTableState = createLoader(tableUrlParsers);

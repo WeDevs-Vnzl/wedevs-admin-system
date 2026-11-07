@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/features/projects/load-project", () => ({ loadProjectOr404: mocks.loadProjectOr404 }));
 vi.mock("@/features/projects/queries", () => ({ getProject: mocks.getProject }));
 vi.mock("@/features/technologies/queries", () => ({
@@ -25,7 +25,7 @@ vi.mock("@/features/tags/queries", () => ({ canCreateTagsInline: mocks.canCreate
 vi.mock("@/components/app/breadcrumb-label", () => ({ BreadcrumbLabel: () => null }));
 vi.mock("@/features/projects/components/project-form", () => ({ ProjectForm: () => null }));
 
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import EditProjectPage from "./page";
 
 const project = { id: "pry_1", code: "PRY-0001", name: "Sitio" };

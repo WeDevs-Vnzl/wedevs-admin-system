@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/features/catalogs/queries", () => ({ listCurrencies: mocks.listCurrencies }));
 vi.mock("@/features/preferences/queries", () => ({ getPreferences: mocks.getPreferences }));
 vi.mock("@/components/patterns/page-header", () => ({ PageHeader: () => null }));

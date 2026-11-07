@@ -15,7 +15,7 @@ import type {
   UserIdInput,
   UserListRowDTO,
 } from "@/lib/validators/users";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { ServiceError, type MockServiceContext } from "../ctx";
 import { nextMockId } from "../ids";
 import type { MockStore } from "../store";

@@ -65,7 +65,7 @@ import {
   type ResolvedRange,
   type TaxesRegisteredReport,
 } from "@/lib/validators/reports";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { ServiceError, type MockServiceContext } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";
 import type { MockStore, ProjectRow } from "../store";

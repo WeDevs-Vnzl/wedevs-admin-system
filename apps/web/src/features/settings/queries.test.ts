@@ -17,7 +17,7 @@ vi.mock("@/lib/api/server", () => ({ getServerApi: async () => holder.api }));
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import type { UserRole } from "@/lib/validators/enums";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   getCompanySettings,
   getOpenableSettingsSection,

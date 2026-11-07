@@ -14,7 +14,7 @@ vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import {
   createTechnologyAction,
   deleteTechnologyAction,

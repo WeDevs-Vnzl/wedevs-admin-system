@@ -1,7 +1,8 @@
 // MOCK — helpers shared by the tests of the mock layer and of the features that read it. Not imported by
 // application code. Deleted with `src/mocks/` at the close of Hito 2 (C9).
 import type { UserRole } from "@/lib/validators/enums";
-import type { SessionUser } from "@/server/auth/types";
+import { makeSessionUser } from "@/lib/auth/testing";
+import type { SessionUser } from "@/lib/auth/types";
 import { createMockContext, createMockPublicContext } from "./ctx";
 import { buildMockStore, deriveMockStore, type MockStore } from "./store";
 
@@ -11,19 +12,7 @@ export const FIXED_NOW = new Date("2026-10-09T15:00:00.000Z");
 /** Business "today" (Caracas) of `FIXED_NOW`. */
 export const FIXED_TODAY = "2026-10-09";
 
-export function makeSessionUser(role: UserRole = "OWNER", overrides: Partial<SessionUser> = {}) {
-  const user: SessionUser = {
-    id: "usr_test",
-    name: "Test User",
-    email: "test.user@example.com",
-    imageUrl: null,
-    role,
-    locale: "es",
-    theme: "system",
-    ...overrides,
-  };
-  return user;
-}
+export { makeSessionUser };
 
 /** A fresh, isolated store plus a context over it. */
 export function makeTestContext(role: UserRole = "OWNER", overrides: Partial<SessionUser> = {}) {

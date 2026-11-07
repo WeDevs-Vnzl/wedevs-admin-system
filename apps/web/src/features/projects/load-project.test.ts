@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("./queries", () => queries);
 
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { loadProjectOr404 } from "./load-project";
 
 const project = { id: "pry_1", code: "PRY-0001", name: "Sitio", archivedAt: null };

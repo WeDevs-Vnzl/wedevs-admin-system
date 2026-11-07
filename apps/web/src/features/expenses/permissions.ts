@@ -1,4 +1,4 @@
-import { can, type PermissionSubject } from "@/server/auth/permissions";
+import { can, type PermissionSubject } from "@/lib/auth/permissions";
 
 /**
  * What the expense screens may show (PRD §4.3, resource `expense`, Owner and Admin). The pages answer the

@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/components/app/breadcrumb-label", () => ({ BreadcrumbLabel: () => null }));
 // The detail renders elsewhere; the page only wires its inputs.
 vi.mock("@/features/invoices/components/invoice-detail", () => ({
@@ -40,8 +40,8 @@ vi.mock("@/features/invoices/components/payment-links-panel", () => ({
     <p>{`panel|${props.invoiceId}|${props.currency}|${props.canCreate}`}</p>
   ),
 }));
-vi.mock("@/server/auth/permissions", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/server/auth/permissions")>();
+vi.mock("@/lib/auth/permissions", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth/permissions")>();
   return {
     ...actual,
     can: (user: Parameters<typeof actual.can>[0], action: string, resource: string) =>

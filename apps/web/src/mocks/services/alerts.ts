@@ -30,7 +30,7 @@ import {
 } from "@/lib/validators/alerts";
 import { DEFAULT_ALERT_DAYS_BEFORE } from "@/lib/validators/documents";
 import type { EntityRef } from "@/lib/validators/common";
-import { can, canSeeFinancials } from "@/server/auth/permissions";
+import { can, canSeeFinancials } from "@/lib/auth/permissions";
 import type { MockServiceContext } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";
 import type { MockStore } from "../store";

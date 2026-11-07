@@ -9,7 +9,7 @@ import { todayInCaracas } from "@/lib/dates";
 import { computeProjectSummary, type ProjectSummary, type ProjectSummaryLine } from "@/lib/finance";
 import { compareMoney, toUsd, type MoneyString } from "@/lib/money";
 import type { BillingPlanDTO, ProjectFinancialSummary } from "@/lib/validators/billing";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { VALIDATION_MESSAGES, type FieldErrors, type Paginated } from "@/lib/validators/common";
 import {
   PROJECT_LINK_GROUP_VALUES,

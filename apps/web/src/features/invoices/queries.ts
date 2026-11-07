@@ -12,8 +12,8 @@ import {
   invoiceFiltersSchema,
   type BillableInstallmentRow,
 } from "@/lib/validators/invoices";
-// MOCK — until cleanup: CLEAN replaces `@/server/errors` and the readers that catch it.
-import { ServiceError } from "@/server/errors";
+// MOCK — until cleanup: CLEAN replaces `@/lib/service-error` and the readers that catch it.
+import { ServiceError } from "@/lib/service-error";
 import { toInvoiceListQuery } from "./api-query";
 import type { InvoiceFilterInput } from "./components/invoice-table-query";
 
@@ -23,7 +23,7 @@ import type { InvoiceFilterInput } from "./components/invoice-table-query";
 /**
  * Unwraps a read. A BE `404` throws `ServiceError("NOT_FOUND")`, `403` `FORBIDDEN` and `422` `VALIDATION`, keeping
  * the message and field errors: other modules (notes, invoices form options) catch these until CLEAN replaces
- * `@/server/errors` and its consumers.
+ * `@/lib/service-error` and its consumers.
  */
 function unwrap<T>(result: ApiResponseLike<T>, what: string): T {
   const mapped = toActionResult(result);

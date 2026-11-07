@@ -4,14 +4,14 @@ import type { ReactElement } from "react";
 const session = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
 const server = vi.hoisted(() => ({ api: null as unknown }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: session.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: session.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { DashboardViewProps } from "@/features/dashboard/components/dashboard-view";
 import { makeDashboardResponse } from "@/features/dashboard/test-fixtures";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import DashboardPage from "./page";
 
 function user(role: SessionUser["role"], name = "Andrés Molina"): SessionUser {

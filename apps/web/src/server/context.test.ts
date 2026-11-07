@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
 
 import { getMockStore } from "@/mocks/store";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { getPublicServiceContext, getServiceContext, ServiceError } from "./context";
 
 beforeEach(() => {

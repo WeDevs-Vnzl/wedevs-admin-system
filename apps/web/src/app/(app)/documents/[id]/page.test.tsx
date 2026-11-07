@@ -50,7 +50,7 @@ import { EntityActivityTab } from "@/features/activity/components/entity-activit
 import { DocumentDetailTabs } from "@/features/documents/components/document-detail-tabs";
 import { EntityNotesTab } from "@/features/notes/components/entity-notes-tab";
 import { DocumentSharesTab } from "@/features/shares/components/document-shares-tab";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import DocumentDetailPage from "./page";
 
 const params = Promise.resolve({ id: "doc_1" });

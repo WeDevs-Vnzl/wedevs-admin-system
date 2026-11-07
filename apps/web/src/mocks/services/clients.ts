@@ -13,7 +13,7 @@
 import { diffFields } from "@/lib/activity-diff";
 import { addDays, toDateOnly, todayInCaracas } from "@/lib/dates";
 import { compareMoney, isZeroMoney, sumMoney, toUsd } from "@/lib/money";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { VALIDATION_MESSAGES, type EntityRef, type Paginated } from "@/lib/validators/common";
 import {
   normalizeVeRif,

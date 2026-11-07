@@ -8,7 +8,7 @@ import {
   type AccountLedgerQuery,
 } from "@/lib/validators/accounts";
 import { idSchema } from "@/lib/validators/common";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import { toAccountListQuery, toLedgerQuery } from "./api-query";
 
 // Reads for the accounts pages (RSC) over the generated client. A refused read throws `ServiceError` with the
@@ -19,7 +19,7 @@ import { toAccountListQuery, toLedgerQuery } from "./api-query";
 function unwrap<T>(response: ApiResponseLike<T>): T {
   const result = toActionResult(response);
   if (result.ok) return result.data;
-  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/server/errors`.
+  // MOCK — until cleanup: `ServiceError` stays the read-failure contract until CLEAN replaces `@/lib/service-error`.
   throw new ServiceError(result.error.code, {
     message: result.error.message,
     ...(result.error.fieldErrors ? { fieldErrors: result.error.fieldErrors } : {}),

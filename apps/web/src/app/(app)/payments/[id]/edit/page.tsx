@@ -8,7 +8,7 @@ import { paymentScreenPermissions } from "@/features/payments/permissions";
 import { getPayment } from "@/features/payments/queries";
 import { notFoundWhenRefused, orNullWhenMissing } from "@/features/payments/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type PaymentEditPageProps = {
   params: Promise<{ id: string }>;

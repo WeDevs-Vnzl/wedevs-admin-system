@@ -5,8 +5,8 @@ import { GlobalGraph } from "@/features/graph/components/global-graph";
 import { getGlobalGraph } from "@/features/graph/queries";
 import { getTags } from "@/features/tags/queries";
 import { listActiveTechnologies } from "@/features/technologies/queries";
-import { can } from "@/server/auth/permissions";
-import { requireSessionUser } from "@/server/auth/session";
+import { can } from "@/lib/auth/permissions";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("graph.page");

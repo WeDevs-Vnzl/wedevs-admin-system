@@ -1,6 +1,6 @@
 // MOCK — tests for the clients service (HU-03, C15, C16, C19).
 import { describe, expect, it } from "vitest";
-import { ServiceError } from "@/server/errors";
+import { ServiceError } from "@/lib/service-error";
 import {
   clientFilterSchema,
   createClientInputSchema,

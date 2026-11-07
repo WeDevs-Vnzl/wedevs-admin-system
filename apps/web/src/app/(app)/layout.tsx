@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/app/theme-toggle";
 import { UserMenu } from "@/components/app/user-menu";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getShellData } from "@/features/shell/queries";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 
 // `id` of the content container: the skip link moves focus there (WCAG 2.4.1).
 const MAIN_CONTENT_ID = "main-content";

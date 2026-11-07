@@ -7,7 +7,7 @@ import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
 import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
 import { listCurrencies } from "@/features/catalogs/queries";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type AccountEditPageProps = {
   params: Promise<{ id: string }>;

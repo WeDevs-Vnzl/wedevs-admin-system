@@ -11,10 +11,10 @@ import {
   type ShareFilterInput,
 } from "@/lib/validators/shares";
 // MOCK — until cleanup: `getServiceContext` and `can` feed only the cosmetic permissions read below (C13).
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { getServiceContext } from "@/server/context";
-// MOCK — until cleanup: the pages and the loader catch `ServiceError`; CLEAN replaces `@/server/errors` and them.
-import { ServiceError } from "@/server/errors";
+// MOCK — until cleanup: the pages and the loader catch `ServiceError`; CLEAN replaces `@/lib/service-error` and them.
+import { ServiceError } from "@/lib/service-error";
 import { toAccessLogQuery, toShareListQuery } from "./api-query";
 import { toAccessLogPage, toShareDetail, toSharePage } from "./mappers";
 import type { ShareableDocument } from "./types";

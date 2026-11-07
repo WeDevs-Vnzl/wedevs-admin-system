@@ -42,7 +42,7 @@ import {
   type MonthKey,
 } from "@/lib/validators/dashboard";
 import type { InvoiceDetailDTO } from "@/lib/validators/invoices";
-import { can, canSeeFinancials } from "@/server/auth/permissions";
+import { can, canSeeFinancials } from "@/lib/auth/permissions";
 import type { MockServiceContext } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";
 import type { MockStore } from "../store";

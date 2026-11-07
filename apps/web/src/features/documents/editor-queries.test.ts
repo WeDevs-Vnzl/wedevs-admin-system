@@ -7,7 +7,7 @@ vi.mock("@/mocks/session", () => session);
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import { getDocumentEditor } from "./editor-queries";
 import { wireDetail, wireVersion } from "./wire-fixtures";
 

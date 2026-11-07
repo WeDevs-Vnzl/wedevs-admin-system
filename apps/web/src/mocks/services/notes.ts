@@ -27,7 +27,7 @@ import type {
   UpdateNoteInput,
 } from "@/lib/validators/notes";
 import type { ArchivedRecordDTO } from "@/lib/validators/trash";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import type { MockServiceContext } from "../ctx";
 import { ServiceError } from "../ctx";
 import { resolveEntityRef } from "../entity-refs";

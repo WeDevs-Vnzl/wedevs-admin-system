@@ -36,7 +36,7 @@ import { readRecentRecords, rememberRecentRecord } from "@/features/search/recen
 import { recordOfPath } from "@/features/search/search-entities";
 import { useGlobalSearch } from "@/features/search/use-global-search";
 import type { SearchResultDto } from "@/lib/api/types/search";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 import { useBreadcrumbLabels } from "./breadcrumb-label";
 
 // Hits come from `searchGlobal`, which already matched them (accents, typos, prefixes), so cmdk keeps every

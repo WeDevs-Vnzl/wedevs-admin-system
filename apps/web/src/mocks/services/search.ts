@@ -23,7 +23,7 @@ import {
   type SearchResultsDTO,
   type SearchableEntityType,
 } from "@/lib/validators/search";
-import { can, type PermissionResource } from "@/server/auth/permissions";
+import { can, type PermissionResource } from "@/lib/auth/permissions";
 import type { MockServiceContext } from "../ctx";
 import { resolveEntityRef, richTextToPlainText } from "../entity-refs";
 import type { MockStore } from "../store";

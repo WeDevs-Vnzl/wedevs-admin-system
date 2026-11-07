@@ -11,8 +11,8 @@ import {
 } from "@/mocks/ctx";
 import { getMockStore } from "@/mocks/store";
 import { getMockSessionUser } from "@/mocks/session";
-import { UnauthenticatedError } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
+import { UnauthenticatedError } from "@/lib/auth/session";
+import { ServiceError } from "@/lib/service-error";
 
 /** `ctx = { db, user, now }`: what every service receives (C11). `now` is the only clock a service may read. */
 export type ServiceContext = MockServiceContext;
@@ -20,7 +20,7 @@ export type ServiceContext = MockServiceContext;
 /** Context of the public portal services: `user` is `null`, the share link travels in the service input. */
 export type PublicServiceContext = MockPublicServiceContext;
 
-/** Thrown by services for domain failures (`CONFLICT`, `NOT_FOUND`, …); defined in `@/server/errors`. */
+/** Thrown by services for domain failures (`CONFLICT`, `NOT_FOUND`, …); defined in `@/lib/service-error`. */
 export { ServiceError };
 
 /**

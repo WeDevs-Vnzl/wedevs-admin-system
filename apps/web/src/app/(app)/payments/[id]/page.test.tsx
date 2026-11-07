@@ -22,7 +22,7 @@ vi.mock("next-intl/server", async () => {
       createTranslator({ locale: "en", messages, namespace } as never),
   };
 });
-vi.mock("@/server/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/components/app/breadcrumb-label", () => ({ BreadcrumbLabel: () => null }));
 vi.mock("@/features/payments/components/payment-detail-header", () => ({
@@ -46,7 +46,7 @@ vi.mock("@/features/payments/components/payment-receipt", () => ({
 import { errorEnvelope, mockApi } from "@/lib/api/testing";
 import { renderWithIntl } from "@/features/payments/components/test-utils";
 import { makePayment } from "@/features/payments/test-fixtures";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import PaymentDetailPage from "./page";
 
 const renderPage = async () =>

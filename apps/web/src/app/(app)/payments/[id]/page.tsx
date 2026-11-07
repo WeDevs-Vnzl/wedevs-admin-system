@@ -15,7 +15,7 @@ import {
   orNullWhenMissing,
   orNullWhenUnavailable,
 } from "@/features/payments/refusal";
-import { requireSessionUser } from "@/server/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
 
 type PaymentDetailPageProps = {
   params: Promise<{ id: string }>;

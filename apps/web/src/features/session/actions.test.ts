@@ -10,7 +10,7 @@ vi.mock("@/mocks/session", async (importOriginal) => ({
 }));
 
 import { getMockStore } from "@/mocks/store";
-import { makeSessionUser } from "@/mocks/test-helpers";
+import { makeSessionUser } from "@/lib/auth/testing";
 import * as actions from "./actions";
 
 const { resetMockDataAction } = actions;

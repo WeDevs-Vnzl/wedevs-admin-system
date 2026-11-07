@@ -1,7 +1,7 @@
 import "server-only";
 import { getServerApi } from "@/lib/api/server";
 import { tagFilterSchema, tagIdInputSchema, type TagFilterInput } from "@/lib/validators/tags";
-import { can } from "@/server/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { getServiceContext } from "@/server/context";
 import { toTagListQuery } from "./api-query";
 import { CREATE_TAG_GRANTS } from "./grants";

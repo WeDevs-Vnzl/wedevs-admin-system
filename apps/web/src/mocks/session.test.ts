@@ -1,6 +1,6 @@
 // MOCK — tests for the Hito 1 mock bridge: the BE session user with the "View as role" override.
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SessionUser } from "@/server/auth/types";
+import type { SessionUser } from "@/lib/auth/types";
 
 const cookieStore = vi.hoisted(() => ({ value: undefined as string | undefined }));
 const be = vi.hoisted(() => ({ getSessionUser: vi.fn() }));
@@ -13,7 +13,7 @@ vi.mock("next/headers", () => ({
         : undefined,
   }),
 }));
-vi.mock("@/server/auth/session", () => ({ getSessionUserOrRedirect: be.getSessionUser }));
+vi.mock("@/lib/auth/session", () => ({ getSessionUserOrRedirect: be.getSessionUser }));
 
 import { buildMockStore } from "./store";
 import { registerMockActor } from "./ctx";
