@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_RATE_CSV_ROWS } from "@/lib/validators/catalogs";
-import { mergeImportErrors, parseRatesCsv } from "./rates-csv";
+import { mergeImportErrors, parseRatesCsv, rowErrorsFromFieldErrors } from "./rates-csv";
 
 describe("parseRatesCsv", () => {
   it("reads the header columns, a BOM, CRLF, quotes and a blank source as MANUAL", () => {
@@ -64,5 +64,26 @@ describe("mergeImportErrors", () => {
       { row: 2, messages: ["a"] },
       { row: 7, messages: ["catalogs.rates.errors.unknownCurrency"] },
     ]);
+  });
+});
+
+describe("rowErrorsFromFieldErrors", () => {
+  it("turns `rows.<i>.<field>` field errors into 1-based row errors, merged per row", () => {
+    expect(
+      rowErrorsFromFieldErrors({
+        "rows.1.usdRate": ["validation.rate.invalid"],
+        "rows.1.date": ["validation.date.invalid"],
+        "rows.0.currency": ["x"],
+        other: ["ignored"],
+      }),
+    ).toEqual([
+      { row: 1, messages: ["x"] },
+      { row: 2, messages: ["validation.rate.invalid", "validation.date.invalid"] },
+    ]);
+  });
+
+  it("is empty without row paths", () => {
+    expect(rowErrorsFromFieldErrors(undefined)).toEqual([]);
+    expect(rowErrorsFromFieldErrors({ rows: ["validation.required"] })).toEqual([]);
   });
 });

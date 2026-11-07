@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/mocks/session", () => session);
+// The catalogs module reads document categories through the API (HTTP double, not a mocked domain layer).
+const server = vi.hoisted(() => ({ api: null as unknown }));
+vi.mock("@/lib/api/server", () => ({ getServerApi: async () => server.api }));
 
 // The overview and detail reads of the documents service are stubbed (their mock implementation is another
 // task); every other service function stays the real one over the mock store.
@@ -12,6 +15,7 @@ vi.mock("@/mocks/services/documents", async (importOriginal) => ({
   ...service,
 }));
 
+import { mockApi } from "@/lib/api/testing";
 import { getMockStore } from "@/mocks/store";
 import { makeSessionUser } from "@/mocks/test-helpers";
 import {
@@ -110,10 +114,22 @@ describe("listEntityDocuments", () => {
 
 describe("listDocumentCategories", () => {
   it("returns every category with its types, in catalog order", async () => {
-    session.getMockSessionUser.mockResolvedValue(makeSessionUser("VIEWER"));
+    const category = (id: string, order: number) => ({
+      id,
+      name: id,
+      nameEn: null,
+      color: null,
+      order,
+      types: [],
+    });
+    const { api, calls } = mockApi({
+      "GET /api/v1/document-categories": { body: [category("a", 0), category("b", 1)] },
+    });
+    server.api = api;
     const categories = await listDocumentCategories();
-    expect(categories.length).toBe(getMockStore().documentCategories.length);
-    const orders = categories.map((category) => category.order);
+    expect(calls).toHaveLength(1);
+    expect(categories.map((c) => c.id)).toEqual(["a", "b"]);
+    const orders = categories.map((c) => c.order);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
   });
 });

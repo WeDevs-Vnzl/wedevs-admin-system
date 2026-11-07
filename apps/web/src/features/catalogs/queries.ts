@@ -1,10 +1,17 @@
 import "server-only";
+import { getServerApi } from "@/lib/api/server";
+import type {
+  DocumentTypeListQuery,
+  TagListQuery,
+  TechnologyListQuery,
+} from "@/lib/api/types/catalogs";
 import { todayInCaracas } from "@/lib/dates";
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_VALUES,
   listFiltersSchema,
   sortsBy,
+  type Paginated,
 } from "@/lib/validators/common";
 import {
   EXCHANGE_RATE_SORT_FIELDS,
@@ -13,70 +20,168 @@ import {
   expenseCategoryListInputSchema,
   getRateForInputSchema,
   paymentMethodListInputSchema,
+  type CurrencyDTO,
   type CurrencyListInputRaw,
+  type ExchangeRateDTO,
   type ExchangeRateFilters,
   type ExpenseCategoryListInputRaw,
+  type ExpenseCategoryTreeNode,
   type GetRateForInput,
+  type PaymentMethodDTO,
   type PaymentMethodListInputRaw,
 } from "@/lib/validators/catalogs";
 import {
   documentTypeFilterSchema,
+  type DocumentCategoryDetailDTO,
   type DocumentTypeFilterInput,
+  type DocumentTypeListRowDTO,
 } from "@/lib/validators/document-types";
-import { tagFilterSchema, type TagFilterInput } from "@/lib/validators/tags";
-import { technologyFilterSchema, type TechnologyFilterInput } from "@/lib/validators/technologies";
-import * as catalogs from "@/mocks/services/catalogs";
-import { getServiceContext } from "@/server/context";
+import type { SelectedRate } from "@/lib/rates";
+import type { FiscalSettings } from "@/lib/validators/settings";
+import { tagFilterSchema, type TagFilterInput, type TagListRowDTO } from "@/lib/validators/tags";
+import {
+  technologyFilterSchema,
+  type TechnologyFilterInput,
+  type TechnologyListRowDTO,
+} from "@/lib/validators/technologies";
+import { toExchangeRateQuery, unwrap } from "./read";
 
 // Reference data every signed-in role needs to fill a form (currencies, methods, technologies, tags…).
 // Managing it is a different matter: that goes through the `settings` actions (Owner and Admin).
 
-export async function getRateFor(input: GetRateForInput) {
-  return catalogs.getRateFor(await getServiceContext(), getRateForInputSchema.parse(input));
+/** The lookup behind `lookupRateAction`: `null` when no rate exists on or before the date. */
+export async function getRateFor(input: GetRateForInput): Promise<SelectedRate | null> {
+  const { date, currency } = getRateForInputSchema.parse(input);
+  const api = await getServerApi();
+  const { rate } = unwrap(
+    await api.GET("/api/v1/exchange-rates/lookup", { params: { query: { date, currency } } }),
+  );
+  return rate;
 }
+
+/** `includeInactive` goes out only when set: pickers get the active rows (the BE default). */
+const inactiveQuery = (includeInactive: boolean) => (includeInactive ? { includeInactive } : {});
 
 // Pickers get the active rows only; the Settings screens pass `{ includeInactive: true }` (m-g).
 
-export async function listCurrencies(input: CurrencyListInputRaw = {}) {
-  return catalogs.listCurrencies(await getServiceContext(), currencyListInputSchema.parse(input));
-}
-
-export async function listPaymentMethods(input: PaymentMethodListInputRaw = {}) {
-  return catalogs.listPaymentMethods(
-    await getServiceContext(),
-    paymentMethodListInputSchema.parse(input),
+export async function listCurrencies(input: CurrencyListInputRaw = {}): Promise<CurrencyDTO[]> {
+  const { includeInactive } = currencyListInputSchema.parse(input);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/currencies", {
+      params: { query: inactiveQuery(includeInactive) },
+    }),
   );
 }
 
-export async function listTechnologies(filter: TechnologyFilterInput = {}) {
-  return catalogs.listTechnologies(await getServiceContext(), technologyFilterSchema.parse(filter));
-}
-
-export async function listDocumentCategories() {
-  return catalogs.listDocumentCategories(await getServiceContext());
-}
-
-export async function listDocumentTypes(filter: DocumentTypeFilterInput = {}) {
-  return catalogs.listDocumentTypes(
-    await getServiceContext(),
-    documentTypeFilterSchema.parse(filter),
+export async function listPaymentMethods(
+  input: PaymentMethodListInputRaw = {},
+): Promise<PaymentMethodDTO[]> {
+  const { includeInactive } = paymentMethodListInputSchema.parse(input);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/payment-methods", {
+      params: { query: inactiveQuery(includeInactive) },
+    }),
   );
 }
 
-export async function listExpenseCategories(input: ExpenseCategoryListInputRaw = {}) {
-  return catalogs.listExpenseCategories(
-    await getServiceContext(),
-    expenseCategoryListInputSchema.parse(input),
+export async function listExpenseCategories(
+  input: ExpenseCategoryListInputRaw = {},
+): Promise<ExpenseCategoryTreeNode[]> {
+  const { includeInactive } = expenseCategoryListInputSchema.parse(input);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/expense-categories", {
+      params: { query: inactiveQuery(includeInactive) },
+    }),
   );
-}
-
-export async function listTags(filter: TagFilterInput = {}) {
-  return catalogs.listTags(await getServiceContext(), tagFilterSchema.parse(filter));
 }
 
 /** Fiscal parameters, incl. `ivaRates`: the source of the allowed VAT rates in invoice forms (C17). */
-export async function getFiscalSettings() {
-  return catalogs.getFiscalSettings(await getServiceContext());
+export async function getFiscalSettings(): Promise<FiscalSettings> {
+  const api = await getServerApi();
+  const fiscal = unwrap(await api.GET("/api/v1/settings/fiscal"));
+  // The BE has no per-method IGTF code list (a method proposes IGTF through `suggestsIgtf`, DT-70).
+  return { ...fiscal, igtfMethodCodes: [] };
+}
+
+// ───────────────────────────── Picker reads (taxonomy owns the writes) ─────────────────────────────
+
+const archivedOf = (includeArchived: boolean) => (includeArchived ? "include" : "exclude");
+
+export async function listTags(filter: TagFilterInput = {}): Promise<Paginated<TagListRowDTO>> {
+  const { page, pageSize, sort, q, entityType, includeArchived } = tagFilterSchema.parse(filter);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/tags", {
+      params: {
+        query: {
+          page,
+          pageSize,
+          sort: sort as TagListQuery["sort"],
+          q,
+          entityType,
+          archived: archivedOf(includeArchived),
+        },
+      },
+    }),
+  );
+}
+
+export async function listTechnologies(
+  filter: TechnologyFilterInput = {},
+): Promise<Paginated<TechnologyListRowDTO>> {
+  const { page, pageSize, sort, q, category, active, includeArchived } =
+    technologyFilterSchema.parse(filter);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/technologies", {
+      params: {
+        query: {
+          page,
+          pageSize,
+          sort: sort as TechnologyListQuery["sort"],
+          q,
+          category,
+          active: (active === undefined
+            ? undefined
+            : String(active)) as TechnologyListQuery["active"],
+          archived: archivedOf(includeArchived),
+        },
+      },
+    }),
+  );
+}
+
+export async function listDocumentCategories(): Promise<DocumentCategoryDetailDTO[]> {
+  const api = await getServerApi();
+  return unwrap(await api.GET("/api/v1/document-categories"));
+}
+
+export async function listDocumentTypes(
+  filter: DocumentTypeFilterInput = {},
+): Promise<Paginated<DocumentTypeListRowDTO>> {
+  const { page, pageSize, sort, q, categoryId, active, requiresSignature, hasExpiration } =
+    documentTypeFilterSchema.parse(filter);
+  const flag = (value: boolean | undefined) => (value === undefined ? undefined : String(value));
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/document-types", {
+      params: {
+        query: {
+          page,
+          pageSize,
+          sort: sort as DocumentTypeListQuery["sort"],
+          q,
+          categoryId,
+          active: flag(active),
+          requiresSignature: flag(requiresSignature),
+          hasExpiration: flag(hasExpiration),
+        },
+      },
+    }),
+  );
 }
 
 // ───────────────────────────── Settings → Tasas table ─────────────────────────────
@@ -138,14 +243,13 @@ export async function getQuickLoadContext(): Promise<{
   today: string;
   currencies: QuickLoadCurrency[];
 }> {
-  const ctx = await getServiceContext();
-  const today = todayInCaracas(ctx.now);
-  const currencies = await catalogs.listCurrencies(ctx, currencyListInputSchema.parse({}));
+  const today = todayInCaracas(new Date());
+  const currencies = await listCurrencies();
   const rows = await Promise.all(
     currencies
       .filter((currency) => currency.code !== "USD")
       .map(async (currency) => {
-        const rate = await catalogs.getRateFor(ctx, { date: today, currency: currency.code });
+        const rate = await getRateFor({ date: today, currency: currency.code });
         return {
           code: currency.code,
           name: currency.name,
@@ -157,9 +261,12 @@ export async function getQuickLoadContext(): Promise<{
 }
 
 /** Settings → Tasas table: one page of stored rates, newest date first. */
-export async function listExchangeRates(input: ExchangeRateFilterInput = {}) {
-  return catalogs.listExchangeRates(
-    await getServiceContext(),
-    exchangeRateFiltersSchema.parse(input),
+export async function listExchangeRates(
+  input: ExchangeRateFilterInput = {},
+): Promise<Paginated<ExchangeRateDTO>> {
+  const filter = exchangeRateFiltersSchema.parse(input);
+  const api = await getServerApi();
+  return unwrap(
+    await api.GET("/api/v1/exchange-rates", { params: { query: toExchangeRateQuery(filter) } }),
   );
 }
