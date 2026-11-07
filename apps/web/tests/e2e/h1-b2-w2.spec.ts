@@ -18,7 +18,9 @@ const notFoundText = (page: Page) => page.getByText("Página no encontrada", { e
 
 const alertsBell = (page: Page) => page.getByRole("button", { name: /^Alertas/ });
 const alertsPanel = (page: Page) => page.getByRole("dialog", { name: "Alertas", exact: true });
-const alertsList = (page: Page) => page.getByRole("list", { name: "Lista de alertas", exact: true });
+// The dashboard renders its own "Lista de alertas" (the same AlertList), so the list is read inside the bell's dialog.
+const alertsList = (page: Page) =>
+  alertsPanel(page).getByRole("list", { name: "Lista de alertas", exact: true });
 
 /** The bell counter as shown (the badge is aria-hidden, so its text is read directly); 0 when not rendered. */
 async function badgeValue(page: Page): Promise<number> {
