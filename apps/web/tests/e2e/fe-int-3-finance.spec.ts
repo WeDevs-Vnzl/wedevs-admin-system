@@ -309,7 +309,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     );
     await issueInvoice(page, voidable);
     await page.goto(`/invoices/${voidable}`);
-    await page.getByRole("button", { name: "Anular factura", exact: true }).first().click();
+    await page.getByRole("button", { name: "Anular", exact: true }).first().click();
     const voidDialog = page.getByRole("dialog");
     await voidDialog.getByRole("button", { name: "Anular factura", exact: true }).click();
     await expect(page.getByText("Factura anulada")).toHaveCount(0);
@@ -318,7 +318,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(page.getByText("Factura anulada")).toBeVisible();
 
     await page.goto(`/invoices/${invoiceId}`);
-    await page.getByRole("button", { name: "Anular factura", exact: true }).first().click();
+    await page.getByRole("button", { name: "Anular", exact: true }).first().click();
     await page.getByRole("dialog").getByLabel("Motivo", { exact: true }).fill("E2E: no debe anularse");
     await page.getByRole("dialog").getByRole("button", { name: "Anular factura", exact: true }).click();
     await expect(page.getByText("La factura tiene pagos asignados: quita primero esas asignaciones")).toBeVisible();
