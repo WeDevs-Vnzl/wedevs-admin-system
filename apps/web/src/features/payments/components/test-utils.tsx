@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enCommon from "@/i18n/messages/en/common.json";
 import enEnums from "@/i18n/messages/en/enums.json";
+import enForms from "@/i18n/messages/en/forms.json";
 import enPatterns from "@/i18n/messages/en/patterns.json";
 import enPayments from "@/i18n/messages/en/payments.json";
 import enTable from "@/i18n/messages/en/table.json";
@@ -17,6 +18,7 @@ export function renderWithIntl(ui: ReactNode) {
       messages={{
         common: enCommon,
         enums: enEnums,
+        forms: enForms,
         patterns: enPatterns,
         payments: enPayments,
         table: enTable,

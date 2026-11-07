@@ -3,25 +3,32 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { MoneyText } from "@/components/patterns/money-text";
+import { Button } from "@/components/ui/button";
 import {
   DataTable,
   createDataTableColumnHelper,
   type DataTableColumnDef,
 } from "@/components/ui/data-table";
-import type { PaymentAllocationDTO } from "@/lib/validators/payments";
+import type { PaymentAllocationResponseDto } from "@/lib/api/types/payments";
 
 type PaymentAllocationsTableProps = {
-  rows: PaymentAllocationDTO[];
+  rows: PaymentAllocationResponseDto[];
   currency: string;
+  /** Adds the "Desasignar" action to every row (cosmetic: the BE decides who may). */
+  onDeallocate?: (allocation: PaymentAllocationResponseDto) => void;
 };
 
-const helper = createDataTableColumnHelper<PaymentAllocationDTO>();
+const helper = createDataTableColumnHelper<PaymentAllocationResponseDto>();
 
 /** Invoices a payment was applied to (PRD §8.6 "Asignaciones"), both amounts as stored at write time. */
-export function PaymentAllocationsTable({ rows, currency }: PaymentAllocationsTableProps) {
+export function PaymentAllocationsTable({
+  rows,
+  currency,
+  onDeallocate,
+}: PaymentAllocationsTableProps) {
   const t = useTranslations("payments.detail");
 
-  const columns: DataTableColumnDef<PaymentAllocationDTO>[] = [
+  const columns: DataTableColumnDef<PaymentAllocationResponseDto>[] = [
     helper.display({
       id: "invoice",
       header: t("invoice"),
@@ -64,6 +71,21 @@ export function PaymentAllocationsTable({ rows, currency }: PaymentAllocationsTa
       meta: { label: t("amountUsd"), align: "end" },
       size: 140,
     }),
+    ...(onDeallocate
+      ? [
+          helper.display({
+            id: "actions",
+            header: () => <span className="sr-only">{t("actions.column")}</span>,
+            cell: ({ row }) => (
+              <Button variant="ghost" size="sm" onClick={() => onDeallocate(row.original)}>
+                {t("actions.deallocate")}
+              </Button>
+            ),
+            meta: { label: t("actions.column"), align: "end" },
+            size: 130,
+          }),
+        ]
+      : []),
   ];
 
   return (

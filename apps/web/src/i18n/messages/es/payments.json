@@ -9,7 +9,10 @@
     "allocationExceedsBalance": "El monto supera el saldo de la factura",
     "allocationInvoiceNotOpen": "La factura no está abierta para este cliente",
     "allocationSameCurrency": "En la misma moneda, el monto de la factura debe ser igual al del pago",
-    "paymentNotConfirmed": "Solo se puede asignar un pago confirmado"
+    "paymentNotConfirmed": "Solo se puede asignar un pago confirmado",
+    "allocationAmountRequired": "Indica el monto a aplicar en ambas monedas",
+    "receiptUnavailable": "Ese comprobante ya pertenece a otro pago",
+    "providerInvoiceClientMismatch": "La factura es de otro cliente"
   },
   "warnings": {
     "duplicate": "Posible pago duplicado: existe otro con la misma referencia, método y cuenta"
@@ -22,7 +25,8 @@
     "description": "Cobros recibidos de los clientes, su asignación a facturas y su comprobante.",
     "newAction": "Registrar pago",
     "listAction": "Ver lista",
-    "overviewAction": "Ver resumen"
+    "overviewAction": "Ver resumen",
+    "editTitle": "Editar pago"
   },
   "overview": {
     "collectedTitle": "Cobrado por mes (USD)",
@@ -129,10 +133,18 @@
       "total": "Total en USD"
     },
     "receiptHint": "PDF, PNG, JPG o WEBP de hasta 10 MB.",
-    "ariaReceipt": "Subir comprobante"
+    "ariaReceipt": "Subir comprobante",
+    "editTitle": "Editar pago",
+    "editDescription": "Corrige los datos del pago. Las facturas a las que se aplica se cambian desde el detalle.",
+    "save": "Guardar",
+    "inactiveHint": "inactivo"
   },
   "toast": {
-    "created": "Pago registrado"
+    "created": "Pago registrado",
+    "updated": "Pago actualizado",
+    "confirmed": "Pago confirmado",
+    "voided": "Pago anulado",
+    "allocated": "Pago asignado"
   },
   "detail": {
     "summary": "Resumen",
@@ -165,17 +177,44 @@
     "receiptTitle": "Comprobante",
     "receiptDescription": "Se ve aquí sin descargarlo.",
     "receiptEmpty": "Este pago no tiene comprobante.",
-    "receiptPreviewUnavailable": "La vista previa del comprobante estará disponible cuando el archivo esté almacenado (Hito 2). En la maqueta solo se muestran sus datos.",
     "receiptFile": "Archivo",
     "receiptMime": "Tipo",
     "receiptSize": "Tamaño",
     "receiptSizeValue": "{kb} KB",
     "amountUsd": "Aplicado (USD)",
-    "dataTitle": "Datos del pago"
+    "dataTitle": "Datos del pago",
+    "receiptImageAlt": "Comprobante {name}",
+    "receiptDownload": "Descargar",
+    "actions": {
+      "confirm": "Confirmar pago",
+      "void": "Anular pago",
+      "allocate": "Asignar",
+      "column": "Acciones",
+      "deallocate": "Desasignar"
+    },
+    "voidDescription": "El pago quedará anulado y sus asignaciones a facturas se quitarán. Esta acción no se puede deshacer desde esta pantalla.",
+    "deallocate": {
+      "title": "¿Quitar la asignación?",
+      "description": "El monto asignado a {invoice} vuelve al saldo a favor del pago y el saldo de la factura se recalcula.",
+      "confirm": "Desasignar factura",
+      "done": "Asignación quitada"
+    }
   },
   "credit": {
     "title": "Saldo a favor",
     "description": "Pagos confirmados del cliente con monto sin asignar.",
     "empty": "No hay saldo a favor."
+  },
+  "errors": {
+    "voided": "Un pago anulado no se puede modificar",
+    "invalidTransition": "Ese cambio de estado no está permitido",
+    "clientLocked": "El cliente y la moneda no se pueden cambiar mientras el pago tenga asignaciones",
+    "allocatableBelowAllocated": "El monto no puede ser menor que lo ya asignado"
+  },
+  "allocate": {
+    "title": "Asignar a facturas",
+    "description": "Elige las facturas abiertas del cliente a las que aplicar el saldo a favor de este pago.",
+    "loading": "Cargando facturas abiertas…",
+    "submit": "Asignar"
   }
 }

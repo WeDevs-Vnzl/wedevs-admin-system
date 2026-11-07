@@ -9,7 +9,10 @@
     "allocationExceedsBalance": "The amount exceeds the invoice balance",
     "allocationInvoiceNotOpen": "The invoice is not open for this client",
     "allocationSameCurrency": "In the same currency, the invoice amount must equal the payment amount",
-    "paymentNotConfirmed": "Only a confirmed payment can be allocated"
+    "paymentNotConfirmed": "Only a confirmed payment can be allocated",
+    "allocationAmountRequired": "Enter the amount to apply in both currencies",
+    "receiptUnavailable": "That receipt already belongs to another payment",
+    "providerInvoiceClientMismatch": "The invoice belongs to another client"
   },
   "warnings": {
     "duplicate": "Possible duplicate payment: another one has the same reference, method and account"
@@ -22,7 +25,8 @@
     "description": "Money received from clients, how it is applied to invoices, and its receipt.",
     "newAction": "Record payment",
     "listAction": "View list",
-    "overviewAction": "View overview"
+    "overviewAction": "View overview",
+    "editTitle": "Edit payment"
   },
   "overview": {
     "collectedTitle": "Collected per month (USD)",
@@ -129,10 +133,18 @@
       "total": "Total in USD"
     },
     "receiptHint": "PDF, PNG, JPG or WEBP up to 10 MB.",
-    "ariaReceipt": "Upload receipt"
+    "ariaReceipt": "Upload receipt",
+    "editTitle": "Edit payment",
+    "editDescription": "Fix the payment data. The invoices it is applied to are changed from the detail.",
+    "save": "Save",
+    "inactiveHint": "inactive"
   },
   "toast": {
-    "created": "Payment recorded"
+    "created": "Payment recorded",
+    "updated": "Payment updated",
+    "confirmed": "Payment confirmed",
+    "voided": "Payment voided",
+    "allocated": "Payment allocated"
   },
   "detail": {
     "summary": "Summary",
@@ -165,17 +177,44 @@
     "receiptTitle": "Receipt",
     "receiptDescription": "Viewable here without downloading.",
     "receiptEmpty": "This payment has no receipt.",
-    "receiptPreviewUnavailable": "The receipt preview is available once the file is stored (Hito 2). The mock only shows its details.",
     "receiptFile": "File",
     "receiptMime": "Type",
     "receiptSize": "Size",
     "receiptSizeValue": "{kb} KB",
     "amountUsd": "Applied (USD)",
-    "dataTitle": "Payment details"
+    "dataTitle": "Payment details",
+    "receiptImageAlt": "Receipt {name}",
+    "receiptDownload": "Download",
+    "actions": {
+      "confirm": "Confirm payment",
+      "void": "Void payment",
+      "allocate": "Allocate",
+      "column": "Actions",
+      "deallocate": "Deallocate"
+    },
+    "voidDescription": "The payment will be voided and its allocations to invoices will be removed. This action cannot be undone from this screen.",
+    "deallocate": {
+      "title": "Remove the allocation?",
+      "description": "The amount allocated to {invoice} goes back to the credit of the payment and the invoice balance is recalculated.",
+      "confirm": "Deallocate invoice",
+      "done": "Allocation removed"
+    }
   },
   "credit": {
     "title": "Credit",
     "description": "Confirmed payments of the client with an amount not yet applied.",
     "empty": "There is no credit."
+  },
+  "errors": {
+    "voided": "A voided payment cannot be changed",
+    "invalidTransition": "That status change is not allowed",
+    "clientLocked": "The client and the currency cannot change while the payment has allocations",
+    "allocatableBelowAllocated": "The amount cannot be lower than what is already allocated"
+  },
+  "allocate": {
+    "title": "Allocate to invoices",
+    "description": "Choose the client's open invoices to apply this payment's credit to.",
+    "loading": "Loading open invoices…",
+    "submit": "Allocate"
   }
 }

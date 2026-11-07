@@ -21,7 +21,7 @@ import { searchClientsAction } from "@/features/clients/actions";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
 import { PAYMENT_STATUS_VALUES } from "@/lib/validators/enums";
 import type { ListQuery } from "@/lib/validators/common";
-import type { PaymentListRow } from "@/lib/validators/payments";
+import type { PaymentListRowDto } from "@/lib/api/types/payments";
 import { listPaymentsAction } from "../actions";
 import { paymentFilterOf } from "./payment-table-query";
 
@@ -34,13 +34,13 @@ export type PaymentFacetSources = {
 
 type PaymentsTableProps = {
   /** First page, read on the server for the query in the URL. */
-  initialRows: PaymentListRow[];
+  initialRows: PaymentListRowDto[];
   initialTotal: number;
   facetSources: PaymentFacetSources;
   canCreate: boolean;
 };
 
-const helper = createDataTableColumnHelper<PaymentListRow>();
+const helper = createDataTableColumnHelper<PaymentListRowDto>();
 
 /**
  * The `/payments/list` table (DT-25, HU-13): amounts in the payment currency and in USD, with what is applied to
@@ -85,7 +85,7 @@ export function PaymentsTable({
     void load(query);
   }, [query, queryKey, load]);
 
-  const columns = useMemo<DataTableColumnDef<PaymentListRow>[]>(
+  const columns = useMemo<DataTableColumnDef<PaymentListRowDto>[]>(
     () =>
       [
         helper.accessor("code", {
@@ -161,7 +161,7 @@ export function PaymentsTable({
           meta: { label: t("table.columns.status"), sortable: true },
           cell: ({ row }) => <StatusBadge enumName="PaymentStatus" value={row.original.status} />,
         }),
-      ] as DataTableColumnDef<PaymentListRow>[],
+      ] as DataTableColumnDef<PaymentListRowDto>[],
     [t, locale],
   );
 
@@ -232,7 +232,7 @@ export function PaymentsTable({
   );
 
   return (
-    <DataTable<PaymentListRow>
+    <DataTable<PaymentListRowDto>
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}

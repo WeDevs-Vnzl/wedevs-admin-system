@@ -16,6 +16,7 @@ import {
   paymentFiltersSchema,
   paymentListRowSchema,
   paymentsOverviewDtoSchema,
+  searchPaymentsInputSchema,
   setPaymentStatusInputSchema,
   updatePaymentInputSchema,
   PAYMENT_SORT_FIELDS,
@@ -334,5 +335,33 @@ describe("sort whitelist (m2)", () => {
       message: VALIDATION_MESSAGES.invalidSort,
       path: ["sort"],
     });
+  });
+});
+
+describe("searchPaymentsInputSchema (typeahead input)", () => {
+  it("defaults to an empty search and trims the text", () => {
+    expect(searchPaymentsInputSchema.parse({})).toEqual({ q: "" });
+    expect(searchPaymentsInputSchema.parse({ q: "  PAG-0001 " })).toEqual({ q: "PAG-0001" });
+  });
+
+  it("refuses a search longer than 200 characters", () => {
+    expect(searchPaymentsInputSchema.safeParse({ q: "x".repeat(201) }).success).toBe(false);
+  });
+});
+
+describe("BE message keys the screens render (payments.json)", () => {
+  const keys = [
+    ["errors", "voided"],
+    ["errors", "invalidTransition"],
+    ["errors", "clientLocked"],
+    ["errors", "allocatableBelowAllocated"],
+    ["validation", "receiptUnavailable"],
+    ["validation", "providerInvoiceClientMismatch"],
+    ["validation", "allocationAmountRequired"],
+  ];
+
+  it.each(keys)("has payments.%s.%s in both locales", (group, key) => {
+    expect(hasKey(es, [group!, key!])).toBe(true);
+    expect(hasKey(en, [group!, key!])).toBe(true);
   });
 });
