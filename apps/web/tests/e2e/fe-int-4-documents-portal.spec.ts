@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./support/auth";
 import { assertBackendHealthy } from "./support/backend";
 import { namePrefix } from "./support/accessible-names";
+import { caracasToday, pickDateViaUi } from "./support/ui-data";
 
 // FE-INT-R E.2 documents and portal E2E (old 4.5). Back office (`@authenticated`): HU-18 CA1–CA4, HU-19 CA1 and CA4,
 // HU-20 CA1–CA2, HU-21 CA1–CA2, HU-22 CA1–CA2 (create a link; a key-protected document), HU-28 for a document.
@@ -212,9 +213,9 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     await dialog.getByRole("radio", { name: oneOf("Firmado", "Signed") }).click();
     await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel(oneOf("Fecha de firma", "Signing date"), { exact: true }).fill(
-      new Date().toISOString().slice(0, 10),
-    );
+    // The signing date is a DateField (a button that opens a calendar), not a text input: `fill` cannot set it.
+    const signedAt = dialog.getByLabel(oneOf("Fecha de firma", "Signing date"), { exact: true });
+    await pickDateViaUi(page, signedAt, caracasToday());
     await dialog.getByRole("button", { name: oneOf("Cambiar estado", "Change status") }).click();
     await expect(page.getByText(oneOf("Estado actualizado", "Status updated"))).toBeVisible();
 
