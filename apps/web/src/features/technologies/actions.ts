@@ -2,16 +2,20 @@
 
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
 import { apiAction } from "@/lib/api/action";
-import type { TechnologyListResponseDto } from "@/lib/api/types/taxonomy";
+import type {
+  TechnologyDeletedDto,
+  TechnologyListResponseDto,
+  TechnologyViewDto,
+} from "@/lib/api/types/taxonomy";
 import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
 import type { ExportSource } from "@/lib/validators/export";
 import {
   createTechnologyInputSchema,
-  deleteTechnologyInputSchema,
   iconSlugSchema,
-  setTechnologyActiveInputSchema,
   technologyFilterSchema,
   updateTechnologyInputSchema,
+  type DeleteTechnologyInput,
+  type SetTechnologyActiveInput,
   type TechnologyFilter,
   type TechnologyFilterInput,
   type TechnologyListRowDTO,
@@ -27,35 +31,44 @@ import { resolveTechnologyIcon } from "./icons";
 
 const SETTINGS_PATH = "/settings/technologies";
 
-/** Settings → Tecnologías writes (Owner and Admin, `settings` matrix row). */
-export const createTechnologyAction = defineAction({
-  permission: { action: "create", resource: "settings" },
-  input: createTechnologyInputSchema,
+// Settings → Tecnologías writes: thin proxies (C10). The settings grant is the BE's rule; the form validates for UX.
+// The inputs are the form's zod input types (as `defineAction` took them): the dialog sends `nameEn: null` and
+// omits `active` when the schema default applies, so `active` takes the schema default (`true`) for the typed body.
+
+/** Creates a technology (settings grant). The BE answers CONFLICT on a taken name or slug. */
+export const createTechnologyAction = apiAction<
+  z.input<typeof createTechnologyInputSchema>,
+  TechnologyViewDto
+>({
+  call: (input, api) =>
+    api.POST("/api/v1/technologies", { body: { ...input, active: input.active ?? true } }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => technologies.createTechnology(ctx, data),
 });
 
-export const updateTechnologyAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateTechnologyInputSchema,
+/** Replaces every editable field of a technology: the edit form submits all of them. */
+export const updateTechnologyAction = apiAction<
+  z.input<typeof updateTechnologyInputSchema>,
+  TechnologyViewDto
+>({
+  call: ({ id, name, nameEn, category, iconSlug, color, active }, api) =>
+    api.PATCH("/api/v1/technologies/{id}", {
+      params: { path: { id } },
+      body: { name, nameEn, category, iconSlug, color, active: active ?? true },
+    }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => technologies.updateTechnology(ctx, data),
 });
 
 /** Activate or deactivate: the switch in the table and the form's "active" field. */
-export const setTechnologyActiveAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: setTechnologyActiveInputSchema,
+export const setTechnologyActiveAction = apiAction<SetTechnologyActiveInput, TechnologyViewDto>({
+  call: ({ id, active }, api) =>
+    api.POST("/api/v1/technologies/{id}/active", { params: { path: { id } }, body: { active } }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => technologies.setTechnologyActive(ctx, data),
 });
 
 /** `INTEGRITY_LOCK` when a non-archived project uses the technology (the UI offers deactivation). */
-export const deleteTechnologyAction = defineAction({
-  permission: { action: "delete", resource: "settings" },
-  input: deleteTechnologyInputSchema,
+export const deleteTechnologyAction = apiAction<DeleteTechnologyInput, TechnologyDeletedDto>({
+  call: ({ id }, api) => api.DELETE("/api/v1/technologies/{id}", { params: { path: { id } } }),
   revalidate: [SETTINGS_PATH],
-  handler: (ctx, data) => technologies.deleteTechnology(ctx, data),
 });
 
 const listTechnologies = apiAction<TechnologyFilter, TechnologyListResponseDto>({

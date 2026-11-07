@@ -20,7 +20,9 @@ export type AssignTagsDto = components["schemas"]["AssignTagsDto"];
 export type UnassignTagDto = components["schemas"]["UnassignTagDto"];
 
 /** Query of `GET /api/v1/technologies`. */
-export type TechnologyListQuery = NonNullable<operations["listTechnologies"]["parameters"]["query"]>;
+export type TechnologyListQuery = NonNullable<
+  operations["listTechnologies"]["parameters"]["query"]
+>;
 /** The `sort` tokens `GET /api/v1/technologies` accepts. */
 export type TechnologyListSort = NonNullable<TechnologyListQuery["sort"]>;
 

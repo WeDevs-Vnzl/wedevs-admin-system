@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const session = vi.hoisted(() => ({ getMockSessionUser: vi.fn() }));
+const cache = vi.hoisted(() => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 const intl = vi.hoisted(() => ({
   getTranslations: vi.fn(async (namespace: string) => (key: string) => `${namespace}:${key}`),
 }));
@@ -8,7 +9,7 @@ vi.mock("server-only", () => ({}));
 const server = vi.hoisted(() => ({ getServerApi: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/api/server", () => server);
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+vi.mock("next/cache", () => cache);
 vi.mock("@/mocks/session", () => session);
 vi.mock("next-intl/server", () => intl);
 
@@ -20,6 +21,8 @@ import {
   exportTechnologiesCsvAction,
   listTechnologiesAction,
   resolveTechnologyIconAction,
+  setTechnologyActiveAction,
+  updateTechnologyAction,
 } from "./actions";
 
 const listQuery = { page: 1, pageSize: 25, includeArchived: false, filters: {} };
@@ -56,20 +59,136 @@ const errorResponse = (code: Parameters<typeof errorEnvelope>[0]) => () => {
 };
 beforeEach(() => {
   session.getMockSessionUser.mockReset();
+  cache.revalidatePath.mockReset();
+  cache.updateTag.mockReset();
+});
+
+/** The catalogue row the BE returns for a technology (`TechnologyViewDto`). */
+const nextJs = {
+  id: "tec_next_js",
+  name: "Next.js",
+  nameEn: null,
+  slug: "next-js",
+  category: "FRONTEND",
+  iconSlug: "nextdotjs",
+  color: null,
+  active: true,
+  usageCount: 2,
+};
+
+describe("technology writes through the API (DT-71)", () => {
+  it("creates through POST /api/v1/technologies and refreshes Settings", async () => {
+    const { api, calls } = mockApi({
+      "POST /api/v1/technologies": {
+        status: 201,
+        body: {
+          ...nextJs,
+          id: "tec_odin",
+          name: "Odin Lang",
+          slug: "odin-lang",
+          category: "OTRO",
+          usageCount: 0,
+        },
+      },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(
+      await createTechnologyAction({ name: "Odin Lang", category: "OTRO", active: true }),
+    ).toMatchObject({
+      ok: true,
+      data: { name: "Odin Lang", slug: "odin-lang" },
+    });
+    expect(calls[0]?.body).toMatchObject({ name: "Odin Lang", category: "OTRO", active: true });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/technologies");
+  });
+
+  it("refuses a Member with FORBIDDEN from the BE and refreshes nothing", async () => {
+    const { api } = mockApi({ "POST /api/v1/technologies": errorEnvelope("FORBIDDEN") });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      createTechnologyAction({ name: "Odin Lang", category: "OTRO", active: true }),
+    ).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps the CONFLICT field key of a taken name onto the field", async () => {
+    const { api } = mockApi({
+      "POST /api/v1/technologies": errorEnvelope("CONFLICT", {
+        fieldErrors: { name: ["catalogs.technologies.errors.nameTaken"] },
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      createTechnologyAction({ name: "Next.js", category: "FRONTEND", active: true }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        fieldErrors: { name: ["catalogs.technologies.errors.nameTaken"] },
+      },
+    });
+  });
+});
+
+describe("updateTechnologyAction and setTechnologyActiveAction", () => {
+  it("replaces the editable fields through PATCH /api/v1/technologies/{id}, without the id or slug", async () => {
+    const { api, calls } = mockApi({
+      "PATCH /api/v1/technologies/{id}": { body: { ...nextJs, active: false } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    expect(
+      await updateTechnologyAction({
+        id: nextJs.id,
+        name: "Next.js",
+        nameEn: undefined,
+        slug: "next-js",
+        category: "FRONTEND",
+        iconSlug: "nextdotjs",
+        color: undefined,
+        active: false,
+      }),
+    ).toMatchObject({ ok: true, data: { id: nextJs.id, active: false } });
+    expect(calls[0]?.path).toBe("/api/v1/technologies/tec_next_js");
+    expect(calls[0]?.body).toEqual({
+      name: "Next.js",
+      category: "FRONTEND",
+      iconSlug: "nextdotjs",
+      active: false,
+    });
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/technologies");
+  });
+
+  it("answers NOT_FOUND when the technology is gone", async () => {
+    const { api } = mockApi({ "PATCH /api/v1/technologies/{id}": errorEnvelope("NOT_FOUND") });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      updateTechnologyAction({ id: "tec_gone", name: "X", category: "OTRO", active: true }),
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
+  });
+
+  it("deactivates through POST /api/v1/technologies/{id}/active", async () => {
+    const { api, calls } = mockApi({
+      "POST /api/v1/technologies/{id}/active": { body: { ...nextJs, active: false } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(
+      setTechnologyActiveAction({ id: nextJs.id, active: false }),
+    ).resolves.toMatchObject({
+      ok: true,
+      data: { active: false },
+    });
+    expect(calls[0]?.path).toBe("/api/v1/technologies/tec_next_js/active");
+    expect(calls[0]?.body).toEqual({ active: false });
+  });
 });
 
 describe("technology actions: permissions (DT-71)", () => {
-  it("lets Owner and Admin create, and refuses Member and Viewer with FORBIDDEN", async () => {
-    asRole("MEMBER");
-    await expect(
-      createTechnologyAction({ name: "Odin Lang", category: "OTRO" }),
-    ).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-
-    asRole("ADMIN");
-    const created = await createTechnologyAction({ name: "Odin Lang", category: "OTRO" });
-    expect(created).toMatchObject({ ok: true, data: { name: "Odin Lang", slug: "odin-lang" } });
-  });
-
   it("lets any signed-in role read the reference catalog (authenticated)", async () => {
     const { api, calls } = mockApi({
       "GET /api/v1/technologies": {
@@ -136,12 +255,33 @@ describe("technology actions: permissions (DT-71)", () => {
   });
 });
 
-describe("deleteTechnologyAction: in-use lock (HU-06 CA3)", () => {
-  it("answers INTEGRITY_LOCK for a technology that a project uses", async () => {
-    asRole("OWNER");
+describe("deleteTechnologyAction", () => {
+  it("deletes an unused technology through DELETE /api/v1/technologies/{id}", async () => {
+    const { api, calls } = mockApi({
+      "DELETE /api/v1/technologies/{id}": { body: { id: "tec_odin" } },
+    });
+    server.getServerApi.mockResolvedValue(api);
+
+    await expect(deleteTechnologyAction({ id: "tec_odin" })).resolves.toEqual({
+      ok: true,
+      data: { id: "tec_odin" },
+    });
+    expect(calls[0]?.path).toBe("/api/v1/technologies/tec_odin");
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/settings/technologies");
+  });
+
+  it("answers INTEGRITY_LOCK for a technology that a project uses (HU-06 CA3)", async () => {
+    const { api } = mockApi({
+      "DELETE /api/v1/technologies/{id}": errorEnvelope("INTEGRITY_LOCK", {
+        message: "catalogs.technologies.errors.inUse",
+      }),
+    });
+    server.getServerApi.mockResolvedValue(api);
+
     await expect(deleteTechnologyAction({ id: "tec_next_js" })).resolves.toMatchObject({
       ok: false,
       error: { code: "INTEGRITY_LOCK", message: "catalogs.technologies.errors.inUse" },
     });
+    expect(cache.revalidatePath).not.toHaveBeenCalled();
   });
 });
