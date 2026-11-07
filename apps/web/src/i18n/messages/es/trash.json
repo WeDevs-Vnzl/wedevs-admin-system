@@ -29,6 +29,9 @@
   "toast": {
     "restored": "{label} restaurado"
   },
+  "conflict": {
+    "open": "Abrir {label}"
+  },
   "errors": {
     "taxIdTaken": "Otro cliente activo ya usa este RIF. Archívalo o edítalo antes de restaurar este.",
     "clientArchived": "Su cliente está archivado. Restaura primero el cliente.",

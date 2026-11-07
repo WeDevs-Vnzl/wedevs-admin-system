@@ -135,6 +135,27 @@ describe("TrashTable (PRD §7.7)", () => {
     expect(screen.getByText("Luis Rivas")).toBeInTheDocument();
   });
 
+  it("links a CONFLICT to the record that blocks the restore and keeps the row (HU-03 CA3)", async () => {
+    const user = userEvent.setup();
+    mocks.restoreFromTrashAction.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: "trash.errors.clientArchived",
+        entity: { id: "cli_kairos", type: "CLIENT", code: "CLI-0001", label: "Kairos" },
+      },
+    });
+    renderTable();
+    await user.click(
+      within(rowOf("Luis Rivas")).getByRole("button", { name: "Restore Luis Rivas" }),
+    );
+    const link = await screen.findByRole("link", { name: "Open Kairos" });
+    expect(link).toHaveAttribute("href", "/clients/cli_kairos");
+    expect(screen.getByText(enTrash.errors.clientArchived)).toBeInTheDocument();
+    expect(mocks.toast.error).not.toHaveBeenCalled();
+    expect(screen.getByText("Luis Rivas")).toBeInTheDocument();
+  });
+
   it("maps every trash CONFLICT key to a message", () => {
     expect(Object.keys(enTrash.errors).sort()).toEqual(
       ["clientArchived", "invoiceNumberTaken", "projectArchived", "taxIdTaken"].sort(),

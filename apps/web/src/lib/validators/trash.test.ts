@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  RESTORABLE_ENTITY_TYPE_VALUES,
   TRASHABLE_ENTITY_TYPE_VALUES,
   archivedRecordSchema,
   restoreFromTrashInputSchema,
@@ -13,6 +14,15 @@ describe("trash", () => {
     expect(TRASHABLE_ENTITY_TYPE_VALUES).toContain("CLIENT");
     expect(TRASHABLE_ENTITY_TYPE_VALUES).not.toContain("USER");
     expect(TRASHABLE_ENTITY_TYPE_VALUES).not.toContain("TAG");
+  });
+
+  it("the trash facets are the types the BE registers a restore handler for", () => {
+    expect([...RESTORABLE_ENTITY_TYPE_VALUES].sort()).toEqual(
+      ["CLIENT", "CONTACT", "DOCUMENT", "INVOICE", "NOTE", "PROJECT"].sort(),
+    );
+    for (const type of RESTORABLE_ENTITY_TYPE_VALUES) {
+      expect(TRASHABLE_ENTITY_TYPE_VALUES).toContain(type);
+    }
   });
 
   it("restoreFromTrash needs a trashable type and an id", () => {
