@@ -265,6 +265,10 @@ export type ProjectFilterInput = z.input<typeof projectFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
+// MOCK — until cleanup: the response DTOs of this section are what the mock services (`mocks/services/projects.ts`),
+// their fixtures and tests return and parse. The screens read the generated DTOs of `lib/api/types/projects.ts`
+// (money is `string | null` there, C13); CLEAN deletes this section with `src/mocks/`.
+
 const usdTotalSchema = moneyAmountSchema({ sign: "nonNegative" });
 
 /** Client of a project as shown in tables and the detail. */
@@ -348,11 +352,13 @@ export const projectsOverviewSchema = z.object({
 });
 export type ProjectsOverviewDTO = z.infer<typeof projectsOverviewSchema>;
 
+// MOCK — until cleanup: only the mock overview service takes this input.
 export const getProjectsOverviewInputSchema = z.object({}).strict();
 export type GetProjectsOverviewInput = z.infer<typeof getProjectsOverviewInputSchema>;
 
 // ───────────────────────────── Services (PRD §12 `projects`) ─────────────────────────────
 
+// MOCK — until cleanup: the mock service and its tests are typed with `ProjectsService` (`satisfies`).
 /**
  * `projects` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). The summary DTO of
  * `getProjectFinancials` (PRD §8.4.4) belongs to the billing contract, so it is a type parameter here

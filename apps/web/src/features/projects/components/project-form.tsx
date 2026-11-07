@@ -34,8 +34,9 @@ import {
   upsertProjectLinksAction,
   removeProjectLinkAction,
 } from "@/features/projects/actions";
+import type { ProjectDetailDto } from "@/lib/api/types/projects";
 import type { ActionError, EntityRef } from "@/lib/validators/common";
-import type { RichTextDoc } from "@/lib/validators/notes";
+import { richTextDocSchema, type RichTextDoc } from "@/lib/validators/notes";
 import type { TechnologyListRowDTO, TechnologyChipDTO } from "@/lib/validators/technologies";
 import type { TagChipDTO } from "@/lib/validators/tags";
 import {
@@ -44,9 +45,9 @@ import {
   projectLinkInputSchema,
   updateProjectInputSchema,
   type CreateProjectInput,
-  type ProjectDetailDTO,
   type UpdateProjectInput,
 } from "@/lib/validators/projects";
+import { stackChips } from "../stack-chips";
 import { linkRowsFromDto, type ProjectLinkRow } from "../link-rows";
 import { ProjectLinksEditor } from "./project-links-editor";
 
@@ -73,7 +74,7 @@ interface ProjectFormValues {
 export interface ProjectFormProps {
   mode: "create" | "edit";
   /** The project being edited; absent when creating. */
-  project?: ProjectDetailDTO;
+  project?: ProjectDetailDto;
   /** Client prefilled from `/projects/new?clientId=` (HU-05 CA3). */
   initialClient?: EntityRef | null;
   technologies: readonly TechnologyListRowDTO[];
@@ -155,7 +156,7 @@ export function ProjectForm({
   const initialLinks = project ? linkRowsFromDto(project.links) : [];
   const [links, setLinks] = useState<ProjectLinkRow[]>(initialLinks);
   const [tagChips, setTagChips] = useState<TagChipDTO[]>(project?.tags ?? []);
-  const [stackRows] = useState<readonly TechnologyChipDTO[]>(project?.stack ?? []);
+  const [stackRows] = useState<readonly TechnologyChipDTO[]>(stackChips(project?.stack ?? []));
 
   const defaults: ProjectFormValues = project
     ? {
@@ -167,7 +168,7 @@ export function ProjectForm({
           role: client.role ?? "",
         })),
         summary: project.summary,
-        description: project.description,
+        description: richTextDocSchema.safeParse(project.description).data ?? null,
         startDate: project.startDate ?? "",
         targetEndDate: project.targetEndDate ?? "",
         endDate: project.endDate ?? "",

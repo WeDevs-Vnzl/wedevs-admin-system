@@ -24,11 +24,10 @@ import { exportProjectsCsvAction, listProjectsAction } from "@/features/projects
 import { toProjectFilter } from "../table-filter";
 import { technologyLabel } from "@/features/technologies/label";
 import type { ResolvedIcon } from "@/features/technologies/components/tech-stack-icons";
+import type { ProjectListRowDto } from "@/lib/api/types/projects";
 import { formatDate } from "@/lib/dates";
 import type { ListQuery } from "@/lib/validators/common";
 import { PROJECT_STATUS_VALUES } from "@/lib/validators/enums";
-import type { ProjectListRowDTO } from "@/lib/validators/projects";
-import type { TechnologyChipDTO } from "@/lib/validators/technologies";
 import type { TagChipDTO } from "@/lib/validators/tags";
 import { ProjectsBulkActions } from "./projects-bulk-actions";
 
@@ -39,7 +38,7 @@ export interface ProjectsTableTechnology {
 
 export interface ProjectsTableProps {
   /** First page, read on the server for the query in the URL. */
-  initialRows: ProjectListRowDTO[];
+  initialRows: ProjectListRowDto[];
   initialTotal: number;
   /** Stack facet: every catalogue technology, labelled for the locale (inactive ones too: they filter old rows). */
   technologies: readonly ProjectsTableTechnology[];
@@ -57,7 +56,7 @@ export interface ProjectsTableProps {
   canRestore: boolean;
 }
 
-const helper = createDataTableColumnHelper<ProjectListRowDTO>();
+const helper = createDataTableColumnHelper<ProjectListRowDto>();
 
 /** The USD decimal-string columns of the row (C15: never converted or summed in the screen). */
 type MoneyKey = "contractedValueUsd" | "invoicedUsd" | "collectedUsd" | "toInvoiceUsd";
@@ -68,7 +67,7 @@ function StackGlyphs({
   icons,
   locale,
 }: {
-  technologies: readonly TechnologyChipDTO[];
+  technologies: ProjectListRowDto["stack"];
   icons: Record<string, ResolvedIcon | null>;
   locale: string;
 }) {
@@ -213,16 +212,24 @@ export function ProjectsTable({
     [tList, tStatus, technologies, tags],
   );
 
-  const columns = useMemo<DataTableColumnDef<ProjectListRowDTO>[]>(() => {
+  const columns = useMemo<DataTableColumnDef<ProjectListRowDto>[]>(() => {
     const money = (id: MoneyKey, label: string) =>
       helper.accessor(id, {
         header: label,
         size: 240,
         meta: { label, sortable: true, exportable: true, align: "end" },
-        cell: ({ row }) => <MoneyText amount={row.original[id]} currency="USD" />,
+        cell: ({ row }) => {
+          const amount = row.original[id];
+          // `null` = the role has no finance grant for this row (C13): "—", never a zero.
+          return amount === null ? (
+            <span className="text-muted-foreground">—</span>
+          ) : (
+            <MoneyText amount={amount} currency="USD" />
+          );
+        },
       });
 
-    const base: DataTableColumnDef<ProjectListRowDTO>[] = [
+    const base: DataTableColumnDef<ProjectListRowDto>[] = [
       helper.accessor("code", {
         header: t("columns.code"),
         size: 120,
@@ -293,7 +300,7 @@ export function ProjectsTable({
         ]
       : [];
 
-    const tail: DataTableColumnDef<ProjectListRowDTO>[] = [
+    const tail: DataTableColumnDef<ProjectListRowDto>[] = [
       helper.display({
         id: "tags",
         header: t("columns.tags"),
@@ -306,7 +313,7 @@ export function ProjectsTable({
   }, [t, locale, icons, showFinancials]);
 
   return (
-    <DataTable<ProjectListRowDTO>
+    <DataTable<ProjectListRowDto>
       data={rows}
       columns={columns}
       getRowId={(row) => row.id}
