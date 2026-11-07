@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
 // Wave 3 E2E, clients (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
@@ -29,16 +30,6 @@ async function resetMockData(page: Page) {
     .getByRole("button", { name: /^(Restablecer|Reset)$/ })
     .click();
   await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
 }
 
 /** Opens a page and waits until React has hydrated it (clicks before that are lost). */
@@ -465,7 +456,7 @@ test.describe("clients (read only)", () => {
 // Role check kept here: Viewer and Member never see the archive menu of a client (HU-03 roles, C13).
 test.describe("client archive is hidden for roles without the grant", () => {
   test("Miembro does not see Archivar cliente on a client", async ({ page }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
     await open(page, "/clients/cli_zafiro_labs");
     const more = page.getByRole("button", { name: "Más acciones", exact: true });
     if ((await more.count()) > 0) {

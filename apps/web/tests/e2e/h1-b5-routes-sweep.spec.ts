@@ -1,4 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
+import { apiBaseUrl } from "./support/backend";
 
 // T9 navigation sweep, H1-B5 (odd/tasks/h1-b5-intelligence-ui.md S10): every route of PRD §11 loads without an
 // error boundary, a 404 or a console error (Hito 1 completeness), plus HU-02 CA1 (only the Owner reaches
@@ -161,16 +163,6 @@ async function resetMockData(browser: Browser) {
   await page.close();
 }
 
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Administrador" | "Miembro" | "Lector") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
-}
-
 test.beforeAll(async ({ browser }) => {
   await resetMockData(browser);
 });
@@ -201,9 +193,11 @@ test.describe("PRD §11 public routes", () => {
     await expect(page.getByRole("list", { name: /^(Documentos|Documents)$/ })).toBeVisible();
   });
 
-  test("/api/s/[token]/files/[documentId] answers a portal document", async ({ page }) => {
+  test.fixme("FE-INT-R W3: the portal file route is on the BE; the KAIROS mock token is not on the BE", async ({
+    page,
+  }) => {
     const response = await page.request.get(
-      `/api/s/${KAIROS_TOKEN}/files/doc_contrato_kairos?download=1`,
+      `${apiBaseUrl()}/api/v1/portal/${KAIROS_TOKEN}/files/doc_contrato_kairos?download=1`,
       { headers: { "x-forwarded-for": "198.51.100.252" }, maxRedirects: 0 },
     );
     expect(response.status()).toBeLessThan(400);
@@ -216,9 +210,13 @@ test.describe("HU-02 CA1: only the Owner sees /settings/users", () => {
     await expect(notFound(page)).toHaveCount(0);
   });
 
-  for (const role of ["Administrador", "Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Administrador", "ADMIN"],
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets a 404 on /settings/users`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       const response = await page.goto("/settings/users");
       await page.waitForLoadState("networkidle");
       expect(response?.status()).toBe(404);

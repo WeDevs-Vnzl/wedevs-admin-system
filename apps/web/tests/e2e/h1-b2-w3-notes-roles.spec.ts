@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
 // Wave 3 E2E, notes, roles, navigation, accessibility and responsive (H1-B2, docs/TASK.md "Tester scope"). This file
 // starts nothing: it runs against the app that PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock
@@ -31,16 +32,6 @@ async function resetMockData(page: Page) {
     .getByRole("button", { name: /^(Restablecer|Reset)$/ })
     .click();
   await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
 }
 
 /** Opens a page and waits until React has hydrated it (clicks before that are lost). */
@@ -148,7 +139,7 @@ test.describe("HU-29 activity is read-only (mutates a client)", () => {
 
 test.describe("roles (View as role)", () => {
   test("Miembro edits a project but cannot create one or archive a client", async ({ page }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
     await open(page, "/projects/pry_kairos_web");
     await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
 
@@ -169,7 +160,7 @@ test.describe("roles (View as role)", () => {
   test("Miembro sees no finance tabs on a client and no money columns on the lists", async ({
     page,
   }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
     await open(page, "/clients/cli_kairos");
     await expect(page.getByRole("tab", { name: /^Facturas/ })).toHaveCount(0);
     await expect(page.getByRole("tab", { name: /^Pagos/ })).toHaveCount(0);
@@ -191,7 +182,7 @@ test.describe("roles (View as role)", () => {
   test("Miembro archives only own notes: the archive control is missing on at least one note", async ({
     page,
   }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
     await open(page, "/notes");
     const rows = page.getByRole("row").filter({ has: page.getByRole("cell") });
     const archiveControls = page.getByRole("button", { name: /^Archivar / });
@@ -203,7 +194,7 @@ test.describe("roles (View as role)", () => {
   test("Lector sees no write action on the clients, projects and notes screens", async ({
     page,
   }) => {
-    await viewAsRole(page, "Lector");
+    await signInAs(page, "VIEWER");
     await open(page, "/clients/list");
     await expect(page.getByRole("link", { name: "Nuevo cliente", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nuevo cliente", exact: true })).toHaveCount(0);
