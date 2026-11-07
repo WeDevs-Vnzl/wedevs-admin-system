@@ -23,7 +23,6 @@ export default defineConfig({
   projects: [
     {
       name: "unauthenticated",
-      testMatch: /(fe-int-0-auth|fe-int-1-identity)\.spec\.ts$/,
       grep: /@unauthenticated/,
       use: { ...devices["Desktop Chrome"] },
     },
