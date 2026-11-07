@@ -177,6 +177,16 @@ describe("PaymentForm (create)", () => {
     expect(mocks.createPaymentAction).not.toHaveBeenCalled();
   });
 
+  it("marks #payment-amount aria-invalid on empty submit", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<PaymentForm {...props} methods={[transfer]} />);
+    const amount = screen.getByLabelText(/Amount received/);
+    expect(amount).not.toHaveAttribute("aria-invalid", "true");
+    await user.click(screen.getByRole("button", { name: "Record payment" }));
+    await waitFor(() => expect(amount).toHaveAttribute("aria-invalid", "true"));
+    expect(amount).toHaveAttribute("id", "payment-amount");
+  });
+
   it("sends the receipt file id of the confirmed upload (HU-14 CA1)", async () => {
     mocks.createPaymentAction.mockResolvedValue({ ok: true, data: makePayment() });
     const user = userEvent.setup();
@@ -488,6 +498,19 @@ describe("PaymentForm (edit, DT-213)", () => {
         "The amount cannot be lower than what is already allocated",
       ),
     );
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it("does not navigate when the save fails", async () => {
+    mocks.updatePaymentAction.mockResolvedValue({
+      ok: false,
+      error: { code: "CONFLICT", message: "common.errors.CONFLICT" },
+    });
+    const user = userEvent.setup();
+    renderEdit(live);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalled());
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 
   it("shows a deactivated account and method of the payment, labelled inactive (rule 23)", () => {

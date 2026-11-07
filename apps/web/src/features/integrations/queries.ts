@@ -1,5 +1,5 @@
 import "server-only";
-import { listAccounts } from "@/features/accounts/queries";
+import { getAccount, listAccounts } from "@/features/accounts/queries";
 import { catalogLabel } from "@/features/catalogs/components/catalog-label";
 import { listPaymentMethods } from "@/features/catalogs/queries";
 import { unwrapOrBoundary } from "@/features/settings/query-boundary";
@@ -33,10 +33,34 @@ export async function getIntegrationsScreen(locale: string): Promise<Integration
     name,
     currency,
   });
+  const resolved = unwrapOrBoundary(mapping);
+  // The list omits inactive accounts: a mapped one is read by id and offered labelled inactive (rule 23).
+  const mappedMissing = async (accountId: string | undefined) => {
+    if (!accountId || accounts.some((account) => account.id === accountId)) return null;
+    try {
+      return await getAccount(accountId);
+    } catch {
+      return null;
+    }
+  };
+  const [stripeMissing, binanceMissing] = await Promise.all([
+    mappedMissing(resolved.stripe?.accountId),
+    mappedMissing(resolved.binance?.accountId),
+  ]);
+  const inactiveOption = (account: NonNullable<typeof stripeMissing>): MappingAccountOption => ({
+    ...toOption(account),
+    inactive: true,
+  });
   return {
-    mapping: unwrapOrBoundary(mapping),
-    accounts: accounts.map(toOption),
-    walletAccounts: accounts.filter((account) => account.type === "WALLET_CRIPTO").map(toOption),
+    mapping: resolved,
+    accounts: [
+      ...accounts.map(toOption),
+      ...(stripeMissing ? [inactiveOption(stripeMissing)] : []),
+    ],
+    walletAccounts: [
+      ...accounts.filter((account) => account.type === "WALLET_CRIPTO").map(toOption),
+      ...(binanceMissing ? [inactiveOption(binanceMissing)] : []),
+    ],
     methods: methods.map((method) => ({ id: method.id, label: catalogLabel(method, locale) })),
   };
 }

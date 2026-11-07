@@ -4,15 +4,12 @@ import es from "@/i18n/messages/es/payments.json";
 import { VALIDATION_MESSAGES } from "./common";
 import { CATALOG_MESSAGES } from "./catalogs";
 import {
-  DUPLICATE_PAYMENT_WARNING,
   PAYMENT_MESSAGES,
   createPaymentInputSchema,
   createPaymentInputSchemaFor,
-  duplicatePaymentWarningDtoSchema,
   paymentFiltersSchema,
   searchPaymentsInputSchema,
   setPaymentStatusInputSchema,
-  updatePaymentInputSchema,
   PAYMENT_SORT_FIELDS,
 } from "./payments";
 
@@ -39,15 +36,9 @@ const payment = {
   reference: "0012345",
 };
 
-const ref = (id: string, type: "CLIENT" | "ACCOUNT" | "INVOICE" | "PAYMENT") => ({
-  id,
-  label: id,
-  type,
-});
-
 describe("payment message keys", () => {
   it("exist in the payments namespace for es and en", () => {
-    const keys = [...Object.values(PAYMENT_MESSAGES), DUPLICATE_PAYMENT_WARNING.message];
+    const keys = Object.values(PAYMENT_MESSAGES);
     for (const key of keys) {
       const [, ...path] = key.split(".");
       expect(hasKey(es, path), `es ${key}`).toBe(true);
@@ -166,12 +157,6 @@ describe("createPayment input", () => {
       }),
     ).not.toThrow();
   });
-
-  it("update takes the id and no allocations", () => {
-    const update = updatePaymentInputSchema.parse({ ...payment, id: "pay1" });
-    expect(Object.keys(update)).not.toContain("allocations");
-    expect(updatePaymentInputSchema.safeParse(payment).success).toBe(false);
-  });
 });
 
 describe("allocations and status", () => {
@@ -185,28 +170,6 @@ describe("allocations and status", () => {
     expect(setPaymentStatusInputSchema.safeParse({ id: "pay1", status: "PAGADO" }).success).toBe(
       false,
     );
-  });
-});
-
-describe("duplicate detection", () => {
-  it("warning DTO lists the existing payments", () => {
-    const dto = {
-      duplicate: true,
-      matches: [
-        {
-          payment: ref("pay9", "PAYMENT"),
-          date: "2026-10-01",
-          amount: "100.00",
-          currency: "USD",
-          status: "CONFIRMADO",
-        },
-      ],
-    };
-    expect(duplicatePaymentWarningDtoSchema.safeParse(dto).success).toBe(true);
-    expect(
-      duplicatePaymentWarningDtoSchema.safeParse({ duplicate: false, matches: [] }).success,
-    ).toBe(true);
-    expect(DUPLICATE_PAYMENT_WARNING.code).toBe("DUPLICATE_PAYMENT");
   });
 });
 

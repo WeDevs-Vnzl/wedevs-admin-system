@@ -35,8 +35,8 @@ const withCredit = [
   },
 ] as unknown as PaymentListRowDto[];
 
-async function renderOverview() {
-  return renderWithIntl(await PaymentsOverview({ overview, withCredit, canCreate: true }));
+async function renderOverview(data: PaymentsOverviewDto = overview) {
+  return renderWithIntl(await PaymentsOverview({ overview: data, withCredit, canCreate: true }));
 }
 
 beforeAll(installResizeObserver);
@@ -62,6 +62,19 @@ describe("PaymentsOverview", () => {
     expect(rows[0]).toHaveTextContent(/October 2026/i);
     expect(rows[1]).toHaveTextContent(/September 2026/i);
     expect(screen.queryByText(/August 2026/i)).not.toBeInTheDocument();
+  });
+
+  it("compares money strings with the money helper, not Number", async () => {
+    // Below the double range: Number() underflows this positive amount to 0 and would hide the month.
+    await renderOverview({
+      ...overview,
+      collectedByMonth: [
+        { period: "2026-09", value: `0.${"0".repeat(400)}1` },
+        { period: "2026-10", value: "-0.00" },
+      ],
+    });
+    const card = screen.getByText("Collected per month (USD)").closest("[data-slot=card]");
+    expect(within(card as HTMLElement).queryAllByRole("listitem")).toHaveLength(1);
   });
 
   it("keeps the breakdowns and the payments with credit in the aside", async () => {

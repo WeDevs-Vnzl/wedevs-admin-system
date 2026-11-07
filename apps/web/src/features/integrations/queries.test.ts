@@ -63,6 +63,35 @@ describe("getIntegrationsScreen", () => {
     ]);
   });
 
+  it("shows an inactive mapped account as a labelled option", async () => {
+    const inactive = { ...account("a9", "WALLET_CRIPTO", "USDT"), active: false };
+    mocks.getServerApi.mockResolvedValue(
+      mockApi(
+        routes({
+          "GET /api/v1/settings/integrations": {
+            body: {
+              stripe: { accountId: "a9", paymentMethodId: "pm1" },
+              binance: { accountId: "a9" },
+            },
+          },
+          "GET /api/v1/accounts/{id}": { body: inactive },
+        }),
+      ).api,
+    );
+    const screen = await getIntegrationsScreen("en");
+    const expected = { id: "a9", name: "Account a9", currency: "USDT", inactive: true };
+    expect(screen.accounts.at(-1)).toEqual(expected);
+    expect(screen.walletAccounts.at(-1)).toEqual(expected);
+    expect(screen.accounts.filter((a) => a.id === "a9")).toHaveLength(1);
+  });
+
+  it("does not read the account again when the active list already offers the mapped one", async () => {
+    const mock = mockApi(routes());
+    mocks.getServerApi.mockResolvedValue(mock.api);
+    await getIntegrationsScreen("en");
+    expect(mock.calls.map((c) => c.path)).not.toContain("/api/v1/accounts/a1");
+  });
+
   it("shows the Spanish method name in Spanish", async () => {
     mocks.getServerApi.mockResolvedValue(mockApi(routes()).api);
     expect((await getIntegrationsScreen("es")).methods[1]?.label).toBe("Efectivo");

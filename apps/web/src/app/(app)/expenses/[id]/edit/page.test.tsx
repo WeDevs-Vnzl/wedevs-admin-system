@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({
+  redirect: (to: string) => {
+    throw new Error(`NEXT_REDIRECT:${to}`);
+  },
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
@@ -42,6 +45,18 @@ describe("/expenses/[id]/edit (Q-FEINT-11 (A), DT-213)", () => {
     const element = await render();
     const form = (element.props.children as { props: Record<string, unknown> }[])[1];
     expect(form?.props).toMatchObject({ expense: { id: "exp_1" }, options: { accounts: [] } });
+  });
+
+  it("redirects a non-PENDIENTE expense to its detail", async () => {
+    mocks.requireSessionUser.mockResolvedValue(makeSessionUser("ADMIN"));
+    mocks.getServerApi.mockResolvedValue(
+      mockApi({
+        "GET /api/v1/expenses/{id}": {
+          body: makeExpense({ status: "PAGADO", paidAt: "2026-10-09" }),
+        },
+      }).api,
+    );
+    await expect(render()).rejects.toThrow("NEXT_REDIRECT:/expenses/exp_1");
   });
 
   it("hides the page from a Viewer without reading the expense", async () => {

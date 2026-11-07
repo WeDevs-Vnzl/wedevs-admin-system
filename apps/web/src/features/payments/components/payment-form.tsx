@@ -596,6 +596,7 @@ export function PaymentForm({
               </FieldLabel>
               <Input
                 id="payment-amount"
+                aria-invalid={errors.amount ? true : undefined}
                 inputMode="decimal"
                 className="tabular-nums"
                 {...form.register("amount")}

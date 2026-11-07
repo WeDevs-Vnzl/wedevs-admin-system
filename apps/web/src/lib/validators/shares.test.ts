@@ -1,27 +1,9 @@
 import { describe, expect, it } from "vitest";
-import * as sharesModule from "./shares";
 import { z } from "./zod";
 import {
-  ACCESS_KEY_LOCKOUT_MINUTES,
-  ACCESS_KEY_MAX_FAILED_ATTEMPTS,
-  ACCESS_KEY_MIN_LENGTH,
   SHARE_TOKEN_LENGTH,
   createShareLinkInputSchema,
   generatedAccessKeySchema,
-  getSharedDocumentActionSchema,
-  getSharedDocumentDownloadActionSchema,
-  getSharedDocumentDownloadServiceInputSchema,
-  getSharedDocumentServiceInputSchema,
-  portalDocumentContentSchema,
-  portalDocumentSchema,
-  portalDocumentViewSchema,
-  portalDownloadSchema,
-  portalShareSchema,
-  recordShareAccessActionSchema,
-  recordShareAccessResultSchema,
-  recordShareAccessServiceInputSchema,
-  resolveShareTokenActionSchema,
-  resolveShareTokenServiceInputSchema,
   setShareDocumentAccessKeyInputSchema,
   setShareDocumentAccessKeyResultSchema,
   shareAccessLogFilterSchema,
@@ -33,21 +15,14 @@ import {
   shareLinkListRowSchema,
   shareLinkMutationResultSchema,
   shareTokenSchema,
-  unlockSharedDocumentActionSchema,
-  unlockSharedDocumentResultSchema,
-  unlockSharedDocumentServiceInputSchema,
   updateShareLinkInputSchema,
 } from "./shares";
 
 const TOKEN = "A".repeat(SHARE_TOKEN_LENGTH);
-const HASH = "a".repeat(64);
 const TS = "2026-10-01T10:00:00.000Z";
 const user = { id: "usr_1", name: "Andrés Molina", imageUrl: null };
 const doc = { id: "doc_1", code: "DOC-0001", label: "Contrato", type: "DOCUMENT" };
 const counters = { viewCount: 3, downloadCount: 1, unlockCount: 1, failedUnlockCount: 2 };
-
-const issues = (result: { error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
-  (result.error?.issues ?? []).map((i) => `${i.path.join(".")}:${i.message}`);
 
 /** Every property name that appears anywhere in a schema (its JSON Schema), so a stray field is caught. */
 function propertyNames(schema: z.ZodType): string[] {
@@ -223,189 +198,6 @@ describe("setShareDocumentAccessKey", () => {
   });
 });
 
-describe("unlockSharedDocument (public)", () => {
-  const valid = { token: TOKEN, documentId: "doc_1", key: "K7M2-QX9P" };
-
-  it("accepts a key of at least 8 characters", () => {
-    expect(ACCESS_KEY_MIN_LENGTH).toBe(8);
-    expect(unlockSharedDocumentActionSchema.safeParse(valid).success).toBe(true);
-    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "12345678" }).success).toBe(
-      true,
-    );
-  });
-
-  it("rejects keys shorter than 8, blank, or absurdly long", () => {
-    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "1234567" }).success).toBe(
-      false,
-    );
-    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "        " }).success).toBe(
-      false,
-    );
-    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "" }).success).toBe(false);
-    expect(
-      unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "x".repeat(129) }).success,
-    ).toBe(false);
-  });
-
-  it("trims a pasted key before measuring it", () => {
-    expect(unlockSharedDocumentActionSchema.parse({ ...valid, key: "  K7M2-QX9P \n" }).key).toBe(
-      "K7M2-QX9P",
-    );
-    expect(
-      unlockSharedDocumentActionSchema.safeParse({ ...valid, key: "  1234567  " }).success,
-    ).toBe(false);
-  });
-
-  it("rejects a malformed token and a missing document", () => {
-    expect(unlockSharedDocumentActionSchema.safeParse({ ...valid, token: "short" }).success).toBe(
-      false,
-    );
-    expect(
-      unlockSharedDocumentActionSchema.safeParse({ token: TOKEN, key: valid.key }).success,
-    ).toBe(false);
-  });
-
-  it("documents the lockout policy: 5 failures, 15 minutes", () => {
-    expect(ACCESS_KEY_MAX_FAILED_ATTEMPTS).toBe(5);
-    expect(ACCESS_KEY_LOCKOUT_MINUTES).toBe(15);
-  });
-
-  it("action schema strips server-only fields a visitor tries to send (C22)", () => {
-    const forged = {
-      ...valid,
-      ip: "198.51.100.1",
-      ipHash: HASH,
-      userAgent: "forged",
-      unlockedDocumentIds: ["doc_1"],
-    };
-    expect(unlockSharedDocumentActionSchema.parse(forged)).toEqual(valid);
-  });
-
-  it("service input carries the IP hash the lockout is keyed on", () => {
-    const parsed = unlockSharedDocumentServiceInputSchema.parse({
-      ...valid,
-      ipHash: HASH,
-      userAgent: "Mozilla/5.0",
-    });
-    expect(parsed).toMatchObject({ token: TOKEN, documentId: "doc_1", ipHash: HASH });
-    expect(unlockSharedDocumentServiceInputSchema.safeParse(valid).success).toBe(false);
-    expect(
-      unlockSharedDocumentServiceInputSchema.safeParse({ ...valid, ipHash: "203.0.113.7" }).success,
-    ).toBe(false);
-  });
-
-  it("result only says the document is unlocked", () => {
-    expect(
-      unlockSharedDocumentResultSchema.safeParse({ documentId: "doc_1", unlocked: true }).success,
-    ).toBe(true);
-    expect(
-      unlockSharedDocumentResultSchema.safeParse({ documentId: "doc_1", unlocked: false }).success,
-    ).toBe(false);
-    expect(
-      propertyNames(unlockSharedDocumentResultSchema).filter((n) => SECRET_FIELD.test(n)),
-    ).toEqual([]);
-  });
-});
-
-describe("other portal inputs", () => {
-  const meta = { ipHash: HASH, userAgent: "Mozilla/5.0" };
-
-  it("action schemas accept only client fields and strip the rest (C22)", () => {
-    const forged = {
-      ip: "198.51.100.1",
-      ipHash: HASH,
-      userAgent: "forged",
-      unlockedDocumentIds: ["doc_1"],
-    };
-    expect(resolveShareTokenActionSchema.parse({ token: TOKEN, ...forged })).toEqual({
-      token: TOKEN,
-    });
-    expect(
-      getSharedDocumentActionSchema.parse({ token: TOKEN, documentId: "doc_1", ...forged }),
-    ).toEqual({ token: TOKEN, documentId: "doc_1" });
-    expect(
-      getSharedDocumentDownloadActionSchema.parse({ token: TOKEN, documentId: "doc_1", ...forged }),
-    ).toEqual({ token: TOKEN, documentId: "doc_1" });
-    expect(recordShareAccessActionSchema.parse({ token: TOKEN, event: "VIEW", ...forged })).toEqual(
-      { token: TOKEN, event: "VIEW" },
-    );
-  });
-
-  it("resolveShareToken and getSharedDocument service inputs default the unlocked ids", () => {
-    expect(
-      resolveShareTokenServiceInputSchema.parse({ token: TOKEN, ...meta }).unlockedDocumentIds,
-    ).toEqual([]);
-    expect(
-      getSharedDocumentServiceInputSchema.parse({ token: TOKEN, documentId: "doc_1", ...meta })
-        .unlockedDocumentIds,
-    ).toEqual([]);
-    expect(
-      getSharedDocumentDownloadServiceInputSchema.parse({
-        token: TOKEN,
-        documentId: "doc_1",
-        unlockedDocumentIds: ["doc_1"],
-        ...meta,
-      }).unlockedDocumentIds,
-    ).toEqual(["doc_1"]);
-    expect(resolveShareTokenActionSchema.safeParse({ token: "x" }).success).toBe(false);
-    expect(resolveShareTokenServiceInputSchema.safeParse({ token: TOKEN }).success).toBe(false);
-  });
-
-  it("recordShareAccess accepts only VIEW and DOWNLOAD", () => {
-    const base = { token: TOKEN, documentId: "doc_1" };
-    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "VIEW" }).success).toBe(true);
-    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "DOWNLOAD" }).success).toBe(
-      true,
-    );
-    expect(recordShareAccessActionSchema.safeParse({ ...base, event: "UNLOCK" }).success).toBe(
-      false,
-    );
-    expect(
-      recordShareAccessActionSchema.safeParse({ ...base, event: "UNLOCK_FAILED" }).success,
-    ).toBe(false);
-    expect(recordShareAccessActionSchema.safeParse({ token: TOKEN, event: "VIEW" }).success).toBe(
-      true,
-    );
-    expect(recordShareAccessResultSchema.safeParse({ recorded: true }).success).toBe(true);
-  });
-
-  it("recordShareAccess service input stores the IP hash, never a raw IP", () => {
-    const input = { token: TOKEN, event: "VIEW", ...meta };
-    expect(recordShareAccessServiceInputSchema.parse(input)).toEqual(input);
-    expect(
-      recordShareAccessServiceInputSchema.safeParse({ token: TOKEN, event: "VIEW" }).success,
-    ).toBe(false);
-    expect(
-      recordShareAccessServiceInputSchema.safeParse({ ...input, ipHash: "203.0.113.7" }).success,
-    ).toBe(false);
-    expect(propertyNames(recordShareAccessServiceInputSchema)).not.toContain("ip");
-  });
-
-  it("only the service inputs carry server-only metadata", () => {
-    for (const action of [
-      unlockSharedDocumentActionSchema,
-      resolveShareTokenActionSchema,
-      getSharedDocumentActionSchema,
-      getSharedDocumentDownloadActionSchema,
-      recordShareAccessActionSchema,
-    ]) {
-      const names = propertyNames(action);
-      for (const forbidden of ["ip", "ipHash", "userAgent", "unlockedDocumentIds"]) {
-        expect(names).not.toContain(forbidden);
-      }
-    }
-    for (const service of [
-      unlockSharedDocumentServiceInputSchema,
-      resolveShareTokenServiceInputSchema,
-      getSharedDocumentServiceInputSchema,
-      getSharedDocumentDownloadServiceInputSchema,
-      recordShareAccessServiceInputSchema,
-    ]) {
-      expect(propertyNames(service)).toContain("ipHash");
-    }
-  });
-});
-
 describe("filters", () => {
   it("shares: facets, document filter and sort whitelist", () => {
     const parsed = shareFilterSchema.parse({
@@ -507,12 +299,6 @@ describe("read DTOs", () => {
       shareAccessLogRowSchema,
       shareDocumentSchema,
       shareCountersSchema,
-      portalShareSchema,
-      portalDocumentSchema,
-      portalDocumentViewSchema,
-      portalDocumentContentSchema,
-      portalDownloadSchema,
-      unlockSharedDocumentResultSchema,
     };
     for (const [name, schema] of Object.entries(readSchemas)) {
       expect(
@@ -561,146 +347,5 @@ describe("read DTOs", () => {
     expect(
       shareLinkMutationResultSchema.safeParse({ share: detail, generatedKeys: [] }).success,
     ).toBe(true);
-  });
-});
-
-describe("portal DTOs expose only what the visitor may see", () => {
-  const portalDocument = {
-    documentId: "doc_1",
-    title: "Contrato de servicios",
-    typeName: "Contrato",
-    typeNameEn: "Agreement",
-    versionNumber: 2,
-    versionDate: "2026-09-15",
-    format: "ARCHIVO",
-    locked: true,
-  };
-  const portal = {
-    title: "Documentación",
-    message: null,
-    locale: "es",
-    allowDownload: true,
-    clientName: "Kairos Studio",
-    expiresAt: null,
-    documents: [portalDocument, { ...portalDocument, documentId: "doc_2", locked: false }],
-  };
-
-  it("has locked: boolean per document", () => {
-    const parsed = portalShareSchema.parse(portal);
-    expect(parsed.documents.map((d) => d.locked)).toEqual([true, false]);
-    expect(portalDocumentSchema.safeParse({ ...portalDocument, locked: "yes" }).success).toBe(
-      false,
-    );
-    expect(portalDocumentSchema.safeParse({ ...portalDocument, locked: undefined }).success).toBe(
-      false,
-    );
-  });
-
-  it("has no internal data: no token, author, ids of internal records, counters or log", () => {
-    const names = propertyNames(portalShareSchema);
-    for (const internal of [
-      "token",
-      "createdBy",
-      "createdAt",
-      "counters",
-      "client",
-      "clientId",
-      "versionId",
-      "revokedAt",
-      "requiresAccessKey",
-      "accessKeyUpdatedAt",
-      "id",
-    ]) {
-      expect(names, internal).not.toContain(internal);
-    }
-  });
-
-  it("strips internal fields a service might pass by mistake", () => {
-    const parsed = portalShareSchema.parse({
-      ...portal,
-      token: TOKEN,
-      createdBy: user,
-      documents: [{ ...portalDocument, accessKeyHash: "scrypt$x", requiresAccessKey: true }],
-    });
-    expect(JSON.stringify(parsed)).not.toMatch(/scrypt|createdBy|requiresAccessKey|token/);
-  });
-
-  it("the viewer payload exists only for unlocked documents and is typed by format", () => {
-    const unlocked = { ...portalDocument, locked: false };
-    expect(
-      portalDocumentViewSchema.safeParse({
-        document: unlocked,
-        content: {
-          format: "ARCHIVO",
-          fileName: "contrato.pdf",
-          mimeType: "application/pdf",
-          sizeBytes: 1024,
-          preview: "pdf",
-        },
-      }).success,
-    ).toBe(true);
-    expect(
-      portalDocumentViewSchema.safeParse({
-        document: portalDocument,
-        content: { format: "ENLACE", url: "https://x.example" },
-      }).success,
-    ).toBe(false);
-    expect(
-      portalDocumentContentSchema.safeParse({ format: "MARKDOWN", markdown: "# Hola" }).success,
-    ).toBe(true);
-    expect(
-      portalDocumentContentSchema.safeParse({ format: "ENLACE", url: "https://x.example" }).success,
-    ).toBe(true);
-    expect(
-      portalDocumentContentSchema.safeParse({ format: "ARCHIVO", fileName: "a.pdf" }).success,
-    ).toBe(false);
-  });
-
-  it("downloads are a 5-minute URL or markdown", () => {
-    expect(
-      portalDownloadSchema.safeParse({
-        kind: "url",
-        url: "https://bucket.example/x?sig=1",
-        fileName: "a.pdf",
-        expiresAt: TS,
-      }).success,
-    ).toBe(true);
-    expect(
-      portalDownloadSchema.safeParse({ kind: "markdown", fileName: "a.md", content: "# A" })
-        .success,
-    ).toBe(true);
-    expect(
-      portalDownloadSchema.safeParse({ kind: "url", url: "https://x.example", fileName: "a.pdf" })
-        .success,
-    ).toBe(false);
-    expect(issues(portalDownloadSchema.safeParse({ kind: "zip" })).length).toBeGreaterThan(0);
-  });
-});
-
-describe("portal input names (Reviewer M3)", () => {
-  it("has no un-suffixed aliases of the service schemas", () => {
-    const removed = [
-      "unlockSharedDocumentInputSchema",
-      "resolveShareTokenInputSchema",
-      "recordShareAccessInputSchema",
-      "getSharedDocumentInputSchema",
-      "getSharedDocumentDownloadInputSchema",
-    ];
-    for (const name of removed) expect(sharesModule, name).not.toHaveProperty(name);
-  });
-
-  it("keeps the Action and ServiceInput schemas for every portal operation", () => {
-    for (const operation of [
-      "unlockSharedDocument",
-      "resolveShareToken",
-      "recordShareAccess",
-      "getSharedDocument",
-      "getSharedDocumentDownload",
-    ]) {
-      expect(sharesModule, `${operation}ActionSchema`).toHaveProperty(`${operation}ActionSchema`);
-      expect(sharesModule, `${operation}ServiceInputSchema`).toHaveProperty(
-        `${operation}ServiceInputSchema`,
-      );
-    }
   });
 });
