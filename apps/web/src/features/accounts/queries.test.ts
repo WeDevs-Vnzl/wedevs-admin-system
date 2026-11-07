@@ -5,6 +5,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/api/server", () => server);
 
 import type { AccountListResponseDto, AccountResponseDto } from "@/lib/api/types/accounts";
+import type { ExchangeSnapshotResponseDto } from "@/lib/api/types/exchange-snapshot";
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
 import type { ActionResult } from "@/lib/validators/common";
 import type { AccountFilterInput } from "@/lib/validators/accounts";
@@ -12,6 +13,7 @@ import { ServiceError } from "@/server/errors";
 import { listAccountsAction } from "./actions";
 import {
   getAccount,
+  getAccountExchangeSnapshot,
   getAccountLedger,
   getAccountsOverview,
   listAccountPartners,
@@ -163,5 +165,54 @@ describe("listAccountPartners", () => {
   it("reads GET /api/v1/accounts/partners", async () => {
     useRoutes({ "GET /api/v1/accounts/partners": { body: [{ id: "usr_1", name: "Camila" }] } });
     await expect(listAccountPartners()).resolves.toEqual([{ id: "usr_1", name: "Camila" }]);
+  });
+});
+
+describe("getAccountExchangeSnapshot (6.4)", () => {
+  const snapshotBody: ExchangeSnapshotResponseDto = {
+    accountId: "acc_wallet",
+    snapshot: {
+      balances: [
+        { asset: "BTC", free: "0.00012345", locked: "0.00000000" },
+        { asset: "USDT", free: "1500.10", locked: "20.00" },
+      ],
+      syncedAt: "2026-11-07T10:00:00.000Z",
+    },
+    systemBalance: { balance: "150.00", balanceUsd: "150.00", currency: "USD" },
+  };
+
+  it("reads GET /api/v1/accounts/{id}/exchange-snapshot and keeps every amount as the BE returned it", async () => {
+    const { calls } = useRoutes({
+      "GET /api/v1/accounts/{id}/exchange-snapshot": { body: snapshotBody },
+    });
+    await expect(getAccountExchangeSnapshot("acc_wallet")).resolves.toEqual(snapshotBody);
+    expect(calls[0]?.path).toBe("/api/v1/accounts/acc_wallet/exchange-snapshot");
+  });
+
+  it("keeps snapshot null while the Binance integration is off (DT-193)", async () => {
+    useRoutes({
+      "GET /api/v1/accounts/{id}/exchange-snapshot": {
+        body: { ...snapshotBody, snapshot: null },
+      },
+    });
+    await expect(getAccountExchangeSnapshot("acc_wallet")).resolves.toMatchObject({
+      snapshot: null,
+    });
+  });
+
+  it("throws ServiceError with the BE code for a 5xx", async () => {
+    useRoutes({
+      "GET /api/v1/accounts/{id}/exchange-snapshot": errorEnvelope("INTERNAL"),
+    });
+    const error = await getAccountExchangeSnapshot("acc_wallet").catch((thrown: unknown) => thrown);
+    expect(error).toBeInstanceOf(ServiceError);
+    expect(error).toMatchObject({ code: "INTERNAL" });
+  });
+
+  it("holds the frozen signature (type-level)", () => {
+    expectTypeOf(getAccountExchangeSnapshot).parameters.toEqualTypeOf<[id: string]>();
+    expectTypeOf(
+      getAccountExchangeSnapshot,
+    ).returns.resolves.toEqualTypeOf<ExchangeSnapshotResponseDto>();
   });
 });

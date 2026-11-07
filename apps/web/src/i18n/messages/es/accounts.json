@@ -108,6 +108,17 @@
       "notes": "Notas"
     }
   },
+  "snapshot": {
+    "title": "Snapshot de Binance",
+    "description": "Saldos en el exchange según la última sincronización. Solo lectura.",
+    "columns": {
+      "asset": "Activo",
+      "free": "Disponible",
+      "locked": "Bloqueado"
+    },
+    "syncedAt": "Sincronizado",
+    "empty": "No hay saldos en el exchange."
+  },
   "ledger": {
     "title": "Libro de movimientos",
     "description": "Cada movimiento que cambia el saldo, con el saldo corrido después de él.",
