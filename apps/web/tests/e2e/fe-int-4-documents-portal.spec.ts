@@ -292,7 +292,7 @@ test.describe("FE-INT-R E.2 documents and portal", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("Compartir en el portal")).toBeVisible();
     // CA2: the document is protected by an access key, generated once when the link is saved.
-    await dialog.getByRole("switch", { name: /^Exigir una clave de acceso para / }).click();
+    await dialog.getByLabel(/^Exigir una clave de acceso para /).click();
     await dialog.getByRole("button", { name: "Crear enlace", exact: true }).click();
 
     // The one-time keys dialog shows the key once.
