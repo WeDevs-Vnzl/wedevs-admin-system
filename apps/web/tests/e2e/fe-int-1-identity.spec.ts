@@ -45,13 +45,20 @@ async function openSession(browser: Browser): Promise<Session> {
   return { context, page: await context.newPage() };
 }
 
-/** Sets one user's role from the users table (Owner only). Waits until the control shows the new role. */
+/**
+ * Sets one user's role from the users table (Owner only). Waits until the control shows the new role. The option list
+ * re-renders while the table refreshes, so an option found detached or still moving is retried by opening the control
+ * again; an open list from a failed attempt is closed first.
+ */
 async function setRowRole(page: Page, email: string, roleLabel: RegExp): Promise<void> {
   const row = page.getByRole("row").filter({ hasText: email });
   const control = row.getByRole("combobox", { name: /^(Rol de |Role of )/ });
-  await control.click();
-  await page.getByRole("option", { name: roleLabel }).click();
-  await expect(control).toHaveText(roleLabel);
+  await expect(async () => {
+    if (await page.getByRole("listbox").isVisible()) await page.keyboard.press("Escape");
+    await control.click();
+    await page.getByRole("option", { name: roleLabel }).click({ timeout: 5_000 });
+    await expect(control).toHaveText(roleLabel, { timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
 }
 
 /** The column headers of the visible table, in order. */
@@ -143,6 +150,8 @@ test.describe("FE-INT-1 identity", () => {
   });
 
   test("@authenticated HU-27 CA1: a table column layout persists across a new session", async ({ browser }) => {
+    // Two sign-ins, a column move and a reload do not fit the default 30 s test budget (the run timed out in this test).
+    test.setTimeout(90_000);
     const first = await openSession(browser);
     const second = await openSession(browser);
     // `tradeName` is pinned to the left edge and has no move control: move the (unpinned) code column instead.
