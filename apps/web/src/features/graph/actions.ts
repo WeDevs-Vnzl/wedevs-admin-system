@@ -1,31 +1,29 @@
 "use server";
 
+import { apiAction } from "@/lib/api/action";
+import type { GraphResponse } from "@/lib/validators/graph";
 import {
-  expandNodeInputSchema,
-  getEntityGraphInputSchema,
-  getGlobalGraphInputSchema,
-} from "@/lib/validators/graph";
-import * as graph from "@/mocks/services/graph";
-import { defineAction } from "@/server/actions/define-action";
+  entityGraphParams,
+  expandNodeParams,
+  globalGraphParams,
+  type EntityGraphRequest,
+  type ExpandNodeRequest,
+  type GlobalGraphRequest,
+} from "./requests";
 
-// Graph reads from the canvas ("Expandir", "+N más", the archived toggle, the global filters). Reads span every
-// module, so the action only requires a session; the service applies the per-type `read` grant and the trash
-// grant for archived nodes (PRD §12 `graph`).
+// Graph reads from the canvas ("Expandir", "+N más", the archived toggle, the global filters). Thin proxies (C10):
+// token → one API call → error mapping. The BE applies the per-type `read` grant and the trash grant for archived
+// nodes (PRD §12 `graph`, DT-180); the FE shows what it gets. No revalidation: graph reads change nothing.
 
-export const expandNodeAction = defineAction({
-  permission: "authenticated",
-  input: expandNodeInputSchema,
-  handler: (ctx, data) => graph.expandNode(ctx, data),
+export const expandNodeAction = apiAction<ExpandNodeRequest, GraphResponse>({
+  call: (input, api) =>
+    api.GET("/api/v1/graph/nodes/{nodeId}/neighbours", { params: expandNodeParams(input) }),
 });
 
-export const getEntityGraphAction = defineAction({
-  permission: "authenticated",
-  input: getEntityGraphInputSchema,
-  handler: (ctx, data) => graph.getEntityGraph(ctx, data),
+export const getEntityGraphAction = apiAction<EntityGraphRequest, GraphResponse>({
+  call: (input, api) => api.GET("/api/v1/graph/{type}/{id}", { params: entityGraphParams(input) }),
 });
 
-export const getGlobalGraphAction = defineAction({
-  permission: "authenticated",
-  input: getGlobalGraphInputSchema,
-  handler: (ctx, data) => graph.getGlobalGraph(ctx, data),
+export const getGlobalGraphAction = apiAction<GlobalGraphRequest, GraphResponse>({
+  call: (input, api) => api.GET("/api/v1/graph", { params: globalGraphParams(input) }),
 });

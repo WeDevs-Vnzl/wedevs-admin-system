@@ -25,6 +25,7 @@ import type { GraphNode, GraphTruncated } from "@/lib/validators/graph";
 import type { VisibleGraph } from "../graph-model";
 import { NODE_HEIGHT, NODE_WIDTH, type Point, type Positions } from "../layout/compute-layout";
 import { MORE_COLOR, NODE_COLORS, NODE_ICONS } from "./graph-styles";
+import { cameraDuration, prefersReducedMotion } from "./motion";
 import type { GraphLabels } from "./use-graph-labels";
 
 // The React Flow canvas (DT-12) of both graphs. Nodes are laid out by `useGraphLayout` (centers); edges are straight
@@ -375,13 +376,18 @@ function CanvasInner(props: GraphCanvasProps) {
   }, [visible, labels]);
 
   useEffect(() => {
-    if (fitNonce > 0) void flow.fitView({ padding: 0.2, duration: 200 });
+    if (fitNonce > 0)
+      void flow.fitView({ padding: 0.2, duration: cameraDuration(200, prefersReducedMotion()) });
   }, [fitNonce, flow]);
 
   useEffect(() => {
     if (!centerRequest) return;
     const center = positions[centerRequest.id];
-    if (center) void flow.setCenter(center.x, center.y, { zoom: 1.2, duration: 300 });
+    if (center)
+      void flow.setCenter(center.x, center.y, {
+        zoom: 1.2,
+        duration: cameraDuration(300, prefersReducedMotion()),
+      });
     // Re-center only on a new request, not when positions move afterwards.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [centerRequest, flow]);
@@ -446,7 +452,13 @@ function CanvasInner(props: GraphCanvasProps) {
 export function GraphCanvas(props: GraphCanvasProps & { className?: string }) {
   const { className, ...rest } = props;
   return (
-    <div className={cn("relative h-full min-h-[480px] w-full", className)}>
+    // `will-change` names the animated property: the viewport's transform (pan, zoom, camera moves).
+    <div
+      className={cn(
+        "relative h-full min-h-[480px] w-full [&_.react-flow__viewport]:will-change-transform",
+        className,
+      )}
+    >
       <ReactFlowProvider>
         <CanvasInner {...rest} />
       </ReactFlowProvider>

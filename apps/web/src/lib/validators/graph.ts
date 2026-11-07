@@ -173,6 +173,7 @@ export type GetGlobalGraphInput = z.infer<typeof getGlobalGraphInputSchema>;
  * `graph` services. Every service is `fn(ctx, input) → Promise<GraphResponse>` (C9, C11). Reading is
  * allowed to every role that can read the underlying records; archived nodes need Owner/Admin.
  */
+// MOCK — until cleanup: the mock services (`src/mocks/services/graph.ts`) still type against this interface.
 export type GraphService<Ctx = unknown> = {
   getEntityGraph: (ctx: Ctx, input: GetEntityGraphInput) => Promise<GraphResponse>;
   expandNode: (ctx: Ctx, input: ExpandNodeInput) => Promise<GraphResponse>;

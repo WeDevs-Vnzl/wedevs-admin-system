@@ -22,12 +22,13 @@ export default async function GlobalGraphPage() {
     getTags({ pageSize: 100 }),
     listActiveTechnologies(),
   ]);
+  if (!graph.ok) throw new Error(`GET /api/v1/graph failed: ${graph.error.code}`);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("globalTitle")} description={t("globalDescription")} />
       <GlobalGraph
-        initial={graph}
+        initial={graph.data}
         canSeeArchived={can(user, "restore", "trash")}
         tags={tags.items.map((tag) => ({ id: tag.id, name: tag.name }))}
         technologies={technologies.map((tech) => ({ id: tech.id, name: tech.name }))}
