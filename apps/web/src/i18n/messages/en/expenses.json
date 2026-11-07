@@ -55,6 +55,7 @@
     "category": "Category",
     "account": "Account",
     "project": "Project",
+    "currency": "Currency",
     "date": "Date"
   },
   "search": {

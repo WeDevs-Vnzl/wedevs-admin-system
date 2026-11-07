@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { listQuerySchema } from "@/lib/validators/common";
 import { expenseFiltersSchema, recurringExpenseFiltersSchema } from "@/lib/validators/expenses";
+import { expenseFilterOf } from "./components/expense-table-query";
 import { toExpenseListQuery, toRecurringExpenseListQuery } from "./api-query";
 
 describe("toExpenseListQuery (api-contract §3)", () => {
@@ -73,5 +75,14 @@ describe("toRecurringExpenseListQuery", () => {
   it("drops a sort the contract does not accept (nextDueDate) instead of sending it", () => {
     const filter = recurringExpenseFiltersSchema.parse({ sort: "nextDueDate:asc" });
     expect(toRecurringExpenseListQuery(filter)).not.toHaveProperty("sort");
+  });
+});
+
+describe("the table's currency facet", () => {
+  it("reaches GET /expenses as the currency list", () => {
+    const filter = expenseFiltersSchema.parse(
+      expenseFilterOf(listQuerySchema.parse({ filters: { currency: ["VES"] } })),
+    );
+    expect(toExpenseListQuery(filter)).toMatchObject({ currency: ["VES"] });
   });
 });

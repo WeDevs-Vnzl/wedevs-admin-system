@@ -72,6 +72,7 @@ export default async function ExpensesListPage({ searchParams }: ExpensesListPag
           categories: options.categories,
           accounts: options.accounts,
           projects: options.projects,
+          currencies: options.currencies,
         }}
       />
     </div>

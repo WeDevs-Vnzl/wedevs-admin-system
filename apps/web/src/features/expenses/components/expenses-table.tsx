@@ -19,14 +19,15 @@ import type { ListQuery } from "@/lib/validators/common";
 import { EXPENSE_STATUS_VALUES } from "@/lib/validators/enums";
 import type { ExpenseListRowDto } from "@/lib/api/types/expenses";
 import { listExpensesAction } from "../actions";
-import type { ExpenseAccountOption, ExpenseOption } from "../form-options";
+import type { ExpenseAccountOption, ExpenseCurrencyOption, ExpenseOption } from "../form-options";
 import { expenseFilterOf } from "./expense-table-query";
 
-/** Options of the category, account and project facets, read on the server with the first page. */
+/** Options of the category, account, project and currency facets, read on the server with the first page. */
 export type ExpenseFacetOptions = {
   categories: ExpenseOption[];
   accounts: ExpenseAccountOption[];
   projects: ExpenseOption[];
+  currencies: ExpenseCurrencyOption[];
 };
 
 type ExpensesTableProps = {
@@ -192,6 +193,15 @@ export function ExpensesTable({ initialRows, initialTotal, facetOptions }: Expen
         label: t("facets.project"),
         kind: "options",
         options: facetOptions.projects.map(({ id, label }) => ({ value: id, label })),
+      },
+      {
+        id: "currency",
+        label: t("facets.currency"),
+        kind: "options",
+        options: facetOptions.currencies.map(({ code, name }) => ({
+          value: code,
+          label: `${code} · ${name}`,
+        })),
       },
       {
         id: "date",

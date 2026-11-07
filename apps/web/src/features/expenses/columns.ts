@@ -1,7 +1,7 @@
 import type { TableFacetDescriptor } from "@/lib/table-query";
 
 /**
- * Facets of the `/expenses/list` table and the module keys they map to: status, category, account and project
+ * Facets of the `/expenses/list` table and the module keys they map to: status, category, account, project and currency
  * reach the filter under their own ids (lists), the date range becomes `dateFrom` / `dateTo`.
  */
 export const EXPENSE_FACETS: readonly TableFacetDescriptor[] = [
@@ -9,5 +9,6 @@ export const EXPENSE_FACETS: readonly TableFacetDescriptor[] = [
   { id: "categoryId", kind: "options" },
   { id: "accountId", kind: "options" },
   { id: "projectId", kind: "options" },
+  { id: "currency", kind: "options" },
   { id: "date", kind: "dateRange", fromKey: "dateFrom", toKey: "dateTo" },
 ];
