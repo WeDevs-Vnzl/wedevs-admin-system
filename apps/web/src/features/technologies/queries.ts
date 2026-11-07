@@ -1,4 +1,5 @@
 import "server-only";
+import { getServerApi } from "@/lib/api/server";
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZE_VALUES,
@@ -10,8 +11,7 @@ import {
   technologyFilterSchema,
   type TechnologyFilterInput,
 } from "@/lib/validators/technologies";
-import * as technologies from "@/mocks/services/technologies";
-import { getServiceContext } from "@/server/context";
+import { toTechnologyListQuery } from "./api-query";
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
@@ -51,17 +51,24 @@ export function technologyFilterFromParams(params: RawSearchParams): TechnologyF
   return parsed.success ? parsed.data : { page: 1, pageSize: DEFAULT_PAGE_SIZE };
 }
 
-/** Settings → Tecnologías table: the rows of one page, with their usage counts. */
+/** Settings → Tecnologías table: the rows of one page, with their usage counts (`GET /api/v1/technologies`). */
 export async function listTechnologies(filter: TechnologyFilterInput = {}) {
-  return technologies.listTechnologies(
-    await getServiceContext(),
-    technologyFilterSchema.parse(filter),
-  );
+  const api = await getServerApi();
+  const { data, response } = await api.GET("/api/v1/technologies", {
+    params: { query: toTechnologyListQuery(technologyFilterSchema.parse(filter)) },
+  });
+  if (!data) throw new Error(`GET /api/v1/technologies failed with ${response.status}`);
+  return data;
 }
 
-/** One technology with its usage count; `NOT_FOUND` when it does not exist. */
+/** One technology with its usage count (`GET /api/v1/technologies/{id}`). */
 export async function getTechnology(id: string) {
-  return technologies.getTechnology(await getServiceContext(), { id });
+  const api = await getServerApi();
+  const { data, response } = await api.GET("/api/v1/technologies/{id}", {
+    params: { path: { id } },
+  });
+  if (!data) throw new Error(`GET /api/v1/technologies/${id} failed with ${response.status}`);
+  return data;
 }
 
 /**

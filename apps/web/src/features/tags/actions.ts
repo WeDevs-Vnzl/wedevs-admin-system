@@ -1,92 +1,98 @@
 "use server";
 
 import { defineCsvExportAction } from "@/features/export/define-csv-export-action";
+import { apiAction } from "@/lib/api/action";
+import type { TagChipsResponseDto, TagDto, TagListResponseDto } from "@/lib/api/types/taxonomy";
 import { entityHref } from "@/lib/entity-routes";
+import { errorMessageKey, type ActionResult } from "@/lib/validators/common";
 import {
-  assignTagsInputSchema,
-  createTagInputSchema,
   tagFilterSchema,
-  unassignTagInputSchema,
-  updateTagInputSchema,
+  type AssignTagsInput,
+  type CreateTagInput,
+  type TagChipDTO,
+  type TagFilter,
+  type TagFilterInput,
+  type UnassignTagInput,
+  type UpdateTagInput,
 } from "@/lib/validators/tags";
+// MOCK — until cleanup: the export source only (`list` is ignored by the helper; the BE builds the CSV).
 import { exportCsv } from "@/mocks/services/export";
 import * as tags from "@/mocks/services/tags";
-import { defineAction } from "@/server/actions/define-action";
+import { toTagListQuery } from "./api-query";
 import { TAG_EXPORT_COLUMNS } from "./columns";
-import { CREATE_TAG_GRANTS } from "./grants";
+
+// Thin API proxies (C10): token → one BE call → error mapping → revalidate. The BE decides every grant
+// (a Member tags projects and notes, not clients); the FE never checks `can()` here.
 
 const SETTINGS_TAGS_PATH = "/settings/tags";
 
-/**
- * Creates a tag. Anyone who may create a settings record, or who may edit a client, project, note or document,
- * may create one inline from that record (Member: notes and documents, PRD §4.3).
- */
-export const createTagAction = defineAction({
-  permission: CREATE_TAG_GRANTS,
-  input: createTagInputSchema,
+/** The Settings table and the record the tags were changed on (its own page shows its tags). */
+function tagRevalidation(input: Pick<AssignTagsInput, "entityType" | "entityId">) {
+  const href = entityHref({ type: input.entityType, id: input.entityId });
+  return href ? [SETTINGS_TAGS_PATH, href] : [SETTINGS_TAGS_PATH];
+}
+
+/** Creates a tag. The BE accepts it from Settings, and inline from a client, project, note or document. */
+export const createTagAction = apiAction<CreateTagInput, TagDto>({
+  call: (input, api) => api.POST("/api/v1/tags", { body: input }),
   revalidate: [SETTINGS_TAGS_PATH],
-  handler: (ctx, data) => tags.createTag(ctx, data),
 });
 
-/** Renames or recolours a tag (Owner and Admin). */
-export const updateTagAction = defineAction({
-  permission: { action: "update", resource: "settings" },
-  input: updateTagInputSchema,
+/** Renames or recolours a tag (settings grant). */
+export const updateTagAction = apiAction<UpdateTagInput, TagDto>({
+  call: ({ id, ...body }, api) =>
+    api.PATCH("/api/v1/tags/{id}", { params: { path: { id } }, body }),
   revalidate: [SETTINGS_TAGS_PATH],
-  handler: (ctx, data) => tags.updateTag(ctx, data),
+});
+
+const assignTags = apiAction<AssignTagsInput, TagChipsResponseDto>({
+  call: (input, api) => api.POST("/api/v1/tags/assign", { body: input }),
+  revalidate: tagRevalidation,
+});
+
+/** Tags one record; resolves to the record's tags. */
+export async function assignTagsAction(
+  input: AssignTagsInput,
+): Promise<ActionResult<TagChipDTO[]>> {
+  const result = await assignTags(input);
+  return result.ok ? { ok: true, data: result.data.items } : result;
+}
+
+const unassignTag = apiAction<UnassignTagInput, TagChipsResponseDto>({
+  call: (input, api) => api.POST("/api/v1/tags/unassign", { body: input }),
+  revalidate: tagRevalidation,
+});
+
+/** Removes one tag from one record; resolves to the record's remaining tags. */
+export async function unassignTagAction(
+  input: UnassignTagInput,
+): Promise<ActionResult<TagChipDTO[]>> {
+  const result = await unassignTag(input);
+  return result.ok ? { ok: true, data: result.data.items } : result;
+}
+
+const listTags = apiAction<TagFilter, TagListResponseDto>({
+  call: (filter, api) => api.GET("/api/v1/tags", { params: { query: toTagListQuery(filter) } }),
 });
 
 /**
- * Tags an entity. The entity's own `can()` check runs in the service (a Member tags projects and notes, not
- * clients); here any taggable update passes the gate.
+ * Reference read behind the picker and the table (tag names and colours are catalogue data, DT-71). Any signed-in
+ * role reads it; the filter is checked for UX only, the BE re-validates.
  */
-export const assignTagsAction = defineAction({
-  permission: [
-    { action: "update", resource: "client" },
-    { action: "update", resource: "contact" },
-    { action: "update", resource: "project" },
-    { action: "update", resource: "document" },
-    { action: "update", resource: "note" },
-    { action: "update", resource: "invoice" },
-    { action: "update", resource: "payment" },
-    { action: "update", resource: "expense" },
-  ],
-  input: assignTagsInputSchema,
-  revalidate: (data) => {
-    const href = entityHref({ type: data.entityType, id: data.entityId });
-    return href ? [SETTINGS_TAGS_PATH, href] : [SETTINGS_TAGS_PATH];
-  },
-  handler: (ctx, data) => tags.assignTags(ctx, data),
-});
+export async function listTagsAction(
+  input: TagFilterInput,
+): Promise<ActionResult<TagListResponseDto>> {
+  const parsed = tagFilterSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: { code: "VALIDATION", message: errorMessageKey("VALIDATION") } };
+  }
+  return listTags(parsed.data);
+}
 
-/** Removes a tag from an entity; same gate as `assignTagsAction`. */
-export const unassignTagAction = defineAction({
-  permission: [
-    { action: "update", resource: "client" },
-    { action: "update", resource: "contact" },
-    { action: "update", resource: "project" },
-    { action: "update", resource: "document" },
-    { action: "update", resource: "note" },
-    { action: "update", resource: "invoice" },
-    { action: "update", resource: "payment" },
-    { action: "update", resource: "expense" },
-  ],
-  input: unassignTagInputSchema,
-  revalidate: (data) => {
-    const href = entityHref({ type: data.entityType, id: data.entityId });
-    return href ? [SETTINGS_TAGS_PATH, href] : [SETTINGS_TAGS_PATH];
-  },
-  handler: (ctx, data) => tags.unassignTag(ctx, data),
-});
-
-/** Reference read behind the picker and the table (tag names and colours are catalogue data, DT-71). */
-export const listTagsAction = defineAction({
-  permission: "authenticated",
-  input: tagFilterSchema,
-  handler: (ctx, data) => tags.listTags(ctx, data),
-});
-
-/** CSV of the Settings table, filtered as the table is (PRD §7.3). */
+/**
+ * CSV of the Settings table, filtered as the table is (PRD §7.3). The export source keeps the mock list for
+ * its column and facet metadata only; the helper calls `POST /exports/TAG`.
+ */
 export const exportTagsCsvAction = defineCsvExportAction({
   entity: "TAG",
   permission: { action: "read", resource: "settings" },
