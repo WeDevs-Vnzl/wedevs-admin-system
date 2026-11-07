@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
 // Wave 5 shell E2E (H1-B1, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The app serves in-memory MOCK data from one process, so
@@ -26,16 +27,6 @@ async function resetMockData(page: Page) {
     .getByRole("button", { name: /^(Restablecer|Reset)$/ })
     .click();
   await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only, no shared state). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
 }
 
 test.describe("routing and sign-in", () => {
@@ -220,7 +211,7 @@ test.describe("roles (View as role)", () => {
   test("View as Viewer hides write quick actions and still reaches Configuración → Preferencias", async ({
     page,
   }) => {
-    await viewAsRole(page, "Lector");
+    await signInAs(page, "VIEWER");
 
     await page.keyboard.press("Control+k");
     const dialog = commandMenu(page);
@@ -237,7 +228,7 @@ test.describe("roles (View as role)", () => {
   });
 
   test("View as Member reaches Configuración → Preferencias from the sidebar", async ({ page }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
 
     await sidebar(page).getByRole("link", { name: "Configuración", exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/preferences$/);

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
 // Wave 3 E2E, projects (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server process and
@@ -29,16 +30,6 @@ async function resetMockData(page: Page) {
     .getByRole("button", { name: /^(Restablecer|Reset)$/ })
     .click();
   await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
 }
 
 /** Opens a page and waits until React has hydrated it (clicks before that are lost). */
@@ -341,7 +332,7 @@ test.describe("projects (read only)", () => {
   });
 
   test("Miembro edits a project and does not see the Nuevo proyecto action", async ({ page }) => {
-    await viewAsRole(page, "Miembro");
+    await signInAs(page, "MEMBER");
     await open(page, "/projects/pry_kairos_web");
     await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
 
@@ -350,7 +341,7 @@ test.describe("projects (read only)", () => {
   });
 
   test("Lector sees no write action on a project", async ({ page }) => {
-    await viewAsRole(page, "Lector");
+    await signInAs(page, "VIEWER");
     await open(page, "/projects/pry_kairos_web");
     await expect(page.getByRole("link", { name: "Editar", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Cambiar estado", exact: true })).toHaveCount(0);

@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/auth";
 
 // Wave 2 E2E (H1-B2, docs/TASK.md "Tester scope"). This file starts nothing: it runs against the app that
 // PLAYWRIGHT_BASE_URL points to (safeguards.md rule 1). The mock store is one in-memory object per server
@@ -31,16 +32,6 @@ async function resetMockData(page: Page) {
     .getByRole("button", { name: /^(Restablecer|Reset)$/ })
     .click();
   await expect(page.getByText(/Datos de prueba restablecidos|Mock data reset/)).toBeVisible();
-}
-
-/** Sets the MOCK role of this context through "Ver como rol" in the user menu (cookie only, no shared state). */
-async function viewAsRole(page: Page, role: "Lector" | "Miembro") {
-  await page.goto("/dashboard");
-  await page.waitForLoadState("networkidle"); // menus open only after hydration; clicks fired earlier are lost
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
-  await page.getByRole("menuitem", { name: "Ver como rol" }).hover();
-  await page.getByRole("menuitemradio", { name: role, exact: true }).click();
-  await expect(page.getByText(`Ahora ves la aplicación como ${role}`)).toBeVisible();
 }
 
 /** The bell counter as shown (the badge is aria-hidden, so its text is read directly); 0 when not rendered. */
@@ -166,9 +157,12 @@ test.describe("tags (mutates tags)", () => {
 });
 
 test.describe("tags access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /settings/tags`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/settings/tags");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
@@ -256,9 +250,12 @@ test.describe("technologies (mutates the catalogue)", () => {
 });
 
 test.describe("technologies access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /settings/technologies`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/settings/technologies");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
@@ -357,9 +354,12 @@ test.describe("activity", () => {
 });
 
 test.describe("activity access (view as role)", () => {
-  for (const role of ["Miembro", "Lector"] as const) {
+  for (const [role, key] of [
+    ["Miembro", "MEMBER"],
+    ["Lector", "VIEWER"],
+  ] as const) {
     test(`${role} gets the in-shell not-found on /activity`, async ({ page }) => {
-      await viewAsRole(page, role);
+      await signInAs(page, key);
       await page.goto("/activity");
       await expect(notFoundText(page)).toBeVisible();
       await expect(sidebar(page)).toBeVisible();
