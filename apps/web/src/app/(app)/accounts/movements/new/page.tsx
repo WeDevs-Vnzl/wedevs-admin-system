@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { MovementForm } from "@/features/accounts/components/movement-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { listAccountPartners, listAccounts } from "@/features/accounts/queries";
+import { notFoundWhenRefused } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
 import { ACCOUNT_MOVEMENT_TYPE_VALUES, type AccountMovementType } from "@/lib/validators/enums";
 import { requireSessionUser } from "@/server/auth/session";
@@ -28,8 +29,8 @@ export default async function NewMovementPage({ searchParams }: MovementNewPageP
   const params = await searchParams;
   const type = ACCOUNT_MOVEMENT_TYPE_VALUES.find((value) => value === first(params.type));
   const [page, partners] = await Promise.all([
-    listAccounts({ pageSize: 100 }),
-    listAccountPartners(),
+    notFoundWhenRefused(() => listAccounts({ pageSize: 100 })),
+    notFoundWhenRefused(listAccountPartners),
   ]);
   const accounts = page.items
     .filter((account) => account.active)

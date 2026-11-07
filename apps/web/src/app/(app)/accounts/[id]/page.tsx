@@ -12,23 +12,16 @@ import { AccountLedgerTable } from "@/features/accounts/components/account-ledge
 import { ReconciliationForm } from "@/features/accounts/components/reconciliation-form";
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
+import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
 import { todayInCaracas } from "@/lib/dates";
-import type { AccountDTO } from "@/lib/validators/accounts";
 import { requireSessionUser } from "@/server/auth/session";
-import { ServiceError } from "@/server/errors";
 
 type AccountDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function readAccount(id: string): Promise<AccountDTO | null> {
-  try {
-    return await getAccount(id);
-  } catch (error) {
-    if (error instanceof ServiceError && error.code === "NOT_FOUND") return null;
-    throw error;
-  }
-}
+// FORBIDDEN from the BE is the same not-found page as an unknown id (C13).
+const readAccount = (id: string) => orNullWhenMissing(() => getAccount(id));
 
 export async function generateMetadata({ params }: AccountDetailPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -44,11 +37,10 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
   const user = await requireSessionUser();
   const permissions = accountScreenPermissions(user);
   if (!permissions.canRead) notFound();
-  const account = await readAccount(id);
-  if (!account) notFound();
+  const account = await notFoundWhenRefused(async () => (await readAccount(id)) ?? notFound());
 
   const [ledger, t, tEnums] = await Promise.all([
-    getAccountLedger({ accountId: account.id, pageSize: 100 }),
+    notFoundWhenRefused(() => getAccountLedger({ accountId: account.id, pageSize: 100 })),
     getTranslations("accounts"),
     getTranslations("enums"),
   ]);

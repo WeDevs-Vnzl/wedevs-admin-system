@@ -8,7 +8,10 @@ import {
   createDataTableColumnHelper,
   type DataTableColumnDef,
 } from "@/components/ui/data-table";
-import type { LedgerEntryKind, LedgerRow } from "@/lib/validators/accounts";
+import type { AccountLedgerEntryDto } from "@/lib/api/types/accounts";
+
+type LedgerRow = AccountLedgerEntryDto;
+type LedgerEntryKind = AccountLedgerEntryDto["kind"];
 
 type AccountLedgerTableProps = {
   rows: LedgerRow[];
