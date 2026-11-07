@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { LOCAL_API_BASE_URL } from "./tests/e2e/support/backend";
+import { appBaseUrl } from "./tests/e2e/support/app";
 
 // No `webServer`: the app and the local BE are started separately (safeguards.md rule 1) or the suite targets a deploy
 // preview. Next reads NEXT_PUBLIC_API_BASE_URL for the browser bundle and the CSP connect-src origin (A3), so an unset
@@ -16,7 +17,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   globalSetup: "./tests/e2e/support/global-setup.ts",
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.APP_URL ?? "http://localhost:3000",
+    baseURL: appBaseUrl(),
     trace: "on-first-retry",
   },
   projects: [

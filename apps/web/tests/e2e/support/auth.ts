@@ -11,7 +11,7 @@ import { roleEmail, type TestRole } from "./roles";
  * so the page first opens `/sign-in`, which is a public route (`proxy.ts`).
  *
  * The Clerk secret key is read by the Clerk helpers from the environment; this file only checks that it is set and
- * never reads or prints its value.
+ * never reads or prints its value. The page ends on `/dashboard` inside the shell, as the legacy helper did.
  */
 export async function signInAs(page: Page, role: TestRole): Promise<void> {
   if (!process.env.CLERK_SECRET_KEY) {
@@ -21,4 +21,5 @@ export async function signInAs(page: Page, role: TestRole): Promise<void> {
   await page.goto("/sign-in");
   await clerk.loaded({ page });
   await clerk.signIn({ page, emailAddress });
+  await page.goto("/dashboard");
 }
