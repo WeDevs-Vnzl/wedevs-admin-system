@@ -6,7 +6,7 @@ import enEnums from "@/i18n/messages/en/enums.json";
 import esActivity from "@/i18n/messages/es/activity.json";
 import esEnums from "@/i18n/messages/es/enums.json";
 import type { ActivityListRowDTO } from "@/lib/validators/activity";
-import { ActivityDetailSheet, browserKey, maskIp } from "./activity-detail-sheet";
+import { ActivityDetailSheet, browserKey } from "./activity-detail-sheet";
 
 const row: ActivityListRowDTO = {
   id: "act_0042",
@@ -34,18 +34,6 @@ function wrap(ui: React.ReactNode, locale: "es" | "en" = "es") {
   );
 }
 
-describe("maskIp", () => {
-  it("keeps the first three IPv4 octets and masks the last one", () => {
-    expect(maskIp("192.0.2.14")).toBe("192.0.2.•••");
-    expect(maskIp("198.51.100.7")).toBe("198.51.100.•••");
-  });
-
-  it("masks the last group of an IPv6 address and passes nothing through", () => {
-    expect(maskIp("2001:db8:85a3:0:0:8a2e:370:7334")).toBe("2001:db8:85a3:•••");
-    expect(maskIp(null)).toBeNull();
-  });
-});
-
 describe("browserKey", () => {
   it("names the browser family, Edge and Firefox before Chrome before Safari", () => {
     expect(browserKey(null)).toBeNull();
@@ -58,11 +46,12 @@ describe("browserKey", () => {
 });
 
 describe("ActivityDetailSheet", () => {
-  it("shows the diff, the masked IP, the browser, the event id, the entity link and the immutability note", () => {
+  it("shows the diff, the IP as the BE sends it, the browser, the event id, the entity link and the immutability note", () => {
     wrap(<ActivityDetailSheet entry={row} open onOpenChange={vi.fn()} />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("192.0.2.•••")).toBeInTheDocument();
-    expect(screen.queryByText("192.0.2.14")).toBeNull();
+    // The BE decides what the IP looks like; the FE renders the received value unchanged (no masking here).
+    expect(screen.getByText("192.0.2.14")).toBeInTheDocument();
+    expect(screen.queryByText("192.0.2.•••")).toBeNull();
     expect(screen.getByText("Firefox")).toBeInTheDocument();
     expect(screen.getByText("act_0042")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Abrir registro/ })).toHaveAttribute(

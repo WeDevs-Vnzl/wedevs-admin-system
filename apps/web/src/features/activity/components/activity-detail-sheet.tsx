@@ -20,20 +20,6 @@ import type { ActivityRow } from "@/lib/api/types/activity";
 import { knownEntityType } from "../entity-type";
 import { ActivityDiff } from "./activity-diff";
 
-/**
- * The IP of a user action with its last octet (or last group, IPv6) masked, e.g. `192.0.2.•••` (PRD §8.14).
- * `null` when the entry carries no IP.
- */
-export function maskIp(ip: string | null): string | null {
-  if (!ip) return null;
-  if (ip.includes(":")) {
-    const groups = ip.split(":");
-    return `${groups.slice(0, 3).join(":")}:•••`;
-  }
-  const octets = ip.split(".");
-  return octets.length === 4 ? `${octets.slice(0, 3).join(".")}.•••` : "•••";
-}
-
 /** The browser family of a user agent, as a key of `activity.browser` (`null` when there is no agent). */
 export function browserKey(
   userAgent: string | null,
@@ -72,7 +58,8 @@ export function ActivityDetailSheet({
   const entityType = knownEntityType(entry.entityType);
   const href = entityType ? entityHref({ type: entityType, id: entry.entityId }) : null;
   const browser = browserKey(entry.userAgent);
-  const ip = maskIp(entry.ip);
+  // The IP arrives already masked from the BE (PRD §8.14, BE-2 choice 5); it is shown as received.
+  const ip = entry.ip;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
