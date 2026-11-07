@@ -1,43 +1,33 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { actionOk } from "@/lib/validators/common";
+import { mockApi, type MockApi } from "@/lib/api/testing";
+import { graphNodeId } from "@/lib/validators/graph";
+import { HIDDEN_BY_DEFAULT } from "../graph-model";
 import {
-  GRAPH_EXPANSION_LIMIT,
-  graphNodeId,
-  type ExpandNodeInput,
-  type GetEntityGraphInput,
-  type GraphResponse,
-} from "@/lib/validators/graph";
-import type { MockServiceContext } from "@/mocks/ctx";
-import { expandNode, getEntityGraph } from "@/mocks/services/graph";
-import { makeTestContext } from "@/mocks/test-helpers";
-import { ENTITY_GRAPH_TYPES, HIDDEN_BY_DEFAULT } from "../graph-model";
+  CLIENT_ROOT_GRAPH,
+  entityGraphRoutes,
+  neighboursPage,
+  nodeIdOfNeighbourPath,
+} from "../testing/graph-http-fixtures";
 import { EntityGraph } from "./entity-graph";
 import { HOVER_DELAY_MS } from "./graph-canvas";
 import { installReactFlowMocks, renderWithIntl } from "./test-utils";
 
-// HU-24 CA1–CA5 over the mock graph service, plus the node list (keyboard alternative) and Ctrl/⌘ + click.
+// HU-24 CA1–CA5 over the HTTP test double (the real Server Actions and client run), plus the node list (keyboard
+// alternative) and Ctrl/⌘ + click. The root comes from the fixture the RSC read would return.
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-let ctx: MockServiceContext;
-const expandSpy = vi.fn();
-const reloadSpy = vi.fn();
-vi.mock("@/features/graph/actions", () => ({
-  expandNodeAction: async (input: ExpandNodeInput) => {
-    expandSpy(input);
-    return actionOk(await expandNode(ctx, input));
-  },
-  getEntityGraphAction: async (input: GetEntityGraphInput) => {
-    reloadSpy(input);
-    return actionOk(await getEntityGraph(ctx, input));
-  },
-  getGlobalGraphAction: vi.fn(),
-}));
+const mocks = vi.hoisted(() => ({ getServerApi: vi.fn() }));
+vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
+
+let api: MockApi;
 
 const KAIROS = graphNodeId("CLIENT", "cli_kairos");
 const KAIROS_WEB = graphNodeId("PROJECT", "pry_kairos_web");
@@ -45,19 +35,19 @@ const KAIROS_APP = graphNodeId("PROJECT", "pry_kairos_app");
 
 beforeAll(installReactFlowMocks);
 beforeEach(() => {
-  ctx = makeTestContext("OWNER").ctx;
+  api = mockApi(entityGraphRoutes());
+  mocks.getServerApi.mockResolvedValue(api.api);
   push.mockReset();
-  expandSpy.mockReset();
-  reloadSpy.mockReset();
 });
 
-async function loadRoot(): Promise<GraphResponse> {
-  return getEntityGraph(ctx, {
-    type: "CLIENT",
-    id: "cli_kairos",
-    depth: 1,
-    include: ENTITY_GRAPH_TYPES,
-  });
+/** The neighbour requests the canvas sent, in order: the node and the cursor of a "+N más" page. */
+function neighbourCalls() {
+  return api.calls
+    .filter((call) => call.path.endsWith("/neighbours"))
+    .map((call) => ({
+      nodeId: nodeIdOfNeighbourPath(call.path),
+      cursor: call.search.get("cursor") ?? undefined,
+    }));
 }
 
 // Role queries over the whole canvas are slow in jsdom; the list is found through its heading instead.
@@ -70,10 +60,11 @@ function nodeList(): HTMLElement {
 const canvasNode = (id: string) => document.querySelector(`[data-testid="graph-node-${id}"]`);
 
 async function renderKairos() {
-  const initial = await loadRoot();
-  const view = renderWithIntl(<EntityGraph initial={initial} rootId={KAIROS} canSeeArchived />);
+  const view = renderWithIntl(
+    <EntityGraph initial={CLIENT_ROOT_GRAPH} rootId={KAIROS} canSeeArchived />,
+  );
   await screen.findByTestId(`graph-node-${KAIROS}`, {}, { timeout: 8000 });
-  return { initial, ...view };
+  return { initial: CLIENT_ROOT_GRAPH, ...view };
 }
 
 // The canvas renders tens of nodes in jsdom: generous timeouts keep the suite stable under parallel load.
@@ -99,6 +90,7 @@ describe("EntityGraph", { timeout: 30000 }, () => {
     expect(
       screen.queryByRole("button", { name: "Expandir Kairos Studio" }),
     ).not.toBeInTheDocument();
+    expect(api.calls).toHaveLength(0);
   });
 
   it("CA2: expanding a project adds its documents, invoices, expenses and the other clients of the project", async () => {
@@ -106,8 +98,8 @@ describe("EntityGraph", { timeout: 30000 }, () => {
     const user = userEvent.setup();
 
     await user.click(within(nodeList()).getByLabelText("Expandir Sitio web Kairos Studio"));
-    expect(expandSpy).toHaveBeenCalledWith(expect.objectContaining({ nodeId: KAIROS_WEB }));
-    const web = await expandNode(ctx, { nodeId: KAIROS_WEB, include: ENTITY_GRAPH_TYPES });
+    await waitFor(() => expect(neighbourCalls()).toContainEqual({ nodeId: KAIROS_WEB, cursor: undefined }));
+    const web = neighboursPage(KAIROS_WEB);
     const webTypes = new Set(web.nodes.map((node) => node.type));
     for (const type of ["DOCUMENT", "INVOICE", "EXPENSE"] as const)
       expect(webTypes, type).toContain(type);
@@ -194,22 +186,10 @@ describe("EntityGraph", { timeout: 30000 }, () => {
     await user.click(projects);
     await waitFor(() => expect(projectButton()).toBeInTheDocument());
     expect(screen.getByTestId(`graph-node-${KAIROS_WEB}`)).toBeInTheDocument();
-    expect(reloadSpy).not.toHaveBeenCalled();
-    expect(expandSpy).not.toHaveBeenCalled();
+    expect(api.calls).toHaveLength(0);
   });
 
   it('CA5: with more than 50 neighbours a "+N más" node appears and loads the next page', async () => {
-    const template = ctx.db.contacts[0];
-    if (!template) throw new Error("no contact fixture");
-    for (let i = 0; i < GRAPH_EXPANSION_LIMIT + 10; i += 1) {
-      ctx.db.contacts.push({
-        ...structuredClone(template),
-        id: `con_bulk_${String(i).padStart(3, "0")}`,
-        clientId: "cli_kairos",
-        fullName: `Contacto ${String(i).padStart(3, "0")}`,
-        archivedAt: null,
-      });
-    }
     const { initial } = await renderKairos();
     const [truncated] = initial.truncated;
     expect(truncated?.nodeId).toBe(KAIROS);
@@ -225,14 +205,10 @@ describe("EntityGraph", { timeout: 30000 }, () => {
     expect(more).toHaveTextContent(`+${remaining} más`);
     await userEvent.setup().click(more);
 
-    expect(expandSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ nodeId: KAIROS, cursor: truncated?.cursor }),
+    await waitFor(() =>
+      expect(neighbourCalls()).toContainEqual({ nodeId: KAIROS, cursor: truncated?.cursor }),
     );
-    const page = await expandNode(ctx, {
-      nodeId: KAIROS,
-      cursor: truncated?.cursor,
-      include: ENTITY_GRAPH_TYPES,
-    });
+    const page = neighboursPage(KAIROS, truncated?.cursor);
     const added = page.nodes.find(
       (node) => node.id !== KAIROS && !HIDDEN_BY_DEFAULT.includes(node.type),
     );
@@ -265,6 +241,8 @@ describe("EntityGraph", { timeout: 30000 }, () => {
       "/projects/pry_kairos_web/graph",
     );
     await user.click(within(panel).getByRole("button", { name: "Expandir" }));
-    expect(expandSpy).toHaveBeenCalledWith(expect.objectContaining({ nodeId: KAIROS_WEB }));
+    await waitFor(() =>
+      expect(neighbourCalls()).toContainEqual({ nodeId: KAIROS_WEB, cursor: undefined }),
+    );
   });
 });
