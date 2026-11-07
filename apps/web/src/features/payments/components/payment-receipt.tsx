@@ -3,10 +3,10 @@
 import { FileText, ImageIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { FileDTO } from "@/lib/validators/files";
+import type { PaymentReceiptDto } from "@/lib/api/types/payments";
 
 type PaymentReceiptProps = {
-  receipt: FileDTO | null;
+  receipt: PaymentReceiptDto | null;
 };
 
 /**

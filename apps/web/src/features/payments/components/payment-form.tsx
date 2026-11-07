@@ -37,7 +37,8 @@ import {
 import { computePaymentAmounts, proposeAllocation } from "@/lib/finance";
 import type { OpenInvoiceOption } from "@/features/payments/types";
 import { compareMoney, isDecimalString, type MoneyString } from "@/lib/money";
-import { createPaymentInputSchema, type DuplicatePaymentMatch } from "@/lib/validators/payments";
+import type { DuplicatePaymentResponseDto } from "@/lib/api/types/payments";
+import { createPaymentInputSchema } from "@/lib/validators/payments";
 import type { DateOnly } from "@/lib/dates";
 
 const FORM_ID = "payment-form";
@@ -142,7 +143,7 @@ export function PaymentForm({
   const [igtfEdited, setIgtfEdited] = useState(false);
   const [duplicateResult, setDuplicateResult] = useState<{
     key: string;
-    matches: DuplicatePaymentMatch[];
+    matches: DuplicatePaymentResponseDto["matches"];
   }>({ key: "", matches: [] });
 
   const initialAccount = accounts.find((account) => account.currency === "USD") ?? accounts[0];
@@ -257,7 +258,7 @@ export function PaymentForm({
     form.setValue("clientId", nextClientId, { shouldValidate: true });
     setApplied({});
     const result = await listOpenInvoicesAction({ clientId: nextClientId });
-    setOpenInvoices(result.ok && result.data ? (result.data as OpenInvoiceOption[]) : []);
+    setOpenInvoices(result.ok ? result.data : []);
   }
 
   function changeAccount(nextAccountId: string) {

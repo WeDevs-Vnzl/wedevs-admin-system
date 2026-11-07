@@ -8,20 +8,20 @@ import {
   createDataTableColumnHelper,
   type DataTableColumnDef,
 } from "@/components/ui/data-table";
-import type { PaymentAllocationDTO } from "@/lib/validators/payments";
+import type { PaymentAllocationResponseDto } from "@/lib/api/types/payments";
 
 type PaymentAllocationsTableProps = {
-  rows: PaymentAllocationDTO[];
+  rows: PaymentAllocationResponseDto[];
   currency: string;
 };
 
-const helper = createDataTableColumnHelper<PaymentAllocationDTO>();
+const helper = createDataTableColumnHelper<PaymentAllocationResponseDto>();
 
 /** Invoices a payment was applied to (PRD §8.6 "Asignaciones"), both amounts as stored at write time. */
 export function PaymentAllocationsTable({ rows, currency }: PaymentAllocationsTableProps) {
   const t = useTranslations("payments.detail");
 
-  const columns: DataTableColumnDef<PaymentAllocationDTO>[] = [
+  const columns: DataTableColumnDef<PaymentAllocationResponseDto>[] = [
     helper.display({
       id: "invoice",
       header: t("invoice"),

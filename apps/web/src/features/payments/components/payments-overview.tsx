@@ -8,12 +8,12 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { ListCode, SimpleListCard } from "@/components/patterns/simple-list-card";
 import { StatCard } from "@/components/patterns/stat-card";
 import { Button } from "@/components/ui/button";
-import type { PaymentListRow, PaymentsOverviewDTO } from "@/lib/validators/payments";
+import type { PaymentListRowDto, PaymentsOverviewDto } from "@/lib/api/types/payments";
 
 type PaymentsOverviewProps = {
-  overview: PaymentsOverviewDTO;
+  overview: PaymentsOverviewDto;
   /** Latest confirmed payments with a credit balance left to apply (already limited by the page). */
-  withCredit: PaymentListRow[];
+  withCredit: PaymentListRowDto[];
   canCreate: boolean;
 };
 
@@ -46,7 +46,7 @@ export async function PaymentsOverview({ overview, withCredit, canCreate }: Paym
       values: [{ node: <MoneyText amount={point.value} currency="USD" /> }],
     }));
 
-  const breakdownRows = (items: PaymentsOverviewDTO["byMethod"]) =>
+  const breakdownRows = (items: PaymentsOverviewDto["byMethod"]) =>
     items.map((item) => ({
       id: item.key,
       label: item.label ?? item.key,

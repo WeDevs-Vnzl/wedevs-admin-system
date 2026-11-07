@@ -26,6 +26,8 @@ import { compareMoney, isDecimalString, subMoney, sumMoney } from "../money";
  * `lib/finance` (C17) and only appear in DTOs.
  */
 
+// MOCK — until cleanup: only the mock service (`mocks/services/payments.ts`, `mocks/store.ts`) reads
+// `PAYMENT_MESSAGES`; the screens show the BE's own message keys.
 export const PAYMENT_MESSAGES = {
   referenceRequired: "payments.validation.referenceRequired",
   igtfExceedsAmount: "payments.validation.igtfExceedsAmount",
@@ -59,6 +61,8 @@ export const allocationInputSchema = z.object({
 });
 export type AllocationInput = z.infer<typeof allocationInputSchema>;
 
+// MOCK — until cleanup: `AllocatePaymentInput` and `DeallocatePaymentInput` are imported only by
+// `mocks/services/payments.ts`; the allocation commands take the generated BE bodies.
 /** `allocatePayment`: applies (part of) an existing payment to an invoice. */
 export const allocatePaymentInputSchema = allocationInputSchema.extend({ paymentId: idSchema });
 export type AllocatePaymentInput = z.infer<typeof allocatePaymentInputSchema>;
@@ -160,6 +164,8 @@ function checkPayment(input: PaymentChecked, options: PaymentSchemaOptions, ctx:
  * the amount, allocations (optional, to apply at creation) one per invoice and not above
  * `amount − igtf`, USD rate 1 for USD.
  */
+// MOCK — until cleanup: `createPaymentInputSchemaFor` and the `CreatePaymentInput` type below are imported only by
+// `mocks/services/payments.ts`; the form validates with `createPaymentInputSchema`.
 export function createPaymentInputSchemaFor(options: PaymentSchemaOptions = {}) {
   return z
     .object({ ...paymentFields, allocations: z.array(allocationInputSchema).max(50).default([]) })
@@ -188,6 +194,7 @@ export type SetPaymentStatusInput = z.infer<typeof setPaymentStatusInputSchema>;
 
 // ───────────────────────────── Duplicate detection (PRD §8.6) ─────────────────────────────
 
+// MOCK — until cleanup: `DetectDuplicatePaymentInput` is imported only by `mocks/services/payments.ts`.
 /** Same reference + method + account is a possible duplicate. */
 export const detectDuplicatePaymentInputSchema = z.object({
   methodId: idSchema,
@@ -215,6 +222,11 @@ export const duplicatePaymentWarningDtoSchema = z.object({
 export type DuplicatePaymentWarningDTO = z.infer<typeof duplicatePaymentWarningDtoSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
+
+// MOCK — until cleanup: the DTO schemas and types below (`DuplicatePaymentWarningDTO`, `PaymentAllocationDTO`,
+// `PaymentListRow`, `PaymentDetailDTO`, `PaymentsOverviewDTO`) stay only because `src/mocks/**` imports them
+// (`mocks/store.ts`, `mocks/services/{payments,reports}.ts`, `mocks/fixtures/payments.ts`). The screens read the
+// generated DTOs (`@/lib/api/types/payments`). CLEAN deletes them.
 
 /** Method as shown in tables (catalog row, not an entity type). */
 export const paymentMethodRefSchema = z.object({
@@ -300,6 +312,10 @@ export const paymentFiltersSchema = withSortFields(
   PAYMENT_SORT_FIELDS,
 );
 export type PaymentFilters = z.infer<typeof paymentFiltersSchema>;
+
+/** Input of the payment typeahead (`searchPaymentsAction`): the free text the user typed. */
+export const searchPaymentsInputSchema = z.object({ q: z.string().trim().max(200).default("") });
+export type SearchPaymentsInput = z.input<typeof searchPaymentsInputSchema>;
 
 export const paymentsOverviewDtoSchema = z.object({
   /** Collected per month, last 12 months (USD). */
