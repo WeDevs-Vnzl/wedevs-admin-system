@@ -12,12 +12,18 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import type { SessionUser } from "@/server/auth/types";
 import { AppSidebar } from "./app-sidebar";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), pathname: "/dashboard" }));
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  signOut: vi.fn(),
+  pathname: "/dashboard",
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mocks.pathname,
   useRouter: () => ({ push: mocks.push, refresh: vi.fn() }),
 }));
+// Clerk is stubbed: the sign-out button ends the Clerk session and redirects through Clerk (DU, 1.1).
+vi.mock("@clerk/nextjs", () => ({ useClerk: () => ({ signOut: mocks.signOut }) }));
 
 const messages = {
   nav: enNav,
@@ -133,7 +139,7 @@ describe("AppSidebar", () => {
     );
   });
 
-  it("renders the user block with name and role, and signs out to /sign-in (m3)", async () => {
+  it("renders the user block with name and role, and signs out through Clerk to /sign-in (m3)", async () => {
     const user = userEvent.setup();
     renderSidebar("MEMBER");
     expect(screen.getByText("Test User")).toBeInTheDocument();
@@ -142,7 +148,8 @@ describe("AppSidebar", () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: enAuth.signOut }));
-    expect(mocks.push).toHaveBeenCalledWith("/sign-in");
+    expect(mocks.signOut).toHaveBeenCalledWith({ redirectUrl: "/sign-in" });
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 
   it("names the collapsed brand link so it is reachable by name (R3)", () => {

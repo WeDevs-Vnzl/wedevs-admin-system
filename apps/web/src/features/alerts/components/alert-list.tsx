@@ -98,6 +98,14 @@ export function AlertList({
 
   const fail = (code: ErrorCode) => toast.error(tCommon(`errors.${code}`));
 
+  // NOT_FOUND: the BE no longer lists this alert for the caller (its type is outside their role, or it is
+  // gone), so the row leaves the list on the reload instead of showing an error.
+  const failed = async (code: ErrorCode) => {
+    focusIndex.current = null;
+    if (code === "NOT_FOUND") return load();
+    return fail(code);
+  };
+
   const undo = async (alertKey: string) => {
     const result = await restoreAlertAction({ alertKey });
     if (!result.ok) return fail(result.error.code);
@@ -123,10 +131,7 @@ export function AlertList({
     setPending(alert.alertKey);
     const result = await dismissAlertAction({ alertKey: alert.alertKey });
     setPending(null);
-    if (!result.ok) {
-      focusIndex.current = null;
-      return fail(result.error.code);
-    }
+    if (!result.ok) return failed(result.error.code);
     await changed(alert, t("toasts.dismissed"));
   };
 
@@ -135,10 +140,7 @@ export function AlertList({
     setPending(alert.alertKey);
     const result = await snoozeAlertAction({ alertKey: alert.alertKey, days });
     setPending(null);
-    if (!result.ok) {
-      focusIndex.current = null;
-      return fail(result.error.code);
-    }
+    if (!result.ok) return failed(result.error.code);
     await changed(alert, t("toasts.snoozed", { days }));
   };
 

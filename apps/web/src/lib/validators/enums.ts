@@ -179,6 +179,8 @@ export const ENTITY_TYPE_VALUES = [
   "TAG",
   "SETTING",
   "USER",
+  "PAYMENT_LINK",
+  "API_TOKEN",
 ] as const;
 export const entityTypeSchema = z.enum(ENTITY_TYPE_VALUES);
 export type EntityType = z.infer<typeof entityTypeSchema>;

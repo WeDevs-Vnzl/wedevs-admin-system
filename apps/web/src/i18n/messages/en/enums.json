@@ -159,7 +159,9 @@
     "RECURRING_CHARGE": "Recurring charge",
     "TAG": "Tag",
     "SETTING": "Setting",
-    "USER": "User"
+    "USER": "User",
+    "PAYMENT_LINK": "Payment link",
+    "API_TOKEN": "API token"
   },
   "ActivityAction": {
     "CREATE": "Created",

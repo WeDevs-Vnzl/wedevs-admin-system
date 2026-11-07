@@ -127,5 +127,9 @@ export function resolveEntityRef(
     }
     case "SETTING":
       return null;
+    // MOCK — until cleanup: the BE types added after the mock store (swap-rule-3 exemption, W1 close record).
+    case "PAYMENT_LINK":
+    case "API_TOKEN":
+      return null;
   }
 }

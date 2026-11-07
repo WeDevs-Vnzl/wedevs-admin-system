@@ -131,6 +131,18 @@ describe("DTOs", () => {
     ).toBe(true);
   });
 
+  it("an alert entity carries its code as the contract types it: a string or null (api-contract §2)", () => {
+    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: null } }).success).toBe(
+      true,
+    );
+    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, code: undefined } }).success).toBe(
+      true,
+    );
+    expect(alertSchema.safeParse({ ...alert, entity: { ...alert.entity, type: "PAYMENT_LINK" } }).success).toBe(
+      true,
+    );
+  });
+
   it("summary and dismissal", () => {
     expect(
       alertsSummarySchema.safeParse({ total: 1, byType: { INVOICE_OVERDUE: 1 }, items: [alert] })
