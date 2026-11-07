@@ -149,8 +149,11 @@ export function entityGraphRoutes(): RouteTable {
   };
 }
 
-/** `GET /api/v1/graph`: clients, projects and documents of the company (the default types). */
-export const GLOBAL_GRAPH: GlobalGraphResponseDto = (() => {
+/** `GET /api/v1/graph`: clients, projects and documents of the company, with archived documents when asked. */
+export function globalGraph(includeArchived = false): GlobalGraphResponseDto {
+  const archived = includeArchived
+    ? [node("DOCUMENT", "doc_2023_archivado", "Contrato 2023 (archivado)", { archived: true })]
+    : [];
   const base = graph(
     [
       node("CLIENT", "cli_kairos", "Kairos Studio", { code: "CLI-0001" }),
@@ -159,6 +162,7 @@ export const GLOBAL_GRAPH: GlobalGraphResponseDto = (() => {
       node("PROJECT", "pry_kairos_app", "App de reservas Kairos", { code: "PRY-0002" }),
       node("DOCUMENT", "doc_client_contract", "Contrato marco"),
       node("DOCUMENT", "doc_web_brief", "Brief del sitio web"),
+      ...archived,
     ],
     [
       edge(KAIROS_WEB, "participa", KAIROS),
@@ -185,9 +189,20 @@ export const GLOBAL_GRAPH: GlobalGraphResponseDto = (() => {
       })),
     },
   };
-})();
-
-/** Routes of the global graph. */
-export function globalGraphRoutes(): RouteTable {
-  return { "GET /api/v1/graph": { status: 200, body: GLOBAL_GRAPH } };
 }
+
+/** The global graph with the default filters (no archived nodes). */
+export const GLOBAL_GRAPH: GlobalGraphResponseDto = globalGraph(false);
+
+/** Routes of the global graph: the archived switch (`includeArchived=true`) adds an archived document. */
+export function globalGraphRoutes(): RouteTable {
+  return {
+    "GET /api/v1/graph": (call: RecordedCall) => ({
+      status: 200,
+      body: globalGraph(call.search.get("includeArchived") === "true"),
+    }),
+  };
+}
+
+/** Id of the archived document the global routes answer with `includeArchived=true`. */
+export const GLOBAL_ARCHIVED_NODE = graphNodeId("DOCUMENT", "doc_2023_archivado");

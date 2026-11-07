@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockApi, type MockApi } from "@/lib/api/testing";
 import { GLOBAL_GRAPH_DEFAULT_TYPES, graphNodeId } from "@/lib/validators/graph";
-import { GLOBAL_GRAPH, globalGraphRoutes } from "../testing/graph-http-fixtures";
+import {
+  GLOBAL_ARCHIVED_NODE,
+  GLOBAL_GRAPH,
+  globalGraphRoutes,
+} from "../testing/graph-http-fixtures";
 import { GlobalGraph } from "./global-graph";
 import { installReactFlowMocks, renderWithIntl } from "./test-utils";
 
@@ -105,6 +109,20 @@ describe("GlobalGraph", { timeout: 30000 }, () => {
       "href",
       "/clients/cli_kairos/graph",
     );
+  });
+
+  it('the "Mostrar archivados" switch reloads the global graph with archived nodes', async () => {
+    await renderGlobal();
+    const user = userEvent.setup();
+    expect(screen.queryByTestId(`graph-node-${GLOBAL_ARCHIVED_NODE}`)).not.toBeInTheDocument();
+
+    const filters = await openFilters();
+    await user.click(filters.getByRole("switch", { name: "Mostrar archivados" }));
+
+    expect(
+      await screen.findByTestId(`graph-node-${GLOBAL_ARCHIVED_NODE}`, {}, { timeout: 8000 }),
+    ).toBeInTheDocument();
+    expect(globalCalls().at(-1)?.search.get("includeArchived")).toBe("true");
   });
 
   it('reloads with the server filters when a type or "Solo activos" changes, and shows the stats', async () => {

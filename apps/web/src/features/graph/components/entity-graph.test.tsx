@@ -40,14 +40,22 @@ beforeEach(() => {
   push.mockReset();
 });
 
-/** The neighbour requests the canvas sent, in order: the node and the cursor of a "+N más" page. */
+/** The reads of the root record (`GET /api/v1/graph/CLIENT/cli_kairos`), in order. */
+function rootRequests() {
+  return api.calls.filter((call) => call.path === "/api/v1/graph/CLIENT/cli_kairos");
+}
+
+/** The neighbour requests the canvas sent, in order. */
+function neighbourRequests() {
+  return api.calls.filter((call) => call.path.endsWith("/neighbours"));
+}
+
+/** The neighbour requests as node and cursor of a "+N más" page. */
 function neighbourCalls() {
-  return api.calls
-    .filter((call) => call.path.endsWith("/neighbours"))
-    .map((call) => ({
-      nodeId: nodeIdOfNeighbourPath(call.path),
-      cursor: call.search.get("cursor") ?? undefined,
-    }));
+  return neighbourRequests().map((call) => ({
+    nodeId: nodeIdOfNeighbourPath(call.path),
+    cursor: call.search.get("cursor") ?? undefined,
+  }));
 }
 
 // Role queries over the whole canvas are slow in jsdom; the list is found through its heading instead.
@@ -219,6 +227,36 @@ describe("EntityGraph", { timeout: 30000 }, () => {
       await screen.findByTestId(`graph-node-${added?.id}`, {}, { timeout: 8000 }),
     ).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText(`+${remaining} más`)).not.toBeInTheDocument());
+  });
+
+  it('the "Mostrar archivados" switch reloads the root with archived nodes and expansions keep the flag', async () => {
+    await renderKairos();
+    const user = userEvent.setup();
+    const archived = graphNodeId("PROJECT", "pry_kairos_old");
+    expect(screen.queryByTestId(`graph-node-${archived}`)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Filtros" }));
+    await user.click(await screen.findByRole("switch", { name: "Mostrar archivados" }));
+
+    expect(
+      await screen.findByTestId(`graph-node-${archived}`, {}, { timeout: 8000 }),
+    ).toBeInTheDocument();
+    expect(rootRequests().at(-1)?.search.get("includeArchived")).toBe("true");
+
+    // Expanding a node afterwards asks for its neighbours with archived nodes included.
+    await user.keyboard("{Escape}");
+    await user.click(within(nodeList()).getByLabelText("Expandir Sitio web Kairos Studio"));
+    await waitFor(() =>
+      expect(neighbourRequests().at(-1)?.search.get("includeArchived")).toBe("true"),
+    );
+
+    // Switching it off (the popover closed with Escape: reopen it) reloads without archived nodes.
+    await user.click(screen.getByRole("button", { name: /^Filtros/ }));
+    await user.click(await screen.findByRole("switch", { name: "Mostrar archivados" }));
+    await waitFor(() =>
+      expect(screen.queryByTestId(`graph-node-${archived}`)).not.toBeInTheDocument(),
+    );
+    expect(rootRequests().at(-1)?.search.get("includeArchived")).toBe("false");
   });
 
   it("offers the node list as a keyboard alternative: Enter selects a node and opens its side panel", async () => {
