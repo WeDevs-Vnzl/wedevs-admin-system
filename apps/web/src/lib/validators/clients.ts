@@ -145,6 +145,7 @@ export type ArchiveClientInput = z.infer<typeof archiveClientInputSchema>;
 export const restoreClientInputSchema = z.object({ id: idSchema });
 export type RestoreClientInput = z.infer<typeof restoreClientInputSchema>;
 
+// MOCK — until cleanup: imported by the mock clients service.
 export const clientIdInputSchema = z.object({ id: idSchema });
 export type ClientIdInput = z.infer<typeof clientIdInputSchema>;
 
@@ -187,6 +188,10 @@ export type ClientFilter = z.infer<typeof clientFilterSchema>;
 export type ClientFilterInput = z.input<typeof clientFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
+
+// MOCK — until cleanup: the DTO schemas and types below are kept only because `src/mocks/**` (services,
+// fixtures, tests) and the CSV export source import them. The screens read the generated DTOs of
+// `@/lib/api/types/clients`. CLEAN deletes this section.
 
 /** USD amount that can be zero but not negative (totals). */
 const usdTotalSchema = moneyAmountSchema({ sign: "nonNegative" });
@@ -281,6 +286,8 @@ export const getClientsOverviewInputSchema = z.object({}).strict();
 export type GetClientsOverviewInput = z.infer<typeof getClientsOverviewInputSchema>;
 
 // ───────────────────────────── Services (PRD §12 `clients`) ─────────────────────────────
+
+// MOCK — until cleanup: `ClientsService` is implemented by `mocks/services/clients.ts` and checked by its tests.
 
 /**
  * `clients` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11); `Ctx` is the service

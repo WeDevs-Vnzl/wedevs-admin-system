@@ -16,13 +16,13 @@ import {
 import { TagChips } from "@/features/tags/components/tag-chips";
 import { useOpenerFocus } from "@/features/clients/components/use-opener-focus";
 import { archiveContactAction, setPrimaryContactAction } from "@/features/contacts/actions";
-import type { ContactListRowDTO } from "@/lib/validators/contacts";
+import type { ContactViewDto } from "@/lib/api/types/clients";
 import { ContactFormDialog } from "./contact-form-dialog";
 
 type ContactsTableProps = {
   clientId: string;
   /** Live contacts of the client, primary first (the server sorts them). */
-  contacts: ContactListRowDTO[];
+  contacts: ContactViewDto[];
   /** Owner and Admin; Member and Viewer read the list only (HU-04, PRD §4.3). */
   canManage: boolean;
   /** Inline "Crear" in the tag picker of the contact form (R13). */
@@ -30,11 +30,11 @@ type ContactsTableProps = {
 };
 
 type Dialog =
-  | { kind: "form"; contact?: ContactListRowDTO; open: boolean; key: number }
-  | { kind: "archive"; contact: ContactListRowDTO; open: boolean }
+  | { kind: "form"; contact?: ContactViewDto; open: boolean; key: number }
+  | { kind: "archive"; contact: ContactViewDto; open: boolean }
   | null;
 
-const helper = createDataTableColumnHelper<ContactListRowDTO>();
+const helper = createDataTableColumnHelper<ContactViewDto>();
 const dash = (value: string | null) => value ?? "—";
 
 /**
@@ -56,7 +56,7 @@ export function ContactsTable({
 
   const refresh = () => router.refresh();
 
-  async function makePrimary(contact: ContactListRowDTO) {
+  async function makePrimary(contact: ContactViewDto) {
     setPendingId(contact.id);
     const result = await setPrimaryContactAction({ id: contact.id });
     setPendingId(null);
@@ -68,7 +68,7 @@ export function ContactsTable({
     refresh();
   }
 
-  async function archive(contact: ContactListRowDTO) {
+  async function archive(contact: ContactViewDto) {
     setPendingId(contact.id);
     const result = await archiveContactAction({ id: contact.id });
     setPendingId(null);
@@ -81,7 +81,7 @@ export function ContactsTable({
     refresh();
   }
 
-  const columns: DataTableColumnDef<ContactListRowDTO>[] = [
+  const columns: DataTableColumnDef<ContactViewDto>[] = [
     helper.accessor("fullName", {
       header: t("columns.fullName"),
       cell: ({ getValue }) => <span className="font-medium">{getValue()}</span>,

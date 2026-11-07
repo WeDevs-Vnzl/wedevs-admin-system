@@ -178,6 +178,21 @@ describe("ClientForm", () => {
     expect(mocks.push).not.toHaveBeenCalled();
   });
 
+  it("keeps the form and shows the generic message for a CONFLICT without entity (DT-177)", async () => {
+    vi.mocked(updateClientAction).mockResolvedValue({
+      ok: false,
+      error: { code: "CONFLICT", message: "common.errors.CONFLICT" },
+    } as never);
+    renderForm({ ...company, legalName: "Nube Austral C.A." });
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(enCommon.errors.CONFLICT));
+    expect(screen.queryByRole("link", { name: /^Open / })).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /Trade name/ })).toHaveValue("Nube Austral");
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
   it("toasts and opens the detail page after a successful save", async () => {
     vi.mocked(updateClientAction).mockResolvedValue({
       ok: true,

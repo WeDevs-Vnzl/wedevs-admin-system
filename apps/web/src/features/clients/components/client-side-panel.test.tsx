@@ -1,12 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
-
-const queries = vi.hoisted(() => ({ getClientFinancials: vi.fn() }));
+import { describe, expect, it, vi } from "vitest";
+import type { ClientDetailDto, ClientSummaryResponseDto } from "@/lib/api/types/clients";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
-vi.mock("@/features/clients/queries", () => queries);
 vi.mock("@/components/patterns/money-text", () => ({
   MoneyText: ({ amount }: { amount: string }) => <span>{amount}</span>,
 }));
@@ -45,34 +42,30 @@ const client = {
   email: null,
   website: null,
   activatedAt: null,
-} as unknown as ClientDetailDTO;
+} as unknown as ClientDetailDto;
 
-beforeEach(() => {
-  queries.getClientFinancials.mockReset();
-  queries.getClientFinancials.mockResolvedValue({
-    clientId: "cli_kairos",
-    totalInvoicedUsd: "2820.00",
-    totalCollectedUsd: "800.00",
-    receivableUsd: "2020.00",
-    overdueUsd: "0.00",
-    creditBalanceUsd: "0.00",
-    projectCount: 2,
-  });
-});
+const financials: ClientSummaryResponseDto = {
+  clientId: "cli_kairos",
+  totalInvoicedUsd: "2820.00",
+  totalCollectedUsd: "800.00",
+  receivableUsd: "2020.00",
+  overdueUsd: "0.00",
+  creditBalanceUsd: "0.00",
+  collectedLast12MonthsUsd: "800.00",
+  projectCount: 2,
+};
 
 describe("ClientSidePanel financial card", () => {
-  it("reads getClientFinancials and renders the card for a finance role", async () => {
-    render(await ClientSidePanel({ client, canSeeFinancials: true }));
-    expect(queries.getClientFinancials).toHaveBeenCalledWith("cli_kairos");
+  it("renders the card from the summary the page read for a finance role", async () => {
+    render(await ClientSidePanel({ client, financials }));
     const card = screen.getByTestId("financial-card");
     expect(card).toHaveTextContent("metrics.totalInvoiced=2820.00");
     expect(card).toHaveTextContent("metrics.totalCollected=800.00");
     expect(card).toHaveTextContent("metrics.receivable=2020.00");
   });
 
-  it("never calls getClientFinancials without canSeeFinancials, and shows no card", async () => {
-    render(await ClientSidePanel({ client, canSeeFinancials: false }));
-    expect(queries.getClientFinancials).not.toHaveBeenCalled();
+  it("shows no card without a summary, only the key data", async () => {
+    render(await ClientSidePanel({ client, financials: null }));
     expect(screen.queryByTestId("financial-card")).toBeNull();
     expect(screen.getByText("keyData.title")).toBeInTheDocument();
   });

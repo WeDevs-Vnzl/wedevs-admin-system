@@ -107,6 +107,9 @@ export type ContactFilterInput = z.input<typeof contactFilterSchema>;
 
 // ───────────────────────────── DTOs ─────────────────────────────
 
+// MOCK — until cleanup: kept only because `src/mocks/**` and the clients DTO schemas import them. The screens
+// read the generated `ContactViewDto` of `@/lib/api/types/clients`. CLEAN deletes this section.
+
 export const contactDetailSchema = z.object({
   id: idSchema,
   clientId: idSchema,
@@ -127,6 +130,8 @@ export const contactListRowSchema = contactDetailSchema;
 export type ContactListRowDTO = z.infer<typeof contactListRowSchema>;
 
 // ───────────────────────────── Services (PRD §12 `contacts`) ─────────────────────────────
+
+// MOCK — until cleanup: `ContactsService` is implemented by `mocks/services/contacts.ts` and checked by its tests.
 
 /**
  * `contacts` services. Every service is `fn(ctx, input) → Promise<DTO>` (C9, C11). `listContacts` is the

@@ -34,7 +34,7 @@ import {
   type CreateClientFormValues,
   type UpdateClientFormValues,
 } from "@/lib/validators/clients";
-import type { ClientDetailDTO } from "@/lib/validators/clients";
+import type { ClientDetailDto } from "@/lib/api/types/clients";
 import type { EntityRef } from "@/lib/validators/common";
 import type { TagChipDTO } from "@/lib/validators/tags";
 
@@ -42,7 +42,7 @@ const FORM_ID = "client-form";
 
 /** The fields a client edit form starts from (the detail DTO without its metrics and contacts). */
 export type ClientFormSource = Pick<
-  ClientDetailDTO,
+  ClientDetailDto,
   | "id"
   | "code"
   | "kind"
@@ -106,7 +106,7 @@ export function ClientForm({ client, canCreateTags }: ClientFormProps) {
           tradeName: client.tradeName,
           legalName: client.legalName,
           taxId: client.taxId,
-          country: client.country,
+          country: client.country as CountryCode,
           address: client.address,
           phone: client.phone,
           email: client.email ?? "",
