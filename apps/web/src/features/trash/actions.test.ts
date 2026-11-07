@@ -5,8 +5,9 @@ vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath, updateTag: mocks.updateTag }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 
+import { entityHref } from "@/lib/entity-routes";
 import { errorEnvelope, mockApi, type RouteTable } from "@/lib/api/testing";
-import { listTrashAction } from "./actions";
+import { listTrashAction, restoreFromTrashAction } from "./actions";
 
 const page = {
   items: [
@@ -31,6 +32,8 @@ function useRoutes(routes: RouteTable) {
 
 beforeEach(() => {
   mocks.getServerApi.mockReset();
+  mocks.revalidatePath.mockReset();
+  mocks.updateTag.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -73,5 +76,58 @@ describe("listTrashAction (HU-28, PRD §7.7)", () => {
       ok: false,
       error: { code: "FORBIDDEN" },
     });
+  });
+});
+
+describe("restoreFromTrashAction (HU-28 CA2)", () => {
+  const input = { entityType: "PROJECT" as const, entityId: "pry_veredas_landing" };
+
+  it("posts the pair to POST /api/v1/trash/restore and revalidates the trash and the record", async () => {
+    const restored = {
+      entity: { id: "pry_veredas_landing", label: "Landing Veredas", type: "PROJECT" },
+      restoredAt: "2026-10-19T12:00:00.000Z",
+    };
+    const { calls } = useRoutes({ "POST /api/v1/trash/restore": { body: restored } });
+    const result = await restoreFromTrashAction(input);
+    expect(result).toEqual({ ok: true, data: restored });
+    expect(calls[0]).toMatchObject({
+      method: "POST",
+      path: "/api/v1/trash/restore",
+      body: { entityType: "PROJECT", entityId: "pry_veredas_landing" },
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/settings/trash");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      entityHref({ type: "PROJECT", id: "pry_veredas_landing" }),
+    );
+  });
+
+  it("returns the CONFLICT message key and the entity it points at, and does not revalidate", async () => {
+    const holder = { type: "CLIENT", id: "cli_kairos", code: "CLI-0001", label: "Kairos" };
+    useRoutes({
+      "POST /api/v1/trash/restore": errorEnvelope("CONFLICT", {
+        message: "trash.errors.clientArchived",
+        entity: holder,
+      }),
+    });
+    const result = await restoreFromTrashAction({ entityType: "CONTACT", entityId: "con_1" });
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: "trash.errors.clientArchived",
+        entity: holder,
+        correlationId: "test-correlation-id",
+      },
+    });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps a Member's FORBIDDEN and changes nothing", async () => {
+    useRoutes({ "POST /api/v1/trash/restore": errorEnvelope("FORBIDDEN") });
+    expect(await restoreFromTrashAction(input)).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
+    });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });
