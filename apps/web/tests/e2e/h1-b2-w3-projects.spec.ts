@@ -1,5 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { appBaseUrl } from "./support/app";
 import { signInAs } from "./support/auth";
+import type { TestRole } from "./support/roles";
 import {
   addInstallmentViaUi,
   caracasToday,
@@ -24,11 +26,31 @@ function linkHandles(page: Page) {
   return page.getByRole("button", { name: /^Reordenar / });
 }
 
+/**
+ * Clicks "Añadir enlace a Repositorio" on the edit page. An empty group is collapsed there and its add button lives in
+ * the collapsed content, so the group is opened first (its trigger is named "Repositorio <count>").
+ */
+async function addRepositoryLink(page: Page) {
+  const add = page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true });
+  if (!(await add.isVisible())) {
+    await page.getByRole("button", { name: /^Repositorio \d+$/ }).click();
+  }
+  await add.click();
+}
+
+/** A second role in its own browser context, so the Owner's session in the test page is left as it is. */
+async function otherRole(browser: Browser, role: TestRole) {
+  const context = await browser.newContext({ baseURL: appBaseUrl() });
+  const page = await context.newPage();
+  await signInAs(page, role);
+  return { context, page };
+}
+
 /** Adds one REPOSITORIO link per entry on the project edit page and saves it. */
 async function addRepositoryLinks(page: Page, projectId: string, links: { label: string; url: string }[]) {
   await openPage(page, `/projects/${projectId}/edit`);
   for (const [index, link] of links.entries()) {
-    await page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true }).click();
+    await addRepositoryLink(page);
     await page.getByLabel("Etiqueta", { exact: true }).nth(index).fill(link.label);
     await page.getByLabel("URL", { exact: true }).nth(index).fill(link.url);
   }
@@ -74,10 +96,11 @@ test.describe("HU-05 create project", () => {
     });
     expect(projectId).toMatch(/^[a-z0-9]{20,}$/);
 
-    // CA2: the roles were saved per client (the Clientes tab of the project shows each role).
+    // CA2: the roles were saved per client. The Resumen lists each client with its role in parentheses, so each role
+    // is checked on its own client's row (a bare "Contratante" text node is never rendered).
     await openPage(page, `/projects/${projectId}`);
-    await expect(page.getByText("Contratante", { exact: true })).toBeVisible();
-    await expect(page.getByText("Usuario final", { exact: true })).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: kairos })).toContainText("(Contratante)");
+    await expect(page.getByRole("listitem").filter({ hasText: playa })).toContainText("(Usuario final)");
 
     // CA3: listed in each linked client's Proyectos tab.
     for (const clientId of [kairosId, playaId]) {
@@ -218,7 +241,7 @@ test.describe("HU-07 project links", () => {
     });
 
     await openPage(page, `/projects/${projectId}/edit`);
-    await page.getByRole("button", { name: "Añadir enlace a Repositorio", exact: true }).click();
+    await addRepositoryLink(page);
     await page.getByLabel("Etiqueta", { exact: true }).first().fill("Enlace E2E");
     const urls = page.getByLabel("URL", { exact: true });
     await urls.first().fill("esto no es una URL");
@@ -394,37 +417,44 @@ test.describe("projects (read only)", () => {
     await expect(page.getByLabel("Nombre", { exact: true })).toBeVisible();
   });
 
-  test("Miembro edits a project and does not see the Nuevo proyecto action", async ({ page }) => {
+  test("Miembro edits a project and does not see the Nuevo proyecto action", async ({ page, browser }) => {
     const run = runId();
     const client = `E2E Miembro ${run}`;
-    await signInAs(page, "OWNER");
     await createClientViaUi(page, client, `E2E-${run}-M`);
     const projectId = await createProjectViaUi(page, {
       name: `Proyecto E2E miembro ${run}`,
       clients: [{ clientName: client, role: "Contratante" }],
     });
 
-    await signInAs(page, "MEMBER");
-    await openPage(page, `/projects/${projectId}`);
-    await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
+    // Signing in again on the Owner's page answers "You're already signed in" (Clerk), so the Miembro has its own context.
+    const member = await otherRole(browser, "MEMBER");
+    try {
+      await openPage(member.page, `/projects/${projectId}`);
+      await expect(member.page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
 
-    await openPage(page, "/projects/list");
-    await expect(page.getByRole("link", { name: "Nuevo proyecto", exact: true })).toHaveCount(0);
+      await openPage(member.page, "/projects/list");
+      await expect(member.page.getByRole("link", { name: "Nuevo proyecto", exact: true })).toHaveCount(0);
+    } finally {
+      await member.context.close();
+    }
   });
 
-  test("Lector sees no write action on a project", async ({ page }) => {
+  test("Lector sees no write action on a project", async ({ page, browser }) => {
     const run = runId();
     const client = `E2E Lector ${run}`;
-    await signInAs(page, "OWNER");
     await createClientViaUi(page, client, `E2E-${run}-V`);
     const projectId = await createProjectViaUi(page, {
       name: `Proyecto E2E lector ${run}`,
       clients: [{ clientName: client, role: "Contratante" }],
     });
 
-    await signInAs(page, "VIEWER");
-    await openPage(page, `/projects/${projectId}`);
-    await expect(page.getByRole("link", { name: "Editar", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Cambiar estado", exact: true })).toHaveCount(0);
+    const viewer = await otherRole(browser, "VIEWER");
+    try {
+      await openPage(viewer.page, `/projects/${projectId}`);
+      await expect(viewer.page.getByRole("link", { name: "Editar", exact: true })).toHaveCount(0);
+      await expect(viewer.page.getByRole("button", { name: "Cambiar estado", exact: true })).toHaveCount(0);
+    } finally {
+      await viewer.context.close();
+    }
   });
 });
