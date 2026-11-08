@@ -8,17 +8,14 @@ import {
   openPage,
 } from "./support/ui-data";
 
-// FE-INT-R E.3 integrations E2E (DT-183, DT-184, DT-193): with Stripe and Binance off (the local default: no
-// provider keys) the invoice detail shows no payment-links panel and a wallet account shows no Binance snapshot, and
-// the account mapping of Settings → Integraciones saves. Personal access tokens are covered by `fe-int-1-identity`
+// FE-INT-R E.3 integrations E2E (DT-183, DT-184, DT-193, DT-227): with Stripe and Binance off (the default: their
+// feature flags are off for the first deploy) the invoice detail shows no payment-links panel, a wallet account shows
+// no Binance snapshot, and Settings has no Integraciones section. The mapping cases need a flag on: phase 2. Personal access tokens are covered by `fe-int-1-identity`
 // (E.0) and are not repeated here. The Stripe-on and Binance-on flows need a live third-party service (W5 rule 30):
 // they stay with the BE e2e and the HTTP-mocked unit tests, and appear below as `test.fixme` naming the batch-close
 // manual check. Runs in the `authenticated` project against the local BE (safeguards.md rule 1); nothing here starts
 // a server. Every record is created through the UI with a unique name (W5 rule 29). Copy is Spanish (the Owner's
 // default locale).
-//
-// The mapping case changes a global setting; it clears the mapping again in a `finally`, so run the authenticated
-// project with `--workers=1`.
 
 const RUN = Date.now();
 
@@ -43,7 +40,9 @@ test.describe("FE-INT-6 integrations (off by default)", () => {
     });
     await openPage(page, `/invoices/${invoice.id}`);
     // The invoice itself rendered (its number is the page title), and the Stripe panel is not there.
-    await expect(page.getByRole("heading", { level: 1, name: invoice.invoiceNumber })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: invoice.invoiceNumber }),
+    ).toBeVisible();
     await expect(page.getByText("Enlaces de pago", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Crear enlace", exact: true })).toHaveCount(0);
   });
@@ -61,54 +60,22 @@ test.describe("FE-INT-6 integrations (off by default)", () => {
     await expect(page.getByText("Snapshot de Binance", { exact: true })).toHaveCount(0);
   });
 
-  test("@authenticated Settings → Integraciones saves the Binance wallet mapping and keeps it after a reload", async ({
+  test("@authenticated Settings has no Integraciones entry and /settings/integrations is not found while both are off (DT-227)", async ({
     page,
   }) => {
-    const wallet = `E2E Wallet mapeo ${RUN}`;
-    await createAccountViaUi(page, { name: wallet, type: "Wallet cripto", currency: "USDT" });
-
+    await openPage(page, "/settings/company");
+    await expect(page.getByRole("link", { name: "Empresa", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Integraciones", exact: true })).toHaveCount(0);
     await openPage(page, "/settings/integrations");
-    await expect(page.getByRole("heading", { level: 1, name: "Integraciones" })).toBeVisible();
-    try {
-      await page.locator("#integrations-binance-account").click();
-      await page.getByRole("option", { name: `${wallet} (USDT)`, exact: true }).click();
-      await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
-      await expect(page.getByText("Asignación guardada")).toBeVisible();
-
-      await openPage(page, "/settings/integrations");
-      await expect(page.locator("#integrations-binance-account")).toContainText(wallet);
-    } finally {
-      await openPage(page, "/settings/integrations");
-      await page.locator("#integrations-binance-account").click();
-      await page.getByRole("option", { name: "Sin asignar", exact: true }).click();
-      await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
-      await expect(page.getByText("Asignación guardada")).toBeVisible();
-    }
+    await expect(page.getByText("Página no encontrada", { exact: true })).toBeVisible();
+    await expect(page.locator("#integrations-binance-account")).toHaveCount(0);
   });
 
-  test("@authenticated Stripe needs both its account and its payment method (or neither)", async ({
-    page,
-  }) => {
-    const account = `E2E Cuenta Stripe ${RUN}`;
-    await createAccountViaUi(page, { name: account, currency: "USD" });
+  test.fixme("Phase 2 (DT-227): Settings → Integraciones saves the Binance wallet mapping and keeps it after a reload; needs FEATURE_BINANCE=true with its keys", async () => {});
 
-    await openPage(page, "/settings/integrations");
-    await page.locator("#integrations-stripe-account").click();
-    await page.getByRole("option", { name: `${account} (USD)`, exact: true }).click();
-    await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
-    await expect(
-      page.getByText("Elige la cuenta y el método de pago, o deja Stripe sin asignar."),
-    ).toBeVisible();
-    await expect(page.getByText("Asignación guardada")).toHaveCount(0);
-  });
+  test.fixme("Phase 2 (DT-227): Stripe needs both its account and its payment method (or neither); needs FEATURE_STRIPE=true with its keys", async () => {});
 
-  test.fixme(
-    "FE-INT-R E.3: creating a Stripe payment link needs Stripe on (live third-party service); covered by the BE e2e, the HTTP-mocked unit tests and the batch-close manual check",
-    async () => {},
-  );
+  test.fixme("FE-INT-R E.3: creating a Stripe payment link needs Stripe on (live third-party service); covered by the BE e2e, the HTTP-mocked unit tests and the batch-close manual check", async () => {});
 
-  test.fixme(
-    "FE-INT-R E.3: the Binance snapshot of a wallet account needs Binance on (live third-party service); covered by the BE e2e, the HTTP-mocked unit tests and the batch-close manual check",
-    async () => {},
-  );
+  test.fixme("FE-INT-R E.3: the Binance snapshot of a wallet account needs Binance on (live third-party service); covered by the BE e2e, the HTTP-mocked unit tests and the batch-close manual check", async () => {});
 });

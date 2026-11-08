@@ -40,6 +40,8 @@ type IntegrationsFormProps = {
   /** Active `WALLET_CRIPTO` accounts only (Binance wallet). */
   walletAccounts: readonly MappingAccountOption[];
   methods: readonly MappingMethodOption[];
+  /** Which providers are on (DT-227): only their sections render, and an off provider is saved as `null`. */
+  features: { stripe: boolean; binance: boolean };
 };
 
 // "Not mapped" has no value of its own in a Radix Select, so it travels as a sentinel and becomes `null`.
@@ -77,13 +79,19 @@ function toFormValues(mapping: IntegrationMappingDto): FormValues {
   };
 }
 
-function toBody(values: FormValues): UpdateIntegrationMappingDto {
+function toBody(
+  values: FormValues,
+  features: IntegrationsFormProps["features"],
+): UpdateIntegrationMappingDto {
   return {
     stripe:
-      values.stripeAccountId === NONE || values.stripeMethodId === NONE
+      !features.stripe || values.stripeAccountId === NONE || values.stripeMethodId === NONE
         ? null
         : { accountId: values.stripeAccountId, paymentMethodId: values.stripeMethodId },
-    binance: values.binanceAccountId === NONE ? null : { accountId: values.binanceAccountId },
+    binance:
+      !features.binance || values.binanceAccountId === NONE
+        ? null
+        : { accountId: values.binanceAccountId },
   };
 }
 
@@ -94,6 +102,7 @@ export function IntegrationsForm({
   accounts,
   walletAccounts,
   methods,
+  features,
 }: IntegrationsFormProps) {
   const t = useTranslations("settings.integrations");
   const tStatus = useTranslations("accounts.status");
@@ -115,7 +124,7 @@ export function IntegrationsForm({
     (account.inactive ? ` · ${tStatus("inactive")}` : "");
 
   async function onSubmit(values: FormValues) {
-    const result = await updateIntegrationMapping(api, toBody(values));
+    const result = await updateIntegrationMapping(api, toBody(values, features));
     if (!result.ok) {
       const { code, fieldErrors, redirectTo } = result.error;
       if (redirectTo) router.push(redirectTo);
@@ -162,25 +171,93 @@ export function IntegrationsForm({
         </p>
       ) : null}
 
-      <SectionCard title={t("stripe.title")} description={t("stripe.description")} group>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field data-invalid={errors.stripeAccountId ? true : undefined}>
-            <FieldLabel htmlFor="integrations-stripe-account">{t("stripe.account")}</FieldLabel>
+      {features.stripe ? (
+        <SectionCard title={t("stripe.title")} description={t("stripe.description")} group>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field data-invalid={errors.stripeAccountId ? true : undefined}>
+              <FieldLabel htmlFor="integrations-stripe-account">{t("stripe.account")}</FieldLabel>
+              <Controller
+                control={form.control}
+                name="stripeAccountId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="integrations-stripe-account"
+                      className="w-full"
+                      aria-invalid={errors.stripeAccountId ? true : undefined}
+                    >
+                      <SelectValue placeholder={t("stripe.accountPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t("none")}</SelectItem>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {accountLabel(account)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {stripeCurrency ? (
+                <FieldDescription>
+                  {t("stripe.currency", { currency: stripeCurrency })}
+                </FieldDescription>
+              ) : null}
+              <FieldError>{message(errors.stripeAccountId?.message)}</FieldError>
+            </Field>
+
+            <Field data-invalid={errors.stripeMethodId ? true : undefined}>
+              <FieldLabel htmlFor="integrations-stripe-method">{t("stripe.method")}</FieldLabel>
+              <Controller
+                control={form.control}
+                name="stripeMethodId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="integrations-stripe-method"
+                      className="w-full"
+                      aria-invalid={errors.stripeMethodId ? true : undefined}
+                    >
+                      <SelectValue placeholder={t("stripe.methodPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t("none")}</SelectItem>
+                      {methods.map((method) => (
+                        <SelectItem key={method.id} value={method.id}>
+                          {method.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldDescription>{t("stripe.methodHint")}</FieldDescription>
+              <FieldError>{message(errors.stripeMethodId?.message)}</FieldError>
+            </Field>
+          </div>
+        </SectionCard>
+      ) : null}
+
+      {features.binance ? (
+        <SectionCard title={t("binance.title")} description={t("binance.description")} group>
+          <Field data-invalid={errors.binanceAccountId ? true : undefined}>
+            <FieldLabel htmlFor="integrations-binance-account">{t("binance.account")}</FieldLabel>
             <Controller
               control={form.control}
-              name="stripeAccountId"
+              name="binanceAccountId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger
-                    id="integrations-stripe-account"
-                    className="w-full"
-                    aria-invalid={errors.stripeAccountId ? true : undefined}
+                    id="integrations-binance-account"
+                    className="w-full md:w-1/2"
+                    aria-invalid={errors.binanceAccountId ? true : undefined}
                   >
-                    <SelectValue placeholder={t("stripe.accountPlaceholder")} />
+                    <SelectValue placeholder={t("binance.accountPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}>{t("none")}</SelectItem>
-                    {accounts.map((account) => (
+                    {walletAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {accountLabel(account)}
                       </SelectItem>
@@ -189,77 +266,13 @@ export function IntegrationsForm({
                 </Select>
               )}
             />
-            {stripeCurrency ? (
-              <FieldDescription>
-                {t("stripe.currency", { currency: stripeCurrency })}
-              </FieldDescription>
+            {walletAccounts.length === 0 ? (
+              <FieldDescription>{t("binance.noWallets")}</FieldDescription>
             ) : null}
-            <FieldError>{message(errors.stripeAccountId?.message)}</FieldError>
+            <FieldError>{message(errors.binanceAccountId?.message)}</FieldError>
           </Field>
-
-          <Field data-invalid={errors.stripeMethodId ? true : undefined}>
-            <FieldLabel htmlFor="integrations-stripe-method">{t("stripe.method")}</FieldLabel>
-            <Controller
-              control={form.control}
-              name="stripeMethodId"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="integrations-stripe-method"
-                    className="w-full"
-                    aria-invalid={errors.stripeMethodId ? true : undefined}
-                  >
-                    <SelectValue placeholder={t("stripe.methodPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>{t("none")}</SelectItem>
-                    {methods.map((method) => (
-                      <SelectItem key={method.id} value={method.id}>
-                        {method.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            <FieldDescription>{t("stripe.methodHint")}</FieldDescription>
-            <FieldError>{message(errors.stripeMethodId?.message)}</FieldError>
-          </Field>
-        </div>
-      </SectionCard>
-
-      <SectionCard title={t("binance.title")} description={t("binance.description")} group>
-        <Field data-invalid={errors.binanceAccountId ? true : undefined}>
-          <FieldLabel htmlFor="integrations-binance-account">{t("binance.account")}</FieldLabel>
-          <Controller
-            control={form.control}
-            name="binanceAccountId"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger
-                  id="integrations-binance-account"
-                  className="w-full md:w-1/2"
-                  aria-invalid={errors.binanceAccountId ? true : undefined}
-                >
-                  <SelectValue placeholder={t("binance.accountPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("none")}</SelectItem>
-                  {walletAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {accountLabel(account)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {walletAccounts.length === 0 ? (
-            <FieldDescription>{t("binance.noWallets")}</FieldDescription>
-          ) : null}
-          <FieldError>{message(errors.binanceAccountId?.message)}</FieldError>
-        </Field>
-      </SectionCard>
+        </SectionCard>
+      ) : null}
 
       <div className="flex justify-end">
         <Button

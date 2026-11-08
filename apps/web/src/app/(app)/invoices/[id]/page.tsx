@@ -8,6 +8,7 @@ import { PaymentLinksPanel } from "@/features/invoices/components/payment-links-
 import { invoiceScreenPermissions } from "@/features/invoices/permissions";
 import { getInvoice } from "@/features/invoices/queries";
 import { orNullWhenMissing } from "@/features/invoices/refusal";
+import { getFeatures } from "@/features/shell/features";
 import { can } from "@/lib/auth/permissions";
 import { requireSessionUser } from "@/lib/auth/session";
 
@@ -34,6 +35,7 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
   if (!permissions.canRead) notFound();
   const invoice = await readInvoice(id);
   if (!invoice) notFound();
+  const { stripe } = await getFeatures();
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,8 +44,9 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
         invoice={invoice}
         canUpdate={permissions.canUpdate}
         paymentLinks={
-          // Cosmetic gate (DT-195): the BE decides. The panel hides itself when Stripe is off or its read fails.
-          can(user, "read", "payment") ? (
+          // Cosmetic gates (DT-195, DT-227): the BE decides. Not rendered while Stripe is off; the panel also hides
+          // itself when its read fails.
+          stripe && can(user, "read", "payment") ? (
             <Suspense fallback={null}>
               <PaymentLinksPanel
                 invoiceId={invoice.id}

@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { FEATURES_OFF, type Features } from "@/lib/features";
 import type { UserRole } from "@/lib/validators/enums";
 import { SETTINGS_SECTIONS, findSettingsSection, isSettingsSectionVisible } from "./settings-nav";
 
 const user = (role: UserRole) => ({ id: `usr_${role.toLowerCase()}`, role });
 
-const visibleSlugs = (role: UserRole) =>
-  SETTINGS_SECTIONS.filter((section) => isSettingsSectionVisible(section, user(role))).map(
-    (section) => section.slug,
-  );
+const ALL_ON: Features = { stripe: true, binance: true, bankSync: true };
+
+const visibleSlugs = (role: UserRole, features: Features = ALL_ON) =>
+  SETTINGS_SECTIONS.filter((section) =>
+    isSettingsSectionVisible(section, user(role), features),
+  ).map((section) => section.slug);
 
 describe("settings sections (PRD §8.15)", () => {
   it("lists every section of §8.15 once", () => {
@@ -59,18 +62,43 @@ describe("settings sections (PRD §8.15)", () => {
   it("keeps API tokens visible to every signed-in role, with no permission check (own tokens only)", () => {
     const apiTokens = findSettingsSection("api-tokens");
     expect(apiTokens).toMatchObject({ labelKey: "apiTokens", permission: null });
-    expect(isSettingsSectionVisible(apiTokens!, null)).toBe(false);
+    expect(isSettingsSectionVisible(apiTokens!, null, ALL_ON)).toBe(false);
     for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
-      expect(isSettingsSectionVisible(apiTokens!, user(role))).toBe(true);
+      expect(isSettingsSectionVisible(apiTokens!, user(role), FEATURES_OFF)).toBe(true);
     }
   });
 
   it("keeps preferences visible to every signed-in role and hides everything without a user", () => {
     const preferences = findSettingsSection("preferences");
     expect(preferences).toBeDefined();
-    expect(isSettingsSectionVisible(preferences!, null)).toBe(false);
+    expect(isSettingsSectionVisible(preferences!, null, ALL_ON)).toBe(false);
     for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
-      expect(isSettingsSectionVisible(preferences!, user(role))).toBe(true);
+      expect(isSettingsSectionVisible(preferences!, user(role), FEATURES_OFF)).toBe(true);
     }
+  });
+
+  it("hides Integraciones from every role while Stripe and Binance are both off (DT-227)", () => {
+    for (const role of ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const) {
+      expect(visibleSlugs(role, FEATURES_OFF)).not.toContain("integrations");
+    }
+    expect(visibleSlugs("OWNER", { ...FEATURES_OFF, bankSync: true })).not.toContain(
+      "integrations",
+    );
+  });
+
+  it.each([
+    ["Stripe", { ...FEATURES_OFF, stripe: true }],
+    ["Binance", { ...FEATURES_OFF, binance: true }],
+  ] as const)("shows Integraciones to Owner and Admin when only %s is on", (_label, features) => {
+    expect(visibleSlugs("OWNER", features)).toContain("integrations");
+    expect(visibleSlugs("ADMIN", features)).toContain("integrations");
+    expect(visibleSlugs("MEMBER", features)).not.toContain("integrations");
+  });
+
+  it("keeps every other section regardless of the flags", () => {
+    const withoutIntegrations = SETTINGS_SECTIONS.map((section) => section.slug).filter(
+      (slug) => slug !== "integrations",
+    );
+    expect(visibleSlugs("OWNER", FEATURES_OFF)).toEqual(withoutIntegrations);
   });
 });
