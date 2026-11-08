@@ -175,6 +175,8 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
     const { token } = await createShare(page, docId, title);
 
     await asVisitor(page);
+    // A real visitor: no back-office session cookies (the portal must load no Clerk script either way).
+    await page.context().clearCookies();
     const hosts = new Set<string>();
     page.on("request", (request) => hosts.add(new URL(request.url()).host));
     const response = await page.goto(`/s/${token}`);
