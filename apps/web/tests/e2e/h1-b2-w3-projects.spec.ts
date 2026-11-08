@@ -54,8 +54,10 @@ async function addRepositoryLinks(page: Page, projectId: string, links: { label:
     await page.getByLabel("Etiqueta", { exact: true }).nth(index).fill(link.label);
     await page.getByLabel("URL", { exact: true }).nth(index).fill(link.url);
   }
+  // The edit page saves the links with the project form, so its toast is the project's one.
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page.getByText("Enlaces guardados", { exact: true })).toBeVisible();
+  await expect(page.getByText("Proyecto actualizado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("tab", { name: new RegExp(`^Enlaces ${links.length}$`) })).toBeVisible();
 }
 
 const runId = () => Date.now().toString(36);
@@ -418,6 +420,7 @@ test.describe("projects (read only)", () => {
   });
 
   test("Miembro edits a project and does not see the Nuevo proyecto action", async ({ page, browser }) => {
+    await signInAs(page, "OWNER");
     const run = runId();
     const client = `E2E Miembro ${run}`;
     await createClientViaUi(page, client, `E2E-${run}-M`);
@@ -440,6 +443,7 @@ test.describe("projects (read only)", () => {
   });
 
   test("Lector sees no write action on a project", async ({ page, browser }) => {
+    await signInAs(page, "OWNER");
     const run = runId();
     const client = `E2E Lector ${run}`;
     await createClientViaUi(page, client, `E2E-${run}-V`);
