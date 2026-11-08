@@ -23,6 +23,9 @@ const alertsList = (page: Page) =>
   alertsPanel(page).getByRole("list", { name: "Lista de alertas", exact: true });
 
 /** The bell counter as shown (the badge is aria-hidden, so its text is read directly); 0 when not rendered. */
+/** The bell panel's page size (`alerts-bell.tsx`, `limit={20}`). */
+const BELL_PAGE = 20;
+
 async function badgeValue(page: Page): Promise<number> {
   const badge = page.locator(ALERTS_BADGE);
   if ((await badge.count()) === 0) return 0;
@@ -212,26 +215,25 @@ test.describe("technologies (mutates the catalogue)", () => {
     await expect(page.getByRole("row").filter({ hasText: name })).toHaveCount(0);
   });
 
-  test.fixme(
-    "FE-INT-R E.1: delete of an in-use technology is refused and deactivation is offered; covered by fe-int-2-commercial:317 (HU-06 CA3)",
-    async ({ page }) => {
-      await page.goto("/settings/technologies?q=next-js");
-      await page.waitForLoadState("networkidle");
-      const row = page.getByRole("row").filter({ hasText: "next-js" });
-      await expect(row).toBeVisible();
-      await expect(row).not.toContainText("Sin proyectos");
+  test.fixme("FE-INT-R E.1: delete of an in-use technology is refused and deactivation is offered; covered by fe-int-2-commercial:317 (HU-06 CA3)", async ({
+    page,
+  }) => {
+    await page.goto("/settings/technologies?q=next-js");
+    await page.waitForLoadState("networkidle");
+    const row = page.getByRole("row").filter({ hasText: "next-js" });
+    await expect(row).toBeVisible();
+    await expect(row).not.toContainText("Sin proyectos");
 
-      await page.getByRole("button", { name: "Eliminar Next.js", exact: true }).click();
-      const notice = page.getByRole("alertdialog", { name: "Tecnología en uso", exact: true });
-      await expect(notice).toBeVisible();
-      await expect(notice).toContainText("Desactivar");
-      await expect(notice.getByRole("button", { name: "Eliminar", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Eliminar Next.js", exact: true }).click();
+    const notice = page.getByRole("alertdialog", { name: "Tecnología en uso", exact: true });
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText("Desactivar");
+    await expect(notice.getByRole("button", { name: "Eliminar", exact: true })).toHaveCount(0);
 
-      await notice.getByRole("button", { name: "Desactivar", exact: true }).click();
-      await expect(page.getByText("Tecnología desactivada", { exact: true })).toBeVisible();
-      await expect(page.getByRole("switch", { name: "Activar Next.js", exact: true })).toBeVisible();
-    },
-  );
+    await notice.getByRole("button", { name: "Desactivar", exact: true }).click();
+    await expect(page.getByText("Tecnología desactivada", { exact: true })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Activar Next.js", exact: true })).toBeVisible();
+  });
 });
 
 test.describe("technologies access (view as role)", () => {
@@ -317,20 +319,19 @@ test.describe("activity", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test.fixme(
-    "FE-INT-R E.1: load more appends the next page of entries; needs more than one page of activity (batch-close manual check)",
-    async ({ page }) => {
-      await page.goto("/activity");
-      await page.waitForLoadState("networkidle");
+  test.fixme("FE-INT-R E.1: load more appends the next page of entries; needs more than one page of activity (batch-close manual check)", async ({
+    page,
+  }) => {
+    await page.goto("/activity");
+    await page.waitForLoadState("networkidle");
 
-      const entries = page.locator('section[aria-label^="Eventos del"] li');
-      const before = await entries.count();
-      const more = page.getByRole("button", { name: "Cargar más", exact: true });
-      await expect(more).toBeVisible();
-      await more.click();
-      await expect.poll(() => entries.count()).toBeGreaterThan(before);
-    },
-  );
+    const entries = page.locator('section[aria-label^="Eventos del"] li');
+    const before = await entries.count();
+    const more = page.getByRole("button", { name: "Cargar más", exact: true });
+    await expect(more).toBeVisible();
+    await more.click();
+    await expect.poll(() => entries.count()).toBeGreaterThan(before);
+  });
 
   test("CSV export starts a download that begins with a UTF-8 BOM", async ({ page }) => {
     await page.goto("/activity");
@@ -383,82 +384,73 @@ test.describe("alerts bell (read only)", () => {
   test.beforeEach(async ({ page }) => {
     await signInAs(page, "OWNER");
   });
-  test(
-    "the counter equals the panel items, and the panel is labelled",
-    async ({ page }) => {
-      await createAlertData(page);
-      await page.goto("/dashboard");
-      await page.waitForLoadState("networkidle");
-      const counter = await badgeValue(page);
-      expect(counter, "the alerts exist for the Owner").toBeGreaterThan(0);
+  test("the counter equals the panel items, and the panel is labelled", async ({ page }) => {
+    await createAlertData(page);
+    await page.goto("/dashboard");
+    await page.waitForLoadState("networkidle");
+    const counter = await badgeValue(page);
+    expect(counter, "the alerts exist for the Owner").toBeGreaterThan(0);
 
-      await alertsBell(page).click();
-      await expect(alertsPanel(page)).toBeVisible();
-      await expect(alertsPanel(page)).toHaveAttribute("aria-labelledby", /.+/);
-      await expect(alertsList(page)).toBeVisible();
-      await expect(alertsList(page).getByRole("listitem")).toHaveCount(counter);
-    },
-  );
+    await alertsBell(page).click();
+    await expect(alertsPanel(page)).toBeVisible();
+    await expect(alertsPanel(page)).toHaveAttribute("aria-labelledby", /.+/);
+    await expect(alertsList(page)).toBeVisible();
+    // The bell lists the first BELL_PAGE alerts; the badge counts all unread ones (BE `unread` is not capped).
+    await expect(alertsList(page).getByRole("listitem")).toHaveCount(Math.min(counter, BELL_PAGE));
+  });
 
-  test(
-    "dismiss and snooze buttons carry the alert subject in their accessible name",
-    async ({ page }) => {
-      await createAlertData(page);
-      await openAlerts(page);
-      const list = alertsList(page);
-      const dismissNames = await list
-        .getByRole("button", { name: /^Descartar: / })
-        .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label") ?? ""));
-      expect(dismissNames.length).toBeGreaterThan(0);
-      expect(new Set(dismissNames).size, "each row has its own name").toBe(dismissNames.length);
-      expect(dismissNames.some((name) => name.includes(" · "))).toBe(true);
+  test("dismiss and snooze buttons carry the alert subject in their accessible name", async ({
+    page,
+  }) => {
+    await createAlertData(page);
+    await openAlerts(page);
+    const list = alertsList(page);
+    const dismissNames = await list
+      .getByRole("button", { name: /^Descartar: / })
+      .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label") ?? ""));
+    expect(dismissNames.length).toBeGreaterThan(0);
+    expect(new Set(dismissNames).size, "each row has its own name").toBe(dismissNames.length);
+    expect(dismissNames.some((name) => name.includes(" · "))).toBe(true);
 
-      const first = list.getByRole("listitem").first();
-      const title = (await first.locator('[data-slot="item-title"]').innerText()).trim();
-      await expect(
-        first.getByRole("button", { name: new RegExp(`^Descartar: ${escapeRegExp(title)}`) }),
-      ).toBeVisible();
-      await expect(
-        first.getByRole("button", { name: new RegExp(`^Posponer: ${escapeRegExp(title)}`) }),
-      ).toBeVisible();
-    },
-  );
+    const first = list.getByRole("listitem").first();
+    const title = (await first.locator('[data-slot="item-title"]').innerText()).trim();
+    await expect(
+      first.getByRole("button", { name: new RegExp(`^Descartar: ${escapeRegExp(title)}`) }),
+    ).toBeVisible();
+    await expect(
+      first.getByRole("button", { name: new RegExp(`^Posponer: ${escapeRegExp(title)}`) }),
+    ).toBeVisible();
+  });
 
-  test(
-    "Escape closes the panel and returns focus to the bell",
-    async ({ page }) => {
-      await createAlertData(page);
-      await openAlerts(page);
-      // The panel takes focus on its own container when it opens (no inner control is focused).
-      await expect(alertsPanel(page)).toBeFocused();
+  test("Escape closes the panel and returns focus to the bell", async ({ page }) => {
+    await createAlertData(page);
+    await openAlerts(page);
+    // The panel takes focus on its own container when it opens (no inner control is focused).
+    await expect(alertsPanel(page)).toBeFocused();
 
-      await page.keyboard.press("Escape");
-      await expect(alertsPanel(page)).toBeHidden();
-      await expect(alertsBell(page)).toBeFocused();
-    },
-  );
+    await page.keyboard.press("Escape");
+    await expect(alertsPanel(page)).toBeHidden();
+    await expect(alertsBell(page)).toBeFocused();
+  });
 
-  test(
-    "the counter badge meets WCAG AA in light and dark mode",
-    async ({ page }) => {
-      await createAlertData(page);
-      // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
-      await page.goto("/dashboard");
-      await page.evaluate(() => localStorage.setItem("theme", "light"));
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-      await expect(page.locator(ALERTS_BADGE)).toBeVisible();
-      await expect(page.locator("html")).not.toHaveClass(DARK_CLASS);
-      expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
+  test("the counter badge meets WCAG AA in light and dark mode", async ({ page }) => {
+    await createAlertData(page);
+    // Not addInitScript: an init script re-runs on reload and would reset the theme set below.
+    await page.goto("/dashboard");
+    await page.evaluate(() => localStorage.setItem("theme", "light"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator(ALERTS_BADGE)).toBeVisible();
+    await expect(page.locator("html")).not.toHaveClass(DARK_CLASS);
+    expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
 
-      await page.evaluate(() => localStorage.setItem("theme", "dark"));
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-      await expect(page.locator("html")).toHaveClass(DARK_CLASS);
-      await expect(page.locator(ALERTS_BADGE)).toBeVisible();
-      expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
-    },
-  );
+    await page.evaluate(() => localStorage.setItem("theme", "dark"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveClass(DARK_CLASS);
+    await expect(page.locator(ALERTS_BADGE)).toBeVisible();
+    expect(await badgeContrast(page)).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 test.describe("alerts bell (mutates alert state)", () => {
@@ -467,40 +459,34 @@ test.describe("alerts bell (mutates alert state)", () => {
   });
   test.describe.configure({ mode: "serial" });
 
-  test(
-    "dismiss lowers the counter and the panel",
-    async ({ page }) => {
-      await createAlertData(page);
-      await openAlerts(page);
-      const before = await badgeValue(page);
-      expect(before).toBeGreaterThan(0);
+  test("dismiss lowers the counter and the panel", async ({ page }) => {
+    await createAlertData(page);
+    await openAlerts(page);
+    const before = await badgeValue(page);
+    expect(before).toBeGreaterThan(0);
 
-      await alertsList(page)
-        .getByRole("button", { name: /^Descartar: / })
-        .first()
-        .click();
-      await expect(page.getByText("Alerta descartada", { exact: true })).toBeVisible();
-      await expect.poll(() => badgeValue(page)).toBe(before - 1);
-      await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
-    },
-  );
+    const first = alertsList(page).locator("[data-alert-key]").first();
+    const key = await first.getAttribute("data-alert-key");
+    await first.getByRole("button", { name: /^Descartar: / }).click();
+    await expect(page.getByText("Alerta descartada", { exact: true })).toBeVisible();
+    await expect.poll(() => badgeValue(page)).toBe(before - 1);
+    // The panel may refill from past the first page, so the dismissed alert is checked by its key, not a count.
+    await expect(alertsList(page).locator(`[data-alert-key="${key}"]`)).toHaveCount(0);
+  });
 
-  test(
-    "snooze for one day lowers the counter and the panel",
-    async ({ page }) => {
-      await createAlertData(page);
-      await openAlerts(page);
-      const before = await badgeValue(page);
-      expect(before).toBeGreaterThan(0);
+  test("snooze for one day lowers the counter and the panel", async ({ page }) => {
+    await createAlertData(page);
+    await openAlerts(page);
+    const before = await badgeValue(page);
+    expect(before).toBeGreaterThan(0);
 
-      await alertsList(page)
-        .getByRole("button", { name: /^Posponer: / })
-        .first()
-        .click();
-      await page.getByRole("menuitem", { name: "1 día", exact: true }).click();
-      await expect(page.getByText("Alerta pospuesta 1 día", { exact: true })).toBeVisible();
-      await expect.poll(() => badgeValue(page)).toBe(before - 1);
-      await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
-    },
-  );
+    await alertsList(page)
+      .getByRole("button", { name: /^Posponer: / })
+      .first()
+      .click();
+    await page.getByRole("menuitem", { name: "1 día", exact: true }).click();
+    await expect(page.getByText("Alerta pospuesta 1 día", { exact: true })).toBeVisible();
+    await expect.poll(() => badgeValue(page)).toBe(before - 1);
+    await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
+  });
 });

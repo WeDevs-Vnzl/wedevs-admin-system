@@ -42,9 +42,11 @@ let fixture: Fixture;
 
 const nodeId = (type: string, id: string) => `${type}:${id}`;
 const canvasNode = (page: Page, id: string) => page.getByTestId(`graph-node-${id}`);
-const nodesOfType = (page: Page, type: string) => page.locator(`[data-testid^="graph-node-${type}:"]`);
+const nodesOfType = (page: Page, type: string) =>
+  page.locator(`[data-testid^="graph-node-${type}:"]`);
 const nodeList = (page: Page) => page.getByRole("list", { name: /^(Lista de nodos|Node list)$/ });
-const sidePanel = (page: Page) => page.getByRole("region", { name: /^(Nodo seleccionado|Selected node)$/ });
+const sidePanel = (page: Page) =>
+  page.getByRole("region", { name: /^(Nodo seleccionado|Selected node)$/ });
 
 async function openGraph(page: Page, path: string, rootId: string) {
   await openPage(page, path);
@@ -148,17 +150,19 @@ test.describe("FE-INT-5 intelligence", () => {
     await page.keyboard.press("Escape");
 
     // Dashboard panel "Cuotas por facturar (próximos 30 días)" lists the installment by its label.
-    await expect(page.locator("main").getByText("Cuotas por facturar (próximos 30 días)")).toBeVisible();
+    await expect(
+      page.locator("main").getByText("Cuotas por facturar (próximos 30 días)"),
+    ).toBeVisible();
     await expect(page.locator("main").getByText(fixture.installmentLabel).first()).toBeVisible();
   });
 
   test("@authenticated HU-19 CA2: a document that expires within its alert window shows in the alerts", async ({
     page,
   }) => {
-    await openPage(page, "/dashboard");
-    await page.getByRole("button", { name: /^Alertas/ }).click();
-    const bell = page.getByRole("dialog", { name: "Alertas" });
-    const alert = bell.locator("[data-alert-key]").filter({ hasText: fixture.documentTitle });
+    // The bell shows the first 20 alerts, and installment alerts from earlier runs sort ahead of a document due today.
+    // The documents overview lists the document alert types only.
+    await page.goto("/documents");
+    const alert = page.locator("main [data-alert-key]").filter({ hasText: fixture.documentTitle });
     await expect(alert.getByText("Documento por vencer", { exact: true })).toBeVisible();
     await expect(alert.getByText(/Vence hoy/)).toBeVisible();
   });
@@ -185,7 +189,11 @@ test.describe("FE-INT-5 intelligence", () => {
   }) => {
     const project = nodeId("PROJECT", fixture.project.id);
     const other = nodeId("CLIENT", fixture.clientB.id);
-    await openGraph(page, `/clients/${fixture.clientA.id}/graph`, nodeId("CLIENT", fixture.clientA.id));
+    await openGraph(
+      page,
+      `/clients/${fixture.clientA.id}/graph`,
+      nodeId("CLIENT", fixture.clientA.id),
+    );
     const before = await page.locator('[data-testid^="graph-node-"]').count();
     await expect(canvasNode(page, other)).toHaveCount(0);
 
@@ -214,7 +222,11 @@ test.describe("FE-INT-5 intelligence", () => {
   test('@authenticated HU-24 CA3: hovering a node shows the preview card, and "Abrir detalle" navigates to the record', async ({
     page,
   }) => {
-    await openGraph(page, `/clients/${fixture.clientA.id}/graph`, nodeId("CLIENT", fixture.clientA.id));
+    await openGraph(
+      page,
+      `/clients/${fixture.clientA.id}/graph`,
+      nodeId("CLIENT", fixture.clientA.id),
+    );
     await canvasNode(page, nodeId("PROJECT", fixture.project.id)).hover();
     const card = page.getByRole("dialog", { name: fixture.project.name });
     await expect(card).toBeVisible();
@@ -227,7 +239,11 @@ test.describe("FE-INT-5 intelligence", () => {
     page,
   }) => {
     const project = nodeId("PROJECT", fixture.project.id);
-    await openGraph(page, `/clients/${fixture.clientA.id}/graph`, nodeId("CLIENT", fixture.clientA.id));
+    await openGraph(
+      page,
+      `/clients/${fixture.clientA.id}/graph`,
+      nodeId("CLIENT", fixture.clientA.id),
+    );
     const navigations: string[] = [];
     page.on("framenavigated", (frame) => {
       if (frame === page.mainFrame()) navigations.push(frame.url());
@@ -242,7 +258,10 @@ test.describe("FE-INT-5 intelligence", () => {
     await projects.click();
     await expect(canvasNode(page, project)).toHaveCount(0);
     await expect(
-      nodeList(page).getByRole("button", { name: `Seleccionar ${fixture.project.name}`, exact: true }),
+      nodeList(page).getByRole("button", {
+        name: `Seleccionar ${fixture.project.name}`,
+        exact: true,
+      }),
     ).toHaveCount(0);
     await expect(canvasNode(page, nodeId("CLIENT", fixture.clientA.id))).toBeVisible();
 
@@ -269,7 +288,9 @@ test.describe("FE-INT-5 intelligence", () => {
       await dialog
         .getByLabel("Nombre completo", { exact: true })
         .fill(`Contacto E2E ${String(i).padStart(2, "0")}`);
-      await dialog.getByLabel("Email", { exact: true }).fill(`contacto.e2e.${RUN}.${i}@example.com`);
+      await dialog
+        .getByLabel("Email", { exact: true })
+        .fill(`contacto.e2e.${RUN}.${i}@example.com`);
       await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
       await expect(dialog).toBeHidden();
     }
@@ -292,7 +313,11 @@ test.describe("FE-INT-5 intelligence", () => {
   test("@authenticated graph keyboard alternative: the node list selects a node with Enter and opens its side panel", async ({
     page,
   }) => {
-    await openGraph(page, `/clients/${fixture.clientA.id}/graph`, nodeId("CLIENT", fixture.clientA.id));
+    await openGraph(
+      page,
+      `/clients/${fixture.clientA.id}/graph`,
+      nodeId("CLIENT", fixture.clientA.id),
+    );
     const item = nodeList(page).getByRole("button", {
       name: `Seleccionar ${fixture.project.name}`,
       exact: true,
@@ -303,14 +328,12 @@ test.describe("FE-INT-5 intelligence", () => {
 
     const panel = sidePanel(page);
     await expect(panel.getByRole("heading", { name: fixture.project.name })).toBeVisible();
-    await expect(panel.getByRole("link", { name: /^(Abrir detalle|Open detail)$/ })).toHaveAttribute(
-      "href",
-      `/projects/${fixture.project.id}`,
-    );
-    await expect(panel.getByRole("link", { name: /^(Ver su grafo|View its graph)$/ })).toHaveAttribute(
-      "href",
-      `/projects/${fixture.project.id}/graph`,
-    );
+    await expect(
+      panel.getByRole("link", { name: /^(Abrir detalle|Open detail)$/ }),
+    ).toHaveAttribute("href", `/projects/${fixture.project.id}`);
+    await expect(
+      panel.getByRole("link", { name: /^(Ver su grafo|View its graph)$/ }),
+    ).toHaveAttribute("href", `/projects/${fixture.project.id}/graph`);
     // Expanding from the panel by keyboard adds the shared project's other nodes.
     const before = await page.locator('[data-testid^="graph-node-"]').count();
     await panel.getByRole("button", { name: /^(Expandir|Expand)$/ }).focus();
@@ -424,7 +447,9 @@ test.describe("FE-INT-5 intelligence", () => {
       await page.getByRole("checkbox", { name: "País", exact: true }).click();
       await page.keyboard.press("Escape");
 
-      await page.getByRole("searchbox", { name: "Buscar en la tabla", exact: true }).fill(`${base} uno`);
+      await page
+        .getByRole("searchbox", { name: "Buscar en la tabla", exact: true })
+        .fill(`${base} uno`);
       await expect(page.getByRole("row").filter({ hasText: `${base} dos` })).toHaveCount(0);
       await expect(page.getByRole("row").filter({ hasText: `${base} uno` })).toBeVisible();
 
@@ -455,7 +480,10 @@ test.describe("FE-INT-5 intelligence", () => {
     const id = await createClientViaUi(page, name, `E2E-ARC-${RUN}`);
     await page.getByRole("button", { name: "Más acciones", exact: true }).click();
     await page.getByRole("menuitem", { name: "Archivar cliente", exact: true }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: "Archivar", exact: true }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Archivar", exact: true })
+      .click();
     await expect(page.getByText("1 cliente archivado", { exact: true })).toBeVisible();
 
     // Table: hidden, then shown by "Mostrar archivados".

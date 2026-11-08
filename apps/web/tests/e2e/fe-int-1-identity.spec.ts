@@ -71,7 +71,9 @@ test.describe("FE-INT-1 identity", () => {
     await assertBackendHealthy();
   });
 
-  test("@unauthenticated HU-01 CA3: Settings → Usuarios without a session goes to sign-in", async ({ page }) => {
+  test("@unauthenticated HU-01 CA3: Settings → Usuarios without a session goes to sign-in", async ({
+    page,
+  }) => {
     await page.goto("/settings/users");
     await expect(page).toHaveURL(/\/sign-in/);
   });
@@ -87,12 +89,18 @@ test.describe("FE-INT-1 identity", () => {
     await page.getByRole("button", { name: oneOf("Invitar usuario", "Invite user") }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel(oneOf("Correo", "E-mail")).fill(email);
-    await dialog.getByRole("button", { name: oneOf("Enviar invitación", "Send invitation") }).click();
-    await expect(page.getByText(oneOf(`Invitación enviada a ${email}`, `Invitation sent to ${email}`))).toBeVisible();
+    await dialog
+      .getByRole("button", { name: oneOf("Enviar invitación", "Send invitation") })
+      .click();
+    await expect(
+      page.getByText(oneOf(`Invitación enviada a ${email}`, `Invitation sent to ${email}`)),
+    ).toBeVisible();
 
     const invitation = page.getByRole("row").filter({ hasText: email });
     await invitation
-      .getByRole("button", { name: oneOf(`Revocar la invitación de ${email}`, `Revoke the invitation of ${email}`) })
+      .getByRole("button", {
+        name: oneOf(`Revocar la invitación de ${email}`, `Revoke the invitation of ${email}`),
+      })
       .click();
     await expect(page.getByText(oneOf("Invitación revocada", "Invitation revoked"))).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: email })).toHaveCount(0);
@@ -121,10 +129,14 @@ test.describe("FE-INT-1 identity", () => {
     await signInAs(page, "MEMBER");
     await page.goto("/settings/users");
     await expect(page.getByText(oneOf("Página no encontrada", "Page not found"))).toBeVisible();
-    await expect(page.getByRole("button", { name: oneOf("Invitar usuario", "Invite user") })).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: oneOf("Invitar usuario", "Invite user") }),
+    ).toHaveCount(0);
   });
 
-  test("@authenticated HU-30: language and theme persist across a new session", async ({ browser }) => {
+  test("@authenticated HU-30: language and theme persist across a new session", async ({
+    browser,
+  }) => {
     const first = await openSession(browser);
     const second = await openSession(browser);
     try {
@@ -132,7 +144,9 @@ test.describe("FE-INT-1 identity", () => {
       await first.page.goto("/settings/preferences");
       await first.page.getByLabel("English").check();
       await first.page.getByLabel(oneOf("Oscuro", "Dark")).check();
-      await first.page.getByRole("button", { name: oneOf("Guardar cambios", "Save changes") }).click();
+      await first.page
+        .getByRole("button", { name: oneOf("Guardar cambios", "Save changes") })
+        .click();
       await expect(first.page.locator("html")).toHaveAttribute("lang", "en");
 
       await signInAs(second.page, "OWNER");
@@ -142,37 +156,47 @@ test.describe("FE-INT-1 identity", () => {
       await second.page.goto("/settings/preferences");
       await second.page.getByLabel("Español").check();
       await second.page.getByLabel(oneOf("Claro", "Light")).check();
-      await second.page.getByRole("button", { name: oneOf("Guardar cambios", "Save changes") }).click();
+      await second.page
+        .getByRole("button", { name: oneOf("Guardar cambios", "Save changes") })
+        .click();
       await expect(second.page.locator("html")).toHaveAttribute("lang", "es");
       await first.context.close();
       await second.context.close();
     }
   });
 
-  test("@authenticated HU-27 CA1: a table column layout persists across a new session", async ({ browser }) => {
+  test("@authenticated HU-27 CA1: a table column layout persists across a new session", async ({
+    browser,
+  }) => {
     // Two sign-ins, a column move and a reload do not fit the default 30 s test budget (the run timed out in this test).
     test.setTimeout(90_000);
     const first = await openSession(browser);
     const second = await openSession(browser);
     // `tradeName` is pinned to the left edge and has no move control: move the (unpinned) code column instead.
     const moveCodeDown = oneOf("Move Code down", "Mover Código hacia abajo");
+    await signInAs(first.page, "OWNER");
     try {
-      await signInAs(first.page, "OWNER");
       await first.page.goto("/clients/list");
       await first.page.getByRole("button", { name: oneOf("Columns", "Columnas") }).click();
       const defaultOrder = await columnOrder(first.page);
       await first.page.getByRole("button", { name: moveCodeDown }).click();
+      // The headers re-render after the move: poll instead of reading them once.
+      await expect.poll(() => columnOrder(first.page)).not.toEqual(defaultOrder);
       const layout = await columnOrder(first.page);
-      expect(layout).not.toEqual(defaultOrder);
       await first.page.keyboard.press("Escape");
 
       await signInAs(second.page, "OWNER");
       await second.page.goto("/clients/list");
       await expect.poll(() => columnOrder(second.page)).toEqual(layout);
     } finally {
-      await second.page.goto("/clients/list");
-      await second.page.getByRole("button", { name: oneOf("Columns", "Columnas") }).click();
-      await second.page.getByRole("button", { name: oneOf("Reset columns", "Restablecer columnas") }).click();
+      // Reset from the first session, which is signed in even when the test failed before the second sign-in.
+      await first.page.goto("/clients/list");
+      await first.page
+        .getByRole("button", { name: oneOf("Columns", "Columnas") })
+        .click({ timeout: 5_000 });
+      await first.page
+        .getByRole("button", { name: oneOf("Reset columns", "Restablecer columnas") })
+        .click({ timeout: 5_000 });
       await first.context.close();
       await second.context.close();
     }
@@ -198,16 +222,23 @@ test.describe("FE-INT-1 identity", () => {
       buffer: PNG_1X1,
     });
     await page.getByRole("button", { name: oneOf("Guardar", "Save") }).click();
-    await expect(page.getByText(oneOf("Perfil de la empresa guardado", "Company profile saved"))).toBeVisible();
+    await expect(
+      page.getByText(oneOf("Perfil de la empresa guardado", "Company profile saved")),
+    ).toBeVisible();
     await expect(
       page.getByText(
-        oneOf("Hay un logo cargado. Sube uno nuevo para reemplazarlo.", "A logo is set. Upload a new one to replace it."),
+        oneOf(
+          "Hay un logo cargado. Sube uno nuevo para reemplazarlo.",
+          "A logo is set. Upload a new one to replace it.",
+        ),
       ),
     ).toBeVisible();
     await expect(page.locator('img[src*="/files/"]').first()).toBeVisible();
   });
 
-  test("@authenticated /settings/api-tokens: create shows the secret once, then revoke", async ({ page }) => {
+  test("@authenticated /settings/api-tokens: create shows the secret once, then revoke", async ({
+    page,
+  }) => {
     const tokenName = `e2e-token-${Date.now()}`;
     await signInAs(page, "VIEWER");
     await page.goto("/settings/api-tokens");
@@ -220,7 +251,9 @@ test.describe("FE-INT-1 identity", () => {
     const secret = await secretDialog
       .locator("code, input[readonly]")
       .first()
-      .evaluate((element) => (element instanceof HTMLInputElement ? element.value : (element.textContent ?? "")));
+      .evaluate((element) =>
+        element instanceof HTMLInputElement ? element.value : (element.textContent ?? ""),
+      );
     expect(secret.length).toBeGreaterThan(0);
     await secretDialog.getByRole("button", { name: API_TOKEN_COPY.done }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -233,6 +266,8 @@ test.describe("FE-INT-1 identity", () => {
     if ((await confirmation.count()) > 0) {
       await confirmation.getByRole("button", { name: API_TOKEN_COPY.revoke }).click();
     }
-    await expect(page.getByRole("row").filter({ hasText: tokenName })).toContainText(/Revocad|Revoked/);
+    await expect(page.getByRole("row").filter({ hasText: tokenName })).toContainText(
+      /Revocad|Revoked/,
+    );
   });
 });
