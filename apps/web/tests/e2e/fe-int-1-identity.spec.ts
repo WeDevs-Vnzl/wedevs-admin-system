@@ -178,7 +178,9 @@ test.describe("FE-INT-1 identity", () => {
     }
   });
 
-  test("@authenticated company logo upload is visible after the BE confirms it (Cloudinary stubbed)", async ({
+  // The browser-side stub answers the bytes POST, but the BE confirms the upload by reading the object on Cloudinary
+  // from the server (`confirm-upload.use-case.ts`, `getObjectInfo`), which no browser stub reaches: rule 30.
+  test.fixme("@authenticated company logo upload is visible after the BE confirms it — FE-INT-R: the BE verifies the upload on Cloudinary server-side (live third-party service); the batch-close manual check covers it", async ({
     page,
   }) => {
     // Cloudinary is never called live: the signed upload and the download redirect are answered with a 1×1 PNG.
