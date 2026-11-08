@@ -71,9 +71,48 @@ test.describe("FE-INT-6 integrations (off by default)", () => {
     await expect(page.locator("#integrations-binance-account")).toHaveCount(0);
   });
 
-  test.fixme("Phase 2 (DT-227): Settings → Integraciones saves the Binance wallet mapping and keeps it after a reload; needs FEATURE_BINANCE=true with its keys", async () => {});
+  // Phase 2 (DT-227): runs once FEATURE_BINANCE=true with its keys; it changes a global setting and clears it in
+  // `finally`, so keep `--workers=1`.
+  test.fixme("@authenticated Phase 2 (DT-227): Settings → Integraciones saves the Binance wallet mapping and keeps it after a reload; needs FEATURE_BINANCE=true with its keys", async ({
+    page,
+  }) => {
+    const wallet = `E2E Wallet mapeo ${RUN}`;
+    await createAccountViaUi(page, { name: wallet, type: "Wallet cripto", currency: "USDT" });
 
-  test.fixme("Phase 2 (DT-227): Stripe needs both its account and its payment method (or neither); needs FEATURE_STRIPE=true with its keys", async () => {});
+    await openPage(page, "/settings/integrations");
+    await expect(page.getByRole("heading", { level: 1, name: "Integraciones" })).toBeVisible();
+    try {
+      await page.locator("#integrations-binance-account").click();
+      await page.getByRole("option", { name: `${wallet} (USDT)`, exact: true }).click();
+      await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
+      await expect(page.getByText("Asignación guardada")).toBeVisible();
+
+      await openPage(page, "/settings/integrations");
+      await expect(page.locator("#integrations-binance-account")).toContainText(wallet);
+    } finally {
+      await openPage(page, "/settings/integrations");
+      await page.locator("#integrations-binance-account").click();
+      await page.getByRole("option", { name: "Sin asignar", exact: true }).click();
+      await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
+      await expect(page.getByText("Asignación guardada")).toBeVisible();
+    }
+  });
+
+  test.fixme("@authenticated Phase 2 (DT-227): Stripe needs both its account and its payment method (or neither); needs FEATURE_STRIPE=true with its keys", async ({
+    page,
+  }) => {
+    const account = `E2E Cuenta Stripe ${RUN}`;
+    await createAccountViaUi(page, { name: account, currency: "USD" });
+
+    await openPage(page, "/settings/integrations");
+    await page.locator("#integrations-stripe-account").click();
+    await page.getByRole("option", { name: `${account} (USD)`, exact: true }).click();
+    await page.getByRole("button", { name: "Guardar asignación", exact: true }).click();
+    await expect(
+      page.getByText("Elige la cuenta y el método de pago, o deja Stripe sin asignar."),
+    ).toBeVisible();
+    await expect(page.getByText("Asignación guardada")).toHaveCount(0);
+  });
 
   test.fixme("FE-INT-R E.3: creating a Stripe payment link needs Stripe on (live third-party service); covered by the BE e2e, the HTTP-mocked unit tests and the batch-close manual check", async () => {});
 
