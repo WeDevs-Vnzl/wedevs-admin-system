@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+const mocks = vi.hoisted(() => ({ clerk: vi.fn(() => "clerk-response") }));
+
 vi.mock("@clerk/nextjs/server", () => ({
-  clerkMiddleware: (handler: unknown) => handler,
+  clerkMiddleware: () => mocks.clerk,
   createRouteMatcher: (patterns: string[]) => {
     const regexes = patterns.map((p) => new RegExp(`^${p}$`));
     return (req: { nextUrl: { pathname: string } }) =>
@@ -10,7 +12,7 @@ vi.mock("@clerk/nextjs/server", () => ({
 }));
 
 import nextConfig from "../next.config";
-import { PUBLIC_ROUTE_PATTERNS, config, isPublicRoute } from "./proxy";
+import proxy, { PUBLIC_ROUTE_PATTERNS, config, isPublicRoute } from "./proxy";
 
 const req = (pathname: string) => ({ nextUrl: { pathname } }) as never;
 
@@ -47,6 +49,30 @@ describe("proxy public routes", () => {
     expect(pages.test("/_next/static/chunk.js")).toBe(false);
     expect(pages.test("/logo.png")).toBe(false);
   });
+});
+
+// The portal page is public and must reach no Clerk at all (PRD: "portal público (sin Clerk)"): `clerkMiddleware`
+// authenticates even public routes and, for a visitor without Clerk cookies, redirects to the Clerk handshake.
+describe("proxy on the portal page", () => {
+  const request = (pathname: string) =>
+    ({ nextUrl: { pathname }, url: `http://localhost:3000${pathname}` }) as never;
+
+  it.each(["/s/abc123", "/s/abc123/"])("%s skips the Clerk middleware", (path) => {
+    mocks.clerk.mockClear();
+    const response = proxy(request(path), {} as never);
+    expect(mocks.clerk).not.toHaveBeenCalled();
+    expect(response).toBeInstanceOf(Response);
+    expect((response as Response).headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it.each(["/s/a/b", "/s/abc123/extra", "/dashboard", "/sign-in", "/api/v1/me"])(
+    "%s still goes through the Clerk middleware",
+    (path) => {
+      mocks.clerk.mockClear();
+      expect(proxy(request(path), {} as never)).toBe("clerk-response");
+      expect(mocks.clerk).toHaveBeenCalledOnce();
+    },
+  );
 });
 
 describe("security headers", () => {
