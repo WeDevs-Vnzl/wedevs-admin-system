@@ -554,7 +554,8 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(page.getByText("Gasto marcado como pagado")).toBeVisible();
 
     // CA3: a paid expense on a project reduces that project's margin (its paid expenses appear in the summary).
-    await page.goto(`/projects/${projectId}/billing`);
+    // The financial summary is the project detail's "Cobro" tab; `/projects/<id>/billing` is the plan editor.
+    await page.goto(`/projects/${projectId}?tab=billing`);
     await expect(page.getByText("Gastos pagados").first()).toBeVisible();
     await expect(page.getByText(money("137,00")).first()).toBeVisible();
   });
