@@ -15,6 +15,8 @@ import { Module, type INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { AppModule } from '../src/app.module';
+import { InvalidEnvError } from '../src/config/env.schema';
+import { DomainError } from '../src/shared/domain/domain-error';
 import { CreateClient } from '../src/modules/commercial/application/use-cases/create-client.use-case';
 import { CreateContact } from '../src/modules/commercial/application/use-cases/create-contact.use-case';
 import { CreateNote } from '../src/modules/commercial/application/use-cases/create-note.use-case';
@@ -696,29 +698,37 @@ class SeedDemoModule {}
 
 async function main(): Promise<void> {
   const url = assertDemoSeedTarget(process.env.DATABASE_URL, process.argv.slice(2));
+  // Boot first: a boot failure (env, DI) must not leave a wiped database. `abortOnError: false` makes Nest
+  // throw instead of calling `process.exit(1)` silently (the logger is off).
+  const app = await NestFactory.createApplicationContext(SeedDemoModule, {
+    logger: false,
+    abortOnError: false,
+  });
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
   try {
     await wipeBusinessData(prisma);
     await seedCatalogs(prisma);
-    const app = await NestFactory.createApplicationContext(SeedDemoModule, { logger: false });
-    try {
-      await seedDemo(app);
-    } finally {
-      await app.close();
-    }
+    await seedDemo(app);
     console.log('Demo data ready:');
     for (const [name, count] of Object.entries(await summary(prisma))) {
       console.log(`  ${name}: ${count}`);
     }
   } finally {
+    await app.close();
     await prisma.$disconnect();
   }
 }
 
+/** Errors whose message is fixed text or variable names / message keys only, never connection details. */
+const SAFE_MESSAGE_ERRORS = [SeedTargetError, InvalidEnvError, DomainError];
+
 if (require.main === module) {
   main().catch((error: unknown) => {
-    if (error instanceof SeedTargetError) {
-      console.error(error.message);
+    if (SAFE_MESSAGE_ERRORS.some((type) => error instanceof type)) {
+      const { name, message } = error as Error;
+      const fieldErrors = (error as { fieldErrors?: unknown }).fieldErrors;
+      console.error(`Demo seed failed: ${name}: ${message}`);
+      if (fieldErrors) console.error(JSON.stringify(fieldErrors));
       process.exit(1);
     }
     // Print only the error name/code, never the message (it may carry connection details).

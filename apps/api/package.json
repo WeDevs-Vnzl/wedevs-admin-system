@@ -23,7 +23,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:demo": "tsx prisma/seed-demo.ts",
+    "db:seed:demo": "node --no-experimental-strip-types --require ./scripts/swc-register.cjs prisma/seed-demo.ts",
     "openapi:generate": "tsx scripts/openapi.ts generate",
     "openapi:check": "tsx scripts/openapi.ts check",
     "check": "bash scripts/check.sh",
