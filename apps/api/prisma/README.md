@@ -35,3 +35,17 @@ drop them. Procedure for every later owner:
    it: stop and report (PRD change).
 5. An interactive `prisma migrate dev` that asks for a migration name right after applying the history is showing
    exactly this expected drift; answer by using `--create-only` as above, never by accepting the drops.
+
+## Pilot demo seed (`seed-demo.ts`)
+
+`bun run db:seed:demo` (or `bun run db:seed:demo` from the monorepo root) prepares a local database for a manual
+pilot. It **wipes the business data** (clients, projects, finance, documents, notes, activity, search index,
+alerts) and keeps the `User` and `UserPreference` rows, the catalogs and the settings; the sequences restart at 0
+and the `integrations.*` settings are dropped. It then re-seeds the catalogs and rebuilds a small fictional data
+set (4 clients, 3 projects, invoices, payments, expenses, notes, documents, a share link) through the application
+use cases, as the OWNER, so every derived value comes from the domain.
+
+- **Localhost only.** A non-local `DATABASE_URL` is always refused and `--allow-remote` is not accepted.
+- **Needs an active OWNER.** Sign the Owner in once first; without one the seed stops before deleting anything.
+- Needs the API env (Clerk, Cloudinary and share secrets) in your shell or `.env`, like the API itself.
+- No file is uploaded and no Stripe or Binance data is created.

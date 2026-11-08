@@ -27,7 +27,8 @@
     "infra:down": "podman compose down",
     "db:migrate": "bun run --cwd apps/api db:migrate",
     "db:reset": "bun run --cwd apps/api db:reset",
-    "db:seed": "bun run --cwd apps/api db:seed"
+    "db:seed": "bun run --cwd apps/api db:seed",
+    "db:seed:demo": "bun run --cwd apps/api db:seed:demo"
   },
   "devDependencies": {
     "turbo": "2.11.10"
