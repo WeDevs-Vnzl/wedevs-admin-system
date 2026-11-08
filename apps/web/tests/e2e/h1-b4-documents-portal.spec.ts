@@ -58,11 +58,17 @@ async function createPublishedPrd(page: Page, title: string, versions: number): 
     await page
       .getByRole("textbox", { name: oneOf("Fuente markdown", "Markdown source") })
       .fill(`# ${title} v${version}`);
-    await page.getByRole("button", { name: oneOf(`Publicar versión v${version}`, `Publish version v${version}`) }).click();
+    await page
+      .getByRole("button", {
+        name: oneOf(`Publicar versión v${version}`, `Publish version v${version}`),
+      })
+      .click();
     const dialog = page.getByRole("dialog");
     await dialog.locator("#document-editor-changelog").fill(`Cambio E2E v${version}`);
     await dialog.getByRole("button", { name: oneOf("Publicar", "Publish") }).click();
-    await expect(page.getByText(anyOf(`Versión v${version} publicada`, `Version v${version} published`))).toBeVisible();
+    await expect(
+      page.getByText(anyOf(`Versión v${version} publicada`, `Version v${version} published`)),
+    ).toBeVisible();
   }
   return id;
 }
@@ -78,14 +84,26 @@ async function createShare(
   options: { key?: boolean; latest?: boolean; allowDownload?: boolean } = {},
 ): Promise<{ token: string; key?: string }> {
   await page.goto(`/documents/${docId}?tab=shares`);
+  const shareLinks = page.locator('a[href^="/documents/shares/"]');
+  const before = new Set(
+    await shareLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+  );
   await page.getByRole("button", { name: "Compartir", exact: true }).click();
   const dialog = page.getByRole("dialog");
   if (options.key) {
-    await dialog.getByLabel(new RegExp(`^Exigir una clave de acceso para ${escapeRegExp(title)}$`)).click();
+    await dialog
+      .getByLabel(new RegExp(`^Exigir una clave de acceso para ${escapeRegExp(title)}$`))
+      .click();
   }
   if (options.latest) {
-    await dialog.getByRole("combobox", { name: new RegExp(`^Versión de ${escapeRegExp(title)}$`) }).click();
-    await page.getByRole("option", { name: oneOf("Siempre la última versión", "Always the latest version") }).click();
+    await dialog
+      .getByRole("combobox", { name: new RegExp(`^Versión de ${escapeRegExp(title)}$`) })
+      .click();
+    await page
+      .getByRole("option", {
+        name: oneOf("Siempre la última versión", "Always the latest version"),
+      })
+      .click();
   }
   if (options.allowDownload === false) {
     await dialog.getByLabel(oneOf("Permitir descargas", "Allow downloads")).click();
@@ -99,18 +117,34 @@ async function createShare(
       .getByRole("dialog")
       .locator("input[readonly], code")
       .first()
-      .evaluate((element) => (element instanceof HTMLInputElement ? element.value : (element.textContent ?? "")));
+      .evaluate((element) =>
+        element instanceof HTMLInputElement ? element.value : (element.textContent ?? ""),
+      );
     await page.getByRole("button", { name: "Ya copié las claves", exact: true }).click();
   }
-  const href = await page.getByRole("link", { name: "Abrir enlace", exact: true }).getAttribute("href");
-  const token = /\/s\/([A-Za-z0-9_-]{43})$/.exec(href ?? "")?.[1];
-  if (!token) throw new Error("No /s/<token> link after sharing");
+  // "Abrir enlace" is a short-lived toast button to the share's back-office page, not the /s/<token> URL: the share
+  // detail page shows that URL. A document can hold several links, so the new one is the href not listed before.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.goto(`/documents/${docId}?tab=shares`);
+  await expect(shareLinks).toHaveCount(before.size + 1);
+  const hrefs = await shareLinks.evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href")),
+  );
+  const created = hrefs.find((href) => href && !before.has(href));
+  if (!created) throw new Error("No new share link after sharing");
+  await page.goto(created);
+  const url = page.getByLabel(oneOf("URL pública", "Public URL"), { exact: true });
+  await expect(url).toHaveValue(/\/s\/[A-Za-z0-9_-]{43}$/);
+  const token = /\/s\/([A-Za-z0-9_-]{43})$/.exec(await url.inputValue())?.[1];
+  if (!token) throw new Error("No /s/<token> URL on the share detail page");
   return { token, key };
 }
 
 /** Opens the unlock dialog of a keyed card and posts `key`; waits for the unlock answer and returns its status. */
 async function unlockWith(page: Page, title: string, key: string): Promise<number> {
-  await card(page, title).getByRole("button", { name: oneOf("Desbloquear", "Unlock") }).click();
+  await card(page, title)
+    .getByRole("button", { name: oneOf("Desbloquear", "Unlock") })
+    .click();
   return submitKey(page, key);
 }
 
@@ -119,7 +153,9 @@ async function submitKey(page: Page, key: string): Promise<number> {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel(oneOf("Clave de acceso", "Access key")).fill(key);
   const [response] = await Promise.all([
-    page.waitForResponse((candidate) => candidate.request().method() === "POST" && candidate.url().includes("/unlock")),
+    page.waitForResponse(
+      (candidate) => candidate.request().method() === "POST" && candidate.url().includes("/unlock"),
+    ),
     dialog.getByRole("button", { name: oneOf("Desbloquear", "Unlock") }).click(),
   ]);
   return response.status();
@@ -168,7 +204,9 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
       const response = await page.goto(`/s/${candidate}`);
       expect(response?.status(), candidate).toBe(404);
       expect(response?.headers()["x-robots-tag"]).toContain("noindex");
-      await expect(page.getByRole("heading", { name: oneOf("Enlace no disponible", "Link not available") })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: oneOf("Enlace no disponible", "Link not available") }),
+      ).toBeVisible();
       await expect(page.locator("body")).not.toContainText(/revocad|expirad|revoked|expired/i);
     };
     await notFound(changed);
@@ -177,7 +215,10 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
     await page.goto("/documents/shares");
     await page.getByRole("row").filter({ hasText: title }).getByRole("link").first().click();
     await page.getByRole("button", { name: oneOf("Revocar enlace", "Revoke link") }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: oneOf("Revocar", "Revoke") }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: oneOf("Revocar", "Revoke") })
+      .click();
     await expect(page.getByText(anyOf("Enlace revocado", "Link revoked"))).toBeVisible();
     await notFound(token);
   });
@@ -192,9 +233,16 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
 
     // Publish v2 after the pinned link was created.
     await page.goto(`/documents/${docId}/editor`);
-    await page.getByRole("button", { name: oneOf("Publicar versión v2", "Publish version v2") }).click();
-    await page.getByRole("dialog").getByRole("button", { name: oneOf("Publicar", "Publish") }).click();
-    await expect(page.getByText(anyOf("Versión v2 publicada", "Version v2 published"))).toBeVisible();
+    await page
+      .getByRole("button", { name: oneOf("Publicar versión v2", "Publish version v2") })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: oneOf("Publicar", "Publish") })
+      .click();
+    await expect(
+      page.getByText(anyOf("Versión v2 publicada", "Version v2 published")),
+    ).toBeVisible();
 
     const latest = await createShare(page, docId, title, { latest: true });
 
@@ -228,10 +276,18 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
     expect((await page.request.get(fileUrl, { headers, maxRedirects: 0 })).status()).toBe(403);
 
     expect(await unlockWith(page, title, "KAIRO-WRONG-0000")).toBe(401);
-    await expect(page.getByText(anyOf("La clave de acceso no es correcta", "The access key is not correct"))).toBeVisible();
+    await expect(
+      page.getByText(anyOf("La clave de acceso no es correcta", "The access key is not correct")),
+    ).toBeVisible();
 
-    await page.getByRole("dialog").getByLabel(oneOf("Clave de acceso", "Access key")).fill(key ?? "");
-    await page.getByRole("dialog").getByRole("button", { name: oneOf("Desbloquear", "Unlock") }).click();
+    await page
+      .getByRole("dialog")
+      .getByLabel(oneOf("Clave de acceso", "Access key"))
+      .fill(key ?? "");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: oneOf("Desbloquear", "Unlock") })
+      .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(keyed.getByRole("button", { name: oneOf("Ver", "View") })).toBeVisible();
   });
@@ -246,7 +302,9 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
 
     await asVisitor(page);
     await page.goto(`/s/${token}`);
-    const wrongKeyMessage = page.getByText(anyOf("La clave de acceso no es correcta", "The access key is not correct"));
+    const wrongKeyMessage = page.getByText(
+      anyOf("La clave de acceso no es correcta", "The access key is not correct"),
+    );
     const lockedMessage = page.getByText(anyOf("Demasiados intentos", "Too many attempts")).first();
     const dialog = page.getByRole("dialog");
 
@@ -265,7 +323,9 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
     await page.reload();
     expect(await unlockWith(page, title, key ?? "")).toBe(429);
     await expect(lockedMessage).toBeVisible();
-    await expect(dialog.getByRole("button", { name: oneOf("Desbloquear", "Unlock") })).toBeDisabled();
+    await expect(
+      dialog.getByRole("button", { name: oneOf("Desbloquear", "Unlock") }),
+    ).toBeDisabled();
   });
 
   test("@authenticated HU-22 CA6 downloads: a link with downloads blocked offers no download to the visitor", async ({
@@ -279,7 +339,9 @@ test.describe("H1-B4 documents and portal (authenticated back office, visitor on
     await asVisitor(page);
     await page.goto(`/s/${token}`);
     await expect(card(page, title)).toBeVisible();
-    await expect(card(page, title).getByRole("link", { name: oneOf("Descargar", "Download") })).toHaveCount(0);
+    await expect(
+      card(page, title).getByRole("link", { name: oneOf("Descargar", "Download") }),
+    ).toHaveCount(0);
   });
 
   test("@authenticated HU-22 mobile layout: at 390 x 844 the portal has no horizontal scroll and the document list is visible", async ({

@@ -137,7 +137,9 @@ test.describe("H1-B5 intelligence", () => {
     await expect(dialog.getByRole("option", { name: new RegExp(name) })).toBeVisible();
   });
 
-  test('HU-26 CA2: searching "invsion" finds "Inversión" (trigram similarity)', async ({ page }) => {
+  test('HU-26 CA2: searching "invsion" finds "Inversión" (trigram similarity)', async ({
+    page,
+  }) => {
     const name = `Grupo Inversión ${RUN}`;
     await createClientViaUi(page, name, `E2E-HU26-2-${RUN}`);
     await openPage(page, "/dashboard");
@@ -240,8 +242,11 @@ test.describe("H1-B5 intelligence", () => {
     const before = await kpiSparklines(page);
     expect(before.length).toBeGreaterThan(0);
 
-    await page.getByRole("radio", { name: /^(Mes anterior|Previous month)$/ }).click();
-    await expect(page).toHaveURL(/preset=PREVIOUS_MONTH/);
+    // A click before hydration is lost: retry it until the range lands in the URL.
+    await expect(async () => {
+      await page.getByRole("radio", { name: /^(Mes anterior|Previous month)$/ }).click();
+      await expect(page).toHaveURL(/preset=PREVIOUS_MONTH/, { timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
     await expect
       .poll(async () => JSON.stringify(await kpiSparklines(page)))
       .not.toBe(JSON.stringify(before));

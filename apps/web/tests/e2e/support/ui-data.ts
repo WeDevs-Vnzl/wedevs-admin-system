@@ -6,10 +6,14 @@ import { namePrefix } from "./accessible-names";
 // catalogs and settings only, so no spec relies on a client or project that another spec created. These helpers
 // drive the real create forms; they never call the BE directly and never read a seeded id.
 
-/** Opens a page and waits until React has hydrated it (clicks fired before that are lost). */
+/**
+ * Opens a page and waits until React has hydrated it (clicks fired before that are lost). Link-heavy pages such as
+ * `/reports` keep prefetching and may never reach `networkidle`, so that wait is bounded; callers then assert a
+ * visible element (and retry their first click) instead of relying on it.
+ */
 export async function openPage(page: Page, path: string): Promise<void> {
   await page.goto(path);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
 }
 
 /**
