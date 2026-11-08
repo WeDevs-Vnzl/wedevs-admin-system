@@ -4,8 +4,9 @@
  * application context runs through this hook instead: `node --require ./scripts/swc-register.cjs <script>.ts`.
  * The options match `vitest.config.ts`, with CommonJS output.
  */
-const Module = require('node:module');
+/* eslint-disable @typescript-eslint/no-require-imports, no-undef -- a CommonJS hook loaded by `node --require` */
 const fs = require('node:fs');
+const Module = require('node:module');
 const { transformSync } = require('@swc/core');
 
 const options = {
