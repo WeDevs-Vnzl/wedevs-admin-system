@@ -95,14 +95,14 @@ test("@authenticated HU-11 CA1/CA2/CA5 + HU-09 CA3: billing a pending installmen
   const { clientId, projectId } = await createBilledProject(page, "10000");
 
   await open(page, `/invoices/new?clientId=${clientId}`);
-  const checkbox = page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" });
+  const checkbox = page.getByRole("checkbox", { name: "Facturar la cuota Cuota 1", exact: true });
   await expect(checkbox).toBeVisible();
   await checkbox.click();
   // The form starts with one blank manual line; the installment line is appended after it.
-  await expect(page.locator("#line-1-description")).toHaveValue(/Anticipo 40 %/);
+  await expect(page.locator("#line-1-description")).toHaveValue(/^Cuota 1$/);
   await expect(page.locator("#line-1-price")).toHaveValue(/^4000(\.00)?$/);
   await page.getByRole("button", { name: "Quitar línea" }).first().click();
-  await expect(page.locator("#line-0-description")).toHaveValue(/Anticipo 40 %/);
+  await expect(page.locator("#line-0-description")).toHaveValue(/^Cuota 1$/);
   // CA2: live totals, 4 000 at the default 16 % → total 4 640.
   await expect(page.getByText(money("4.640,00")).first()).toBeVisible();
 
@@ -113,15 +113,19 @@ test("@authenticated HU-11 CA1/CA2/CA5 + HU-09 CA3: billing a pending installmen
 
   // CA5: the installment is FACTURADA and no longer offered.
   await open(page, `/invoices/new?clientId=${clientId}`);
-  await expect(page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" })).toHaveCount(0);
+  await expect(
+    page.getByRole("checkbox", { name: "Facturar la cuota Cuota 1", exact: true }),
+  ).toHaveCount(0);
   await open(page, `/projects/${projectId}/billing`);
-  const row = page.getByRole("row", { name: /Anticipo 40 %/ });
+  const row = page.getByRole("row", { name: /Cuota 1\b/ });
   await expect(row.getByText("Facturada").first()).toBeVisible();
 
   // HU-09 CA3: a billed installment keeps its amount and currency (only the label is editable).
-  await row.getByRole("button", { name: /Editar Anticipo 40 %/ }).click();
+  await row.getByRole("button", { name: "Editar Cuota 1", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText("Cuota facturada: solo se puede cambiar la etiqueta.")).toBeVisible();
+  await expect(
+    dialog.getByText("Cuota facturada: solo se puede cambiar la etiqueta."),
+  ).toBeVisible();
   await expect(dialog.getByLabel("Monto", { exact: true })).toBeDisabled();
   await expect(dialog.getByLabel("Nombre", { exact: true })).toBeEnabled();
 });

@@ -107,6 +107,10 @@ async function draftInvoiceFromInstallment(
   await page.getByRole("checkbox", { name: installment }).first().click();
   await page.getByRole("button", { name: "Quitar línea" }).first().click();
   await page.locator("#invoice-number").fill(number);
+  // The form issues on save unless "Guardar como borrador" is on.
+  const draft = page.getByRole("switch", { name: "Guardar como borrador", exact: true });
+  await draft.click();
+  await expect(draft).toBeChecked();
   await page.locator('button[type="submit"][form="invoice-form"]').last().click();
   await expect(page.getByText("Factura registrada")).toBeVisible();
   await expect(page).toHaveURL(/\/invoices\/[a-z0-9]{20,}/, { timeout: 30_000 });
@@ -125,6 +129,8 @@ test.describe("FE-INT-R E.2 finance", () => {
   test.beforeAll(async () => {
     await assertBackendHealthy();
   });
+  // Each case builds its client, project, plan and installments through the UI first: 30 s is too tight.
+  test.slow();
 
   test("@authenticated HU-09 CA1/CA2: 40/30/30 over 10 000 USD gives 4 000, 3 000, 3 000; a mismatch shows a persistent warning", async ({
     page,
@@ -215,13 +221,13 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     // CA1: the client's pending installments are offered; the selection creates the line.
     await page.goto(`/invoices/new?clientId=${clientId}`);
-    const checkbox = page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" });
+    const checkbox = page.getByRole("checkbox", { name: "Facturar la cuota Cuota 1", exact: true });
     await expect(checkbox).toBeVisible();
     await checkbox.click();
-    await expect(page.locator("#line-1-description")).toHaveValue(/Anticipo 40 %/);
+    await expect(page.locator("#line-1-description")).toHaveValue(/^Cuota 1$/);
     await expect(page.locator("#line-1-price")).toHaveValue(/^4000(\.00)?$/);
     await page.getByRole("button", { name: "Quitar línea" }).first().click();
-    await expect(page.locator("#line-0-description")).toHaveValue(/Anticipo 40 %/);
+    await expect(page.locator("#line-0-description")).toHaveValue(/^Cuota 1$/);
     // CA2: live totals, 4 000 at the default 16 % → total 4 640.
     await expect(page.getByText(money("4.640,00")).first()).toBeVisible();
 
@@ -233,14 +239,14 @@ test.describe("FE-INT-R E.2 finance", () => {
     // CA5: the installment is FACTURADA and no longer offered.
     await page.goto(`/invoices/new?clientId=${clientId}`);
     await expect(
-      page.getByRole("checkbox", { name: "Facturar la cuota Anticipo 40 %" }),
+      page.getByRole("checkbox", { name: "Facturar la cuota Cuota 1", exact: true }),
     ).toHaveCount(0);
     await page.goto(`/projects/${projectId}/billing`);
-    const row = page.getByRole("row", { name: /Anticipo 40 %/ });
+    const row = page.getByRole("row", { name: /Cuota 1\b/ });
     await expect(row.getByText("Facturada").first()).toBeVisible();
 
     // HU-09 CA3: a billed installment keeps its amount and currency; only the label is editable.
-    await row.getByRole("button", { name: /Editar Anticipo 40 %/ }).click();
+    await row.getByRole("button", { name: "Editar Cuota 1", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(
       dialog.getByText("Cuota facturada: solo se puede cambiar la etiqueta."),
@@ -268,7 +274,12 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByRole("button", { name: "Quitar línea" }).first().click();
     await page.locator("#invoice-number").fill(number);
     await page.locator('button[type="submit"][form="invoice-form"]').last().click();
-    await expect(page.getByText("Ya existe una factura con este número")).toBeVisible();
+    await expect(
+      page
+        .getByRole("group", { name: "Datos de la factura" })
+        .getByRole("alert")
+        .filter({ hasText: "Ya existe una factura con este número" }),
+    ).toBeVisible();
   });
 
   // The BE confirms an upload by reading the object on Cloudinary from the server, which a browser-side stub cannot
@@ -392,14 +403,12 @@ test.describe("FE-INT-R E.2 finance", () => {
     const number = uniq("arch").replace(/\s/g, "-");
     const archivedId = await draftInvoiceFromInstallment(page, clientId, number);
 
-    // Archiving moves the invoice to the trash (HU-28 CA1): the trash lists it.
+    // Archiving moves the invoice to the trash (HU-28 CA1): the invoice "Archivar" acts at once (no confirmation
+    // dialog) and returns to the list.
     await page.goto(`/invoices/${archivedId}`);
     await page.getByRole("button", { name: "Archivar", exact: true }).click();
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Archivar", exact: true })
-      .click();
     await expect(page.getByText("Factura archivada")).toBeVisible();
+    await expect(page).toHaveURL(/\/invoices\/list/);
 
     // The number is free again among the non-archived invoices (HU-11 CA3): a new invoice takes it.
     await draftInvoiceFromInstallment(page, clientId, number);
@@ -449,7 +458,7 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByLabel("Saldo del estado de cuenta", { exact: true }).fill("1200");
     await page.getByRole("button", { name: "Conciliar", exact: true }).click();
     await expect(page.getByText("La diferencia sugiere un ajuste por ese importe.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Registrar ajuste", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Registrar ajuste", exact: true })).toBeVisible();
   });
 
   // ───────────────────────────── HU-16 · transfer between currencies ─────────────────────────────
@@ -476,10 +485,14 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByRole("button", { name: "Registrar transferencia", exact: true }).click();
     await expect(page.getByText("Transferencia registrada")).toBeVisible();
 
+    // The list pages at 25 rows and E2E accounts accumulate: search each account before reading its row.
     await page.goto("/accounts/list");
+    const search = page.getByRole("searchbox", { name: "Buscar en la tabla" });
+    await search.fill(origin);
     await expect(
       page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00")),
     ).toBeVisible();
+    await search.fill(target);
     await expect(
       page.getByRole("row").filter({ hasText: target }).getByText(money("99,00")),
     ).toBeVisible();
@@ -527,9 +540,8 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
-    await expect(
-      page.getByText("La cuenta de pago es obligatoria para un gasto pagado"),
-    ).toBeVisible();
+    // The mark-paid dialog validates the account as a required id ("Campo obligatorio").
+    await expect(dialog.getByRole("alert").filter({ hasText: "Campo obligatorio" })).toBeVisible();
     await dialog.locator("#mark-paid-account").click();
     await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
     await dialog.locator("#mark-paid-account-amount").fill("137");
