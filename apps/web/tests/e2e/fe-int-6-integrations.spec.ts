@@ -64,7 +64,11 @@ test.describe("FE-INT-6 integrations (off by default)", () => {
     page,
   }) => {
     await openPage(page, "/settings/company");
-    await expect(page.getByRole("link", { name: "Empresa", exact: true })).toBeVisible();
+    const settingsNav = page.getByRole("navigation", { name: "Configuración" });
+    await expect(settingsNav.getByRole("link", { name: "Empresa", exact: true })).toBeVisible();
+    await expect(settingsNav.getByRole("link", { name: "Integraciones", exact: true })).toHaveCount(
+      0,
+    );
     await expect(page.getByRole("link", { name: "Integraciones", exact: true })).toHaveCount(0);
     await openPage(page, "/settings/integrations");
     await expect(page.getByText("Página no encontrada", { exact: true })).toBeVisible();
