@@ -339,6 +339,13 @@ describe('route inventory (full AppModule)', () => {
     expect(routes.filter((r) => /\/statements/.test(r.route))).toEqual([]);
   });
 
+  it('GET /features is the only feature-flag route, open to any signed-in user (DT-227)', () => {
+    const routes = inventory(app).filter((r) => /^[A-Z]+ \/api\/v1\/features\b/.test(r.route));
+    expect(routes.map((r) => [r.route, r.requirement ?? r.grant])).toEqual([
+      ['GET /api/v1/features', 'authenticated'],
+    ]);
+  });
+
   it('POST /mcp is authenticated by the MCP authenticator only and no other route is', () => {
     const marked = inventory(app)
       .filter((r) => {

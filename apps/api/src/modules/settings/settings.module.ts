@@ -15,6 +15,7 @@ import { CompanyLogoFileAccessResolver } from './infrastructure/company-logo-fil
 import { PlatformCompanyLogoAdapter } from './infrastructure/platform-company-logo.adapter';
 import { PrismaSettingRepository } from './infrastructure/prisma-setting.repository';
 import { DocumentTypesModule } from './document-types.module';
+import { FeaturesModule } from './features.module';
 import { FinanceCatalogsModule } from './finance-catalogs.module';
 import { TagsModule } from './tags.module';
 import { TechnologiesModule } from './technologies.module';
@@ -30,6 +31,7 @@ import { CompanySettingsController } from './interface/http/company-settings.con
   imports: [
     PlatformModule,
     FinanceCatalogsModule,
+    FeaturesModule,
     DocumentTypesModule,
     TagsModule,
     TechnologiesModule,

@@ -61,6 +61,7 @@ describe('BE-6 flows (full app)', () => {
   let mcpUrl: URL;
 
   beforeAll(async () => {
+    process.env.FEATURE_STRIPE = 'true';
     process.env.STRIPE_SECRET_KEY = apiKey;
     process.env.STRIPE_WEBHOOK_SECRET = webhookSecret;
     const script = new ScriptedStripeFetch();
@@ -120,6 +121,7 @@ describe('BE-6 flows (full app)', () => {
     await truncateBusinessTables(prisma);
     await app.close();
     await prisma.$disconnect();
+    delete process.env.FEATURE_STRIPE;
     delete process.env.STRIPE_SECRET_KEY;
     delete process.env.STRIPE_WEBHOOK_SECRET;
   });

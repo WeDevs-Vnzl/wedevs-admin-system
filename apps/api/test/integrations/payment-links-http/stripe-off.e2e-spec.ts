@@ -15,13 +15,29 @@ vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
 
 const admin = createTestPrisma(assertLocalDatabaseUrl(process.env.DATABASE_URL));
 
-describe('Stripe unconfigured (e2e): choice 3, DT-193', () => {
+/** Stripe off two ways: no keys (DT-193), or complete keys with `FEATURE_STRIPE` not `true` (DT-227). */
+const OFF_ENVS = [
+  ['unconfigured', {}],
+  ['keys set, FEATURE_STRIPE unset', { STRIPE_SECRET_KEY: 'sk_test_off', STRIPE_WEBHOOK_SECRET: 'whsec_off' }],
+  [
+    'keys set, FEATURE_STRIPE=false',
+    { STRIPE_SECRET_KEY: 'sk_test_off', STRIPE_WEBHOOK_SECRET: 'whsec_off', FEATURE_STRIPE: 'false' },
+  ],
+] as const;
+
+function clearStripeEnv(): void {
+  delete process.env.STRIPE_SECRET_KEY;
+  delete process.env.STRIPE_WEBHOOK_SECRET;
+  delete process.env.FEATURE_STRIPE;
+}
+
+describe.each(OFF_ENVS)('Stripe off (e2e), %s: choice 3, DT-193, DT-227', (_label, env) => {
   let app: NestExpressApplication;
   let token: string;
 
   beforeAll(async () => {
-    delete process.env.STRIPE_SECRET_KEY;
-    delete process.env.STRIPE_WEBHOOK_SECRET;
+    clearStripeEnv();
+    Object.assign(process.env, env);
     const authenticator = new FakeAuthenticator();
     app = await createTestApp({
       modules: [StripeModule, PaymentLinksModule],
@@ -43,9 +59,9 @@ describe('Stripe unconfigured (e2e): choice 3, DT-193', () => {
   });
 
   afterAll(async () => {
+    clearStripeEnv();
     await truncateBusinessTables(admin);
     await app.close();
-    await admin.$disconnect();
   });
 
   it('answers 404 NOT_FOUND on the webhook, before any signature check', async () => {
@@ -70,4 +86,8 @@ describe('Stripe unconfigured (e2e): choice 3, DT-193', () => {
       expect(res.body.error.code).toBe('NOT_FOUND');
     }
   });
+});
+
+afterAll(async () => {
+  await admin.$disconnect();
 });

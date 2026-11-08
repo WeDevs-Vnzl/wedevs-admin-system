@@ -1,7 +1,23 @@
 import { Global, Module } from '@nestjs/common';
-import { type AppConfig, type WorkerConfig, parseEnv, parseWorkerEnv } from './env.schema';
+import {
+  type AppConfig,
+  type FeaturesView,
+  type WorkerConfig,
+  featuresOf,
+  parseEnv,
+  parseWorkerEnv,
+} from './env.schema';
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
+
+/** The effective integration feature flags (`FeaturesView`, DT-227), in the API and in the worker. */
+export const FEATURES = Symbol('FEATURES');
+
+const featuresProvider = {
+  provide: FEATURES,
+  useFactory: (config: AppConfig | WorkerConfig): FeaturesView => featuresOf(config),
+  inject: [APP_CONFIG],
+};
 
 @Global()
 @Module({
@@ -10,8 +26,9 @@ export const APP_CONFIG = Symbol('APP_CONFIG');
       provide: APP_CONFIG,
       useFactory: (): AppConfig => parseEnv(process.env),
     },
+    featuresProvider,
   ],
-  exports: [APP_CONFIG],
+  exports: [APP_CONFIG, FEATURES],
 })
 export class AppConfigModule {}
 
@@ -23,7 +40,8 @@ export class AppConfigModule {}
       provide: APP_CONFIG,
       useFactory: (): WorkerConfig => parseWorkerEnv(process.env),
     },
+    featuresProvider,
   ],
-  exports: [APP_CONFIG],
+  exports: [APP_CONFIG, FEATURES],
 })
 export class WorkerConfigModule {}
