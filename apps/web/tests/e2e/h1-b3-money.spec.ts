@@ -36,7 +36,8 @@ async function createBilledProject(
   await page.getByLabel("Dirección", { exact: true }).fill("Calle E2E 1");
   await page.locator("#client-phone").fill("+57 300 123 4567");
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page).toHaveURL(/\/clients\/[^/?#]+$/);
+  // A record id: `/clients/new` itself would match a looser pattern before the save redirects.
+  await expect(page).toHaveURL(/\/clients\/[a-z0-9]{20,}$/);
   const clientId = idFromUrl(page.url(), "clients");
 
   await page.goto("/projects/new");

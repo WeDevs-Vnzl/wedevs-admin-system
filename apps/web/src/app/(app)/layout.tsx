@@ -1,3 +1,6 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { getLocale } from "next-intl/server";
+import { clerkLocalization } from "@/app/(auth)/sign-in/clerk-appearance";
 import { AlertsBell } from "@/components/app/alerts-bell";
 import { BreadcrumbLabelProvider } from "@/components/app/breadcrumb-label";
 import { AppBreadcrumbs } from "@/components/app/app-breadcrumbs";
@@ -26,40 +29,44 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // (`/sign-in?reason=no-access`) must win; `getPreferences` maps 401 to a plain `/sign-in`.
   const shell = await getShellData();
   const preferences = await getPreferences();
+  const locale = await getLocale();
 
+  // Clerk is scoped to the signed-in shell and the sign-in group: the public portal loads no Clerk script.
   return (
-    <BreadcrumbLabelProvider>
-      <SidebarProvider>
-        <PreferenceSync locale={preferences.locale} theme={preferences.theme} />
-        <SkipLink targetId={MAIN_CONTENT_ID} />
-        <AppSidebar user={shell.user} />
-        <SidebarInset className="min-w-0">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-4">
-            <SidebarToggle />
-            <AppBreadcrumbs />
-            <div className="ml-auto flex shrink-0 items-center gap-1.5 xl:gap-2">
-              <CommandMenu user={shell.user} />
-              <RateChip
-                rate={shell.vesRate}
-                missing={shell.vesRateMissing}
-                canManage={can(shell.user, "read", "settings")}
-              />
-              <AlertsBell count={shell.unreadAlertCount} />
-              <LocaleSwitcher />
-              <ThemeToggle />
-              <UserMenu user={shell.user} />
+    <ClerkProvider localization={clerkLocalization(locale)}>
+      <BreadcrumbLabelProvider>
+        <SidebarProvider>
+          <PreferenceSync locale={preferences.locale} theme={preferences.theme} />
+          <SkipLink targetId={MAIN_CONTENT_ID} />
+          <AppSidebar user={shell.user} />
+          <SidebarInset className="min-w-0">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-4">
+              <SidebarToggle />
+              <AppBreadcrumbs />
+              <div className="ml-auto flex shrink-0 items-center gap-1.5 xl:gap-2">
+                <CommandMenu user={shell.user} />
+                <RateChip
+                  rate={shell.vesRate}
+                  missing={shell.vesRateMissing}
+                  canManage={can(shell.user, "read", "settings")}
+                />
+                <AlertsBell count={shell.unreadAlertCount} />
+                <LocaleSwitcher />
+                <ThemeToggle />
+                <UserMenu user={shell.user} />
+              </div>
+            </header>
+            <div
+              id={MAIN_CONTENT_ID}
+              tabIndex={-1}
+              className="flex min-w-0 flex-1 scroll-mt-16 flex-col gap-6 p-4 outline-none md:p-6"
+            >
+              {children}
             </div>
-          </header>
-          <div
-            id={MAIN_CONTENT_ID}
-            tabIndex={-1}
-            className="flex min-w-0 flex-1 scroll-mt-16 flex-col gap-6 p-4 outline-none md:p-6"
-          >
-            {children}
-          </div>
-          <AppFooter />
-        </SidebarInset>
-      </SidebarProvider>
-    </BreadcrumbLabelProvider>
+            <AppFooter />
+          </SidebarInset>
+        </SidebarProvider>
+      </BreadcrumbLabelProvider>
+    </ClerkProvider>
   );
 }
