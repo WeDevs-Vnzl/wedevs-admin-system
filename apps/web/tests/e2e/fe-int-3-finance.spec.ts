@@ -172,13 +172,15 @@ test.describe("FE-INT-R E.2 finance", () => {
     await dialog.getByRole("button", { name: "Crear cobro", exact: true }).click();
     await expect(page.getByText("Cobro recurrente creado")).toBeVisible();
 
-    // CA1: the period's installment falls on the 28th or 29th of the month before the billing day.
+    // CA1: the periods are generated with their billing day (the 5th). The PRD's "28 or 29 of the month before" is the
+    // day the daily job creates the period (`generateOn = periodStart − leadDays`), which the UI does not show; the BE
+    // covers it in `apps/api/src/modules/finance/domain/recurring.test.ts`.
     const generate = page.getByRole("button", {
       name: `Generar periodos pendientes de ${chargeName}`,
     });
     await generate.click();
     await expect(page.getByText(/periodos? generados?/)).toBeVisible();
-    await expect(page.getByText(/(28|29)\/\d{2}\/\d{4}/).first()).toBeVisible();
+    await expect(page.getByText(/(^|\D)0?5 [a-zé]{3,4}\.? \d{4}/).first()).toBeVisible();
 
     // CA2: running the task again the same day does not duplicate the installments.
     await generate.click();
@@ -249,14 +251,13 @@ test.describe("FE-INT-R E.2 finance", () => {
 
   // ───────────────────────────── HU-11 CA3/CA4 · number and PDF ─────────────────────────────
 
-  test("@authenticated HU-11 CA3/CA4: the invoice number is unique among the active invoices; the real PDF attaches and shows on the detail", async ({
+  test("@authenticated HU-11 CA3: the invoice number is unique among the active invoices", async ({
     page,
   }) => {
     await signInAs(page, "OWNER");
-    await stubStorage(page);
     const { clientId } = await setupInstallmentClient(page);
     const number = uniq("num").replace(/\s/g, "-");
-    const invoiceId = await draftInvoiceFromInstallment(page, clientId, number);
+    await draftInvoiceFromInstallment(page, clientId, number);
 
     // CA3: a second active invoice with the same number is refused by the BE (`numberTaken`).
     await page.goto(`/invoices/new?clientId=${clientId}`);
@@ -268,17 +269,11 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.locator("#invoice-number").fill(number);
     await page.locator('button[type="submit"][form="invoice-form"]').last().click();
     await expect(page.getByText("Ya existe una factura con este número")).toBeVisible();
-
-    // CA4: the PDF of the real invoice uploads through the BE-issued params and shows on the detail.
-    await page.goto(`/invoices/${invoiceId}`);
-    await page.locator('input[type="file"]').first().setInputFiles({
-      name: "factura.pdf",
-      mimeType: "application/pdf",
-      buffer: PNG_1X1,
-    });
-    await expect(page.getByText("PDF adjuntado")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Abrir PDF", exact: true })).toBeVisible();
   });
+
+  // The BE confirms an upload by reading the object on Cloudinary from the server, which a browser-side stub cannot
+  // answer (`confirm-upload.use-case.ts`, `getObjectInfo`): uploads are a live third-party case (rule 30).
+  test.fixme("@authenticated HU-11 CA4: the real PDF attaches and shows on the detail — FE-INT-R: the BE verifies the upload on Cloudinary server-side (live third-party service); the batch-close manual check covers it", async () => {});
 
   // ───────────────────────────── HU-12 · automatic status and void ─────────────────────────────
 
@@ -345,7 +340,8 @@ test.describe("FE-INT-R E.2 finance", () => {
 
   // ───────────────────────────── HU-14 · receipt ─────────────────────────────
 
-  test("@authenticated HU-14: a receipt uploaded through the intercepted storage POST is shown on the payment detail", async ({
+  // Same reason as HU-11 CA4: the BE confirms the receipt on Cloudinary server-side (rule 30).
+  test.fixme("@authenticated HU-14: a receipt uploaded through the intercepted storage POST is shown on the payment detail — FE-INT-R: the BE verifies the upload on Cloudinary server-side (live third-party service); the batch-close manual check covers it", async ({
     page,
   }) => {
     await signInAs(page, "OWNER");
@@ -435,6 +431,10 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.locator("#movement-account").click();
     await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
     await page.locator("#movement-amount").fill("250");
+    // A capital contribution names its partner and a description.
+    await page.locator("#movement-partner").click();
+    await page.getByRole("option").first().click();
+    await page.locator("#movement-description").fill(uniq("aporte"));
     await page.getByRole("button", { name: "Registrar movimiento", exact: true }).click();
     await expect(page.getByText("Movimiento registrado")).toBeVisible();
 
@@ -471,6 +471,8 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.locator("#transfer-amount-from").fill("100");
     await page.locator("#transfer-amount-to").fill("99");
     await page.locator("#transfer-fee").fill("0");
+    // Different currencies need the cross rate: what arrives divided by what leaves (99 / 100).
+    await page.locator("#transfer-rate").fill("0.99");
     await page.getByRole("button", { name: "Registrar transferencia", exact: true }).click();
     await expect(page.getByText("Transferencia registrada")).toBeVisible();
 
@@ -510,6 +512,8 @@ test.describe("FE-INT-R E.2 finance", () => {
 
     await page.goto("/expenses/new");
     await page.locator("#expense-description").fill(uniq("suscripción"));
+    await page.locator("#expense-category").click();
+    await page.getByRole("option").first().click();
     await page.locator("#expense-project").click();
     await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(projectName)}`) }).click();
     await page.locator("#expense-status").click();
