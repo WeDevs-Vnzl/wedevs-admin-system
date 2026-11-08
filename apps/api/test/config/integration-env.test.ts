@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   InvalidEnvError,
+  featuresOf,
   integrationsOf,
   parseEnv,
   parseWorkerEnv,
@@ -24,6 +25,13 @@ const clerk = {
 };
 const api = { ...base, ...clerk };
 const worker = { ...base, REDIS_URL: 'redis://redis:6379' };
+
+const allKeys = {
+  STRIPE_SECRET_KEY: 's',
+  STRIPE_WEBHOOK_SECRET: 'w',
+  BINANCE_API_KEY: 'k',
+  BINANCE_API_SECRET: 'x',
+};
 
 const PAIRS = [
   ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
@@ -65,10 +73,12 @@ describe.each([
     expect(namesOf(() => parse({ ...ok, [second]: 'leaky-value' }))).toEqual([first]);
   });
 
-  it('builds the typed views from complete pairs', () => {
+  it('builds the typed views from complete pairs with their flags on', () => {
     const view = integrationsOf(
       parse({
         ...ok,
+        FEATURE_STRIPE: 'true',
+        FEATURE_BINANCE: 'true',
         STRIPE_SECRET_KEY: 's',
         STRIPE_WEBHOOK_SECRET: 'w',
         BINANCE_API_KEY: 'k',
@@ -78,6 +88,40 @@ describe.each([
     expect(view.stripe).toEqual({ secretKey: 's', webhookSecret: 'w' });
     expect(view.binance).toEqual({ apiKey: 'k', apiSecret: 'x' });
   });
+
+  it('keeps every flag off by default, even with complete pairs (DT-227)', () => {
+    const config = parse({ ...ok, ...allKeys });
+    expect(integrationsOf(config)).toEqual({ stripe: null, binance: null });
+    expect(featuresOf(config)).toEqual({ stripe: false, binance: false, bankSync: false });
+  });
+
+  it('turns a provider off when its flag is "false", even with its pair', () => {
+    const config = parse({ ...ok, ...allKeys, FEATURE_STRIPE: 'false', FEATURE_BINANCE: 'true' });
+    expect(featuresOf(config)).toEqual({ stripe: false, binance: true, bankSync: false });
+  });
+
+  it.each([
+    ['FEATURE_STRIPE', PAIRS[0]],
+    ['FEATURE_BINANCE', PAIRS[1]],
+  ] as const)('refuses %s=true without its pair, naming both keys', (flag, pair) => {
+    expect([...namesOf(() => parse({ ...ok, [flag]: 'true' }))].sort()).toEqual([...pair].sort());
+  });
+
+  it('names a missing key once when a half pair also has its flag on', () => {
+    const names = namesOf(() => parse({ ...ok, FEATURE_STRIPE: 'true', STRIPE_SECRET_KEY: 'leaky' }));
+    expect(names).toEqual(['STRIPE_WEBHOOK_SECRET']);
+  });
+
+  it('exposes FEATURE_BANK_SYNC as the flag alone (no bank adapter yet, DT-186)', () => {
+    expect(featuresOf(parse({ ...ok, FEATURE_BANK_SYNC: 'true' })).bankSync).toBe(true);
+  });
+
+  it.each(['FEATURE_STRIPE', 'FEATURE_BINANCE', 'FEATURE_BANK_SYNC'])(
+    'refuses a %s that is not "true" or "false", naming it',
+    (flag) => {
+      expect(namesOf(() => parse({ ...ok, [flag]: 'yes' }))).toEqual([flag]);
+    },
+  );
 
   it('reports a pair problem together with another invalid variable', () => {
     const names = namesOf(() => parse({ ...ok, STRIPE_SECRET_KEY: 's', APP_URL: 'nope' }));

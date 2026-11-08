@@ -47,10 +47,13 @@ const saved: IntegrationMappingDto = {
   binance: { accountId: "acc_wallet" },
 };
 
+const ALL_ON = { stripe: true, binance: true };
+
 function setup(
   routes: RouteTable,
   initial: IntegrationMappingDto = saved,
   wallets = walletAccounts,
+  features = ALL_ON,
 ) {
   const mock = mockApi(routes);
   mocks.api = mock.api;
@@ -71,6 +74,7 @@ function setup(
         accounts={accounts}
         walletAccounts={wallets}
         methods={methods}
+        features={features}
       />
     </NextIntlClientProvider>,
   );
@@ -119,6 +123,7 @@ describe("IntegrationsForm", () => {
           accounts={[...accounts, inactive]}
           walletAccounts={walletAccounts}
           methods={methods}
+          features={ALL_ON}
         />
       </NextIntlClientProvider>,
     );
@@ -211,5 +216,39 @@ describe("IntegrationsForm", () => {
   it("explains when there are no wallet accounts to map", () => {
     setup({}, { stripe: null, binance: null }, []);
     expect(screen.getByText(/no crypto wallet accounts yet/i)).toBeInTheDocument();
+  });
+
+  it("renders only the Binance section while Stripe is off and saves Stripe as null (DT-227)", async () => {
+    const user = userEvent.setup();
+    const { calls } = setup(
+      { "PUT /api/v1/settings/integrations": { body: { stripe: null, binance: null } } },
+      saved,
+      walletAccounts,
+      { stripe: false, binance: true },
+    );
+    expect(screen.queryByRole("combobox", { name: "Target account" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Payment method" })).not.toBeInTheDocument();
+    await choose(user, "Wallet account", "Not mapped");
+    await user.click(screen.getByRole("button", { name: "Save mapping" }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.body).toEqual({ stripe: null, binance: null });
+  });
+
+  it("renders only the Stripe section while Binance is off and saves Binance as null (DT-227)", async () => {
+    const user = userEvent.setup();
+    const { calls } = setup(
+      { "PUT /api/v1/settings/integrations": { body: { stripe: saved.stripe, binance: null } } },
+      saved,
+      walletAccounts,
+      { stripe: true, binance: false },
+    );
+    expect(screen.queryByRole("combobox", { name: "Wallet account" })).not.toBeInTheDocument();
+    await choose(user, "Payment method", "Cash");
+    await user.click(screen.getByRole("button", { name: "Save mapping" }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.body).toEqual({
+      stripe: { accountId: "acc_usd", paymentMethodId: "pm_cash" },
+      binance: null,
+    });
   });
 });

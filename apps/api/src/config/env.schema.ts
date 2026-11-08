@@ -15,6 +15,45 @@ const INTEGRATION_PAIRS = [
   ['BINANCE_API_KEY', 'BINANCE_API_SECRET'],
 ] as const;
 
+/** `"true"` or `"false"`, default off (DT-227). */
+const featureFlag = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((value) => value === 'true');
+
+/**
+ * Integration feature flags (DT-227). A provider is on only when its flag is `true` and its key pair is complete;
+ * `FEATURE_BANK_SYNC` has no adapter yet (DT-186) and gates the phase-2 bank module.
+ */
+const featureFields = {
+  FEATURE_STRIPE: featureFlag,
+  FEATURE_BINANCE: featureFlag,
+  FEATURE_BANK_SYNC: featureFlag,
+};
+
+/** A flag turned on needs its key pair: each missing key is named, never a value. */
+const FLAG_PAIRS = [
+  ['FEATURE_STRIPE', INTEGRATION_PAIRS[0]],
+  ['FEATURE_BINANCE', INTEGRATION_PAIRS[1]],
+] as const;
+
+function requireKeysForFlags(raw: Record<string, unknown>, ctx: z.RefinementCtx): void {
+  for (const [flag, pair] of FLAG_PAIRS) {
+    if (raw[flag] !== true) continue;
+    for (const name of pair) {
+      if (raw[name] === undefined) {
+        ctx.addIssue({ code: 'custom', path: [name], message: `required when ${flag} is true` });
+      }
+    }
+  }
+}
+
+/** Both checks; a variable named twice is reported once (`invalidNames` dedupes). */
+function refineIntegrations(raw: Record<string, unknown>, ctx: z.RefinementCtx): void {
+  requireCompletePairs(raw, ctx);
+  requireKeysForFlags(raw, ctx);
+}
+
 /** Refuses a half-configured pair; the issue names the missing variable only, never a value. */
 function requireCompletePairs(raw: Record<string, unknown>, ctx: z.RefinementCtx): void {
   for (const pair of INTEGRATION_PAIRS) {
@@ -49,9 +88,10 @@ const baseFields = {
   THROTTLE_LIMIT: z.coerce.number().int().min(1).default(60),
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   ...integrationFields,
+  ...featureFields,
 };
 
-export const envSchema = z.object(baseFields).superRefine(requireCompletePairs);
+export const envSchema = z.object(baseFields).superRefine(refineIntegrations);
 
 export type AppConfig = z.infer<typeof envSchema>;
 
@@ -72,8 +112,9 @@ export const workerEnvSchema = z
     SHARE_IP_SALT: baseFields.SHARE_IP_SALT,
     SHARE_UNLOCK_SECRET: baseFields.SHARE_UNLOCK_SECRET,
     ...integrationFields,
+    ...featureFields,
   })
-  .superRefine(requireCompletePairs);
+  .superRefine(refineIntegrations);
 
 export type WorkerConfig = z.infer<typeof workerEnvSchema>;
 
@@ -82,23 +123,57 @@ export interface IntegrationsView {
   readonly binance: { readonly apiKey: string; readonly apiSecret: string } | null;
 }
 
-/** Typed view of the optional integration pairs; `null` when the pair is not configured. */
-export function integrationsOf(
-  config: Pick<
-    AppConfig,
-    'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'BINANCE_API_KEY' | 'BINANCE_API_SECRET'
-  >,
-): IntegrationsView {
-  const { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, BINANCE_API_KEY, BINANCE_API_SECRET } = config;
+type IntegrationConfig = Pick<
+  AppConfig,
+  | 'STRIPE_SECRET_KEY'
+  | 'STRIPE_WEBHOOK_SECRET'
+  | 'BINANCE_API_KEY'
+  | 'BINANCE_API_SECRET'
+  | 'FEATURE_STRIPE'
+  | 'FEATURE_BINANCE'
+>;
+
+/**
+ * Typed view of the integrations; `null` when the provider is off: its flag is not `true` or its pair is not
+ * configured (DT-193, DT-227).
+ */
+export function integrationsOf(config: IntegrationConfig): IntegrationsView {
+  const {
+    STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET,
+    BINANCE_API_KEY,
+    BINANCE_API_SECRET,
+    FEATURE_STRIPE,
+    FEATURE_BINANCE,
+  } = config;
   return {
     stripe:
-      STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET
+      FEATURE_STRIPE && STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET
         ? { secretKey: STRIPE_SECRET_KEY, webhookSecret: STRIPE_WEBHOOK_SECRET }
         : null,
     binance:
-      BINANCE_API_KEY && BINANCE_API_SECRET
+      FEATURE_BINANCE && BINANCE_API_KEY && BINANCE_API_SECRET
         ? { apiKey: BINANCE_API_KEY, apiSecret: BINANCE_API_SECRET }
         : null,
+  };
+}
+
+export interface FeaturesView {
+  readonly stripe: boolean;
+  readonly binance: boolean;
+  readonly bankSync: boolean;
+}
+
+/**
+ * The effective feature flags the FE reads from `GET /features` (DT-227). `bankSync` is the flag alone: no bank
+ * adapter exists yet (DT-186), so nothing binds to it today.
+ */
+export function featuresOf(config: IntegrationConfig & Pick<AppConfig, 'FEATURE_BANK_SYNC'>): FeaturesView {
+  const view = integrationsOf(config);
+  return {
+    stripe: view.stripe !== null,
+    binance: view.binance !== null,
+    bankSync: config.FEATURE_BANK_SYNC,
   };
 }
 

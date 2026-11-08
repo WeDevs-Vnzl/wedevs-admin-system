@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getServerApi: vi.fn(),
   requireSessionUser: vi.fn(),
   denyPayment: false,
+  stripe: true,
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({
@@ -16,6 +17,9 @@ vi.mock("next/navigation", () => ({
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 vi.mock("@/lib/api/server", () => ({ getServerApi: mocks.getServerApi }));
 vi.mock("@/lib/auth/session", () => ({ requireSessionUser: mocks.requireSessionUser }));
+vi.mock("@/features/shell/features", () => ({
+  getFeatures: async () => ({ stripe: mocks.stripe, binance: false, bankSync: false }),
+}));
 vi.mock("@/components/app/breadcrumb-label", () => ({ BreadcrumbLabel: () => null }));
 // The detail renders elsewhere; the page only wires its inputs.
 vi.mock("@/features/invoices/components/invoice-detail", () => ({
@@ -64,6 +68,7 @@ function asRole(role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.denyPayment = false;
+  mocks.stripe = true;
 });
 
 describe("/invoices/[id]", () => {
@@ -107,6 +112,19 @@ describe("/invoices/[id]", () => {
   it("does not mount the panel without the payment read grant, and makes no link call", async () => {
     asRole("ADMIN");
     mocks.denyPayment = true;
+    const { api, calls } = mockApi({
+      "GET /api/v1/invoices/{id}": { body: multiRateInvoice() },
+    });
+    mocks.getServerApi.mockResolvedValue(api);
+    render(await InvoiceDetailPage({ params }));
+    expect(screen.getByText("00001234|true")).toBeInTheDocument();
+    expect(screen.queryByText(/^panel\|/)).not.toBeInTheDocument();
+    expect(calls.some((call) => call.path.includes("payment-links"))).toBe(false);
+  });
+
+  it("does not mount the panel while Stripe is off, and makes no link call (DT-227)", async () => {
+    asRole("OWNER");
+    mocks.stripe = false;
     const { api, calls } = mockApi({
       "GET /api/v1/invoices/{id}": { body: multiRateInvoice() },
     });

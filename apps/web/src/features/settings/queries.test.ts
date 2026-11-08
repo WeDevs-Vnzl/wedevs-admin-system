@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const context = vi.hoisted(() => ({ requireSessionUser: vi.fn() }));
+const flags = vi.hoisted(() => ({ getFeatures: vi.fn() }));
 const holder = vi.hoisted(() => ({ api: undefined as unknown }));
 const nav = vi.hoisted(() => ({
   notFound: vi.fn(() => {
@@ -12,6 +13,7 @@ const nav = vi.hoisted(() => ({
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/session", () => context);
+vi.mock("@/features/shell/features", () => flags);
 vi.mock("next/navigation", () => nav);
 vi.mock("@/lib/api/server", () => ({ getServerApi: async () => holder.api }));
 
@@ -29,7 +31,10 @@ const signIn = (role: UserRole) =>
 
 const slugs = async () => (await getVisibleSettingsSections()).map((section) => section.slug);
 
-beforeEach(() => context.requireSessionUser.mockReset());
+beforeEach(() => {
+  context.requireSessionUser.mockReset();
+  flags.getFeatures.mockResolvedValue({ stripe: true, binance: true, bankSync: false });
+});
 
 describe("HU-02 CA1: only the Owner sees /settings/users", () => {
   it("shows the users entry to the Owner and lets them open it", async () => {
@@ -55,6 +60,16 @@ describe("HU-02 CA1: only the Owner sees /settings/users", () => {
     signIn("MEMBER");
     expect(await slugs()).toEqual(["preferences", "api-tokens"]);
     expect(await getOpenableSettingsSection("unknown")).toBeNull();
+  });
+});
+
+describe("feature flags (DT-227)", () => {
+  it("hides and refuses Integraciones while Stripe and Binance are both off", async () => {
+    flags.getFeatures.mockResolvedValue({ stripe: false, binance: false, bankSync: false });
+    signIn("OWNER");
+    expect(await slugs()).not.toContain("integrations");
+    expect(await getOpenableSettingsSection("integrations")).toBeNull();
+    expect(await getOpenableSettingsSection("company")).toMatchObject({ slug: "company" });
   });
 });
 

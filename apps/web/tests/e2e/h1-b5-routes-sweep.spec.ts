@@ -59,7 +59,8 @@ const SETTINGS_SECTIONS = [
   "tags",
   "trash",
   "api-tokens",
-  "integrations",
+  // "integrations" is hidden and not-found while Stripe and Binance are off (DT-227, the first deploy):
+  // `fe-int-6-integrations` checks it.
 ];
 
 /** Authenticated routes of PRD §11 (Owner), as templates: `{name}` is replaced by the id the sweep created. */

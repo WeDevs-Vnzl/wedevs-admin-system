@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { FEATURES } from '../../../src/config/config.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { EXCHANGE } from '../../../src/modules/integrations/application/ports/exchange.port';
 import { INTEGRATION_EVENT_STORE } from '../../../src/modules/integrations/application/ports/integration-event-store.port';
@@ -37,6 +38,8 @@ describe('GET /accounts/{id}/exchange-snapshot (e2e)', () => {
       authenticator,
       overrides: [
         { token: AUTHORIZATION, useValue: new MatrixAuthorization() },
+        // Binance on (DT-227); the off case is in `feature-flags.e2e-spec.ts`.
+        { token: FEATURES, useValue: { stripe: true, binance: true, bankSync: false } },
         { token: INTEGRATION_MAPPING, useValue: mapping },
         { token: INTEGRATION_EVENT_STORE, useValue: events },
         {

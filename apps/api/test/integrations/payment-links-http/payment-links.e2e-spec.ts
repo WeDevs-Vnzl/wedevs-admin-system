@@ -36,6 +36,7 @@ describe('payment-link routes (e2e): choice 1, 3, 5, DT-196, DT-197', () => {
   const tokens: Partial<Record<UserRole, string>> = {};
 
   beforeAll(async () => {
+    process.env.FEATURE_STRIPE = 'true';
     process.env.STRIPE_SECRET_KEY = testApiKey();
     process.env.STRIPE_WEBHOOK_SECRET = testWebhookSecret();
     script = new ScriptedStripeFetch();
@@ -63,6 +64,7 @@ describe('payment-link routes (e2e): choice 1, 3, 5, DT-196, DT-197', () => {
     await truncateBusinessTables(admin);
     await app.close();
     await admin.$disconnect();
+    delete process.env.FEATURE_STRIPE;
     delete process.env.STRIPE_SECRET_KEY;
     delete process.env.STRIPE_WEBHOOK_SECRET;
   });

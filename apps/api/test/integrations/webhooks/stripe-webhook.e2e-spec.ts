@@ -54,6 +54,7 @@ describe('POST /webhooks/stripe (e2e): DT-183, A6, A11', () => {
   let ownerId: string;
 
   beforeAll(async () => {
+    process.env.FEATURE_STRIPE = 'true';
     process.env.STRIPE_SECRET_KEY = apiKey;
     process.env.STRIPE_WEBHOOK_SECRET = secret;
     const script = new ScriptedStripeFetch().on((r) => {
@@ -89,6 +90,7 @@ describe('POST /webhooks/stripe (e2e): DT-183, A6, A11', () => {
     await truncateBusinessTables(admin);
     await app.close();
     await admin.$disconnect();
+    delete process.env.FEATURE_STRIPE;
     delete process.env.STRIPE_SECRET_KEY;
     delete process.env.STRIPE_WEBHOOK_SECRET;
   });

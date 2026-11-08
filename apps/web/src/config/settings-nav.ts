@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { can, type PermissionAction, type PermissionResource } from "@/lib/auth/permissions";
+import type { Features } from "@/lib/features";
 
 /**
  * The sections of Configuración (PRD §8.15, routes per frontend-patterns §3). The settings layout builds its
@@ -29,6 +30,8 @@ export interface SettingsSection {
   icon: LucideIcon;
   /** `can()` check that shows the section; `null` for the signed-in user's own preferences. */
   permission: { action: PermissionAction; resource: PermissionResource } | null;
+  /** Feature flags the section needs (DT-227); absent when it is always on. */
+  feature?: (features: Features) => boolean;
 }
 
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
@@ -76,6 +79,8 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     labelKey: "integrations",
     icon: Plug,
     permission: { action: "read", resource: "settings" },
+    // Only while Stripe or Binance is on (DT-227); the first deploy runs with both off.
+    feature: (features) => features.stripe || features.binance,
   },
   {
     slug: "technologies",
@@ -109,11 +114,16 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   },
 ];
 
-/** Whether a user sees the section. Preferences need only a signed-in user; the rest follow `can()`. */
+/**
+ * Whether a user sees the section. A section behind a feature flag is hidden while the flag is off; then
+ * preferences need only a signed-in user and the rest follow `can()`.
+ */
 export function isSettingsSectionVisible(
   section: SettingsSection,
   user: Parameters<typeof can>[0],
+  features: Features,
 ): boolean {
+  if (section.feature && !section.feature(features)) return false;
   if (section.permission === null) return user !== null && user !== undefined;
   return can(user, section.permission.action, section.permission.resource);
 }

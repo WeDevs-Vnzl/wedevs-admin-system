@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { FEATURES } from '../../../src/config/config.module';
 import { MatrixAuthorization } from '../../../src/modules/identity/application/matrix-authorization';
 import { IntegrationMappingModule } from '../../../src/modules/settings/integration-mapping.module';
 import type { CurrentUser } from '../../../src/shared/application/current-user';
@@ -27,7 +28,11 @@ describe('integration mapping (e2e): DT-183, DT-184', () => {
     app = await createTestApp({
       modules: [IntegrationMappingModule],
       authenticator,
-      overrides: [{ token: AUTHORIZATION, useValue: new MatrixAuthorization() }],
+      overrides: [
+        { token: AUTHORIZATION, useValue: new MatrixAuthorization() },
+        // Both providers on (DT-227); the off cases are in `feature-flags.e2e-spec.ts`.
+        { token: FEATURES, useValue: { stripe: true, binance: true, bankSync: false } },
+      ],
     });
   });
 

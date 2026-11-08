@@ -15,6 +15,7 @@ import { ReconciliationForm } from "@/features/accounts/components/reconciliatio
 import { accountScreenPermissions } from "@/features/accounts/permissions";
 import { getAccount, getAccountLedger } from "@/features/accounts/queries";
 import { notFoundWhenRefused, orNullWhenMissing } from "@/features/accounts/refusal";
+import { getFeatures } from "@/features/shell/features";
 import { todayInCaracas } from "@/lib/dates";
 import { requireSessionUser } from "@/lib/auth/session";
 
@@ -40,6 +41,7 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
   const permissions = accountScreenPermissions(user);
   if (!permissions.canRead) notFound();
   const account = await notFoundWhenRefused(async () => (await readAccount(id)) ?? notFound());
+  const features = await getFeatures();
 
   const [ledger, t, tEnums] = await Promise.all([
     notFoundWhenRefused(() => getAccountLedger({ accountId: account.id, pageSize: 100 })),
@@ -108,9 +110,12 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
                 className="text-sm text-muted-foreground"
               />
             )}
-            <Suspense fallback={null}>
-              <ExchangeSnapshot accountId={account.id} accountType={account.type} />
-            </Suspense>
+            {/* Binance off (DT-227): no snapshot block and no read. */}
+            {features.binance ? (
+              <Suspense fallback={null}>
+                <ExchangeSnapshot accountId={account.id} accountType={account.type} />
+              </Suspense>
+            ) : null}
           </CardContent>
         </Card>
         <Card className="@lg:col-span-2">

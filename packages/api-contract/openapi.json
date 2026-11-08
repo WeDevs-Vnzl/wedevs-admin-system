@@ -9827,6 +9827,25 @@
         ],
         "type": "object"
       },
+      "FeaturesResponseDto": {
+        "properties": {
+          "bankSync": {
+            "type": "boolean"
+          },
+          "binance": {
+            "type": "boolean"
+          },
+          "stripe": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stripe",
+          "binance",
+          "bankSync"
+        ],
+        "type": "object"
+      },
       "FileResponseDto": {
         "properties": {
           "createdAt": {
@@ -31682,6 +31701,48 @@
         ]
       }
     },
+    "/api/v1/features": {
+      "get": {
+        "operationId": "getFeatures",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "UNAUTHENTICATED"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "INTERNAL"
+          }
+        },
+        "summary": "Effective integration feature flags",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/v1/files": {
       "post": {
         "operationId": "confirmFileUpload",
@@ -41082,6 +41143,16 @@
             },
             "description": "FORBIDDEN"
           },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "NOT_FOUND"
+          },
           "500": {
             "content": {
               "application/json": {
@@ -41141,6 +41212,16 @@
               }
             },
             "description": "FORBIDDEN"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "NOT_FOUND"
           },
           "422": {
             "content": {
