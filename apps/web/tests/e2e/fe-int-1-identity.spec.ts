@@ -172,14 +172,15 @@ test.describe("FE-INT-1 identity", () => {
     test.setTimeout(90_000);
     const first = await openSession(browser);
     const second = await openSession(browser);
-    // `tradeName` is pinned to the left edge and has no move control: move the (unpinned) code column instead.
-    const moveCodeDown = oneOf("Move Code down", "Mover Código hacia abajo");
+    // `tradeName` is pinned and renders first whatever its saved place, so moving `code` (saved right before it) down
+    // changes nothing on screen. Move a column clear of the pinned one: `kind` swaps with `country`.
+    const moveKindDown = oneOf("Move Type down", "Mover Tipo hacia abajo");
     await signInAs(first.page, "OWNER");
     try {
       await first.page.goto("/clients/list");
       await first.page.getByRole("button", { name: oneOf("Columns", "Columnas") }).click();
       const defaultOrder = await columnOrder(first.page);
-      await first.page.getByRole("button", { name: moveCodeDown }).click();
+      await first.page.getByRole("button", { name: moveKindDown }).click();
       // The headers re-render after the move: poll instead of reading them once.
       await expect.poll(() => columnOrder(first.page)).not.toEqual(defaultOrder);
       const layout = await columnOrder(first.page);

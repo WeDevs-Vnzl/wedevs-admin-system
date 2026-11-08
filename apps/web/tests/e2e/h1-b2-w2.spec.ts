@@ -480,13 +480,13 @@ test.describe("alerts bell (mutates alert state)", () => {
     const before = await badgeValue(page);
     expect(before).toBeGreaterThan(0);
 
-    await alertsList(page)
-      .getByRole("button", { name: /^Posponer: / })
-      .first()
-      .click();
+    const first = alertsList(page).locator("[data-alert-key]").first();
+    const key = await first.getAttribute("data-alert-key");
+    await first.getByRole("button", { name: /^Posponer: / }).click();
     await page.getByRole("menuitem", { name: "1 día", exact: true }).click();
     await expect(page.getByText("Alerta pospuesta 1 día", { exact: true })).toBeVisible();
     await expect.poll(() => badgeValue(page)).toBe(before - 1);
-    await expect(alertsList(page).getByRole("listitem")).toHaveCount(before - 1);
+    // As for dismiss: the panel refills past the first page, so the snoozed alert is checked by its key.
+    await expect(alertsList(page).locator(`[data-alert-key="${key}"]`)).toHaveCount(0);
   });
 });

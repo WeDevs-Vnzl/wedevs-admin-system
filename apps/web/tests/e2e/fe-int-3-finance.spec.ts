@@ -328,8 +328,10 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.goto(`/invoices/${voidable}`);
     await page.getByRole("button", { name: "Anular", exact: true }).first().click();
     const voidDialog = page.getByRole("dialog");
-    await voidDialog.getByRole("button", { name: "Anular factura", exact: true }).click();
-    await expect(page.getByText("Factura anulada")).toHaveCount(0);
+    // CA5: a void needs a reason, so the confirm button stays disabled until one is typed.
+    await expect(
+      voidDialog.getByRole("button", { name: "Anular factura", exact: true }),
+    ).toBeDisabled();
     await voidDialog.getByLabel("Motivo", { exact: true }).fill("E2E: anulación de prueba");
     await voidDialog.getByRole("button", { name: "Anular factura", exact: true }).click();
     await expect(page.getByText("Factura anulada")).toBeVisible();
@@ -421,8 +423,9 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(
       page.getByText("Otra factura activa ya usa este número. Edítala antes de restaurar esta."),
     ).toBeVisible();
+    // The conflict alert above the table links to the active invoice holding the number.
     await expect(
-      row.getByRole("link", { name: /^Abrir / }).or(row.getByRole("button", { name: /^Abrir / })),
+      page.getByRole("alert").getByRole("link", { name: `Abrir ${number}`, exact: true }),
     ).toBeVisible();
   });
 
@@ -485,16 +488,17 @@ test.describe("FE-INT-R E.2 finance", () => {
     await page.getByRole("button", { name: "Registrar transferencia", exact: true }).click();
     await expect(page.getByText("Transferencia registrada")).toBeVisible();
 
-    // The list pages at 25 rows and E2E accounts accumulate: search each account before reading its row.
+    // The list pages at 25 rows and E2E accounts accumulate: search each account before reading its row. A USD
+    // account shows the same amount in its balance and USD-balance columns: the first is the balance.
     await page.goto("/accounts/list");
     const search = page.getByRole("searchbox", { name: "Buscar en la tabla" });
     await search.fill(origin);
     await expect(
-      page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00")),
+      page.getByRole("row").filter({ hasText: origin }).getByText(money("400,00")).first(),
     ).toBeVisible();
     await search.fill(target);
     await expect(
-      page.getByRole("row").filter({ hasText: target }).getByText(money("99,00")),
+      page.getByRole("row").filter({ hasText: target }).getByText(money("99,00")).first(),
     ).toBeVisible();
 
     // CA2: the same account on both sides is refused by the form.
@@ -544,7 +548,8 @@ test.describe("FE-INT-R E.2 finance", () => {
     await expect(dialog.getByRole("alert").filter({ hasText: "Campo obligatorio" })).toBeVisible();
     await dialog.locator("#mark-paid-account").click();
     await page.getByRole("option", { name: new RegExp(`^${escapeRegExp(account)}`) }).click();
-    await dialog.locator("#mark-paid-account-amount").fill("137");
+    // Same currency (USD → USD): no separate debit amount; the paid amount defaults to the expense's 137.
+    await expect(dialog.locator("#mark-paid-amount")).toHaveValue(/^137([.,]0+)?$/);
     await dialog.getByRole("button", { name: "Marcar como pagado", exact: true }).click();
     await expect(page.getByText("Gasto marcado como pagado")).toBeVisible();
 

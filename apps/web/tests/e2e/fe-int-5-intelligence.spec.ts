@@ -138,17 +138,19 @@ test.describe("FE-INT-5 intelligence", () => {
 
   // ───────────────────────────── alerts (HU-10 CA4, HU-19 CA2) ─────────────────────────────
 
-  test('@authenticated HU-10 CA4: the "Cuota por facturar" alert shows in the bell and in the dashboard', async ({
+  test('@authenticated HU-10 CA4: the "Cuota por facturar" alert shows in the alerts and in the dashboard', async ({
     page,
   }) => {
-    await openPage(page, "/dashboard");
-    await page.getByRole("button", { name: /^Alertas/ }).click();
-    const bell = page.getByRole("dialog", { name: "Alertas" });
-    const alert = bell.locator("[data-alert-key]").filter({ hasText: fixture.installmentLabel });
+    // The bell shows the first 20 alerts, and overdue installments from earlier runs sort ahead of one due today. The
+    // projects overview lists the installment alerts only.
+    await openPage(page, "/projects");
+    const alert = page
+      .locator("main [data-alert-key]")
+      .filter({ hasText: fixture.installmentLabel });
     await expect(alert.getByText("Cuota por facturar", { exact: true })).toBeVisible();
     await expect(alert.getByText(fixture.project.name)).toBeVisible();
-    await page.keyboard.press("Escape");
 
+    await openPage(page, "/dashboard");
     // Dashboard panel "Cuotas por facturar (próximos 30 días)" lists the installment by its label.
     await expect(
       page.locator("main").getByText("Cuotas por facturar (próximos 30 días)"),
